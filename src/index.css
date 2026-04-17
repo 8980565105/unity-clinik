@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Velzon-inspired Admin Dashboard Design System - Solid Colors Only */
+
+@layer base {
+  :root {
+    /* Core Layout */
+    --background: 248 250 252;
+    --foreground: 30 41 59;
+    
+    /* Cards & Surfaces - Solid Colors */
+    --card: 255 255 255;
+    --card-foreground: 30 41 59;
+    --card-border: 226 232 240;
+    
+    /* Primary Brand - Solid */
+    --primary: 99 102 241;
+    --primary-foreground: 255 255 255;
+    --primary-hover: 79 70 229;
+    --primary-light: 238 242 255;
+    
+    /* Secondary - Solid */
+    --secondary: 100 116 139;
+    --secondary-foreground: 255 255 255;
+    --secondary-hover: 71 85 105;
+    --secondary-light: 241 245 249;
+    
+    /* Success - Solid Green */
+    --success: 34 197 94;
+    --success-foreground: 255 255 255;
+    --success-hover: 22 163 74;
+    --success-light: 240 253 244;
+    
+    /* Warning - Solid Orange */
+    --warning: 251 146 60;
+    --warning-foreground: 255 255 255;
+    --warning-hover: 249 115 22;
+    --warning-light: 255 247 237;
+    
+    /* Danger - Solid Red */
+    --destructive: 239 68 68;
+    --destructive-foreground: 255 255 255;
+    --destructive-hover: 220 38 38;
+    --destructive-light: 254 242 242;
+    
+    /* Info - Solid Blue */
+    --info: 59 130 246;
+    --info-foreground: 255 255 255;
+    --info-hover: 37 99 235;
+    --info-light: 239 246 255;
+    
+    /* Neutral - Solid */
+    --muted: 248 250 252;
+    --muted-foreground: 100 116 139;
+    --accent: 241 245 249;
+    --accent-foreground: 51 65 85;
+    
+    /* Form Elements */
+    --border: 226 232 240;
+    --input: 255 255 255;
+    --input-border: 203 213 225;
+    --input-focus: 99 102 241;
+    --ring: 99 102 241;
+    
+    /* Sidebar - Solid */
+    --sidebar-background: 255 255 255;
+    --sidebar-foreground: 71 85 105;
+    --sidebar-primary: 99 102 241;
+    --sidebar-primary-foreground: 255 255 255;
+    --sidebar-accent: 241 245 249;
+    --sidebar-accent-foreground: 71 85 105;
+    --sidebar-border: 226 232 240;
+    --sidebar-active: 99 102 241;
+    --sidebar-active-foreground: 255 255 255;
+    
+    /* Header - Solid */
+    --header-background: 255 255 255;
+    --header-foreground: 30 41 59;
+    --header-border: 226 232 240;
+    
+    /* Table - Solid */
+    --table-header: 248 250 252;
+    --table-border: 226 232 240;
+    --table-hover: 248 250 252;
+    
+    /* Layout */
+    --radius: 0.5rem;
+    --radius-lg: 0.75rem;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  .dark {
+    /* Core Layout - Dark */
+    --background: 15 23 42;
+    --foreground: 241 245 249;
+    
+    /* Cards & Surfaces - Dark Solid */
+    --card: 30 41 59;
+    --card-foreground: 241 245 249;
+    --card-border: 51 65 85;
+    
+    /* Primary - Dark Mode */
+    --primary: 129 140 248;
+    --primary-foreground: 15 23 42;
+    --primary-hover: 99 102 241;
+    --primary-light: 30 27 75;
+    
+    /* Secondary - Dark */
+    --secondary: 71 85 105;
+    --secondary-foreground: 241 245 249;
+    --secondary-hover: 100 116 139;
+    --secondary-light: 30 41 59;
+    
+    /* Status Colors - Dark */
+    --success: 34 197 94;
+    --warning: 251 146 60;
+    --destructive: 248 113 113;
+    --info: 96 165 250;
+    
+    /* Neutral - Dark */
+    --muted: 30 41 59;
+    --muted-foreground: 148 163 184;
+    --accent: 51 65 85;
+    --accent-foreground: 226 232 240;
+    
+    /* Form Elements - Dark */
+    --border: 51 65 85;
+    --input: 30 41 59;
+    --input-border: 51 65 85;
+    --input-focus: 129 140 248;
+    --ring: 129 140 248;
+    
+    /* Sidebar - Dark */
+    --sidebar-background: 30 41 59;
+    --sidebar-foreground: 203 213 225;
+    --sidebar-primary: 129 140 248;
+    --sidebar-primary-foreground: 15 23 42;
+    --sidebar-accent: 51 65 85;
+    --sidebar-accent-foreground: 203 213 225;
+    --sidebar-border: 51 65 85;
+    --sidebar-active: 129 140 248;
+    --sidebar-active-foreground: 15 23 42;
+    
+    /* Header - Dark */
+    --header-background: 30 41 59;
+    --header-foreground: 241 245 249;
+    --header-border: 51 65 85;
+    
+    /* Table - Dark */
+    --table-header: 30 41 59;
+    --table-border: 51 65 85;
+    --table-hover: 51 65 85;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  /* Velzon-style solid buttons */
+  .btn-solid-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary-hover border-0 shadow-sm;
+  }
+  
+  .btn-solid-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary-hover border-0 shadow-sm;
+  }
+  
+  .btn-solid-success {
+    @apply bg-success text-success-foreground hover:bg-success-hover border-0 shadow-sm;
+  }
+  
+  .btn-solid-warning {
+    @apply bg-warning text-warning-foreground hover:bg-warning-hover border-0 shadow-sm;
+  }
+  
+  .btn-solid-danger {
+    @apply bg-destructive text-destructive-foreground hover:bg-destructive-hover border-0 shadow-sm;
+  }
+  
+  .btn-solid-info {
+    @apply bg-info text-info-foreground hover:bg-info-hover border-0 shadow-sm;
+  }
+  
+  /* Solid status badges */
+  .badge-solid-primary {
+    @apply bg-primary text-primary-foreground border-0;
+  }
+  
+  .badge-solid-success {
+    @apply bg-success text-success-foreground border-0;
+  }
+  
+  .badge-solid-warning {
+    @apply bg-warning text-warning-foreground border-0;
+  }
+  
+  .badge-solid-danger {
+    @apply bg-destructive text-destructive-foreground border-0;
+  }
+  
+  .badge-solid-info {
+    @apply bg-info text-info-foreground border-0;
+  }
+  
+  .badge-solid-secondary {
+    @apply bg-secondary text-secondary-foreground border-0;
+  }
+  
+  /* Solid stat cards */
+  .stat-card-primary {
+    @apply bg-primary text-primary-foreground;
+  }
+  
+  .stat-card-success {
+    @apply bg-success text-success-foreground;
+  }
+  
+  .stat-card-warning {
+    @apply bg-warning text-warning-foreground;
+  }
+  
+  .stat-card-info {
+    @apply bg-info text-info-foreground;
+  }
+  
+  .stat-card-secondary {
+    @apply bg-secondary text-secondary-foreground;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
