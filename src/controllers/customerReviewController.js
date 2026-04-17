@@ -288,6 +288,7 @@ const getPublicReviewsByProduct = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 
 // આ નવો function add કરો — existing getReviews ની નીચે
 const getPublicReviews = async (req, res) => {
@@ -322,6 +323,10 @@ const getPublicReviews = async (req, res) => {
 module.exports = {
   getReviews,
   getPublicReviews,
+=======
+module.exports = {
+  getReviews,
+>>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
   getReviewById,
   createReview,
   updateReview,

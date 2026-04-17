@@ -4,6 +4,11 @@
 /node_modules
 /.pnp
 .pnp.js
+<<<<<<< HEAD
+=======
+/.vscode-test
+.vscode
+>>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
 
 # testing
 /coverage

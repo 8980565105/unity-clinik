@@ -111,6 +111,7 @@ app.use(
 
 // Helmet તમારા HTTP હેડર્સને સિક્યોર કરે છે, જેથી હેકર્સ સહેલાઈથી જાણી ન શકે કે તમે કઈ ટેકનોલોજી વાપરો છો.
 
+<<<<<<< HEAD
 // app.use(
 //   helmet({
 //     contentSecurityPolicy: {
@@ -136,16 +137,22 @@ app.use(
 //   }),
 // );
 
+=======
+>>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
+<<<<<<< HEAD
 
+=======
+>>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
         imgSrc: [
           "'self'",
           "data:",
           "blob:",
+<<<<<<< HEAD
           "http://localhost:5000", 
           "http://localhost:*",
         ],
@@ -160,6 +167,20 @@ app.use(
       },
     },
 
+=======
+          "http://localhost:5000",
+          "https://your-production-url.com",
+        ],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        connectSrc: [
+          "'self'",
+          "http://localhost:5000",
+          "https://your-production-url.com",
+        ],
+      },
+    },
+>>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
     crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
