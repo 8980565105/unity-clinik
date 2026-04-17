@@ -1,0 +1,514 @@
+.App
+ {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Italianno&display=swap');
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+
+* {
+  font-family: 'Roboto', sans-serif;
+}
+
+
+:root {
+  /* Theme Colors */
+   --primary-color: #F43297; /* your pink color */
+  --theme-color: #F43297;         /* main theme color */
+  --sec-theme-color-30: rgba(210, 175, 159, 0.3); /* 30% opacity */
+  --theme-hover-color: #F43297;   /* hover color */
+  --theme-bg-light: #ffe6f0;      /* light background */
+ --theme-bg-100: #f32f94;      /* light background */
+ --text-light: rgba(0,0,0,0.70);
+ 
+   --ef3a96-9: rgba(239, 58, 150, 0.09);
+
+ --theme-bg-rgba: rgba(210, 175, 159, 0.3);
+ --theme-light-border:#BCBCBC;
+ --text-break:break-word;
+ --text-line-height:100%;
+ --text-14:14px;
+ --text-p-light:#989696;
+
+
+
+  /* Fonts */
+  --font-family-h2: 'Italianno', cursive;
+  --font-family-main: 'Roboto', sans-serif;
+ --font-weight-bold: 700;
+  --font-weight-medium: 500;
+  --font-weight-reguler: 400;
+  --font-style-main: italic;
+  --font-size-h1: 80px;
+   --font-size-h2: 50px;
+   --font-mobile-h2:22px;
+  --font-size-p: 16px;
+
+   --font-inter: 'Inter', sans-serif;
+
+  --font-family-h3: 'Roboto', sans-serif;
+  --font-weight-h3: 600;   /* semibold */
+  --font-size-h3: 30px;    /* ~text-xl */
+  --font-color-h3: #000;   /* black */
+
+  --font-family-h4: 'Roboto', sans-serif;
+  --font-weight-h4: 500;   /* Medium */
+  --font-size-h4: 18px ;    /* ~text-xl */
+   --font-color-h4: rgba(0, 0, 0, 0.7);   /* black */
+
+    --font-size-h5: 70px;    /* ~text-xl */
+
+  
+}
+/* Classes */
+.bg-ef3a96-9 {
+  background-color: var(--ef3a96-9) !important;
+}
+.theme-bg-light
+{
+  background-color: var(--theme-bg-light);  
+}
+.bg-color-100 {
+  background-color: var(--theme-bg-100);  
+}
+
+.button {
+  transition: all 0.3s ease;
+  
+}
+.button:hover {
+  background-color: var(--theme-hover-color);
+  color: white !important;
+}
+/* globals.css */
+.text-theme {
+  color: var(--theme-color);
+}
+
+
+.theme-border-block {
+  display: block;                     
+                         
+  height: 2px;                        
+                
+  border-bottom: 2px solid var(--theme-color); 
+  margin-top: 0.25rem;                
+}
+.bg-color {
+  background-color: var(--theme-color);  
+}
+.light-color{
+  background-color: var( --theme-bg-rgba);
+}
+
+/* Hover */
+.bg-color:hover {
+  background-color: var(--theme-color);
+}
+
+/* Active (while clicked) */
+.bg-color:active {
+  background-color: var(--theme-color);
+}
+
+/* Circle with border */
+.circle-border {
+  border-style: solid; 
+  border-width: 5px 0px 0px 5px; 
+  border-color: var(--theme-color);
+  border-radius: 50%; 
+}
+
+.theme-border {
+   border: 1px solid var(--theme-color) !important; 
+}
+.text-color {
+  color: var(--theme-color);
+}
+
+.font-main {
+  font-family: var(--font-family-main);
+  font-style: var(--font-style-main); /* ← Apply italic dynamically */
+}
+
+.font-bold {
+  font-weight: var(--font-weight-bold);
+}
+
+.font-medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.font-sans
+{
+  font-family: var(--font-family-main);
+}
+
+.text-h1 {
+  font-size: var(--font-size-h1);
+}
+
+.text-p {
+  font-size: var(--font-size-p);
+}
+
+
+
+
+
+
+.font-h2 {
+  font-family: var(--font-family-h2);
+  font-style: normal; /* Italianno is already cursive */
+  font-weight: 400;    /* regular weight */
+  font-size: var(--font-size-h2);
+  
+}
+.font-h5 {
+  font-family:var(--font-family-h2);
+  font-style: italic; /* Italianno is already cursive */
+  font-weight: 500;    /* regular weight */
+  font-size: var(--font-size-h5);
+  
+}
+/* common h3 style */
+.new-arrival-title {
+  font-family: var(--font-family-h3);
+
+  font-weight: var(--font-weight-h3);
+  font-size: var(--font-size-h3);
+  
+  position: absolute;
+  top: 40px;
+  left: 20px;
+}
+
+/* common h4 style */
+.font-h4 {
+  font-family: var(--font-family-h4);
+  font-weight: var(--font-weight-h4);
+
+}
+
+/* slick slider styles */
+@import "~slick-carousel/slick/slick.css";
+@import "~slick-carousel/slick/slick-theme.css";
+
+
+
+
+
+/* Custom CSS to style the active slider dot */
+.slick-dots li.slick-active div {
+ 
+    background-color: var(--theme-color) !important;
+    border-radius: 20%; /* perfect round */
+}
+
+.discount-badge {
+  
+  color: var(--theme-color);
+  font-size: 15px; /* text-sm */
+  font-weight: 500;    /* font-semibold */
+  padding: 0.25rem 0.5rem; /* py-1 px-2 */
+  border-radius: 0.25rem; /* rounded */
+  width: 200px;       /* fixed width */
+  text-align: center;
+}
+
+
+
+/* // */
+
+.discount-star {
+  background-color: #ff007f; /* Base color of the star */
+  border-radius: 5px;
+  transform: rotate(22.5deg); /* Rotate the main square */
+}
+
+.discount-star::before,
+.discount-star::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #ff007f;
+  border-radius: 5px;
+  z-index: -1;
+}
+
+.discount-star::before {
+  transform: rotate(45deg); /* Rotate the first pseudo-element */
+}
+
+.discount-star::after {
+  transform: rotate(90deg); /* Rotate the second pseudo-element */
+}
+
+/* Optional: To position the text in the center and rotate it */
+.discount-star {
+  /* To counter the rotation of the parent div */
+  transform: rotate(22.5deg);
+}
+
+.discount-star > * {
+  /* To rotate the text back to a readable angle */
+  transform: rotate(-22.5deg);
+}
+
+/* Font stroke + shadow */
+.text-stroke {
+  -webkit-text-stroke: 2px white; /* stroke width + color */
+  -webkit-text-fill-color: black; /* fill color */
+}
+
+.text-shadow-custom {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4); /* x, y, blur, color */
+}
+
+
+
+.font-inter {
+      font-family: var(--font-inter);
+}
+
+.text-60px {
+    font-size: 60px;
+}
+
+.text-22px {
+    font-size: 22px;
+}
+
+.text-20px {
+    font-size: 20px;
+}
+
+/* responsive header scroll bar */
+/* scroll bar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  
+  scrollbar-width: none;    
+}
+.bg-theme {
+  background-color: var(--theme-bg-rgba);
+}
+
+.sfpro {
+  font-family: "SF Pro Display", sans-serif;
+  font-weight: 600; /* semibold */
+  font-size: 17px;
+  line-height: 1.4; 
+}
+
+
+
+
+
+/* new changes */
+.text-light{
+  color: var(--text-light);
+}
+.box-shadow{
+  box-shadow:0px 0px 4px 0px rgba(0,0,0,0.25);
+}
+.form-shadow{
+  box-shadow: 0px 0.5px 10.1px 0px rgba(0,0,0,0.30);
+}
+.light-border{
+  border-color: var(--theme-light-border);
+}
+.loginSlider .slick-dots li.slick-active div {
+  border-radius: 20px;
+}
+.loginSlider .slick-dots li{
+  margin: 0 !important;
+}
+.sec-theme{
+  background-color: var(--sec-theme-color-30);
+}
+.heading-18{
+  color:var(--font-size-h4);
+}
+.text-14{
+  font-size: var(--text-14);
+}
+.break{
+  word-break: var(--text-break);
+}
+.leading{
+  line-height:var(--text-line-height);
+}
+.hover-text{
+  color: var(--theme-color);
+}
+.font-regular{
+  font-weight: var(--font-weight-reguler);
+}
+.sec-text-color{
+  color: var( --text-p-light);
+}
+.font-18{
+  font-size: var(--font-size-h4);
+}
+/* .input-common {
+  @apply w-full border-b light-border rounded-[5px] px-[10px] py-[8px] md:px-[20px] md:py-[13px] focus:outline-none focus:ring-2 focus:ring-pink-400 form-shadow placeholder-[#BCBCBC];
+} */
+
+.input-common {
+  @apply w-full border-b light-border rounded-[5px] px-[10px] py-[8px] md:px-[20px] md:py-[13px] focus:outline-none form-shadow placeholder-[#BCBCBC];
+}
+.input-common:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--theme-bg-rgba);
+}
+
+@media (max-width: 767px) {
+.font-h2{
+  font-size: var(--font-mobile-h2);
+}
+}
+
+
+.container-1440 {
+  @apply w-full mx-auto lg:max-w-[1440px];
+}
+
+
+/* app.css */
+/* app.css */
+.bg-gradient-custom {
+  background: linear-gradient(
+    90deg, 
+    rgba(210, 175, 159, 0.6) 0%,   /* 0% */
+    rgba(210, 175, 159, 0.6) 30%,  /* 30% */
+    rgba(210, 175, 159, 0.6) 100%  /* 100% */
+  );
+}
+
+/* ultra thin dashed border */
+.thin-border {
+  border-width: 0.5px !important;
+  border-style: dashed !important;
+}
+
+
+/* utility classes for easy usage */
+.bg-color { background-color: var(--primary-color); }
+.border-color { border-color: var(--primary-color); }
+.text-color { color: var(--primary-color); }
+.ring-color { ring-color: var(--primary-color); }
+
+
+/* આનાથી ખાલી લાઈન (Space) દેખાવા લાગશે */
+.prose p:empty::before {
+  content: "";
+  display: inline-block;
+  height: 1em;
+}
+
+.prose br {
+  display: block;
+  content: "";
+  margin-top: 10px; /* તમારી જરૂરિયાત મુજબ સ્પેસ વધારી શકો */
+}
+
+/* ટેબલને બોર્ડર અને સ્પેસિંગ આપવા માટે */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+.prose td, .prose th {
+  border: 1px solid #e2e8f0;
+  padding: 8px 12px;
+}
+
+
+
+
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+/* header overflow-auto-y */
+
+/* 🔥 Hide scrollbar (PharmEasy style) */
+.hide-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hide-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hide-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db; /* light gray */
+  border-radius: 10px;
+}
+
+.hide-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Firefox */
+.hide-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
