@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // const multer = require("multer");
 // const path = require("path");
 
@@ -15,7 +14,6 @@
 // const upload = multer({ storage });
 
 // module.exports = upload;
-=======
 const multer = require("multer");
 const path = require("path");
 
@@ -32,4 +30,3 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 module.exports = upload;
->>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5

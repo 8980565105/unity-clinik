@@ -240,7 +240,7 @@ const deleteReview = async (req, res) => {
 const bulkDeleteReviews = async (req, res) => {
   try {
     const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) 
+    if (!Array.isArray(ids) || ids.length === 0)
       return sendResponse(res, false, null, "No IDs provided");
 
     const result = await CustomerReview.deleteMany({ _id: { $in: ids } });
@@ -288,14 +288,10 @@ const getPublicReviewsByProduct = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-
-// આ નવો function add કરો — existing getReviews ની નીચે
 const getPublicReviews = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    // storeId domain પરથી resolve કરો
     const storeId = await resolveStoreId(req);
 
     const query = { is_approved: true };
@@ -322,11 +318,6 @@ const getPublicReviews = async (req, res) => {
 
 module.exports = {
   getReviews,
-  getPublicReviews,
-=======
-module.exports = {
-  getReviews,
->>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
   getReviewById,
   createReview,
   updateReview,
@@ -334,4 +325,5 @@ module.exports = {
   bulkDeleteReviews,
   updateReviewStatus,
   getPublicReviewsByProduct,
+  getPublicReviews,
 };

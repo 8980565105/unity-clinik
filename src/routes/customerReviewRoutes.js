@@ -3,10 +3,7 @@ const router = express.Router();
 const {
   getReviews,
   getReviewById,
-<<<<<<< HEAD
   getPublicReviews,
-=======
->>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
   createReview,
   updateReview,
   deleteReview,
@@ -21,11 +18,7 @@ const {
 } = require("../middlewares/authMiddleware");
 
 router.get("/product/:product_id", getPublicReviewsByProduct);
-<<<<<<< HEAD
 router.get("/public", getPublicReviews);
-=======
->>>>>>> fe887d7bf29e4195a4ae74254b104258eeda54b5
-
 router.use(authMiddleware);
 router.post("/", createReview);
 router.get("/", authorizeMinRole("store_owner"), getReviews);
