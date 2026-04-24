@@ -13,18 +13,15 @@ import {
   Package,
   XCircleIcon,
 } from "lucide-react";
-
 import ShopIcon from "../icons/shop";
 import HeaderLogo from "../../assets/logo.png";
 import bannerImg from "../../assets/banner.png";
 import banner1 from "../../assets/banner1.png";
 import WhiteLogin from "../../assets/white login.png";
 import SvgComponent from "../icons/login";
-
 import { useDispatch, useSelector } from "react-redux";
 import { fetchNavbar } from "../../features/navbar/navbarThunk";
 import { logout } from "../../features/auth/authSlice";
-
 import Button from "../ui/Button";
 import Row from "../ui/Row";
 import LoginForm from "../../pages/Login";
@@ -35,7 +32,6 @@ import { clearOrders } from "../../features/orders/orderSlice";
 import { getImageUrl } from "../utils/helper";
 import { fetchCategories } from "../../features/categories/categoriesThunk";
 import { fetchsubCategories } from "../../features/subcategories/subcategoriesThunk";
-
 import shoppingImg from "../../assets/shopping.png";
 import kurtiImg from "../../assets/Kurti.png";
 import JeansImg from "../../assets/Jeans.png";
@@ -114,43 +110,36 @@ const Header = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isForgetOpen, setIsForgetOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-
+  const isWishlistActive = location.pathname === "/wishlist";
+  const isCartActive = location.pathname === "/cart";
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileMegaMenuOpen, setIsMobileMegaMenuOpen] = useState(false);
-
   const hoverTimeoutRef = useRef(null);
-
   const cart = useSelector((state) => state.cart.cart);
   const wishlist = useSelector((state) => state.wishlist.items);
   const { info: storeInfo } = useSelector((state) => state.store);
   const cartCount =
     cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
   const wishlistCount = wishlist?.length || 0;
-
   const [megaMenuPage, setMegaMenuPage] = useState(1);
   const [mobileMenuPage, setMobileMenuPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
-
   const isShopActive = location.pathname === "/shop";
-
   useEffect(() => {
     if (isMegaMenuOpen && parentCategories.length > 0 && !activeParent) {
       setActiveParent(parentCategories[0]._id);
     }
   }, [isMegaMenuOpen, parentCategories]);
-
   useEffect(() => {
     if (parentCategories.length > 0 && !activeParent) {
       setActiveParent(parentCategories[0]._id);
     }
   }, [parentCategories]);
-
   const handleParentChange = (parentId) => {
     setActiveParent(parentId);
     setMegaMenuPage(1);
     setMobileMenuPage(1);
   };
-
   useEffect(() => {
     dispatch(fetchNavbar({ status: "active" }));
     dispatch(fetchCategories());
@@ -236,7 +225,7 @@ const Header = () => {
   })();
 
   return (
-    <header className="w-full mb-[5px] md:mb-[10px] bg-[var(--primary-color)] sticky top-0 z-50 shadow-[0_3px_15px_var(--primary-color)]">
+    <header className="w-full mb-[5px] md:mb-[10px] bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary">
       <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]">
         <button
           className="custom-lg:hidden text-light transition-colors duration-300 border rounded-[3px] p-[5px] border-[#D2AF9F]"
@@ -247,7 +236,11 @@ const Header = () => {
 
         <div className="flex items-center">
           <Link to="/">
-            <img src={dynamicLogoUrl || HeaderLogo} alt="Logo" />
+            <img
+              src={dynamicLogoUrl || HeaderLogo}
+              alt="Logo"
+              className="h-auto w-[200px]"
+            />
           </Link>
         </div>
 
@@ -272,15 +265,15 @@ const Header = () => {
                         className={`relative cursor-pointer transition-all duration-300 pb-[10px] flex items-center
                           ${
                             isShopActive
-                              ? "text-black font-medium"
-                              : "text-[var(--secondary-color)] hover:text-black"
+                              ? "text-primary font-medium"
+                              : "text-primary"
                           }
                           after:content-['•••'] after:absolute after:left-[52%] after:-bottom-[4px]
                           after:-translate-x-1/2 after:text-[20px] after:tracking-[3px]
-                          after:font-bold after:text-black
+                          after:font-bold after:text-primary
                           after:h-[14px] after:leading-[14px]
                           after:transition-opacity after:duration-300
-                          ${isShopActive ? "after:opacity-100" : "after:opacity-0"}`}
+                          ${isShopActive ? "after:opacity-100 " : "after:opacity-0 hover:after:opacity-100"}`}
                       >
                         {item.name}
                         <ChevronDown
@@ -292,7 +285,7 @@ const Header = () => {
 
                       {isMegaMenuOpen && (
                         <div
-                          className="fixed left-0 right-0 top-[100px] bg-white z-50 form-shadow border-t border-[var(--primary-color)] flex min-h-[300px] max-w-[1400px] mx-auto w-full"
+                          className="fixed left-0 right-0 top-[100px] bg-white z-50 form-shadow border-t border-primary flex min-h-[300px] max-w-[1400px] mx-auto w-full"
                           onMouseEnter={handleMegaMenuMouseEnter}
                           onMouseLeave={handleMegaMenuMouseLeave}
                         >
@@ -321,7 +314,7 @@ ${
                               {activeParent ? (
                                 <>
                                   <div className="flex justify-between items-center px-8 pt-8 ">
-                                    <p className="text-[var(--primary-color)] text-sm mb-4">
+                                    <p className="text-primary text-sm mb-4">
                                       Sub Categories
                                     </p>
                                     <Button
@@ -329,7 +322,7 @@ ${
                                         navigate("/collections");
                                         setIsMegaMenuOpen(false);
                                       }}
-                                      className="text-[var(--primary-color)] transition-colors hover:text-[var(--theme-hover-color)] hover:underline"
+                                      className="text-primary transition-colors hover:text-[var(--theme-hover-color)] hover:underline"
                                     >
                                       All SubCategories
                                     </Button>
@@ -371,7 +364,7 @@ ${
                                                     className="w-full h-full object-cover"
                                                   />
                                                 </div>
-                                                <p className="mt-2 text-sm text-[var(--primary-color)] group-hover:text-[var(--theme-hover-color)]">
+                                                <p className="mt-2 text-sm text-primary group-hover:text-[var(--theme-hover-color)]">
                                                   {sub.name}
                                                 </p>
                                               </div>
@@ -392,7 +385,7 @@ ${
                                                 )
                                               }
                                               disabled={megaMenuPage === 1}
-                                              className="px-3 py-1 rounded border border-[var(--primary-color)] text-sm disabled:opacity-40 hover:bg-[var(--theme-color)] hover:text-white transition-colors"
+                                              className="px-3 py-1 rounded border border-primary text-sm disabled:opacity-40 hover:bg-[var(--theme-color)] hover:text-white transition-colors"
                                             >
                                               <ChevronLeft size={18} />
                                             </button>
@@ -408,7 +401,7 @@ ${
                                                 className={`w-8 h-8 rounded-full text-[14px] border transition-colors ${
                                                   megaMenuPage === page
                                                     ? "bg-[var(--theme-color)] text-white border-[var(--theme-color)]"
-                                                    : "border-[var(--primary-color)] hover:bg-[var(--theme-color)] hover:text-white"
+                                                    : "border-primary hover:bg-[var(--theme-color)] hover:text-white"
                                                 }`}
                                               >
                                                 {page}
@@ -423,7 +416,7 @@ ${
                                               disabled={
                                                 megaMenuPage === totalPages
                                               }
-                                              className="px-3 py-1 rounded border border-[var(--primary-color)] text-sm disabled:opacity-40 hover:bg-[var(--theme-color)] hover:text-white transition-colors"
+                                              className="px-3 py-1 rounded border border-primary text-sm disabled:opacity-40 hover:bg-[var(--theme-color)] hover:text-white transition-colors"
                                             >
                                               <ChevronRight size={18} />
                                             </button>
@@ -450,12 +443,12 @@ ${
                         `relative cursor-pointer transition-all duration-300 pb-[10px]
                         ${
                           isActive
-                            ? "text-black font-medium after:opacity-100"
-                            : "text-[var(--secondary-color)] hover:text-black after:opacity-0"
+                            ? "text-primary font-medium after:opacity-100"
+                            : "text-primary  after:opacity-0 hover:after:opacity-100"
                         }
                         after:content-['•••'] after:absolute after:left-[52%] after:-bottom-[4px]
                         after:-translate-x-1/2 after:text-[20px] after:tracking-[3px]
-                        after:font-bold after:text-black
+                        after:font-bold after:text-primary
                         after:h-[14px] after:leading-[14px]
                         after:transition-opacity after:duration-300`
                       }
@@ -476,7 +469,7 @@ ${
           <div className="relative hidden custom-lg:block group">
             <Button
               variant="common"
-              className="!min-w-[113px] !py-[7px] !px-[8px] flex items-center hover:!text-black"
+              className="!min-w-[113px] !py-[7px] !px-[8px] flex items-center"
               onClick={() => {
                 if (!token) setIsLoginOpen(true);
               }}
@@ -493,7 +486,7 @@ ${
               ) : (
                 <>
                   <span
-                    className="inline-block max-w-[40px] overflow-hidden text-ellipsis whitespace-nowrap"
+                    className="inline-block  "
                     title={user?.name || "User"}
                   >
                     {user?.name || "User"}
@@ -512,7 +505,7 @@ ${
                   <>
                     <span>Welcome User!</span>
                     <span
-                      className="text-[var(--primary-color)] hover:text-[var(--theme-hover-color)] cursor-pointer font-18 font-medium"
+                      className="text-primary hover:text-[var(--theme-hover-color)] cursor-pointer font-18 font-medium"
                       onClick={() => setIsRegisterOpen(true)}
                     >
                       Sign Up
@@ -522,7 +515,7 @@ ${
                   <>
                     <span>Welcome {user?.name || "User"} !</span>
                     <span
-                      className="text-[var(--primary-color)] hover:text-[var(--theme-hover-color)] cursor-pointer font-18 font-medium whitespace-nowrap"
+                      className="text-primary hover:text-[var(--theme-hover-color)] cursor-pointer font-18 font-medium whitespace-nowrap"
                       onClick={handleLogout}
                     >
                       Sign Out
@@ -531,7 +524,7 @@ ${
                 )}
               </div>
               <ul className="text-light text-p p-[17px]">
-                <li className="py-[10px] text-[var(--primary-color)] hover:text-[var(--theme-hover-color)]">
+                <li className="py-[10px] text-primary hover:text-[var(--theme-hover-color)]">
                   <button
                     onClick={() => openProtectedLink("/my-account")}
                     className="flex items-center gap-[15px] w-full"
@@ -540,7 +533,7 @@ ${
                     <span>My Profile</span>
                   </button>
                 </li>
-                <li className="py-[8px] text-[var(--primary-color)] hover:text-[var(--theme-hover-color)]">
+                <li className="py-[8px] text-primary hover:text-[var(--theme-hover-color)]">
                   <button
                     onClick={() => openProtectedLink("/my-account/orders")}
                     className="flex items-center gap-[15px] w-full"
@@ -549,7 +542,7 @@ ${
                     <span>Orders</span>
                   </button>
                 </li>
-                <li className="py-[8px] text-[var(--primary-color)] hover:text-[var(--theme-hover-color)]">
+                <li className="py-[8px] text-primary hover:text-[var(--theme-hover-color)]">
                   <button
                     onClick={() => openProtectedLink("/wishlist")}
                     className="flex items-center gap-[15px] w-full"
@@ -564,23 +557,32 @@ ${
 
           <button
             onClick={() => openProtectedLink("/wishlist")}
-            className="relative text-[var(--secondary-color)] hover:text-black"
+            className="relative text-primary "
           >
-            <Heart className="w-5 h-5" />
+            {isWishlistActive ? (
+              <Heart className="w-6 h-6 fill-primary " />
+            ) : (
+              <Heart className="w-6 h-6" />
+            )}
             {wishlistCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[var(--secondary-color)] text-[var(--primary-color)] text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[12px] rounded-full w-4 h-4 flex items-center justify-center">
                 {wishlistCount}
               </span>
             )}
           </button>
 
           <button
-            className="relative text-[var(--secondary-color)] hover:text-black"
+            className={`relative ${
+              isCartActive
+                ? "text-primary"
+                : "text-primary"
+            }`}
             onClick={() => openProtectedLink("/cart")}
           >
-            <FontAwesomeIcon icon={faCartShopping} className="w-5 h-5" />
+            <FontAwesomeIcon icon={faCartShopping} className="w-6 h-6" />
+
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[var(--secondary-color)] text-[var(--primary-color)] text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+              <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
                 {cartCount}
               </span>
             )}
@@ -608,11 +610,8 @@ ${
         </button>
 
         <div className="flex h-full flex-col overflow-y-auto no-scrollbar">
-          <img src={bannerImg} className="w-full" alt="Banner" />
-
-          <nav className="py-3">
+          <nav className="mt-12 py-3">
             {navItems.map((item, i) => {
-              if (item.name === "Home") return null;
               const isOdd = i % 2 !== 0;
 
               if (item.isMegaMenu) {
@@ -738,11 +737,13 @@ ${
                 >
                   {item.icon}
                   <span>{item.name}</span>
-                  <span className="ml-auto">›</span>
+                  <span className="ml-auto">
+                    <ChevronRight className="w-4 h-4" />
+                  </span>
                 </NavLink>
               );
             })}
-            <div className="flex items-center justify-center h-[60px]">
+            <div className="flex items-center justify-center h-[30px]">
               <hr className="w-full border-t border-dashed border-gray-400" />
             </div>
 
@@ -771,19 +772,13 @@ ${
                   <FontAwesomeIcon icon={farHeart} /> Wishlist
                 </button>
               </div>
-              <div className="py-4 px-4 cursor-pointer">
-                <Link to="/cart" className="flex items-center gap-[15px]">
-                  <FontAwesomeIcon icon={faGift} /> Coupons
-                </Link>
-              </div>
             </div>
           </nav>
-          <img src={banner1} className="w-full" alt="Bottom Banner" />
         </div>
       </div>
       {isLoginOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-          <div className="relative bg-white w-full max-w-[1062px] rounded-md overflow-hidden">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
             <LoginForm
               onClose={() => setIsLoginOpen(false)}
               onSwitchRegister={() => {
@@ -800,7 +795,7 @@ ${
       )}
       {isRegisterOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-          <div className="relative bg-white w-full max-w-[1062px] rounded-md overflow-hidden">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
             <RegistrationForm
               onClose={() => setIsRegisterOpen(false)}
               onSwitch={() => {
@@ -813,7 +808,7 @@ ${
       )}
       {isForgetOpen && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
-          <div className="relative bg-white w-full max-w-[1062px] rounded-md overflow-hidden">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
             <ForgetForm
               onClose={() => setIsForgetOpen(false)}
               onSwitch={() => {

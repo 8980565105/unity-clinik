@@ -6,9 +6,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchFaqs, getFaqBanner } from "../features/faqs/faqsThunk";
 import { Plus } from "lucide-react";
-
+import SEO from "../components/seo/seo";
+import { fetchPageBySlug } from "../features/pages/pagesThunk";
 function FAQItem({ question, answer }) {
   const [open, setOpen] = useState(false);
+
   return (
     <div className="border border-gray-200 rounded-lg mb-2 overflow-hidden">
       <button
@@ -35,6 +37,9 @@ function FAQItem({ question, answer }) {
 export default function FAQPage() {
   const dispatch = useDispatch();
   const { faqs, loading, banner } = useSelector((state) => state.faqs);
+  const { pages } = useSelector((state) => state.pages);
+
+  const faqPage = pages?.find((p) => p.slug === "faqs");
 
   const [activeCat, setActiveCat] = useState("all");
   const location = useLocation();
@@ -42,6 +47,7 @@ export default function FAQPage() {
 
   useEffect(() => {
     dispatch(fetchFaqs());
+    dispatch(fetchPageBySlug("faqs"));
     dispatch(getFaqBanner());
   }, [dispatch]);
 
@@ -94,6 +100,11 @@ export default function FAQPage() {
 
   return (
     <>
+      <SEO
+        title={faqPage?.meta_title || "FAQs"}
+        description={faqPage?.meta_description || "FAQ page"}
+      />
+
       <Section
         className="bg-cover bg-center bg-no-repeat min-h-[300px] min-[500px]:min-h-[400px] flex items-center justify-center"
         style={{ backgroundImage: `url(${heroBg})` }}
@@ -121,8 +132,7 @@ export default function FAQPage() {
                     onClick={() => handleCategorySelect(cat.key)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-sm mb-0.5 transition-colors ${
                       activeCat === cat.key
-                        ? // ? "bg-[rgba(239,58,150,0.09)] text-theme font-medium"
-                          "bg-theme text-[var(--theme-color)] font-medium"
+                        ? "bg-theme text-[var(--theme-color)] font-medium"
                         : "text-black hover:bg-gray-100 hover:text-[var(--theme-color)]"
                     }`}
                   >

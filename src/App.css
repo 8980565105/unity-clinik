@@ -406,7 +406,7 @@
   @apply w-full border-b light-border rounded-[5px] px-[10px] py-[8px] md:px-[20px] md:py-[13px] focus:outline-none form-shadow placeholder-[#BCBCBC];
 }
 .input-common:focus {
-  border-color: var(--primary-color);
+  border-color: primary;
   box-shadow: 0 0 0 2px var(--theme-bg-rgba);
 }
 
@@ -441,10 +441,10 @@
 
 
 /* utility classes for easy usage */
-.bg-color { background-color: var(--primary-color); }
-.border-color { border-color: var(--primary-color); }
-.text-color { color: var(--primary-color); }
-.ring-color { ring-color: var(--primary-color); }
+.bg-color { background-color: primary; }
+.border-color { border-color: primary; }
+.text-color { color: primary; }
+.ring-color { ring-color: primary; }
 
 
 /* આનાથી ખાલી લાઈન (Space) દેખાવા લાગશે */
@@ -511,4 +511,13 @@
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeInUp {
+  animation: fadeInUp 0.55s ease forwards;
 }

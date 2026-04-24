@@ -1,7 +1,7 @@
 function Heading({ title, align = "center", className = "" }) {
   return (
     <div
-      className={`relative flex items-center w-full mb-[50px] md:mb-[90px] ${
+      className={`relative flex items-center w-full mb-[20px] md:mb-[30px] ${
         align === "start" ? "justify-start" : "justify-center"
       } ${className}`}
     >
@@ -17,3 +17,5 @@ function Heading({ title, align = "center", className = "" }) {
 }
 
 export default Heading;
+
+

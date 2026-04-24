@@ -78,7 +78,7 @@ export default function CouponCard({
             <p className="sec-text-color font-medium text-[12px] mt-[10px]">
               {coupon.description}
             </p>
-            <p className="text-[12px] font-medium text-[var(--primary-color)] mt-[5px] cursor-pointer hover:underline">
+            <p className="text-[12px] font-medium text-primary mt-[5px] cursor-pointer hover:underline">
               *Terms & conditions
             </p>
 

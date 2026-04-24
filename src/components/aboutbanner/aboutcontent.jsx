@@ -54,9 +54,9 @@ export default function AboutContent() {
   const dispatch = useDispatch();
   const { pages } = useSelector((state) => state.pages);
 
-  useEffect(() => {
-    dispatch(fetchPageBySlug("about"));
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchPageBySlug("about"));
+  // }, [dispatch]);
 
   const aboutPage = pages?.find((page) => page.slug === "about");
 

@@ -1,18 +1,13 @@
-// features/cart/cartThunk.js
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
 
-// ─── Helper: get token ────────────────────────────────────────────────────────
 const getAuthHeaders = () => ({
   "Content-Type": "application/json",
   Authorization: `Bearer ${localStorage.getItem("token")}`,
 });
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CREATE CART
-// ═══════════════════════════════════════════════════════════════════════════════
 export const createCart = createAsyncThunk(
   "cart/createCart",
   async ({ user_id }, { rejectWithValue }) => {
@@ -32,9 +27,6 @@ export const createCart = createAsyncThunk(
   },
 );
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// FETCH CART BY ID
-// ═══════════════════════════════════════════════════════════════════════════════
 export const fetchCart = createAsyncThunk(
   "cart/fetchCart",
   async (cart_id, { rejectWithValue }) => {
@@ -48,10 +40,6 @@ export const fetchCart = createAsyncThunk(
     }
   },
 );
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Route: POST /carts/add-item
-// ═══════════════════════════════════════════════════════════════════════════════
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
   async (
@@ -71,10 +59,6 @@ export const addToCart = createAsyncThunk(
   },
 );
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// UPDATE CART ITEM QUANTITY
-// Route: PUT /carts/update-item
-// ═══════════════════════════════════════════════════════════════════════════════
 export const updateCartItem = createAsyncThunk(
   "cart/updateCartItem",
   async ({ cart_id, item_id, quantity }, { rejectWithValue }) => {
@@ -93,10 +77,6 @@ export const updateCartItem = createAsyncThunk(
   },
 );
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// DELETE CART ITEM
-// Route: DELETE /carts/delete-item
-// ═══════════════════════════════════════════════════════════════════════════════
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
   async ({ cart_id, item_id }, { rejectWithValue }) => {

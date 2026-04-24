@@ -6,7 +6,6 @@ export const addReview = createAsyncThunk(
   "reviews/addReview",
   async (reviewData, { rejectWithValue }) => {
     try {
-      // const response = await api.post("/customer-reviews", reviewData);
       const response = await api.post(ROUTES.customerReviews.post, reviewData);
       return response.data;
     } catch (err) {
@@ -32,20 +31,6 @@ export const fetchProductReviews = createAsyncThunk(
     }
   },
 );
-
-// export const fetchAllReviews = createAsyncThunk(
-//   "reviews/fetchAllReviews",
-//   async ({ page = 1, limit = 10 }, { rejectWithValue }) => {
-//     try {
-//       const response = await api.get(ROUTES.customerReviews.getAll);
-//       return response.data;
-//     } catch (err) {
-//       return rejectWithValue(
-//         err.response?.data?.message || "Failed to fetch reviews",
-//       );
-//     }
-//   },
-// );
 
 export const fetchAllReviews = createAsyncThunk(
   "reviews/fetchAllReviews",

@@ -132,6 +132,18 @@ export const ROUTES = {
   customerReviews: {
     post: "/customer-reviews",
     getAll: "/customer-reviews",
-     getPublic: "/customer-reviews/public"
+    getPublic: "/customer-reviews/public",
+  },
+
+  results: {
+    getPublic: "/results/public",
+  },
+
+  dashboard: {
+    get: "/dashboard/count",
+  },
+
+  emails: {
+    create: "/emails",
   },
 };

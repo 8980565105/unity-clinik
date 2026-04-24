@@ -1,11 +1,6 @@
-// D:\mycara\frontend\src\features\wishlist\wishlistThunk.js
-
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ROUTES } from "../../services/routes";
 import api from "../../services/api";
-
-
 export const addToWishlist = createAsyncThunk(
   "wishlist/addToWishlist",
   async ({ user_id, product_id, variant_id }, { rejectWithValue }) => {
@@ -61,8 +56,6 @@ export const removeWishlistItem = createAsyncThunk(
     }
   }
 );
-
-
 
 export const bulkDeleteWishlistItems = createAsyncThunk(
   "wishlists/bulkDeleteWishlistItems",

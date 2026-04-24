@@ -25,12 +25,6 @@ const tabs = [
     component: Orders,
   },
   {
-    name: "Address",
-    path: "/my-account/address",
-    icon: <MapPin />,
-    component: Address,
-  },
-  {
     name: "Account Details",
     path: "/my-account/account-details",
     icon: <FaUser />,
@@ -49,12 +43,9 @@ export default function AccountTabs() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const activeTab =
     tabs.find((tab) => tab.path === location.pathname) || tabs[0];
-
   const ActiveComponent = activeTab.component;
-
   const handleLogout = (e) => {
     e.preventDefault();
 
@@ -73,14 +64,13 @@ export default function AccountTabs() {
                   key={tab.name}
                   onClick={handleLogout}
                   className="flex items-center h-[43px] gap-[10px] px-[15px] sm:px-[30px] py-2 transition text-[18px] 
-                    bg-[rgba(255,255,255,0.50)] text-[var(--primary-color)] "
+                    bg-[rgba(255,255,255,0.50)] text-primary "
                 >
                   <span>{tab.icon}</span>
                   <span className="hidden custom-lg:inline">{tab.name}</span>
                 </button>
               );
             }
-
             return (
               <NavLink
                 key={tab.name}
@@ -89,8 +79,8 @@ export default function AccountTabs() {
                   `flex items-center h-[43px] gap-[10px] px-[15px] sm:px-[30px] py-2 transition text-[18px]
                   ${
                     isActive
-                      ? "bg-white font-medium text-[var(--primary-color)]"
-                      : "bg-[rgba(255,255,255,0.50)] text-[var(--primary-color)] "
+                      ? "bg-white font-medium text-primary"
+                      : "bg-[rgba(255,255,255,0.50)] text-primary "
                   }`
                 }
               >
@@ -101,7 +91,6 @@ export default function AccountTabs() {
           })}
         </div>
       </Row>
-
       <Row className="!max-w-[1122px] mt-[34px]">
         {ActiveComponent ? (
           <ActiveComponent />

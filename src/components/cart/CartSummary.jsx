@@ -1,4 +1,3 @@
-// //D:\mycara\frontend\src\components\cart\CartSummary.jsx
 import React from "react";
 import Button from "../ui/Button";
 import { Link } from "react-router-dom";

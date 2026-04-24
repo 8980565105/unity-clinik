@@ -3,7 +3,7 @@ import FlowerIcon from "../icons/FlowerIcon";
 
 const ContactCard = ({ icon, title, description, linkText, linkHref }) => {
   return (
-    <div className="relative border-2 border-dashed border-[var(--primary-color)] py-[29px] px-[21px] rounded-lg transition flex items-start gap-[20px] bg-white">
+    <div className="relative border-2 border-dashed border-primary py-[29px] px-[21px] rounded-lg transition flex items-start gap-[20px] bg-white">
       <FlowerIcon className="absolute -top-5 -left-5 sm:-left-6 w-[40px] sm:w-[50px] h-[40px] text-pink-300 pointer-events-none" />
 
       <div className=" p-[10px] bg-color-100 w-[50px] h-[50px] rounded-[10px]">

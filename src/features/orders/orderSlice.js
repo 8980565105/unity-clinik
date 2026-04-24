@@ -24,7 +24,6 @@ const orderSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // ─── CREATE ORDER ─────────────────────────────────────────────────────────
     builder
       .addCase(createOrder.pending, (state) => {
         state.loading = true;
@@ -39,7 +38,6 @@ const orderSlice = createSlice({
         state.error = action.payload;
       });
 
-    // ─── FETCH SINGLE ORDER ───────────────────────────────────────────────────
     builder
       .addCase(fetchOrder.pending, (state) => {
         state.loading = true;
@@ -54,7 +52,6 @@ const orderSlice = createSlice({
         state.error = action.payload;
       });
 
-    // ─── FETCH USER ORDERS ────────────────────────────────────────────────────
     builder
       .addCase(fetchUserOrders.pending, (state) => {
         state.loading = true;
@@ -70,7 +67,6 @@ const orderSlice = createSlice({
         state.error = action.payload?.message || action.payload;
       });
 
-    // ─── CANCEL ORDER ─────────────────────────────────────────────────────────
     builder
       .addCase(cancelOrder.pending, (state) => {
         state.loading = true;

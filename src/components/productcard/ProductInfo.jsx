@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Handbag, Star } from "lucide-react";
 import Button from "../ui/Button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import HeartIcon from "../icons/HeartIcon";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -13,6 +13,7 @@ import {
 import { useAddToWishlist } from "../wishlist/handleAddTowishlist";
 import toast, { Toaster } from "react-hot-toast";
 import { fetchProductReviews } from "../../features/reivews/reviewsThunk";
+import { getImageUrl } from "../utils/helper";
 
 function CountdownTimer({ endDate }) {
   const calcTimeLeft = useCallback(() => {
@@ -60,55 +61,40 @@ export default function ProductInfo({
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
   const [addingToCart, setAddingToCart] = useState(false);
-
-  // const reviewData = useMemo(() => {
-  //   const reviews = Array.isArray(product?.reviews) ? product.reviews : [];
-  //   if (reviews.length === 0) return { average: 0, total: 0 };
-  //   const total = reviews.length;
-  //   const sum = reviews.reduce(
-  //     (acc, curr) => acc + (Number(curr.rating) || 0),
-  //     0,
-  //   );
-  //   return { average: (sum / total).toFixed(1), total };
-  // }, [product?.reviews]);
-
   const { productReviews } = useSelector((state) => state.reviews);
 
   const reviewData = useMemo(() => {
     const reviews = productReviews?.[product?._id]?.reviews || [];
-
     if (reviews.length === 0) return { average: 0, total: 0 };
-
     const total = reviews.length;
-
     const sum = reviews.reduce(
       (acc, curr) => acc + (Number(curr.rating) || 0),
       0,
     );
-
-    return {
-      average: (sum / total).toFixed(1),
-      total,
-    };
+    return { average: (sum / total).toFixed(1), total };
   }, [productReviews, product?._id]);
-
-  useEffect(() => {
-    if (product?._id) {
-      dispatch(
-        fetchProductReviews({ productId: product._id, page: 1, limit: 50 }),
-      );
-    }
-  }, [product?._id, dispatch]);
 
   const [selectedSize, setSelectedSize] = useState(null);
   const [activeVariant, setActiveVariant] = useState(null);
 
-  const sizesForSelectedColor = useMemo(() => {
-    if (!selectedColor) return [];
-    return (product?.variants || []).filter(
-      (v) => v.color_id?._id === selectedColor,
-    );
-  }, [product, selectedColor]);
+  // const sizesForSelectedColor = useMemo(() => {
+  //   return product?.variants || [];
+  // }, [product]);
+
+  const selectAgeSection = (product?.sections || []).find(
+    (sec) =>
+      sec.type === "Select your age" &&
+      (sec.data?.status === true || sec.data?.status === undefined),
+  );
+  const [selectedAge, setSelectedAge] = useState(null);
+
+  const scalpSection = (product?.sections || []).find(
+    (sec) =>
+      sec.type === "Select your scalp type" &&
+      (sec.data?.status === true || sec.data?.status === undefined),
+  );
+
+  const [selectedScalp, setSelectedScalp] = useState(null);
 
   useEffect(() => {
     if (product?.variants?.length > 0) {
@@ -129,23 +115,10 @@ export default function ProductInfo({
       const firstAvailable =
         variantsForColor.find((v) => v.stock_quantity > 0) ||
         variantsForColor[0];
-      setSelectedSize(firstAvailable.size_id?._id || null);
       setActiveVariant(firstAvailable);
       setSelectedVariant(firstAvailable);
     }
   }, [selectedColor, product?.variants, setSelectedVariant]);
-
-  useEffect(() => {
-    if (!selectedSize || !selectedColor) return;
-    const match = (product?.variants || []).find(
-      (v) =>
-        v.color_id?._id === selectedColor && v.size_id?._id === selectedSize,
-    );
-    if (match) {
-      setActiveVariant(match);
-      setSelectedVariant(match);
-    }
-  }, [selectedSize, selectedColor, product?.variants, setSelectedVariant]);
 
   const originalPrice = activeVariant?.price || 0;
   const discountType = product?.discount_id?.type;
@@ -275,39 +248,127 @@ export default function ProductInfo({
         )}
       </div>
 
-      <div className="pt-[34px] space-y-[28px]">
-        <div className="flex items-center justify-between">
-          <span className="text-[24px]">Select Size</span>
-        </div>
+      <div className="mt-[15px] space-y-[28px]">
+        {scalpSection && (scalpSection.data?.items || []).length > 0 && (
+          <div className="space-y-[16px]">
+            <h3 className="text-[18px] font-semibold">
+              {scalpSection.data?.title || "Select your scalp type"}
+            </h3>
 
-        <div className="flex flex-wrap gap-[13px]">
-          {sizesForSelectedColor.map((v) => {
-            const outOfStock = v.stock_quantity === 0;
-            return (
-              <div key={v._id} className="flex flex-col items-center">
-                <button
-                  disabled={outOfStock}
-                  onClick={() => !outOfStock && setSelectedSize(v.size_id._id)}
-                  className={`text-black w-[65px] py-[6px] rounded-[20px] text-[16px] transition-all
-                    ${
-                      selectedSize === v.size_id._id
-                        ? "border border-black bg-black text-white"
-                        : "border light-border"
-                    }
-                    ${outOfStock ? "cursor-not-allowed opacity-50" : ""}
-                  `}
-                >
-                  {v.size_id.name}
-                </button>
-                {outOfStock && (
-                  <span className="text-[12px] sec-text-color mt-[3px]">
-                    Sold Out
-                  </span>
-                )}
+            <div className="gap-2 flex flex-wrap ">
+              {(scalpSection.data?.items || []).map((item, i) => {
+                const productId =
+                  typeof item.product_id === "object"
+                    ? item.product_id?._id
+                    : item.product_id;
+                const hasLink =
+                  productId && productId !== "" && productId !== "none";
+
+                const cardContent = (
+                  <div className="flex flex-col items-center h-full w-20">
+                    <div
+                      className={`flex items-center justify-center relative w-20 h-20 max-md:w-14 max-md:h-14 rounded-xl border ${
+                        !hasLink && selectedScalp === i
+                          ? "border-primary text-primary border-2"
+                          : "border-brand-primary"
+                      }`}
+                    >
+                      <img
+                        src={getImageUrl(item.image)}
+                        alt={item.name}
+                        className="w-full h-full object-cover rounded-xl"
+                      />
+                    </div>
+                    <div className="p-2 text-center flex-1 flex flex-col justify-center">
+                      <p
+                        className={`text-sm font-semibold mb-0.5
+                         ${
+                           selectedScalp === i
+                             ? "text-primary"
+                             : "text-black"
+                         }`}
+                      >
+                        {item.name}
+                      </p>
+                    </div>
+                  </div>
+                );
+
+                return hasLink ? (
+                  <Link
+                    key={i}
+                    to={`/products/${productId}`}
+                    className="cursor-pointer transition-all duration-200"
+                  >
+                    {cardContent}
+                  </Link>
+                ) : (
+                  <div
+                    key={i}
+                    onClick={() => setSelectedScalp(i)}
+                    className="cursor-pointer transition-all duration-200"
+                  >
+                    {cardContent}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {selectAgeSection &&
+          (selectAgeSection.data?.items || []).length > 0 && (
+            <div className="space-y-[16px]">
+              <span className="text-[18px] font-semibold">
+                {selectAgeSection.data?.title || "Select your age"}
+              </span>
+
+              <div className="flex gap-[10px] flex-wrap">
+                {(selectAgeSection.data?.items || []).map((item, i) => {
+                  const productId =
+                    typeof item.product_id === "object"
+                      ? item.product_id?._id
+                      : item.product_id;
+                  const hasLink =
+                    productId && productId !== "" && productId !== "none";
+
+                  const btn = (
+                    <button
+                      onClick={() => !hasLink && setSelectedAge(i)}
+                      className={`
+        min-w-[80px] h-[40px] px-[14px]
+        flex items-center justify-center
+        rounded-[10px] text-[14px] font-medium
+        border transition-all duration-200
+        ${
+          selectedAge === i
+            ? "bg-primary text-white border-[#0B5ED7]"
+            : "bg-white text-gray-700 border-black hover:border-primary hover:border-2"
+        }
+      `}
+                    >
+                      {item.name}
+                    </button>
+                  );
+
+                  return hasLink ? (
+                    <Link key={i} to={`/products/${productId}`}>
+                      {btn}
+                    </Link>
+                  ) : (
+                    <div key={i}>{btn}</div>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
+
+              {selectedAge !== null &&
+                selectAgeSection.data?.items?.[selectedAge]?.description && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    {selectAgeSection.data.items[selectedAge].description}
+                  </p>
+                )}
+            </div>
+          )}
 
         <div className="flex flex-col sm:flex-row gap-[17px] pt-[10px]">
           <Button

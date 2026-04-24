@@ -4,7 +4,7 @@ const SvgComponent = (props) => (
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 26 24"
     fill="none"
-    className={`w-full h-full text-[var(--primary-color)] hover:text-[var(--secondary-color)] ${props.className || ""}`}
+    className={`w-full h-full text-primary hover:text-secondary ${props.className || ""}`}
     {...props}
   >
     <path

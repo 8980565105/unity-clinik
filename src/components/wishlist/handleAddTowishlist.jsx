@@ -2,7 +2,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { addToWishlist } from "../../features/wishlist/wishlistThunk";
 import toast from "react-hot-toast";
-
 export const useAddToWishlist = (setShowLoginPopup) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();

@@ -8,11 +8,8 @@ import {
 import { fetchCategories } from "../../features/categories/categoriesThunk";
 import { fetchsubCategories } from "../../features/subcategories/subcategoriesThunk";
 
-import { fetchSizes } from "../../features/sizes/sizesThunk";
-import { fetchColors } from "../../features/colors/colorsThunk";
 import { fetchBrands } from "../../features/brands/brandsThunk";
 import { fetchtypes } from "../../features/types/typeThunk";
-import { fetchFabrics } from "../../features/fabrics/fabricsThunk";
 import { fetchDiscounts } from "../../features/discounts/discountsThunk";
 import { fetchProductLabels } from "../../features/productLabels/productlabelsThunk";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,21 +20,15 @@ const MobileFilterModal = ({
   selectedCategories,
   handleCategoryChange,
   handleResetCategories,
-  selectedSizes,
-  handleSizeChange,
-  handleResetSizes,
-  selectedColors,
-  handleColorChange,
-  handleResetColors,
   selectedBrands,
   handleBrandChange,
   handleResetBrands,
   selectedTypes,
   handleTypeChange,
   handleResetTypes,
-  selectedFabrics,
-  handleFabricChange,
-  handleResetFabrics,
+  // selectedFabrics,
+  // handleFabricChange,
+  // handleResetFabrics,
   selectedDiscounts,
   handleDiscountChange,
   handleResetDiscounts,
@@ -55,31 +46,20 @@ const MobileFilterModal = ({
     setOpenFilter((prev) => (prev === filterId ? null : filterId));
   };
 
-  // Redux data
-  // const { items: categories = [], loading: catLoading } = useSelector(
-  //   (state) => state.categories,
-  // );
-
   const { items: subcategories = [], loading: subcatLoading } = useSelector(
     (state) => state.subcategories,
   );
 
   const { products } = useSelector((state) => state.products);
-  const { sizes = [], loading: sizeLoading } = useSelector(
-    (state) => state.sizes,
-  );
-  const { colors = [], loading: colorLoading } = useSelector(
-    (state) => state.colors,
-  );
   const { brands = [], loading: brandLoading } = useSelector(
     (state) => state.brands,
   );
   const { types = [], loading: typesLoading } = useSelector(
     (state) => state.types,
   );
-  const { fabrics = [], loading: fabricsLoading } = useSelector(
-    (state) => state.fabrics,
-  );
+  // const { fabrics = [], loading: fabricsLoading } = useSelector(
+  //   (state) => state.fabrics,
+  // );
   const { discounts = [], loading: discountsLoading } = useSelector(
     (state) => state.discounts,
   );
@@ -90,23 +70,12 @@ const MobileFilterModal = ({
   useEffect(() => {
     dispatch(fetchCategories());
     dispatch(fetchsubCategories());
-    dispatch(fetchSizes());
-    dispatch(fetchColors());
     dispatch(fetchBrands());
     dispatch(fetchtypes());
-    dispatch(fetchFabrics());
     dispatch(fetchDiscounts());
     dispatch(fetchProductLabels());
   }, [dispatch]);
 
-  //category count
-  // const categoryCounts = products.reduce((acc, product) => {
-  //   const catId = product.category?._id;
-  //   if (catId) {
-  //     acc[catId] = (acc[catId] || 0) + 1;
-  //   }
-  //   return acc;
-  // }, {});
 
   const subCategoryCountsById = Array.isArray(products)
     ? products.reduce((acc, product) => {
@@ -118,7 +87,6 @@ const MobileFilterModal = ({
       }, {})
     : {};
 
-  //brandcount
   const brandCounts = products.reduce((acc, product) => {
     const brandId = product.variants?.[0]?.brand?.[0]?._id;
     if (brandId) {
@@ -127,7 +95,6 @@ const MobileFilterModal = ({
     return acc;
   }, {});
 
-  //typecount
   const typeCounts = products.reduce((acc, product) => {
     const typeId = product.variants?.[0]?.type?.[0]?._id;
     if (typeId) {
@@ -136,16 +103,6 @@ const MobileFilterModal = ({
     return acc;
   }, {});
 
-  //fabriccount
-  const fabricCounts = products.reduce((acc, product) => {
-    const fabricId = product.variants?.[0]?.fabric?.[0]?._id;
-    if (fabricId) {
-      acc[fabricId] = (acc[fabricId] || 0) + 1;
-    }
-    return acc;
-  }, {});
-
-  //discountcount
   const discountCounts = products.reduce((acc, product) => {
     const discountId = product.discount_id;
     if (discountId) {
@@ -154,7 +111,6 @@ const MobileFilterModal = ({
     return acc;
   }, {});
 
-  //productLabels
   const labelCounts = products.reduce((acc, product) => {
     const labelId = product.variants?.[0]?.labels?.[0];
     if (labelId) {
@@ -234,77 +190,7 @@ const MobileFilterModal = ({
               setMaxPrice={setMaxPrice}
               isMobile={false}
             />
-
-            <CollapsibleFilter
-              title="Size"
-              isOpen={openFilter === "Size"}
-              onToggle={() => toggleFilter("Size")}
-              isSelected={selectedSizes.length > 0}
-              showButtons={true}
-              onCancelClick={handleResetSizes}
-              onApplyClick={onClose}
-            >
-              <div className="grid grid-cols-2 px-3 py-3">
-                {sizeLoading ? (
-                  <p className="text-sm text-gray-500">Loading categories...</p>
-                ) : sizes.length > 0 ? (
-                  sizes.map((size) => (
-                    <FilterItemCheckbox
-                      key={size._id}
-                      name={size.name}
-                      isChecked={selectedSizes.includes(size.name)}
-                      onChange={handleSizeChange}
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No sizes found.</p>
-                )}
-              </div>
-            </CollapsibleFilter>
-
-            <CollapsibleFilter
-              title="Color"
-              isOpen={openFilter === "Color"}
-              onToggle={() => toggleFilter("Color")}
-              isSelected={selectedColors.length > 0}
-              showButtons={true}
-              onCancelClick={handleResetColors}
-              onApplyClick={onClose}
-            >
-              <div className="grid grid-cols-5 px-3 py-3">
-                {colorLoading ? (
-                  <p className="text-sm text-gray-500 col-span-full">
-                    Loading colors...
-                  </p>
-                ) : Array.isArray(colors) && colors.length > 0 ? (
-                  colors.map((clr) => (
-                    <div
-                      key={clr._id || clr.name}
-                      className="flex flex-col items-center cursor-pointer"
-                      onClick={() => handleColorChange(clr.name)}
-                    >
-                      <div
-                        className={`w-[22px] h-[22px] rounded-full box-shadow ${
-                          selectedColors.includes(clr.name)
-                            ? "ring-2 ring-offset-1 ring-black"
-                            : ""
-                        } transition-transform duration-200`}
-                        style={{ backgroundColor: clr.code }}
-                      ></div>
-                      <p className="text-[10px] sec-text-color mt-1 text-center">
-                        {clr.name}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500 col-span-full">
-                    No colors found.
-                  </p>
-                )}
-              </div>
-            </CollapsibleFilter>
-
-            {/* Brands Filter */}
+           
             <CollapsibleFilter
               title="Brands"
               isOpen={openFilter === "Brands"}
@@ -333,7 +219,6 @@ const MobileFilterModal = ({
               </div>
             </CollapsibleFilter>
 
-            {/* Type Filter */}
             <CollapsibleFilter
               title="Type"
               isOpen={openFilter === "Type"}
@@ -363,33 +248,6 @@ const MobileFilterModal = ({
             </CollapsibleFilter>
 
             <CollapsibleFilter
-              title="Fabric"
-              isOpen={openFilter === "Fabric"}
-              onToggle={() => toggleFilter("Fabric")}
-              isSelected={selectedFabrics.length > 0}
-              showButtons={true}
-              onCancelClick={handleResetFabrics}
-              onApplyClick={onClose}
-            >
-              <div className=" px-3 py-3">
-                {fabricsLoading ? (
-                  <p className="text-sm text-gray-500">Loading brands...</p>
-                ) : fabrics.length > 0 ? (
-                  fabrics.map((fabric) => (
-                    <FilterItemCheckbox
-                      key={fabric._id}
-                      name={fabric.name}
-                      count={fabricCounts[fabric._id] || 0}
-                      isChecked={selectedFabrics.includes(fabric.name)}
-                      onChange={handleFabricChange}
-                    />
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No fabrics found.</p>
-                )}
-              </div>
-            </CollapsibleFilter>
-            <CollapsibleFilter
               title="Discounts"
               isOpen={openFilter === "Discounts"}
               onToggle={() => toggleFilter("Discounts")}
@@ -408,7 +266,6 @@ const MobileFilterModal = ({
                       name={discount.name}
                       count={discountCounts[discount._id] || 0}
                       isChecked={selectedDiscounts.includes(discount._id)}
-                      // onChange={handleDiscountChange}
                       onChange={() => handleDiscountChange(discount._id)}
                     />
                   ))
@@ -437,7 +294,6 @@ const MobileFilterModal = ({
                       name={label.name}
                       count={labelCounts[label._id] || 0}
                       isChecked={selectedLabels.includes(label._id)}
-                      // onChange={handleLabelChange}
                       onChange={() => handleLabelChange(label._id)}
                     />
                   ))

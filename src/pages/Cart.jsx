@@ -94,7 +94,7 @@ export default function Cart() {
 
                   <Link to="/updatecart">
                     <Button
-                      variant="secondary"
+                      variant="common"
                       className="uppercase !text-18 md:min-w-[181px] self-center md:self-auto"
                     >
                       UPDATE CART

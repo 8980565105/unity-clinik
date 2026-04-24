@@ -55,29 +55,22 @@ function CountdownTimer({ endDate }) {
 export default function ProductCard({ product, setShowLoginPopup }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
-
   const reviewsState = useSelector((state) => state.reviews);
   const productReviewData = reviewsState?.productReviews?.[product?._id];
-
   const [addingToCart, setAddingToCart] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
-
   const getDiscountedPrice = (product) => {
     const originalPrice = product?.variants?.[0]?.price || 0;
     const discount = product?.discount?.value || 0;
     const discountType = product?.discount?.type || "none";
-
     let discountedPrice = originalPrice;
-
     if (discountType === "percentage") {
       discountedPrice = originalPrice - (originalPrice * discount) / 100;
     } else if (discountType === "flat") {
       discountedPrice = originalPrice - discount;
     }
-
     return {
       originalPrice,
       discountedPrice,
@@ -86,19 +79,14 @@ export default function ProductCard({ product, setShowLoginPopup }) {
     };
   };
   const { productReviews } = useSelector((state) => state.reviews);
-
   const reviewData = useMemo(() => {
     const reviews = productReviews?.[product?._id]?.reviews || [];
-
     if (reviews.length === 0) return { average: 0, total: 0 };
-
     const total = reviews.length;
-
     const sum = reviews.reduce(
       (acc, curr) => acc + (Number(curr.rating) || 0),
       0,
     );
-
     return {
       average: (sum / total).toFixed(1),
       total,
@@ -106,44 +94,33 @@ export default function ProductCard({ product, setShowLoginPopup }) {
   }, [productReviews, product?._id]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
-
   const firstVariantImages = Array.isArray(product?.variants?.[0]?.images)
     ? product.variants[0].images
     : [];
   const mainImages = Array.isArray(product?.images) ? product.images : [];
   const allImages =
     firstVariantImages.length > 0 ? firstVariantImages : mainImages;
-
   const displayedImage = getImageUrl(allImages[currentIndex]);
   const hasMultipleImages = allImages.length > 1;
-
   const { handleAddToWishlist } = useAddToWishlist(setShowLoginPopup);
-
   const wishlistProductIds = useSelector((state) => state.wishlist.productIds);
   const isWishlisted = wishlistProductIds.includes(product._id);
-
   const uniqueColors = (() => {
     const seen = new Set();
     const result = [];
-
     (product?.variants || []).forEach((variant) => {
       const firstColor = Array.isArray(variant?.color)
         ? variant.color[0]
         : variant?.color;
-
       if (!firstColor) return;
-
       const colorCode = firstColor?.code || firstColor;
       const colorName = firstColor?.name || "";
       if (seen.has(colorCode)) return;
       seen.add(colorCode);
-
       result.push({ code: colorCode, name: colorName });
     });
-
     return result;
   })();
-
   const getVariantForColor = (product, colorCode) => {
     return (
       product?.variants?.find((v) =>
@@ -151,30 +128,24 @@ export default function ProductCard({ product, setShowLoginPopup }) {
       ) || product?.variants?.[0]
     );
   };
-
   const handleAddToCart = async (product) => {
     if (!token) {
       setShowLoginPopup(true);
       return;
     }
-
     const selectedColorCode = selectedColor;
     const variant = selectedColorCode
       ? getVariantForColor(product, selectedColorCode)
       : product?.variants?.[0];
-
     if (!variant?._id) {
       toast.error("Variant not found!");
       return;
     }
-
     if (variant?.stock_quantity === 0) {
       toast.error("This variant is out of stock!");
       return;
     }
-
     setAddingToCart(true);
-
     try {
       let cartId = cart?._id || localStorage.getItem("cart_id");
 
@@ -228,7 +199,7 @@ export default function ProductCard({ product, setShowLoginPopup }) {
   return (
     <>
       <Link to={`/products/${product._id}`}>
-        <div className="bg-white rounded-2xl border p-3 w-full max-w-[300px] hover:shadow-lg transition-all group">
+        <div className="bg-gray-100 rounded-2xl border p-3 w-full max-w-[300px] hover:shadow-lg transition-all group">
           <div className="relative">
             <img
               src={displayedImage}

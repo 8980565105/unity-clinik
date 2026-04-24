@@ -7,32 +7,27 @@ import {
 import { fetchCategories } from "../../features/categories/categoriesThunk";
 import { fetchsubCategories } from "../../features/subcategories/subcategoriesThunk";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchSizes } from "../../features/sizes/sizesThunk";
-import { fetchColors } from "../../features/colors/colorsThunk";
+// import { fetchSizes } from "../../features/sizes/sizesThunk";
 import { fetchBrands } from "../../features/brands/brandsThunk";
 import { fetchtypes } from "../../features/types/typeThunk";
-import { fetchFabrics } from "../../features/fabrics/fabricsThunk";
 import { fetchDiscounts } from "../../features/discounts/discountsThunk";
 import { fetchProductLabels } from "../../features/productLabels/productlabelsThunk";
 const DesktopFilters = ({
   selectedCategories = [],
   handleCategoryChange,
   handleResetCategories,
-  selectedSizes = [],
-  handleSizeChange,
-  handleResetSizes,
-  selectedColors = [],
-  handleColorChange,
-  handleResetColors,
+  // selectedSizes = [],
+  // handleSizeChange,
+  // handleResetSizes,
+  // selectedColors = [],
+  // handleColorChange,
+  // handleResetColors,
   selectedBrands = [],
   handleBrandChange,
   handleResetBrands,
   selectedTypes = [],
   handleTypeChange,
   handleResetTypes,
-  selectedFabrics = [],
-  handleFabricChange,
-  handleResetFabrics,
   selectedDiscounts = [],
   handleDiscountChange,
   handleResetDiscounts,
@@ -47,7 +42,6 @@ const DesktopFilters = ({
 }) => {
   const dispatch = useDispatch();
   const [openFilter, setOpenFilter] = useState("Category");
-
   const toggleFilter = (filterId) => {
     setOpenFilter((prev) => (prev === filterId ? null : filterId));
   };
@@ -59,20 +53,14 @@ const DesktopFilters = ({
     loading,
     error,
   } = useSelector((state) => state.products);
-  const { sizes = [], loading: sizeLoading } = useSelector(
-    (state) => state.sizes,
-  );
-  const { colors = [], loading: colorLoading } = useSelector(
-    (state) => state.colors,
-  );
+  // const { sizes = [], loading: sizeLoading } = useSelector(
+  //   (state) => state.sizes,
+  // );
   const { brands = [], loading: brandLoading } = useSelector(
     (state) => state.brands,
   );
   const { types = [], loading: typesLoading } = useSelector(
     (state) => state.types,
-  );
-  const { fabrics = [], loading: fabricsLoading } = useSelector(
-    (state) => state.fabrics,
   );
   const { discounts = [], loading: discountsLoading } = useSelector(
     (state) => state.discounts,
@@ -83,11 +71,9 @@ const DesktopFilters = ({
   useEffect(() => {
     dispatch(fetchCategories({ status: "active" }));
     dispatch(fetchsubCategories({ status: "active" }));
-    dispatch(fetchSizes({ status: "active" }));
-    dispatch(fetchColors({ status: "active" }));
+    // dispatch(fetchSizes({ status: "active" }));
     dispatch(fetchBrands({ status: "active" }));
     dispatch(fetchtypes({ status: "active" }));
-    dispatch(fetchFabrics({ status: "active" }));
     dispatch(fetchDiscounts({ status: "active" }));
     dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
@@ -113,14 +99,6 @@ const DesktopFilters = ({
     ? products.reduce((acc, product) => {
         const typeId = product.variants?.[0]?.type?.[0]?._id;
         if (typeId) acc[typeId] = (acc[typeId] || 0) + 1;
-        return acc;
-      }, {})
-    : {};
-
-  const fabricCounts = Array.isArray(products)
-    ? products.reduce((acc, product) => {
-        const fabricId = product.variants?.[0]?.fabric?.[0]?._id;
-        if (fabricId) acc[fabricId] = (acc[fabricId] || 0) + 1;
         return acc;
       }, {})
     : {};
@@ -190,7 +168,7 @@ const DesktopFilters = ({
         onToggle={() => toggleFilter("Price")}
       />
 
-      <CollapsibleFilter
+      {/* <CollapsibleFilter
         title="Size"
         isOpen={openFilter === "Size"}
         onToggle={() => toggleFilter("Size")}
@@ -214,48 +192,7 @@ const DesktopFilters = ({
             <p className="text-sm text-gray-500">No sizes found.</p>
           )}
         </div>
-      </CollapsibleFilter>
-
-      <CollapsibleFilter
-        title="Color"
-        isOpen={openFilter === "Color"}
-        onToggle={() => toggleFilter("Color")}
-        isSelected={selectedColors.length > 0}
-        onReset={handleResetColors}
-        showButtons={true}
-      >
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-y-[15px] gap-x-[10px] px-3 py-3">
-          {colorLoading ? (
-            <p className="text-sm text-gray-500 col-span-full">
-              Loading colors...
-            </p>
-          ) : Array.isArray(colors) && colors.length > 0 ? (
-            colors.map((clr) => (
-              <div
-                key={clr._id || clr.name}
-                className="flex flex-col items-center cursor-pointer"
-                onClick={() => handleColorChange(clr.name)}
-              >
-                <div
-                  className={`w-[22px] h-[22px] rounded-full box-shadow ${
-                    selectedColors.includes(clr.name)
-                      ? "ring-2 ring-offset-1 ring-black"
-                      : ""
-                  } transition-transform duration-200`}
-                  style={{ backgroundColor: clr.code }}
-                ></div>
-                <p className="text-[10px] sec-text-color mt-1 text-center">
-                  {clr.name}
-                </p>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-gray-500 col-span-full">
-              No colors found.
-            </p>
-          )}
-        </div>
-      </CollapsibleFilter>
+      </CollapsibleFilter> */}
 
       <CollapsibleFilter
         title="Brands"
@@ -311,32 +248,6 @@ const DesktopFilters = ({
         </div>
       </CollapsibleFilter>
 
-      <CollapsibleFilter
-        title="Fabric"
-        isOpen={openFilter === "Fabric"}
-        onToggle={() => toggleFilter("Fabric")}
-        isSelected={selectedFabrics.length > 0}
-        onReset={handleResetFabrics}
-        showButtons={true}
-      >
-        <div className="space-y-1 overflow-y-auto px-3 py-3">
-          {fabricsLoading ? (
-            <p className="text-sm text-gray-500">Loading fabrics...</p>
-          ) : fabrics.length > 0 ? (
-            fabrics.map((fabric) => (
-              <FilterItemCheckbox
-                key={fabric._id}
-                name={fabric.name}
-                count={fabricCounts[fabric._id] || 0}
-                isChecked={selectedFabrics.includes(fabric.name)}
-                onChange={handleFabricChange}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-gray-500">No fabrics found.</p>
-          )}
-        </div>
-      </CollapsibleFilter>
 
       <CollapsibleFilter
         title="Discounts"

@@ -1,4 +1,3 @@
-// D:\mycara\frontend\src\components\icons\Battery.jsx
 import * as React from "react"
 const SvgComponent = (props) => (
   <svg

@@ -1,134 +1,32 @@
-// import React, { useMemo } from "react";
-// import Row from "../ui/Row";
-// import { getRecentlyViewed } from "../utils/recentlyViewed";
-// import { getImageUrl } from "../utils/helper";
-// import prodimg from "../../assets/shopsaree4.jpg";
-// import prodimg1 from "../../assets/shopsaree2.jpg";
-// import Section from "../ui/Section";
-
-// export default function CustomerAlsoViewed({
-//   products = [],
-//   currentProductId = null,
-// }) {
-//   const recentIds = getRecentlyViewed();
-
-//   const displayList = useMemo(() => {
-//     const byId = products.reduce((acc, p) => {
-//       if (p?._id) acc[p._id] = p;
-//       return acc;
-//     }, {});
-//     const recent = recentIds.map((id) => byId[id]).filter(Boolean);
-//     return (recent.length ? recent : products)
-//       .filter((p) => p._id !== currentProductId)
-//       .slice(0, 3);
-//   }, [products, recentIds, currentProductId]);
-
-//   const usedSideProductIds = new Set();
-//   const productData = displayList.map((product) => {
-//     const mainImageUrl = product?.variants?.[0]?.images?.[0]
-//       ? getImageUrl(product.variants[0].images[0])
-//       : prodimg;
-
-//     const categoryId =
-//       product?.category_id?._id ?? product?.category_id ?? null;
-//     const sameCategoryProducts = products.filter((p) => {
-//       if (!p || !categoryId) return false;
-//       const pCategoryId = p?.category_id?._id ?? p?.category_id ?? null;
-//       return (
-//         p._id !== product._id &&
-//         pCategoryId === categoryId &&
-//         !usedSideProductIds.has(p._id)
-//       );
-//     });
-//     const sideImages = sameCategoryProducts.slice(0, 2).map((p) => {
-//       usedSideProductIds.add(p._id);
-//       const imageUrl = p?.variants?.[0]?.images?.[0]
-//         ? getImageUrl(p.variants[0].images[0])
-//         : prodimg1;
-//       return { imageUrl, productId: p._id };
-//     });
-
-//     return { ...product, mainImageUrl, sideImages };
-//   });
-
-//   return (
-//     <Section>
-//       <Row>
-//         <div className="relative flex justify-center items-center w-full mb-[50px] md:mb-[90px]">
-//           <div className="w-[18px] md:w-[50px] border-t border-black"></div>
-
-//           <h2 className="font-h2 text-black whitespace-nowrap mx-5">
-//             Customer Also Viewed
-//           </h2>
-
-//           <div className="w-[18px] md:w-[50px] border-t border-black"></div>
-//         </div>
-//         <div className="!max-w-[1155px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[15px] auto-rows-fr">
-//           {productData.map((product, index) => (
-//             <div
-//               key={product._id || index}
-//               className="bg-white rounded-[3px] box-shadow overflow-hidden p-[23px] h-full flex flex-col"
-//             >
-//               <div className="grid grid-cols-[2fr_1fr] gap-[7px] mb-[12px] aspect-[21/22]">
-//                 <a
-//                   href={`/products/${product._id}`}
-//                   target="_blank"
-//                   rel="noopener noreferrer"
-//                 >
-//                   <img
-//                     src={product.mainImageUrl}
-//                     alt={product?.name || product?.title || "product"}
-//                     className="w-full h-full object-cover "
-//                   />
-//                 </a>
-
-//                 <div className="grid grid-rows-2 gap-[7px] h-full">
-//                   {product.sideImages.map((side, idx) => (
-//                     <a
-//                       href={`/products/${side.productId}`}
-//                       key={side.id || side.productId || idx}
-//                       target="_blank"
-//                       rel="noopener noreferrer"
-//                     >
-//                       <img
-//                         src={side.imageUrl}
-//                         alt={`related-${idx}`}
-//                         className="w-full h-full object-cover"
-//                       />
-//                     </a>
-//                   ))}
-//                 </div>
-//               </div>
-
-//               <h3 className="text-14 sec-text-color line-clamp-2">
-//                 {product?.name || product?.title}
-//               </h3>
-//             </div>
-//           ))}
-//         </div>
-//       </Row>
-//     </Section>
-//   );
-// }
-
-import React, { useMemo, useRef, useState } from "react";
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { getRecentlyViewed } from "../utils/recentlyViewed";
 import { useSelector } from "react-redux";
 import Section from "../ui/Section";
 import Row from "../ui/Row";
 import ProductCard from "../productcard/ProductCard";
 import NavBtn from "../ui/Navbtn";
+import Heading from "../ui/Heading";
+
+const CARD_W = 270;
+const GAP = 20;
+const STEP = CARD_W + GAP;
 
 export default function CustomerAlsoViewed({
   currentProductId = null,
   setShowLoginPopup,
 }) {
   const { products = [] } = useSelector((state) => state.products);
-
   const containerRef = useRef(null);
-  const [offset, setOffset] = useState(0);
+  const trackRef = useRef(null);
+  const isAnimating = useRef(false);
 
-  const CARD_W = 300;
+  const [isCenter, setIsCenter] = useState(false);
 
   const recentIds = getRecentlyViewed();
 
@@ -137,64 +35,122 @@ export default function CustomerAlsoViewed({
       if (p?._id) acc[p._id] = p;
       return acc;
     }, {});
-
     const recent = recentIds.map((id) => byId[id]).filter(Boolean);
-
     return (recent.length ? recent : products).filter(
       (p) => p._id !== currentProductId,
     );
   }, [products, recentIds, currentProductId]);
 
-  const getVisibleCount = () => {
+  const total = items.length;
+  const [currentIndex, setCurrentIndex] = useState(total);
+
+  const tripled = total > 0 ? [...items, ...items, ...items] : [];
+
+  const getVisibleCount = useCallback(() => {
     if (!containerRef.current) return 4;
-    return Math.floor(containerRef.current.offsetWidth / CARD_W);
+    return Math.floor(containerRef.current.offsetWidth / STEP);
+  }, []);
+
+  useEffect(() => {
+    const checkCenter = () => {
+      if (!containerRef.current) return;
+      const visible = Math.floor(containerRef.current.offsetWidth / STEP);
+      setIsCenter(total <= visible);
+    };
+
+    checkCenter();
+    window.addEventListener("resize", checkCenter);
+
+    return () => window.removeEventListener("resize", checkCenter);
+  }, [total]);
+
+  useEffect(() => {
+    if (trackRef.current && total > 0) {
+      trackRef.current.style.transition = "none";
+      trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+    }
+  }, [total]);
+
+  const slideTo = (newIndex, withAnimation = true) => {
+    if (!trackRef.current) return;
+    trackRef.current.style.transition = withAnimation
+      ? "transform 300ms cubic-bezier(0.4,0,0.2,1)"
+      : "none";
+    trackRef.current.style.transform = `translateX(-${newIndex * STEP}px)`;
   };
 
-  const maxOffset = Math.max(0, items.length - getVisibleCount());
+  const handleNext = () => {
+    if (isAnimating.current || total === 0 || isCenter) return;
+    isAnimating.current = true;
 
-  const prev = () => setOffset((o) => Math.max(0, o - 1));
-  const next = () => setOffset((o) => Math.min(maxOffset, o + 1));
+    const next = currentIndex + 1;
+    setCurrentIndex(next);
+    slideTo(next, true);
+
+    setTimeout(() => {
+      if (next >= total * 2) {
+        const reset = next - total;
+        setCurrentIndex(reset);
+        slideTo(reset, false);
+      }
+      isAnimating.current = false;
+    }, 310);
+  };
+
+  const handlePrev = () => {
+    if (isAnimating.current || total === 0 || isCenter) return;
+    isAnimating.current = true;
+
+    const prev = currentIndex - 1;
+    setCurrentIndex(prev);
+    slideTo(prev, true);
+
+    setTimeout(() => {
+      if (prev < total) {
+        const reset = prev + total;
+        setCurrentIndex(reset);
+        slideTo(reset, false);
+      }
+      isAnimating.current = false;
+    }, 310);
+  };
 
   if (!items.length) return null;
 
   return (
     <Section>
       <Row>
-        <div className="relative flex justify-start items-center w-full mb-[50px] md:mb-[90px]">
-          {/* <div className="w-[18px] md:w-[50px] border-t border-black"></div> */}
+        <Heading title={"Customer Also Viewed"} />
 
-          <h2 className="font-h2 text-black whitespace-nowrap mx-5">
-            Customer Also Viewed
-          </h2>
-
-          <div className="w-[18px] md:w-[50px] border-t border-black"></div>
-        </div>
-
-        <div className="relative px-2" ref={containerRef}>
-          {/* LEFT BTN */}
-          {offset > 0 && (
-            <NavBtn direction="left" onClick={prev} variant="primary" />
-          )}
-
-          <div className="overflow-hidden">
-            <div
-              className="flex gap-5 transition-transform duration-300"
-              style={{ transform: `translateX(-${offset * CARD_W}px)` }}
-            >
-              {items.map((product) => (
-                <div key={product._id} className="flex-shrink-0 w-[270px]">
-                  <ProductCard
-                    product={product}
-                    setShowLoginPopup={setShowLoginPopup}
-                  />
-                </div>
-              ))}
-            </div>
+        {!isCenter && (
+          <div className="flex items-center justify-end gap-3 mb-4">
+            <NavBtn direction="left" onClick={handlePrev} variant="primary" />
+            <NavBtn direction="right" onClick={handleNext} variant="primary" />
           </div>
+        )}
 
-          {offset < maxOffset && (
-            <NavBtn direction="right" onClick={next} variant="primary" />
-          )}
+        <div className="overflow-hidden" ref={containerRef}>
+          <div
+            ref={trackRef}
+            className={`flex ${isCenter ? "justify-center" : "justify-start"}`}
+            style={{
+              gap: `${GAP}px`,
+              transform: isCenter ? "none" : `translateX(-${total * STEP}px)`,
+              willChange: "transform",
+            }}
+          >
+            {(isCenter ? items : tripled).map((product, i) => (
+              <div
+                key={`${product._id}-${i}`}
+                className="flex-shrink-0 w-[270px]"
+              >
+                <ProductCard
+                  product={product}
+                  setShowLoginPopup={setShowLoginPopup}
+                />
+              </div>
+            ))}
+          </div>
         </div>
       </Row>
     </Section>

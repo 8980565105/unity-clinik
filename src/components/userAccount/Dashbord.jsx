@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import orderImg from "../../assets/orders.png"
-import addressImg from "../../assets/address.png"
 import accountImg from "../../assets/account-details.png"
 
 const cards = [
@@ -10,12 +9,6 @@ const cards = [
     description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod",
     image: orderImg,
     link: "/my-account/orders",
-  },
-  {
-    title: "Your Addresses",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod",
-    image: addressImg,
-    link: "/my-account/address",
   },
   {
     title: "Account Details",

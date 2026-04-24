@@ -9,11 +9,11 @@ const Button = ({
 }) => {
   const variants = {
     common:
-      "bg-[var(--primary-color)] text-white text-[18px] min-w-[200px] py-[8px] md:py-[15px] hover:bg-[var(--theme-hover-color)] hover:text-white",
+      "bg-primary text-white text-[18px] min-w-[200px] py-[8px] md:py-[15px] hover:bg-[var(--theme-hover-color)] hover:text-white",
     secondary:
-      "bg-[var(--secondary-color)] text-white hover:text-[var(--secondary-color)] hover:bg-[var(--primary-color)] text-[18px] min-w-[200px] py-[8px] md:py-[15px] box-shadow",
+      "bg-secondary text-white hover:text-secondary hover:bg-primary text-[18px] min-w-[200px] py-[8px] md:py-[15px] box-shadow",
     outline:
-      "border border-[var(--primary-color)]  text-[var(--primary-color)] hover:text-[var(--secondary-color)] hover:border-[var(--secondary-color)] text-[18px] min-w-[200px] py-[8px] md:py-[15px] ",
+      "border border-primary  text-primary hover:text-secondary hover:bg-primary hover:border-primary text-[18px] min-w-[200px] py-[8px] md:py-[15px] ",
   };
   const sizes = {
     sm: "py-1 px-3 text-sm",

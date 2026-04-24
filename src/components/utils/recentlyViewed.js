@@ -1,7 +1,6 @@
 
 const KEY = "recently_viewed_products";
-const MAX_ITEMS = 100; // change as needed
-
+const MAX_ITEMS = 100; 
 export function getRecentlyViewed() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -20,9 +19,8 @@ export function addRecentlyViewed(item) {
     if (!id) return;
 
     const current = getRecentlyViewed();
-    // remove if already exists
     const filtered = current.filter((x) => x !== id);
-    filtered.unshift(id); // newest first
+    filtered.unshift(id); 
     const trimmed = filtered.slice(0, MAX_ITEMS);
     localStorage.setItem(KEY, JSON.stringify(trimmed));
   } catch (e) {

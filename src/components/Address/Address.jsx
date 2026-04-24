@@ -79,7 +79,7 @@ function Address({ userId = null }) {
                 name="street"
                 value={formData.street}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:var(--primary-color) outline-none transition"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none transition"
                 placeholder="123 Street Name"
               />
             </div>
@@ -92,7 +92,7 @@ function Address({ userId = null }) {
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:var(--primary-color) outline-none"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
                 placeholder="Surat"
               />
             </div>
@@ -105,7 +105,7 @@ function Address({ userId = null }) {
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:var(--primary-color) outline-none"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
                 placeholder="Gujarat"
               />
             </div>
@@ -118,7 +118,7 @@ function Address({ userId = null }) {
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:var(--primary-color) outline-none"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
                 placeholder="India"
               />
             </div>
@@ -132,7 +132,7 @@ function Address({ userId = null }) {
                 name="zip_code"
                 value={formData.zip_code}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:var(--primary-color) outline-none"
+                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
                 placeholder="395001"
               />
             </div>

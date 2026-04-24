@@ -7,7 +7,6 @@ import { getImageUrl } from "../utils/helper";
 import { createPayment } from "../../features/payments/paymentThunk";
 import { createOrder } from "../../features/orders/orderThunk";
 import toast, { Toaster } from "react-hot-toast";
-
 import { clearCart } from "../../features/cart/cartSlice";
 export default function OrderSummary({ formData }) {
   const dispatch = useDispatch();
@@ -154,15 +153,11 @@ export default function OrderSummary({ formData }) {
       payment_method: selectedPayment,
       status: selectedPayment === "cod" ? "pending" : "completed",
     };
-
     await dispatch(createPayment(paymentPayload));
-
     dispatch(clearCart());
-
     toast("Order placed successfully!");
-    navigate("/my-account/orders");
+    navigate("/ordercompleted");
   };
-
   return (
     <>
       <Toaster position="top center" />
@@ -173,11 +168,9 @@ export default function OrderSummary({ formData }) {
             <span className="theme-border-block w-[34px] h-[2px] rounded-[10px] block"></span>
           </div>
         </h2>
-
         <div className="pb-[10px] text-p">
           {items.reduce((sum, item) => sum + (item.quantity || 1), 0)} items
         </div>
-
         {items.map((item, index) => (
           <div
             key={item._id || index}
@@ -210,7 +203,6 @@ export default function OrderSummary({ formData }) {
             </div>
           </div>
         ))}
-
         <div className="border-t pb-[30px] space-y-[14px] text-p text-light">
           <div className="flex justify-between text-black">
             <span>Subtotal</span>
@@ -234,7 +226,6 @@ export default function OrderSummary({ formData }) {
             </span>
           </div>
         </div>
-
         <div className="text-light text-14 space-y-[10px]">
           {["cod", "paypal", "credit_card"].map((method) => (
             <label
@@ -260,7 +251,6 @@ export default function OrderSummary({ formData }) {
               </span>
             </label>
           ))}
-
           {selectedPayment === "credit_card" && (
             <div className="space-y-[19px] text-light text-14">
               <p className="text-light text-[12px] mb-[5px]">
@@ -296,12 +286,10 @@ export default function OrderSummary({ formData }) {
               </div>
             </div>
           )}
-
           {paymentError && (
             <p className="text-red-500 text-sm mt-2">{paymentError}</p>
           )}
         </div>
-
         <div className="text-center mt-[50px]">
           <Button
             variant="common"

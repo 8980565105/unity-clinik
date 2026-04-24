@@ -12,6 +12,13 @@ module.exports = {
       screens: {
         "custom-lg": "980px",
       },
+
+      colors: {
+        primary: "var(--primary-color)",
+        secondary: "var(--secondary-color)",
+
+        // #005c99
+      },
     },
   },
   plugins: [],

@@ -1,5 +1,3 @@
-// import Logo from "../assets/my_logo.png";
-import LoginSlider from "../components/login/loginSlider";
 import { FaPlay } from "react-icons/fa";
 import Button from "../components/ui/Button";
 import { X, Eye, EyeOff, Mail, KeyRound, ShieldCheck } from "lucide-react";
@@ -28,10 +26,10 @@ const StepBar = ({ current }) => (
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${
                 done
-                  ? "bg-color text-[var(--secondary-color)]"
+                  ? "bg-color text-black"
                   : active
-                    ? "border-2 border-[var(--primary-color)] text-[var(--primary-color)]"
-                    : "border-2 border-[var(--secondary-color)] text-[var(--secondary-color)]"
+                    ? "border-2 border-primary text-primary"
+                    : "border-2 border-black text-black"
               }`}
             >
               <Icon size={16} />
@@ -41,8 +39,8 @@ const StepBar = ({ current }) => (
                 active
                   ? "text-[--primary-color]"
                   : done
-                    ? "text-[var(--secondary-color)]"
-                    : "text-[var(--secondary-color)]"
+                    ? "text-black"
+                    : "text-black"
               }`}
             >
               {s.label}
@@ -52,8 +50,8 @@ const StepBar = ({ current }) => (
             <div
               className={`w-10 h-[2px] mb-4 transition-all duration-300 ${
                 done
-                  ? "bg-[var(--primary-color)]"
-                  : "bg-[var(--secondary-color)]"
+                  ? "bg-primary"
+                  : "bg-black"
               }`}
             />
           )}
@@ -120,8 +118,8 @@ const OtpInput = ({ value, onChange }) => {
           onPaste={handlePaste}
           className={`w-11 h-13 py-3 text-center text-xl font-bold border-2 rounded-lg
             focus:outline-none transition-all duration-200
-            ${d ? "border-[var(--primary-color)] text-[var(--primary-color)]" : "border-[var(--secondary-color)] bg-white text-gray-800"}
-            focus:border-[var(--primary-color)] focus:ring-2 focus:ring-[var(--primary-color)]`}
+            ${d ? "border-primary text-primary" : "border-gray-200 bg-white text-gray-800"}
+            focus:border-primary focus:ring-2 focus:ring-primary`}
         />
       ))}
     </div>
@@ -147,7 +145,7 @@ const ResendTimer = ({ onResend, loading }) => {
       {secs > 0 ? (
         <>
           Resend OTP in{" "}
-          <span className="text-[var(--primary-color)] font-semibold">
+          <span className="text-primary font-semibold">
             {secs}s
           </span>
         </>
@@ -156,7 +154,7 @@ const ResendTimer = ({ onResend, loading }) => {
           type="button"
           onClick={handle}
           disabled={loading}
-          className="text-[var(--primary-color)] font-semibold underline disabled:opacity-50"
+          className="text-primary font-semibold underline disabled:opacity-50"
         >
           {loading ? "Sending…" : "Resend OTP"}
         </button>
@@ -250,7 +248,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const { info: storeInfo } = useSelector((state) => state.store);
 
-  // ✅ Handle OTP sent success
   useEffect(() => {
     if (otpSent && step === 0) {
       console.log("✅ OTP sent successfully!");
@@ -259,7 +256,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
     }
   }, [otpSent, step]);
 
-  // ✅ Handle OTP error
   useEffect(() => {
     if (otpError) {
       console.error("❌ OTP Error:", otpError);
@@ -267,7 +263,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
     }
   }, [otpError]);
 
-  // ✅ Handle reset success - AUTO LOGIN
   useEffect(() => {
     if (resetSuccess) {
       console.log("✅ Password reset successfully!");
@@ -277,18 +272,15 @@ const ForgetForm = ({ onClose, onSwitch }) => {
         position: "top-center",
       });
 
-      // Clear the reset state
       dispatch(clearPasswordResetState());
 
-      // Close modal and redirect after 1.5 seconds
       setTimeout(() => {
         onClose();
-        window.location.href = "/"; // Force redirect to home
+        window.location.href = "/";
       }, 1500);
     }
   }, [resetSuccess, token, dispatch, onClose]);
 
-  // ✅ Handle reset error
   useEffect(() => {
     if (resetError) {
       console.error("❌ Reset Error:", resetError);
@@ -296,7 +288,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
     }
   }, [resetError]);
 
-  // Cleanup on unmount
   useEffect(() => () => dispatch(clearPasswordResetState()), [dispatch]);
 
   const handleSendOtp = async (e) => {
@@ -307,27 +298,17 @@ const ForgetForm = ({ onClose, onSwitch }) => {
         position: "top-center",
       });
     }
-
-    console.log("📧 Sending OTP to:", email);
-    console.log("🌐 Current domain:", window.location.host);
-
     const result = await dispatch(forgotPassword({ email }));
-
-    console.log("📨 OTP Result:", result);
   };
 
   const handleVerifyOtp = (e) => {
     e.preventDefault();
-
     const cleanOtp = otp.replace(/\D/g, "");
-
     if (cleanOtp.length < 6) {
       return toast.error("Please enter the full 6-digit OTP.", {
         position: "top-center",
       });
     }
-
-    console.log("✅ OTP verified, moving to password reset step");
     setStep(2);
   };
 
@@ -344,11 +325,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
       return toast.error("Passwords do not match.", { position: "top-center" });
     }
 
-    console.log("🔐 Resetting password...");
-    console.log("Email:", email);
-    console.log("OTP:", otp);
-    console.log("Domain:", window.location.host);
-
     const result = await dispatch(
       resetPassword({
         email,
@@ -356,8 +332,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
         newPassword,
       }),
     );
-
-    console.log("🔐 Reset Result:", result);
   };
 
   const BASE = process.env.REACT_APP_API_URL_IMAGE;
@@ -372,185 +346,162 @@ const ForgetForm = ({ onClose, onSwitch }) => {
   return (
     <>
       <Toaster />
-      <div className="flex items-center justify-center">
-        <div className="bg-white box-shadow rounded-lg flex w-full overflow-hidden max-w-[1062px] mx-auto">
-          <div className="w-1/3 md:flex items-center justify-center light-color hidden">
-            <LoginSlider />
-          </div>
 
-          <div className="w-full md:w-2/3 px-5 py-12 relative md:mx-0 md:px-20">
-            <button
-              onClick={onClose}
-              className="absolute top-0 right-0 bg-color p-[8px]"
-            >
-              <X className="text-white" size={20} />
-            </button>
+      <div className="p-10 relative">
+        <button
+          onClick={onClose}
+          className="absolute top-0 right-0 bg-color p-[8px]"
+        >
+          <X className="text-white" size={20} />
+        </button>
 
-            <div className="mb-4 text-center">
-              {/* <img src={Logo} className="mx-auto mb-5" alt="Logo" /> */}
+        <div className="mb-4 text-center">
+          <img
+            src={dynamicLogoUrl || HeaderLogo}
+            alt="Logo"
+            className="mx-auto mb-6"
+          />
+          <h1 class="text-3xl font-bold text-primary">
+            Forgot Password
+          </h1>
+        </div>
 
-              <img
-                src={dynamicLogoUrl || HeaderLogo}
-                alt="Logo"
-                className="mx-auto mb-6"
+        <StepBar current={step} />
+
+        {step === 0 && (
+          <form onSubmit={handleSendOtp} className="space-y-4">
+            <p class="text-gray-500 mt-2 text-center">Enter your email to reset your password</p>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2 "
+            />
+
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
+              <button
+                type="button"
+                onClick={onSwitch}
+                className="text-primary text-[14px] hover:underline"
+              >
+                Back to Sign In?
+              </button>
+              <Button
+                type="submit"
+                disabled={otpLoading}
+                variant="common"
+                className="!min-w-[185px] flex items-center justify-between"
+              >
+                {otpLoading ? "Sending OTP…" : "Send OTP"}
+                <FaPlay size={8} />
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {step === 1 && (
+          <form onSubmit={handleVerifyOtp} className="space-y-2">
+            <p className="text-sm text-primary text-center">
+              We sent a 6-digit OTP to{" "}
+              <span className="font-semibold text-primary">
+                {email}
+              </span>
+            </p>
+
+            <OtpInput value={otp} onChange={setOtp} />
+
+            <ResendTimer
+              loading={otpLoading}
+              onResend={() => dispatch(forgotPassword({ email }))}
+            />
+
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep(0);
+                  setOtp("");
+                }}
+                className="text-primary   text-[14px] hover:underline"
+              >
+                ← Change Email
+              </button>
+              <Button
+                type="submit"
+                variant="common"
+                className="!min-w-[185px] flex items-center justify-between"
+              >
+                Verify OTP
+                <FaPlay size={8} />
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {step === 2 && (
+          <form onSubmit={handleResetPassword} className="space-y-3">
+            <p className="text-sm text-gray-500 text-center mb-2">
+              OTP verified! Set your new password.
+            </p>
+
+            <div>
+              <PasswordField
+                name="newPassword"
+                placeholder="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
               />
-              <h3 className="mb-11 text-[var(--secondary-color)]">
-                Welcome to {storeInfo?.name || "maycra store"}
-              </h3>
-
-              {/* <p className="text-light text-[14px] mb-6">
-                Women's wear collection/label/line. The high street giant is
-                launching a designer womenswear collection.
-              </p> */}
-              <h3 className="text-[var(--primary-color)] text-bold text-[26px]">
-                Forgot Password
-              </h3>
+              <StrengthBar password={newPassword} />
             </div>
 
-            <StepBar current={step} />
+            <PasswordField
+              name="confirmPassword"
+              placeholder="Confirm New Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+            />
 
-            {/* STEP 1: Email Input */}
-            {step === 0 && (
-              <form onSubmit={handleSendOtp} className="space-y-4">
-                <p className="text-sm text-[var(--secondary-color)] text-center mb-2">
-                  Enter your registered email and we'll send you a 6-digit OTP.
-                </p>
-
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2 "
-                />
-
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={onSwitch}
-                    className="text-[var(--primary-color)] text-[14px] hover:underline"
-                  >
-                    Back to Sign In?
-                  </button>
-                  <Button
-                    type="submit"
-                    disabled={otpLoading}
-                    variant="common"
-                    className="!min-w-[185px] flex items-center justify-between"
-                  >
-                    {otpLoading ? "Sending OTP…" : "Send OTP"}
-                    <FaPlay size={8} />
-                  </Button>
-                </div>
-              </form>
+            {confirmPassword && (
+              <p
+                className={`text-xs ${
+                  newPassword === confirmPassword
+                    ? "text-green-600"
+                    : "text-red-400"
+                }`}
+              >
+                {newPassword === confirmPassword
+                  ? "✓ Passwords match"
+                  : "✗ Passwords do not match"}
+              </p>
             )}
 
-            {/* STEP 2: OTP Verification */}
-            {step === 1 && (
-              <form onSubmit={handleVerifyOtp} className="space-y-2">
-                <p className="text-sm text-[var(--secondary-color)] text-center">
-                  We sent a 6-digit OTP to{" "}
-                  <span className="font-semibold text-[var(--primary-color)]">
-                    {email}
-                  </span>
-                </p>
-
-                <OtpInput value={otp} onChange={setOtp} />
-
-                <ResendTimer
-                  loading={otpLoading}
-                  onResend={() => dispatch(forgotPassword({ email }))}
-                />
-
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep(0);
-                      setOtp("");
-                    }}
-                    className="text-[var(--primary-color)]   text-[14px] hover:underline"
-                  >
-                    ← Change Email
-                  </button>
-                  <Button
-                    type="submit"
-                    variant="common"
-                    className="!min-w-[185px] flex items-center justify-between"
-                  >
-                    Verify OTP
-                    <FaPlay size={8} />
-                  </Button>
-                </div>
-              </form>
-            )}
-
-            {/* STEP 3: New Password */}
-            {step === 2 && (
-              <form onSubmit={handleResetPassword} className="space-y-3">
-                <p className="text-sm text-gray-500 text-center mb-2">
-                  OTP verified! Set your new password.
-                </p>
-
-                <div>
-                  <PasswordField
-                    name="newPassword"
-                    placeholder="New Password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                  <StrengthBar password={newPassword} />
-                </div>
-
-                <PasswordField
-                  name="confirmPassword"
-                  placeholder="Confirm New Password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-
-                {confirmPassword && (
-                  <p
-                    className={`text-xs ${
-                      newPassword === confirmPassword
-                        ? "text-green-600"
-                        : "text-red-400"
-                    }`}
-                  >
-                    {newPassword === confirmPassword
-                      ? "✓ Passwords match"
-                      : "✗ Passwords do not match"}
-                  </p>
-                )}
-
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep(1);
-                      setNewPassword("");
-                      setConfirmPassword("");
-                    }}
-                    className="text-[var(--primary-color)] text-[14px] hover:underline"
-                  >
-                    ← Back
-                  </button>
-                  <Button
-                    type="submit"
-                    disabled={resetLoading}
-                    variant="common"
-                    className="!min-w-[185px] flex items-center justify-between"
-                  >
-                    {resetLoading ? "Resetting…" : "Reset Password"}
-                    <FaPlay size={8} />
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep(1);
+                  setNewPassword("");
+                  setConfirmPassword("");
+                }}
+                className="text-primary text-[14px] hover:underline"
+              >
+                ← Back
+              </button>
+              <Button
+                type="submit"
+                disabled={resetLoading}
+                variant="common"
+                className="!min-w-[185px] flex items-center justify-between"
+              >
+                {resetLoading ? "Resetting…" : "Reset Password"}
+                <FaPlay size={8} />
+              </Button>
+            </div>
+          </form>
+        )}
       </div>
     </>
   );

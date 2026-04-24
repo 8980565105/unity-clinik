@@ -29,6 +29,10 @@ import AboutPage from "./pages/About";
 import ScrollToTop from "./components/ScrollToTop";
 import { fetchStoreInfo } from "./features/store/storeThunk";
 import { useDispatch, useSelector } from "react-redux";
+import Result from "./pages/Result";
+import { HelmetProvider } from "react-helmet-async";
+import NotFound from "./pages/notfound";
+import OrderComplete from "./pages/ordercomplet";
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -109,7 +113,6 @@ function App() {
     return (
       <>
         <ScrollToTop />
-
         <Header hideOnMobileShopPage={isShopPage} />
         <Routes>
           <Route path="/" element={<Home />} />
@@ -120,10 +123,10 @@ function App() {
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/my-account" element={<MyAccount />}>
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="orders" element={<Orders />} />
-            <Route path="address" element={<Address />} />
-            <Route path="account-details" element={<AccountDetails />} />
-            <Route path="logout" />
+            {/* <Route path="orders" element={<Orders />} /> */}
+            {/* <Route path="address" element={<Address />} /> */}
+            {/* <Route path="account-details" element={<AccountDetails />} /> */}
+            {/* <Route path="logout" /> */}
           </Route>
           <Route path="/cart" element={<Cart />}></Route>
           <Route path="/updatecart" element={<Updatecart />}></Route>
@@ -131,7 +134,12 @@ function App() {
           <Route path="/products/:id" element={<Product />}></Route>
           <Route path="/wishlist" element={<Wishlist />}></Route>
           <Route path="/faqs" element={<Faqs />} />
-          <Route path="about" element={<AboutPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/results" element={<Result />} />
+          <Route path="/ordercompleted" element={<OrderComplete />} />
+          <Route path="orders" element={<Orders />} />
+
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
       </>
@@ -139,9 +147,11 @@ function App() {
   };
   return (
     <>
-      <Router>
-        <RouterWrapper />
-      </Router>
+      <HelmetProvider>
+        <Router>
+          <RouterWrapper />
+        </Router>
+      </HelmetProvider>
     </>
   );
 }

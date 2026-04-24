@@ -2,8 +2,6 @@
 import OriginalSortByIcon from "../icons/SortByIcon";
 import { ChevronDown} from 'lucide-react';
 import FilterIconComponent from "../icons/filter"; 
-
-
 const SortByIcon = (props) => (<OriginalSortByIcon {...props} className="h-4 w-4 md:text-gray-500" />);
 const CustomChevronDown = (props) => ( <ChevronDown {...props} />);
 const Filter = (props) => (<FilterIconComponent {...props} />);

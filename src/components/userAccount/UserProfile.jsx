@@ -6,27 +6,21 @@ import defaultimg from "../../assets/default-avatar.png";
 import { Pencil } from "lucide-react";
 import { uploadProfilePicture } from "../../features/user/userThunk";
 import toast from "react-hot-toast";
-
 export default function UserProfile() {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { loading } = useSelector((state) => state.user);
   const fileInputRef = useRef(null);
   const [preview, setPreview] = useState(user?.profile_picture || defaultimg);
-
   useEffect(() => {
     setPreview(user?.profile_picture || defaultimg);
   }, [user?.profile_picture]);
-
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const localUrl = URL.createObjectURL(file);
     setPreview(localUrl);
-
     const result = await dispatch(uploadProfilePicture(file));
-
     if (uploadProfilePicture.fulfilled.match(result)) {
       const newUrl = result.payload?.profile_picture;
       if (newUrl) setPreview(newUrl);
@@ -37,7 +31,6 @@ export default function UserProfile() {
         position: "top-center",
       });
     }
-
     URL.revokeObjectURL(localUrl);
     e.target.value = "";
   };

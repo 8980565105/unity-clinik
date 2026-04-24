@@ -5,12 +5,12 @@ import Row from "../components/ui/Row";
 import { MapPinIcon, PhoneIcon } from "lucide-react";
 import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import MapForm from "../components/contactus/MapForm";
-import FAQ from "../components/contactus/Faq";
 import SecondarySection from "../components/ui/SecondarySection";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import { getImageUrl } from "../components/utils/helper";
 import contactBg from "../assets/contact.jpg";
+import SEO from "../components/seo/seo";
 
 const staticBg = {
   sections: [
@@ -42,6 +42,10 @@ export default function ContactUs() {
 
   return (
     <>
+      <SEO
+        title={contactPageFromApi?.meta_title}
+        description={contactPageFromApi?.meta_description}
+      />
       {contactPage?.sections?.map((section) => (
         <SecondarySection
           key={section._id}
@@ -79,7 +83,6 @@ export default function ContactUs() {
       </Section>
 
       <MapForm />
-     <FAQ /> 
     </>
   );
 }

@@ -6,6 +6,7 @@ import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import { getImageUrl } from "../components/utils/helper";
 import shopBg from "../assets/shopBannerImage.jpg";
 import { Toaster } from "react-hot-toast";
+import SEO from "../components/seo/seo.js";
 
 const staticShopPage = {
   sections: [
@@ -21,7 +22,7 @@ const staticShopPage = {
 
 export default function Shop() {
   const dispatch = useDispatch();
-  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const { pages } = useSelector((state) => state.pages);
 
   useEffect(() => {
     dispatch(fetchPageBySlug("shop"));
@@ -38,6 +39,10 @@ export default function Shop() {
 
   return (
     <>
+      <SEO
+        title={shopPage?.meta_title || "Shop"}
+        description={shopPage?.meta_description || "Shop page description"}
+      />
       <Toaster position="top-center" reverseOrder={false} />
       <div className="hidden lg:flex relative">
         {shopPage?.sections?.map((section) => (

@@ -1,21 +1,16 @@
 const NavBtn = ({ direction, onClick, disabled, variant = "default" }) => {
-  const directions = {
-    left: "left-0 -translate-x-1/2",
-    right: "right-0 translate-x-1/2",
-  };
-
   const variants = {
-    secondary: "bg-white border-gray-300 shadow-sm hover:bg-gray-50",
+    secondary:
+      "bg-secondary text-white hover:text-secondary hover:bg-primary text-[18px] min-w-[200px] py-[8px] md:py-[15px] box-shadow",
     primary:
-      "bg-[var(--primary-color)] hover:bg-[var(--secondary-color)] border-none text-[var(--secondary-color)] hover:text-[var(--primary-color)] hover:opacity-90",
+      "bg-primary text-white text-[18px] py-[8px] md:py-[15px] hover:bg-primary hover:text-white",
   };
 
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`absolute top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full border flex items-center justify-center transition-all duration-150 flex-shrink-0
-        ${directions[direction]} 
+      className={`w-[50px] h-10  rounded border flex items-center justify-center transition-all duration-150
         ${variants[variant]} 
         ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer active:scale-95"}`}
     >

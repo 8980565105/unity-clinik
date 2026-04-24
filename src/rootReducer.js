@@ -8,11 +8,11 @@ import couponsReducer from "./features/coupons/couponsSlice";
 import categoriesReducer from "./features/categories/categoriesSlice";
 import subcategoriesReducer from "./features/subcategories/subcategoriesSlice";
 import pagesReducer from "./features/pages/pagesSlice";
-import sizesReducer from "./features/sizes/sizesSlice";
-import colorsReducer from "./features/colors/colorsSlice";
+// import sizesReducer from "./features/sizes/sizesSlice";
+// import colorsReducer from "./features/colors/colorsSlice";
 import brandsReducer from "./features/brands/brandsSlice";
 import typesReducer from "./features/types/typesSlice";
-import fabricsReducer from "./features/fabrics/fabricsSlice";
+// import fabricsReducer from "./features/fabrics/fabricsSlice";
 import productLabelsReducer from "./features/productLabels/productLabelsSlice";
 import wishlistReducer from "./features/wishlist/wishlistSlice";
 import cartReducer from "./features/cart/cartSlice";
@@ -25,6 +25,9 @@ import offersReducer from "./features/offers/offersSlice";
 import faqsReducer from "./features/faqs/faqsSlice";
 import storeReducer from "./features/store/storeSlice";
 import settingReducer from "./features/setting/settingSlice";
+import resultReducer from "./features/results/resultsSlice";
+import dashboardReducer from "./features/dashboard/dashboardSlice";
+import emailsReducer from "./features/emails/emailSlice";
 
 export const rootReducer = {
   auth: authReducer,
@@ -38,11 +41,11 @@ export const rootReducer = {
   subcategories: subcategoriesReducer,
   coupons: couponsReducer,
   pages: pagesReducer,
-  sizes: sizesReducer,
-  colors: colorsReducer,
+  // sizes: sizesReducer,
+  // colors: colorsReducer,
   brands: brandsReducer,
   types: typesReducer,
-  fabrics: fabricsReducer,
+  // fabrics: fabricsReducer,
   productLabels: productLabelsReducer,
   wishlist: wishlistReducer,
   cart: cartReducer,
@@ -54,4 +57,7 @@ export const rootReducer = {
   faqs: faqsReducer,
   store: storeReducer,
   settings: settingReducer,
+  results: resultReducer,
+  dashboard: dashboardReducer,
+  emails: emailsReducer,
 };

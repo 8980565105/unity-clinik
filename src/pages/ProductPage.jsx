@@ -5,6 +5,7 @@ import {
   fetchProductById,
   fetchProducts,
 } from "../features/products/productsThunk";
+import { fetchProductReviews } from "../features/reivews/reviewsThunk";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
 import Breadcrumb from "../components/ui/Breadcrumb";
@@ -16,6 +17,11 @@ import CustomerAlsoViewed from "../components/productcard/CustomerAlsoViewed";
 import { fetchPages } from "../features/pages/pagesThunk";
 import { addRecentlyViewed } from "../components/utils/recentlyViewed";
 import LoginForm from "./Login";
+import Heading from "../components/ui/Heading";
+import NavBtn from "../components/ui/Navbtn";
+import ReviewCard from "../components/reviews/reviewscard";
+import ProductSections from "../components/productcard/ProductSections";
+import SEO from "../components/seo/seo";
 
 export default function Product() {
   const { id } = useParams();
@@ -23,28 +29,64 @@ export default function Product() {
   const { product, products, loading, error } = useSelector(
     (state) => state.products,
   );
+  const { productReviews } = useSelector((state) => state.reviews);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
-
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const productReviewData = productReviews?.[product?._id];
+  const allReviews = productReviewData?.reviews || [];
+  const getVisible = () => {
+    if (window.innerWidth < 640) return 1;
+    if (window.innerWidth < 1024) return 2;
+    return 3;
+  };
+
+  const [visible, setVisible] = useState(getVisible());
+
+  const CARD_W = visible === 1 ? 280 : visible === 2 ? 320 : 425;
+  const GAP = visible === 1 ? 20 : visible === 2 ? 30 : 55;
+  const STEP = CARD_W + GAP;
 
   useEffect(() => {
     if (id) dispatch(fetchProductById(id));
   }, [id, dispatch]);
+
   useEffect(() => {
     dispatch(fetchProducts());
     dispatch(fetchPages());
   }, [dispatch]);
+
   useEffect(() => {
     if (product && product._id) {
       addRecentlyViewed(product);
+      dispatch(
+        fetchProductReviews({ productId: product._id, page: 1, limit: 50 }),
+      );
     }
-  }, [product]);
+  }, [product?._id, dispatch]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setVisible(getVisible());
+      setOffset(0);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const maxOffset = Math.max(0, allReviews.length - visible);
+  const prev = () => setOffset((o) => Math.max(0, o - 1));
+  const next = () => setOffset((o) => Math.min(maxOffset, o + 1));
+  const isCenter = allReviews.length <= visible;
+
   if (loading) return <p className="text-center py-10">Loading product...</p>;
   if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
   if (!product) return <p className="text-center py-10">No Product Found.</p>;
+
   return (
     <>
+      <SEO title={product?.name} description={product?.description} />
       <Section>
         <Row>
           <Breadcrumb />
@@ -64,21 +106,68 @@ export default function Product() {
               setSelectedColor={setSelectedColor}
               setShowLoginPopup={setShowLoginPopup}
             />
+
+            <div className="border-dashed border-b light-border my-5"></div>
+            <ProductTabs product={product} selectedVariant={selectedVariant} />
           </div>
         </Row>
-        <Row>
-          <ProductTabs product={product} selectedVariant={selectedVariant} />
-        </Row>
       </Section>
+
       <SimilarProducts
         product={product}
         products={products}
         setShowLoginPopup={setShowLoginPopup}
       />
-      <CustomerAlsoViewed products={products} currentProductId={product?._id} />
+      <ProductSections sections={product?.sections} />
+
+      {allReviews.length > 0 && (
+        <Section className="bg-[var(--ef3a96-9)] py-20">
+          <Row>
+            <Heading title={"What Our Customer Says!"} />
+
+            {!isCenter && (
+              <div className="flex items-center justify-end gap-3 mb-4">
+                <NavBtn direction="left" onClick={prev} variant="primary" />
+                <NavBtn direction="right" onClick={next} variant="primary" />
+              </div>
+            )}
+
+            <div className="overflow-hidden w-full">
+              <div
+                className={`flex transition-transform duration-500 ease-in-out pt-10 ${
+                  isCenter ? "justify-center" : "justify-start"
+                }`}
+                style={{
+                  gap: `${GAP}px`,
+                  transform: isCenter
+                    ? "none"
+                    : `translateX(-${offset * STEP}px)`,
+                }}
+              >
+                {allReviews.map((review, i) => (
+                  <div
+                    key={review._id}
+                    className="flex-shrink-0"
+                    style={{ width: `${CARD_W}px` }}
+                  >
+                    <ReviewCard review={review} index={i} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Row>
+        </Section>
+      )}
+
+      <CustomerAlsoViewed
+        pr
+        oducts={products}
+        currentProductId={product?._id}
+      />
+
       {showLoginPopup && (
         <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center px-4">
-          <div className="relative bg-white w-full max-w-[1062px] rounded-md overflow-hidden">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
             <LoginForm
               onClose={() => setShowLoginPopup(false)}
               onSwitch={() => setShowLoginPopup(false)}

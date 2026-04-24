@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../utils/helper";
 import { Plus } from "lucide-react";
-
 export default function TrendingCard ({ product }){
   return(
  <Link

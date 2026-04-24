@@ -2,13 +2,20 @@ import React from "react";
 import Section from "../ui/Section";
 import Row from "../ui/Row";
 import b2 from "../../assets/b2.png";
+import { ArrowRight } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom";
 
 export default function ShortBanner() {
+  const Navigate = useNavigate();
   return (
     <Section>
       <Row>
-        <div className="w-full rounded-xl overflow-hidden bg-gradient-to-r from-[#7B5CF5] to-[#9B6EF3] px-6 md:px-10 pt-6">
-
+        <div
+          className="w-full overflow-hidden bg-gradient-to-r from-[#7B5CF5] to-[#9B6EF3] px-6 md:px-10 pt-6"
+          style={{
+            borderRadius: "100px 40px 110px 40px",
+          }}
+        >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div className="flex flex-col justify-center items-start text-white max-w-[320px]">
               <h2 className="text-[18px] md:text-[22px] font-semibold">
@@ -27,13 +34,17 @@ export default function ShortBanner() {
               <p className="text-sm md:text-base font-medium text-white/90 max-w-[420px]">
                 Save 6% on medicines, 20% on lab tests & enjoy FREE delivery.
               </p>
-
-              <button className="mt-4 bg-[var(--primary-color)] text-white font-medium px-5 py-2 rounded-md flex items-center gap-2 hover:bg-[var(--secondary-color)] transition">
+              <button
+                onClick={() => Navigate("/shop")}
+                className="group flex items-center gap-2 bg-[#1e293b] hover:bg-[#334155] text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 shadow-lg transform hover:-translate-y-1"
+              >
                 Explore Now
-                <span>›</span>
+                <ArrowRight
+                  size={18}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
               </button>
             </div>
-
             <div className="flex justify-end items-end mt-4 md:mt-0">
               <img
                 src={b2}

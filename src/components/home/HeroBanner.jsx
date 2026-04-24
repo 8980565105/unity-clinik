@@ -15,13 +15,12 @@ const heroBannerItem = {
   image_url: herobannerImage,
   isStatic: true,
 };
-
 const DiscountBadge = () => {
   return (
     <>
       <div className="absolute top-3 left-3 w-[70px] h-[70px] sm:w-[90px] sm:h-[90px] md:w-[130px] md:h-[130px] z-30 flex items-center justify-center">
         <div
-          className="absolute inset-0 bg-[var(--primary-color)] shadow-md"
+          className="absolute inset-0 bg-primary shadow-md"
           style={{
             clipPath:
               "polygon(22% 10%, 46% 12%, 61% 2%, 71% 19%, 89% 24%, 86% 43%, 99% 64%, 82% 74%, 77% 96%, 77% 96%, 55% 94%, 35% 99%, 25% 84%, 8% 81%, 11% 59%, 1% 44%, 17% 31%)",

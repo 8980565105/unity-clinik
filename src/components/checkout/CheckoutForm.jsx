@@ -8,7 +8,6 @@ export default function CheckoutForm({ formData, setFormData }) {
   const [selectedState, setSelectedState] = useState("");
   const [cities, setCities] = useState([]);
 
-  //country dropdown
   useEffect(() => {
     async function fetchCountries() {
       try {
@@ -24,7 +23,6 @@ export default function CheckoutForm({ formData, setFormData }) {
     fetchCountries();
   }, []);
 
-  //state dropdown
   useEffect(() => {
     async function fetchStates() {
       if (!formData.country) {
@@ -51,7 +49,6 @@ export default function CheckoutForm({ formData, setFormData }) {
     fetchStates();
   }, [formData.country]);
 
-  //city dropdown
   useEffect(() => {
     if (!selectedState) {
       setCities([]);
@@ -81,7 +78,6 @@ export default function CheckoutForm({ formData, setFormData }) {
 
   return (
     <div className="flex-1">
-      {/* Contact Information */}
       <div className="mb-[30px]">
         <h2 className="text-20px ">Contact Information</h2>
         <span className="theme-border-block w-[59px] h-[2px] rounded-[10px] block mb-[12px]"></span>
@@ -97,7 +93,6 @@ export default function CheckoutForm({ formData, setFormData }) {
         />
       </div>
 
-      {/* Billing Details */}
       <div className="mb-[30px]">
         <h2 className="text-20px">Billing Details</h2>
         <span className="theme-border-block w-[59px] h-[2px] rounded-[10px] block mb-[12px]"></span>
@@ -165,7 +160,6 @@ export default function CheckoutForm({ formData, setFormData }) {
         </div>
         <div className="space-y-[10px] md:space-y-[28px] mb-[30px]">
           <div className="block sm:flex gap-[10px] md:gap-[27px]">
-            {/* <input type="text" placeholder="State" className="input-common" /> */}
             <select
               className={`input-common mb-[10px] w-full appearance-none sm:mb-0 ${!formData.state ? "text-[#BCBCBC]" : "text-black"}`}
               value={formData.state || ""}
@@ -183,7 +177,6 @@ export default function CheckoutForm({ formData, setFormData }) {
                 </option>
               ))}
             </select>
-            {/* <input type="text" placeholder="City" className="input-common"  /> */}
             <select
               className={`input-common w-full appearance-none ${!formData.city ? "text-[#BCBCBC]" : "text-black"}`}
               value={formData.city || ""}
@@ -231,12 +224,10 @@ export default function CheckoutForm({ formData, setFormData }) {
         </div>
       </div>
 
-      {/* Shipping */}
       <div className="mb-[30px]">
         <h2 className="text-20px mb-[10px]">Shipping Options</h2>
         <div className="input-common flex justify-between">
           <label className="flex items-center space-x-2">
-            {/* <input type="radio" name="shipping" checked readOnly /> */}
             <input
               type="radio"
               name="shipping"
@@ -250,7 +241,6 @@ export default function CheckoutForm({ formData, setFormData }) {
         </div>
       </div>
 
-      {/* Extra options */}
       <div className="flex flex-col pb-[30px] border-b light-border text-p text-light">
         <label className="flex items-center pb-[10px]">
           <input type="checkbox" className="mr-[12px]" />

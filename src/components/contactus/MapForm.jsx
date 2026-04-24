@@ -5,14 +5,12 @@ import Section from "../ui/Section";
 import { createContact } from "../../features/contact/contactThunk";
 import { useDispatch } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
-
 export default function ContactSection() {
   const dispatch = useDispatch();
-
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    order_number: "",
+    subject: "",
     message: "",
   });
 
@@ -25,7 +23,7 @@ export default function ContactSection() {
     try {
       await dispatch(createContact(formData)).unwrap();
       toast.success("Message sent successfully!");
-      setFormData({ name: "", email: "", order_number: "", message: "" });
+      setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
       toast.error(error || "Something went wrong");
     }
@@ -61,25 +59,21 @@ export default function ContactSection() {
               onChange={handleChange}
               required
             />
-            {/* <input
-              type="text" name="order_number" placeholder="Order Number"
-              className="input-common" value={formData.order_number}
-              onChange={handleChange}
-            /> */}
             <div className="flex sm:grid flex-col sm:grid-cols-2 gap-[15px] md:gap-[28px]">
               <input
                 type="text"
-                name="order_number"
-                placeholder="Order Number"
+                name="subject"
+                placeholder="Your Subject "
                 className="input-common"
-                value={formData.order_number}
+                value={formData.subject}
                 onChange={handleChange}
               />
+
               <input
                 type="date"
                 name="orderDate"
                 placeholder="DD/MM/YY"
-                className="input-common placeholder-[#BCBCBC]"
+                className="input-common"
                 value={formData.orderDate}
                 onChange={handleChange}
               />

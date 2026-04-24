@@ -1,6 +1,3 @@
-//D:\mycara\frontend\src\components\icons\ArrowRight.js
-
-
 import * as React from "react"
 const SvgComponent = (props) => (
  <svg

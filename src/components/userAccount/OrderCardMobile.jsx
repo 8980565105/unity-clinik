@@ -1,4 +1,3 @@
-//D:\mycara\frontend\src\components\userAccount\OrderCardMobile.jsx
 
 import { useState } from "react";
 import {
@@ -45,7 +44,7 @@ export default function OrderCardMobile({
           <span className="text-black text-p ">#</span>
           <span className="text-black text-p flex gap-[5px] items-center">
             Order Id
-            <img src={sortImg} className="h-[14px] w-[14px]" />
+            <img src={sortImg} alt={sortImg} className="h-[14px] w-[14px]" />
           </span>
         </div>
       </div>
@@ -69,7 +68,6 @@ export default function OrderCardMobile({
             )}
           </div>
 
-          {/* Expanded Details */}
           {openRow === order._id && (
             <div className="flex flex-col gap-[8px] px-[60px] pb-[20px] text-14 sec-text-color">
               <p className="flex items-center gap-2">

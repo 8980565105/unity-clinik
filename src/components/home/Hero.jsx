@@ -65,6 +65,8 @@ export default function Hero() {
             <div key={index}>
               <div
                 className="relative w-full min-h-[220px] lg:min-h-[680px]"
+                className="relative w-full min-h-[220px] lg:min-h-[930px]"
+
                 style={{
                   backgroundImage: slide.background_image_url
                     ? `url(${getImageUrl(slide.background_image_url)})`
@@ -94,7 +96,7 @@ export default function Hero() {
                     {slide.is_button !== false && (
                       <button
                         onClick={() => navigate(slide.button_link)}
-                        className="lg:w-[160px] w-[72px] lg:h-[54px] h-[26px] text-[12px] lg:text-[22px] text-[var(--secondary-color)] hover:text-[var(--primary-color)] font-regular rounded shadow-md duration-300 bg-[var(--primary-color)] hover:bg-[var(--secondary-color)] "
+                        className="lg:w-[160px] w-[72px] lg:h-[54px] h-[26px] text-[12px] lg:text-[22px] text-secondary hover:text-primary font-regular rounded shadow-md duration-300 bg-primary hover:bg-secondary "
                       >
                         {slide.button_name}
                       </button>

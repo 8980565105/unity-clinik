@@ -53,22 +53,34 @@ export default function OfferSlider({ setShowLoginPopup }) {
       </Row>
       <Row>
         <div className="relative">
-          <NavBtn
-            direction="left"
-            onClick={() => scroll("left")}
-            variant="primary"
-          />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10">
+            <NavBtn
+              direction="left"
+              onClick={() => scroll("left")}
+              variant="primary"
+            />
+          </div>
+
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 z-10">
+            <NavBtn
+              direction="right"
+              onClick={() => scroll("right")}
+              variant="primary"
+            />
+          </div>
+
           <div
             ref={scrollRef}
-            className="flex gap-3 overflow-x-auto scroll-smooth px-10 py-3 no-scrollbar"
+            className="flex gap-3 overflow-x-auto scroll-smooth px-10 py-3 no-scrollbar ms-10"
           >
             <button
               onClick={() => setActiveOffer("all")}
               className={`whitespace-nowrap px-4 py-2 rounded-[5px] border text-sm transition
-              ${activeOffer === "all" ? "bg-[var(--theme-color)] text-white" : "bg-white text-black"}`}
+      ${activeOffer === "all" ? "bg-[var(--theme-color)] text-white" : "bg-white text-black"}`}
             >
               All
             </button>
+
             {discounts
               .filter((cat) => cat.status === "active")
               .map((cat) => (
@@ -76,17 +88,12 @@ export default function OfferSlider({ setShowLoginPopup }) {
                   key={cat._id}
                   onClick={() => setActiveOffer(cat._id)}
                   className={`whitespace-nowrap px-4 py-2 rounded-[5px] border text-sm transition
-                  ${activeOffer === cat._id ? "bg-[var(--theme-color)] text-white" : "bg-white text-black"}`}
+          ${activeOffer === cat._id ? "bg-[var(--theme-color)] text-white" : "bg-white text-black"}`}
                 >
                   {cat.name}
                 </button>
               ))}
           </div>
-          <NavBtn
-            direction="right"
-            onClick={() => scroll("right")}
-            variant="primary"
-          />
         </div>
       </Row>
       <Row>
@@ -110,7 +117,7 @@ export default function OfferSlider({ setShowLoginPopup }) {
             <div className="col-span-4 flex justify-center mt-10">
               <button
                 onClick={() => setVisibleCount((prev) => prev + 20)}
-                className="text-[18px] theme-border text-theme w-[187px] h-[70px] sm:w-[220px] sm:h-[89px] font-medium rounded-[10px] shadow-lg transition duration-300 uppercase"
+                className="text-[18px] theme-border text-theme w-[187px] h-[70px] sm:w-[220px] sm:h-[75px] font-medium rounded-[10px] shadow-lg transition duration-300 uppercase"
                 style={{
                   boxShadow: "inset 0px 0px 30px ",
                 }}

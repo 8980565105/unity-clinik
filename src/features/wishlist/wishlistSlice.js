@@ -1,4 +1,3 @@
-//D:\mycara\frontend\src\features\wishlist\wishlistSlice.js
 import { createSlice } from "@reduxjs/toolkit";
 import {
   addToWishlist,

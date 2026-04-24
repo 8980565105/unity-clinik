@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-
 import { Minus, Plus, Eye, Trash2 } from "lucide-react";
-
 import Button from "../ui/Button";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -24,7 +22,6 @@ const Wishlist = ({ product }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { token } = useSelector((state) => state.auth);
-  // const [showLoginPopup, setShowLoginPopup] = useState(false);
   const { items = [] } = useSelector((state) => state.wishlist);
   const userId = useSelector((state) => state.auth.user?._id);
   const wishlistId = useSelector((state) => state.wishlist.wishlistId);
@@ -112,15 +109,6 @@ const Wishlist = ({ product }) => {
           return;
         }
       }
-
-      const addResult = await dispatch(
-        addToCart({
-          cart_id,
-          product_id,
-          variant_id,
-          quantity: selectedQuantity,
-        }),
-      ).unwrap();
 
       if (selectedQuantity > 1) {
         const cartData = await dispatch(fetchCart(cart_id)).unwrap();

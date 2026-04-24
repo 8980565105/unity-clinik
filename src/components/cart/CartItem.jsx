@@ -33,16 +33,13 @@ export default function CartItem() {
     if (!cart_id) return;
     const newQuantity = item.quantity + 1;
 
-    // Optimistic update — UI instantly updates, no reload
     dispatch(updateLocalQuantity({ item_id: item._id, quantity: newQuantity }));
 
-    // Sync to backend silently — NO fetchCart after this
     dispatch(
       updateCartItem({ cart_id, item_id: item._id, quantity: newQuantity }),
     )
       .unwrap()
       .catch(() => {
-        // Revert on failure
         dispatch(
           updateLocalQuantity({ item_id: item._id, quantity: item.quantity }),
         );
@@ -53,11 +50,7 @@ export default function CartItem() {
     const cart_id = localStorage.getItem("cart_id");
     if (!cart_id || item.quantity <= 1) return;
     const newQuantity = item.quantity - 1;
-
-    // Optimistic update — UI instantly updates, no reload
     dispatch(updateLocalQuantity({ item_id: item._id, quantity: newQuantity }));
-
-    // Sync to backend silently — NO fetchCart after this
     dispatch(
       updateCartItem({ cart_id, item_id: item._id, quantity: newQuantity }),
     )
@@ -73,7 +66,6 @@ export default function CartItem() {
     const cart_id = localStorage.getItem("cart_id");
     if (!cart_id) return Toaster("No cart found!");
 
-    // fetchCart is fine here — delete kare to refresh jaruri se
     dispatch(deleteCartItem({ cart_id, item_id }))
       .unwrap()
       .then(() => dispatch(fetchCart(cart_id)));
@@ -91,7 +83,6 @@ export default function CartItem() {
 
   return (
     <div className="w-full">
-      {/* Desktop View */}
       <table className="w-full hidden custom-lg:table">
         <thead className="table-header-group">
           <tr className="border-b border-black font-18">
@@ -162,7 +153,6 @@ export default function CartItem() {
         </tbody>
       </table>
 
-      {/* Mobile View */}
       <div className="custom-lg:hidden space-y-[20px]">
         {items.map((item, index) => (
           <div

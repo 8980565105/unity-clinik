@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 
 
 export default function Checkout() {
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [appliedCoupon] = useState(null);
   const [formData, setFormData] = React.useState({
     email: "",
     firstName: "",

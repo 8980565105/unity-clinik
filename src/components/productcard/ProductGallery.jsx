@@ -118,7 +118,6 @@ export default function ProductGallery({
           ))}
         </div>
       </div>
-
       <div className="block md:hidden w-full rounded-[10px]">
         {fullImageUrls.length > 0 ? (
           <Slider {...sliderSettings}>

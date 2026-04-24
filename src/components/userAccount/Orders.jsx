@@ -77,17 +77,6 @@ export default function Orders() {
 
     dispatch(addReview(finalData));
   };
-  // useEffect(() => {
-  //   function handleClickOutside(event) {
-  //     if (sortRef.current && !sortRef.current.contains(event.target)) {
-  //       setIsSortOpen(false);
-  //     }
-  //     if (filterRef.current && !filterRef.current.contains(event.target))
-  //       setIsFilterOpen(false);
-  //   }
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => document.removeEventListener("mousedown", handleClickOutside);
-  // }, []);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -192,7 +181,7 @@ export default function Orders() {
                 setIsFilterOpen(!isFilterOpen);
                 setIsSortOpen(false);
               }}
-              className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isFilterOpen ? "bg-[var(--secondary-color)] text-[var(--primary-color)]" : "bg-[var(--primary-color)] text-[var(--secondary-color)] hover:bg-[var(--secondary-color)] hover:text-[var(--primary-color)]"}`}
+              className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isFilterOpen ? "bg-secondary text-primary" : "bg-primary text-secondary hover:bg-secondary hover:text-primary"}`}
             >
               <span className="hidden md:inline capitalize">Filter by </span>
               <SlidersHorizontal size={18} />
@@ -205,7 +194,7 @@ export default function Orders() {
                     setStatusFilter("all");
                     setIsFilterOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${statusFilter === "all" ? "text-[var(--primary-color)] font-bold" : ""}`}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${statusFilter === "all" ? "text-primary font-bold" : ""}`}
                 >
                   All Status
                 </button>
@@ -216,7 +205,7 @@ export default function Orders() {
                       setStatusFilter(status);
                       setIsFilterOpen(false);
                     }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 capitalize ${statusFilter === status ? "text-[var(--primary-color)] font-bold" : "text-gray-700"}`}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 capitalize ${statusFilter === status ? "text-primary font-bold" : "text-gray-700"}`}
                   >
                     {status.replace("_", " ")}
                   </button>
@@ -231,7 +220,7 @@ export default function Orders() {
                 setIsSortOpen(!isSortOpen);
                 setIsFilterOpen(false);
               }}
-              className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isSortOpen ? "text-[var(--primary-color)]" : "bg-[var(--primary-color)] text-[var(--secondary-color)] hover:bg-[var(--secondary-color)] hover:text-[var(--primary-color)]"}`}
+              className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isSortOpen ? "text-primary" : "bg-primary text-secondary hover:bg-secondary hover:text-primary"}`}
             >
               <span className="hidden md:inline capitalize">Sort by</span>
               <SortDesc size={18} />
@@ -244,7 +233,7 @@ export default function Orders() {
                     setPaymentFilter("all");
                     setIsSortOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "all" ? "text-[var(--primary-color)] font-bold" : ""}`}
+                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "all" ? "text-primary font-bold" : ""}`}
                 >
                   All Orders
                 </button>
@@ -253,7 +242,7 @@ export default function Orders() {
                     setPaymentFilter("Online");
                     setIsSortOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "Online" ? " text-[var(--primary-color)] font-bold" : "text-gray-700"}`}
+                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "Online" ? " text-primary font-bold" : "text-gray-700"}`}
                 >
                   Online Payment
                 </button>
@@ -262,7 +251,7 @@ export default function Orders() {
                     setPaymentFilter("COD");
                     setIsSortOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "COD" ? " text-[var(--primary-color)] font-bold" : "text-gray-700"}`}
+                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "COD" ? " text-primary font-bold" : "text-gray-700"}`}
                 >
                   Cash on Delivery
                 </button>
