@@ -51,7 +51,6 @@ const settingSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-settingSchema.index({ storeId: 1 }, { unique: true, sparse: true });
 settingSchema.index({ user: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model("Setting", settingSchema);

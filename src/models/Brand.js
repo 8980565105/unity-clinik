@@ -28,7 +28,7 @@ brandSchema.pre("save", function (next) {
   if (this.isModified("name")) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-  // next();
+  
 });
 
 brandSchema.index({ name: 1, storeId: 1 }, { unique: true });

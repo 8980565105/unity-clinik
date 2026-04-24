@@ -1,4 +1,3 @@
-
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const OrderItem = require("../models/OrderItem");
@@ -35,7 +34,10 @@ const getDashboard = async (req, res) => {
       now.getFullYear(),
       now.getMonth() + 1,
       0,
-      23, 59, 59, 999
+      23,
+      59,
+      59,
+      999,
     );
 
     const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -43,7 +45,10 @@ const getDashboard = async (req, res) => {
       now.getFullYear(),
       now.getMonth(),
       0,
-      23, 59, 59, 999
+      23,
+      59,
+      59,
+      999,
     );
 
     const totalProducts = await Product.countDocuments(productFilter);
@@ -205,7 +210,7 @@ const getDashboard = async (req, res) => {
           .populate("product_id", "name")
           .populate("variant_id", "sku price");
         return { ...order.toObject(), items };
-      })
+      }),
     );
 
     return sendResponse(res, true, {
@@ -232,4 +237,27 @@ const getDashboard = async (req, res) => {
   }
 };
 
-module.exports = { getDashboard };
+const getDashboardcount = async (req, res) => {
+  try {
+    const totalProducts = await Product.countDocuments();
+    const totalOrders = await Order.countDocuments();
+    const totalUsers = await User.countDocuments();
+    const revenueAgg = await Payment.aggregate([
+      { $match: { status: "completed" } },
+      { $group: { _id: null, totalRevenue: { $sum: "$amount_paid" } } },
+    ]);
+    const totalRevenue = revenueAgg[0]?.totalRevenue || 0;
+
+    return sendResponse(res, true, {
+      totalProducts,
+      totalOrders,
+      totalUsers,
+      totalRevenue,
+    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    return sendResponse(res, false, null, error.message);
+  }
+};
+
+module.exports = { getDashboard, getDashboardcount };

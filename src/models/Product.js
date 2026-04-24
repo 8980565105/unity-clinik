@@ -5,7 +5,7 @@ const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     description: { type: String },
-
+    steps: { type: String },
     category_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "subCategory",
@@ -38,6 +38,29 @@ const productSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    sections: [
+      {
+        type: { type: String },
+        data: {
+          status: { type: Boolean, default: true },
+          title: { type: String },
+          description: { type: String },
+          image: { type: String },
+          items: [
+            {
+              name: { type: String },
+              description: { type: String },
+              image: { type: String },
+              product_id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product",
+                default: null,
+              },
+            },
+          ],
+        },
+      },
+    ],
   },
   { timestamps: true },
 );
@@ -46,7 +69,6 @@ productSchema.pre("save", function (next) {
   if (this.isModified("name") || !this.slug) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-  // next();
 });
 
 productSchema.index({ name: 1, storeId: 1 }, { unique: true });
