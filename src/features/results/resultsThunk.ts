@@ -1,68 +1,74 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
-
-export const fetchBrands = createAsyncThunk(
-  "brands/fetchBrands",
+export const fetchResults = createAsyncThunk(
+  "results/fetchResults",
   async (
-    params: { page?: number; limit?: number; search?: string; isDownload?: boolean,status?: "active" | "inactive"; } = {},
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      isDownload?: boolean;
+      status?: "active" | "inactive";
+    } = {},
     { rejectWithValue }
   ) => {
     try {
       const { isDownload = false, ...query } = params;
-      const res = await api.get(ROUTES.brands.getAll, { params: { ...query, isDownload } });
+      const res = await api.get(ROUTES.results.getAll, {
+        params: { ...query, isDownload },
+      });
       if (res.data.success) return res.data.data;
-      return rejectWithValue(res.data.message || "Failed to fetch brands");
+      return rejectWithValue(res.data.message || "Failed to fetch results");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
   }
 );
-
-export const getBrandById = createAsyncThunk(
-  "brands/getBrandById",
+export const getResultsById = createAsyncThunk(
+  "results/getResultsById",
   async (id: string, { rejectWithValue }) => {
     try {
-      const res = await api.get(ROUTES.brands.getById(id));
+      const res = await api.get(ROUTES.results.getById(id));
       if (res.data.success) return res.data.data;
-      return rejectWithValue(res.data.message || "Brand not found");
+      return rejectWithValue(res.data.message || "Result not found");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
   }
 );
-
-export const createBrand = createAsyncThunk(
-  "brands/createBrand",
+export const createResults = createAsyncThunk(
+  "results/createResults",
   async (data: any, { rejectWithValue }) => {
     try {
-      const res = await api.post(ROUTES.brands.create, data);
+      const res = await api.post(ROUTES.results.create, data);
       if (res.data.success) return res.data.data;
-      return rejectWithValue(res.data.message || "Failed to create brand");
+      return rejectWithValue(res.data.message || "Failed to create result");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
   }
 );
-
-export const updateBrand = createAsyncThunk(
-  "brands/updateBrand",
+export const updateResults = createAsyncThunk(
+  "results/updateResults",
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
-      const res = await api.put(ROUTES.brands.update(id), data);
+      const res = await api.put(ROUTES.results.update(id), data);
       if (res.data.success) return res.data.data;
-      return rejectWithValue(res.data.message || "Failed to update brand");
+      return rejectWithValue(res.data.message || "Failed to update result");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
   }
 );
-
-export const updateBrandStatus = createAsyncThunk(
-  "brands/updateBrandStatus",
-  async ({ id, status }: { id: string; status: "active" | "inactive" }, { rejectWithValue }) => {
+export const updateResultsStatus = createAsyncThunk(
+  "results/updateResultsStatus",
+  async (
+    { id, status }: { id: string; status: "active" | "inactive" },
+    { rejectWithValue }
+  ) => {
     try {
-      const res = await api.put(ROUTES.brands.updateStatus(id), { status });
+      const res = await api.put(ROUTES.results.updateStatus(id), { status });
       if (res.data.success) return res.data.data;
       return rejectWithValue(res.data.message || "Failed to update status");
     } catch (err: any) {
@@ -70,27 +76,25 @@ export const updateBrandStatus = createAsyncThunk(
     }
   }
 );
-
-export const deleteBrand = createAsyncThunk(
-  "brands/deleteBrand",
+export const deleteResults = createAsyncThunk(
+  "results/deleteResults",
   async (id: string, { rejectWithValue }) => {
     try {
-      const res = await api.delete(ROUTES.brands.delete(id));
+      const res = await api.delete(ROUTES.results.delete(id));
       if (res.data.success) return id;
-      return rejectWithValue(res.data.message || "Failed to delete brand");
+      return rejectWithValue(res.data.message || "Failed to delete result");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
   }
 );
-
-export const bulkDeleteBrands = createAsyncThunk(
-  "brands/bulkDeleteBrands",
+export const bulkDeleteResults = createAsyncThunk(
+  "results/bulkDeleteResults",
   async (ids: string[], { rejectWithValue }) => {
     try {
-      const res = await api.post(ROUTES.brands.bulkDelete, { ids });
+      const res = await api.post(ROUTES.results.bulkDelete, { ids });
       if (res.data.success) return ids;
-      return rejectWithValue(res.data.message || "Failed to delete brands");
+      return rejectWithValue(res.data.message || "Failed to bulk delete");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }

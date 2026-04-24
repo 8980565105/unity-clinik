@@ -1,4 +1,4 @@
-import { createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, isRejectedWithValue } from "@reduxjs/toolkit";
 import api from "@/services/api";
 import { ROUTES } from "@/services/routes";
 
@@ -86,9 +86,31 @@ export const bulkDeleteCustomerReviews = createAsyncThunk(
   },
 );
 
-// ─── Create review (Frontend user submits review on product page) ─────────────
-// store_owner_id is auto-resolved on backend from product_id.createdBy
-// Frontend just sends: product_id, rating, title, comment
+// ─── Fetch public reviews for a product (Frontend product page — no auth) ─────
+// Uses public route: GET /customer-reviews/product/:product_id
+export const fetchPublicProductReviews = createAsyncThunk(
+  "customerReviews/fetchPublic",
+  async (
+    {
+      product_id,
+      page = 1,
+      limit = 5,
+    }: { product_id: string; page?: number; limit?: number },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await api.get(
+        `${ROUTES.customerReviews.getAll}/product/${product_id}`,
+        { params: { page, limit } },
+      );
+      if (res.data.success) return res.data.data;
+      return rejectWithValue(res.data.message || "Failed to fetch reviews");
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server error");
+    }
+  },
+);
+
 export const createCustomerReview = createAsyncThunk(
   "customerReviews/create",
   async (
@@ -110,25 +132,14 @@ export const createCustomerReview = createAsyncThunk(
   },
 );
 
-// ─── Fetch public reviews for a product (Frontend product page — no auth) ─────
-// Uses public route: GET /customer-reviews/product/:product_id
-export const fetchPublicProductReviews = createAsyncThunk(
-  "customerReviews/fetchPublic",
-  async (
-    {
-      product_id,
-      page = 1,
-      limit = 5,
-    }: { product_id: string; page?: number; limit?: number },
-    { rejectWithValue },
-  ) => {
+
+export const updateReviews = createAsyncThunk(
+  "customerReviews/update",
+  async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
     try {
-      const res = await api.get(
-        `${ROUTES.customerReviews.getAll}/product/${product_id}`,
-        { params: { page, limit } },
-      );
+      const res = await api.put(ROUTES.customerReviews.update(id), data);
       if (res.data.success) return res.data.data;
-      return rejectWithValue(res.data.message || "Failed to fetch reviews");
+      return rejectWithValue(res.data.message || "Failed to update review");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server error");
     }

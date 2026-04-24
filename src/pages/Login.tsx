@@ -115,7 +115,7 @@ export default function Login() {
           </button>
 
         </form>
-        <div className="flex justify-center mt-2 text-red-500">
+        {/* <div className="flex justify-center mt-2 text-red-500">
           <button
             type="button"
 
@@ -123,7 +123,7 @@ export default function Login() {
           >
             Create account?
           </button>
-        </div>
+        </div> */}
 
       </div>
     </div>

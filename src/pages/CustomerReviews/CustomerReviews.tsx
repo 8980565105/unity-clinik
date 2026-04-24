@@ -9,9 +9,15 @@ import {
   updateReviewsStatus,
 } from "@/features/customerReviews/customerReviewsThunk";
 import { GenericTable } from "@/components/ui/adminTable";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useBasePath } from "@/hooks/useBasePath";
+import { Link } from "react-router-dom";
+
 
 export default function CustomerReviewsPage() {
   const dispatch = useDispatch<AppDispatch>();
+    const basePath = useBasePath();
 
   const columns = [
     {
@@ -69,6 +75,13 @@ export default function CustomerReviewsPage() {
           updateReviewsStatus({ id, is_approved: newStatus }),
         ).unwrap();
       }}
+       headerActions={
+                      <Link to={`${basePath}/customer-reviews/add`}>
+                          <Button className="flex items-center gap-2">
+                              <Plus className="h-4 w-4" /> Add Reviews
+                          </Button>
+                      </Link>
+                  }
 
 
     />

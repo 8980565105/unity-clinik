@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminLayout } from "./components/layout/AdminLayout";
-import Register from "./pages/Register";
+// import Register from "./pages/Register";
 import VelzonDashboard from "./pages/VelzonDashboard";
 import Products from "./pages/Products/Products";
 import AddProduct from "./pages/Products/AddProduct";
@@ -19,14 +19,14 @@ import BrandFormPage from "./pages/Brands/BrandFormPage";
 import Brands from "./pages/Brands/Brands";
 import TypeFormPage from "./pages/Types/TypeForm";
 import Types from "./pages/Types/Types";
-import FabricFormPage from "./pages/Fabrics/FabricForm";
-import Fabrics from "./pages/Fabrics/Fabrics";
+// import FabricFormPage from "./pages/Fabrics/FabricForm";
+// import Fabrics from "./pages/Fabrics/Fabrics";
 import ProductLabels from "./pages/ProductLabels/ProductLabels";
 import ProductLabelFormPage from "./pages/ProductLabels/ProductLabelForm";
-import Colors from "./pages/Colors/Colors";
-import ColorFormPage from "./pages/Colors/ColorForm";
-import Sizes from "./pages/Sizes/Sizes";
-import SizeFormPage from "./pages/Sizes/SizeForm";
+// import Colors from "./pages/Colors/Colors";
+// import ColorFormPage from "./pages/Colors/ColorForm";
+// import Sizes from "./pages/Sizes/Sizes";
+// import SizeFormPage from "./pages/Sizes/SizeForm";
 import Discounts from "./pages/Discount/Discounts";
 import DiscountFormPage from "./pages/Discount/DiscountForm";
 import CouponFormPage from "./pages/coupons/CouponForm";
@@ -55,7 +55,13 @@ import Subcategories from "./pages/Subcategories/Subcategories"
 import SubCategoryFormPage from "./pages/Subcategories/SubcategoryForm";
 import FaqsFrom from "./pages/Faqs/FaqsFrom";
 import Faqspage from "./pages/Faqs/Faqs";
-
+import ResultFrom from "./pages/Result/ResultFrom";
+import Result from "./pages/Result/Result";
+// import { Router } from "lucide-react";
+import EmailsPage from "./pages/Email/email";
+import { Router } from "lucide-react";
+import EmailsFormPage from "./pages/Email/EmailFrom";
+import CustomerReviewsFrom from "./pages/CustomerReviews/CustomerReviewsFrom";
 
 const queryClient = new QueryClient();
 
@@ -67,7 +73,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* <Route path="/register" element={<Register />} /> */}
           <Route path="/forgate-password" element={<Forgatepassword />}></Route>
           {/* ════════════════════════════════════════════════════════════════
               ADMIN ROUTES   —   prefix: /
@@ -85,7 +91,6 @@ const App = () => (
               <Route path="categories" element={<Categories />} />
               <Route path="categories/add" element={<CategoryFormPage />} />
               <Route path="categories/:id/edit" element={<CategoryFormPage />} />
-
               <Route path="subcategories" element={<Subcategories />} />
               <Route path="subcategories/add" element={<SubCategoryFormPage />} />
               <Route path="subcategories/:id/edit" element={<SubCategoryFormPage />} />
@@ -96,18 +101,18 @@ const App = () => (
               <Route path="types" element={<Types />} />
               <Route path="types/add" element={<TypeFormPage />} />
               <Route path="types/:id/edit" element={<TypeFormPage />} />
-              <Route path="fabrics" element={<Fabrics />} />
+              {/* <Route path="fabrics" element={<Fabrics />} />
               <Route path="fabrics/add" element={<FabricFormPage />} />
-              <Route path="fabrics/:id/edit" element={<FabricFormPage />} />
+              <Route path="fabrics/:id/edit" element={<FabricFormPage />} /> */}
               <Route path="product-labels" element={<ProductLabels />} />
               <Route path="product-labels/add" element={<ProductLabelFormPage />} />
               <Route path="product-labels/:id/edit" element={<ProductLabelFormPage />} />
-              <Route path="colors" element={<Colors />} />
+              {/* <Route path="colors" element={<Colors />} />
               <Route path="colors/add" element={<ColorFormPage />} />
-              <Route path="colors/:id/edit" element={<ColorFormPage />} />
-              <Route path="sizes" element={<Sizes />} />
+              <Route path="colors/:id/edit" element={<ColorFormPage />} /> */}
+              {/* <Route path="sizes" element={<Sizes />} />
               <Route path="sizes/add" element={<SizeFormPage />} />
-              <Route path="sizes/:id/edit" element={<SizeFormPage />} />
+              <Route path="sizes/:id/edit" element={<SizeFormPage />} /> */}
 
               {/* Promotions */}
               <Route path="discounts" element={<Discounts />} />
@@ -130,6 +135,12 @@ const App = () => (
               <Route path="users/add" element={<UserFormPage />} />
               <Route path="users/:id/edit" element={<UserFormPage />} />
               <Route path="customer-reviews" element={<CustomerReviews />} />
+              <Route path="customer-reviews/add" element={<CustomerReviewsFrom />} />
+              <Route path="customer-reviews/:id/edit" element={<CustomerReviewsFrom />} />
+
+
+
+
               <Route path="wishlists" element={<Wishlist />} />
               <Route path="carts" element={<Cart />} />
 
@@ -137,6 +148,14 @@ const App = () => (
               <Route path="faqs" element={<Faqspage />} />
               <Route path="faqs/add" element={<FaqsFrom />} />\
               <Route path="faqs/:id/edit" element={<FaqsFrom />} />
+              <Route path="results" element={<Result />} />
+              <Route path="results/add" element={<ResultFrom />} />
+              <Route path="results/:id/edit" element={<ResultFrom />} />
+
+              {/* emails */}
+              <Route path="emails" element={<EmailsPage />} />
+              <Route path="emails/add" element={<EmailsFormPage />} />
+              <Route path="emails/:id/edit" element={<EmailsFormPage />} />
 
               {/* System */}
               <Route path="pages" element={<Pages />} />
@@ -188,18 +207,18 @@ const App = () => (
               <Route path="types" element={<Types />} />
               <Route path="types/add" element={<TypeFormPage />} />
               <Route path="types/:id/edit" element={<TypeFormPage />} />
-              <Route path="fabrics" element={<Fabrics />} />
+              {/* <Route path="fabrics" element={<Fabrics />} />
               <Route path="fabrics/add" element={<FabricFormPage />} />
-              <Route path="fabrics/:id/edit" element={<FabricFormPage />} />
+              <Route path="fabrics/:id/edit" element={<FabricFormPage />} /> */}
               <Route path="product-labels" element={<ProductLabels />} />
               <Route path="product-labels/add" element={<ProductLabelFormPage />} />
               <Route path="product-labels/:id/edit" element={<ProductLabelFormPage />} />
-              <Route path="colors" element={<Colors />} />
+              {/* <Route path="colors" element={<Colors />} />
               <Route path="colors/add" element={<ColorFormPage />} />
-              <Route path="colors/:id/edit" element={<ColorFormPage />} />
-              <Route path="sizes" element={<Sizes />} />
+              <Route path="colors/:id/edit" element={<ColorFormPage />} /> */}
+              {/* <Route path="sizes" element={<Sizes />} />
               <Route path="sizes/add" element={<SizeFormPage />} />
-              <Route path="sizes/:id/edit" element={<SizeFormPage />} />
+              <Route path="sizes/:id/edit" element={<SizeFormPage />} /> */}
 
               {/* Promotions */}
               <Route path="discounts" element={<Discounts />} />
@@ -225,6 +244,10 @@ const App = () => (
               <Route path="users/add" element={<UserFormPage />} />
               <Route path="users/:id/edit" element={<UserFormPage />} />
               <Route path="customer-reviews" element={<CustomerReviews />} />
+              <Route path="customer-reviews" element={<CustomerReviews />} />
+              <Route path="customer-reviews/add" element={<CustomerReviewsFrom />} />
+              <Route path="customer-reviews/:id/edit" element={<CustomerReviewsFrom />} />
+
               <Route path="wishlists" element={<Wishlist />} />
               <Route path="carts" element={<Cart />} />
 
@@ -232,6 +255,18 @@ const App = () => (
               <Route path="faqs" element={<Faqspage />} />
               <Route path="faqs/add" element={<FaqsFrom />} />
               <Route path="faqs/:id/edit" element={<FaqsFrom />} />
+              <Route path="results" element={<Result />} />
+              <Route path="results/add" element={<ResultFrom />} />
+              <Route path="results/:id/edit" element={<ResultFrom />} />
+
+              {/* emails */}
+
+              <Route path="emails" element={<EmailsPage />} />
+              <Route path="emails/add" element={<EmailsFormPage />} />
+              <Route path="emails/:id/edit" element={<EmailsFormPage />} />
+
+
+
 
               {/* System */}
               <Route path="pages" element={<Pages />} />

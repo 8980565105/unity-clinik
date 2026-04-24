@@ -11,19 +11,16 @@ import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useBasePath } from "@/hooks/useBasePath";
 import { createFaqs, getFaqsById, updateFaqs } from "@/features/faqs/faqsThunk";
-
 export default function FaqsFrom() {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
     const isEditMode = Boolean(id);
     const basePath = useBasePath();
-
     const [question, setQuestion] = useState("");
     const [answer, setAnswer] = useState("");
     const [status, setStatus] = useState(true);
     const [category, setCategory] = useState("");
-
     useEffect(() => {
         if (isEditMode && id) {
             dispatch(getFaqsById(id)).then((res: any) => {
@@ -37,7 +34,6 @@ export default function FaqsFrom() {
             });
         }
     }, [dispatch, id, isEditMode]);
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const payload = {
@@ -46,7 +42,6 @@ export default function FaqsFrom() {
             category,
             status: status ? "active" : "inactive",
         };
-
         try {
             let result;
             if (isEditMode && id) {
@@ -54,7 +49,6 @@ export default function FaqsFrom() {
             } else {
                 result = await dispatch(createFaqs(payload));
             }
-
             if (createFaqs.fulfilled.match(result) || updateFaqs.fulfilled.match(result)) {
                 toast.success(isEditMode ? "FAQ updated successfully!" : "FAQ created successfully!");
                 navigate(`${basePath}/faqs`); 
@@ -65,7 +59,6 @@ export default function FaqsFrom() {
             toast.error("Server Error");
         }
     };
-
     return (
         <div className="p-6 mx-auto">
             <div className="flex items-center gap-4 mb-6">
@@ -83,7 +76,6 @@ export default function FaqsFrom() {
                     </p>
                 </div>
             </div>
-
             <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
                     <Card className="shadow-md border border-gray-200">
@@ -125,7 +117,6 @@ export default function FaqsFrom() {
                         </CardContent>
                     </Card>
                 </div>
-
                 <div className="space-y-6">
                     <Card className="shadow-md border border-gray-200">
                         <CardHeader>
@@ -142,7 +133,6 @@ export default function FaqsFrom() {
                             </div>
                         </CardContent>
                     </Card>
-
                     <div className="flex gap-3">
                         <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
                             {isEditMode ? "Update FAQ" : "Create FAQ"}

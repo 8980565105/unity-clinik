@@ -22,8 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import { fetchCategories } from "@/features/categories/categoriesThunk";
 import { fetchBrands } from "@/features/brands/brandsThunk";
 import { fetchTypes } from "@/features/types/typesThunk";
-import { fetchFabrics } from "@/features/fabrics/fabricsThunk";
-import { fetchColors } from "@/features/colors/colorsThunk";
+// import { fetchFabrics } from "@/features/fabrics/fabricsThunk";
+// import { fetchColors } from "@/features/colors/colorsThunk";
 import { fetchSizes } from "@/features/sizes/sizesThunk";
 import { fetchProductLabels } from "@/features/productLabels/productLabelsThunk";
 import {
@@ -61,8 +61,8 @@ export default function Products() {
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [sizeFilter, setSizeFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
-  const [fabricFilter, setFabricFilter] = useState<string[]>([]);
-  const [colorFilter, setColorFilter] = useState<string[]>([]);
+  // const [fabricFilter, setFabricFilter] = useState<string[]>([]);
+  // const [colorFilter, setColorFilter] = useState<string[]>([]);
   const [priceFilter, setPriceFilter] = useState<{
     min?: number;
     max?: number;
@@ -71,9 +71,9 @@ export default function Products() {
   const { categories } = useSelector((state: RootState) => state.categories);
   const { brands } = useSelector((state: RootState) => state.brands);
   const { types } = useSelector((state: RootState) => state.types);
-  const { fabrics } = useSelector((state: RootState) => state.fabrics);
-  const { colors } = useSelector((state: RootState) => state.colors);
-  const { sizes } = useSelector((state: RootState) => state.sizes);
+  // const { fabrics } = useSelector((state: RootState) => state.fabrics);
+  // const { colors } = useSelector((state: RootState) => state.colors);
+  // const { sizes } = useSelector((state: RootState) => state.sizes);
   const { labels: productLabels } = useSelector(
     (state: RootState) => state.productLabels
   );
@@ -92,8 +92,8 @@ export default function Products() {
     brands: brandFilter.length ? brandFilter.join(",") : undefined,
     sizes: sizeFilter.length ? sizeFilter.join(",") : undefined,
     types: typeFilter.length ? typeFilter.join(",") : undefined,
-    fabrics: fabricFilter.length ? fabricFilter.join(",") : undefined,
-    colors: colorFilter.length ? colorFilter.join(",") : undefined,
+    // fabrics: fabricFilter.length ? fabricFilter.join(",") : undefined,
+    // colors: colorFilter.length ? colorFilter.join(",") : undefined,
     productLabels: productLabelsFilter.length
       ? productLabelsFilter.join(",")
       : undefined,
@@ -111,8 +111,8 @@ export default function Products() {
     brandFilter,
     sizeFilter,
     typeFilter,
-    fabricFilter,
-    colorFilter,
+    // fabricFilter,
+    // colorFilter,
     priceFilter,
     productLabelsFilter,
     dispatch,
@@ -163,9 +163,9 @@ export default function Products() {
     dispatch(fetchCategories({ page: 1, limit: 100 }));
     dispatch(fetchBrands({ page: 1, limit: 100 }));
     dispatch(fetchTypes({ page: 1, limit: 100 }));
-    dispatch(fetchFabrics({ page: 1, limit: 100 }));
-    dispatch(fetchColors({ page: 1, limit: 100 }));
-    dispatch(fetchSizes({ page: 1, limit: 100 }));
+    // dispatch(fetchFabrics({ page: 1, limit: 100 }));
+    // dispatch(fetchColors({ page: 1, limit: 100 }));
+    // dispatch(fetchSizes({ page: 1, limit: 100 }));
     dispatch(fetchProductLabels({ page: 1, limit: 100 }));
     dispatch(fetchsubCategories({ page: 1, limit: 100, status: "active" }));
   }, [dispatch]);
@@ -214,8 +214,8 @@ export default function Products() {
     const [localBrand, setLocalBrand] = useState(brandFilter);
     const [localSize, setLocalSize] = useState(sizeFilter);
     const [localType, setLocalType] = useState(typeFilter);
-    const [localFabric, setLocalFabric] = useState(fabricFilter);
-    const [localColor, setLocalColor] = useState(colorFilter);
+    // const [localFabric, setLocalFabric] = useState(fabricFilter);
+    // const [localColor, setLocalColor] = useState(colorFilter);
     const [localPrice, setLocalPrice] = useState(priceFilter);
     const [localLabels, setLocalLabels] = useState(productLabelsFilter);
 
@@ -224,8 +224,8 @@ export default function Products() {
       setLocalBrand([]);
       setLocalSize([]);
       setLocalType([]);
-      setLocalFabric([]);
-      setLocalColor([]);
+      // setLocalFabric([]);
+      // setLocalColor([]);
       setLocalPrice({});
       setLocalLabels([]);
     };
@@ -235,8 +235,8 @@ export default function Products() {
       setBrandFilter(localBrand);
       setSizeFilter(localSize);
       setTypeFilter(localType);
-      setFabricFilter(localFabric);
-      setColorFilter(localColor);
+      // setFabricFilter(localFabric);
+      // setColorFilter(localColor);
       setPriceFilter(localPrice);
       setProductLabelsFilter(localLabels);
       onApply();
@@ -265,13 +265,13 @@ export default function Products() {
           setSelected={setLocalBrand}
         />
 
-        <h4 className="font-semibold text-gray-700">Filter by Size</h4>
+        {/* <h4 className="font-semibold text-gray-700">Filter by Size</h4>
         <MultiSelectPopover
           label="Select Sizes"
           options={sizes.map((s) => ({ value: s._id, label: s.name }))}
           selected={localSize}
           setSelected={setLocalSize}
-        />
+        /> */}
 
         <h4 className="font-semibold text-gray-700">Other Filters</h4>
         <div className="grid grid-cols-2 gap-2">
@@ -281,18 +281,18 @@ export default function Products() {
             selected={localType}
             setSelected={setLocalType}
           />
-          <MultiSelectPopover
+          {/* <MultiSelectPopover
             label="Fabrics"
             options={fabrics.map((f) => ({ value: f._id, label: f.name }))}
             selected={localFabric}
             setSelected={setLocalFabric}
-          />
-          <MultiSelectPopover
+          /> */}
+          {/* <MultiSelectPopover
             label="Colors"
             options={colors.map((c) => ({ value: c._id, label: c.name }))}
             selected={localColor}
             setSelected={setLocalColor}
-          />
+          /> */}
           <MultiSelectPopover
             label="Product Labels"
             options={productLabels.map((p) => ({
@@ -461,7 +461,7 @@ export default function Products() {
                         colSpan={6}
                         className="text-center py-10 text-gray-500"
                       >
-                        <div className="flex items-center justify-center gap-2">
+                        {/* <div className="flex items-center justify-center gap-2">
                           <svg
                             className="animate-spin h-5 w-5 text-gray-400"
                             xmlns="http://www.w3.org/2000/svg"
@@ -483,7 +483,7 @@ export default function Products() {
                             />
                           </svg>
                           Loading products...
-                        </div>
+                        </div> */}
                       </td>
                     </tr>
                   ) : products?.length === 0 ? (
@@ -602,12 +602,12 @@ export default function Products() {
                                           <th className="p-2 text-left">
                                             Type
                                           </th>
-                                          <th className="p-2 text-left">
+                                          {/* <th className="p-2 text-left">
                                             Fabric
                                           </th>
                                           <th className="p-2 text-left">
                                             Color / Size
-                                          </th>
+                                          </th> */}
                                           <th className="p-2 text-left">
                                             Price / Stock
                                           </th>
@@ -629,11 +629,11 @@ export default function Products() {
                                             <td className="p-2">
                                               {v?.type?.[0]?.name || "-"}
                                             </td>
-                                            <td className="p-2">
+                                            {/* <td className="p-2">
                                               {v?.fabric?.[0]?.name || "-"}
-                                            </td>
+                                            </td> */}
                                             <td className="p-2">
-                                              {v?.color?.[0]?.name || "-"} /{" "}
+                                              {/* {v?.color?.[0]?.name || "-"} /{" "} */}
                                               {v?.size?.[0]?.name || "-"}
                                             </td>
                                             <td className="p-2">

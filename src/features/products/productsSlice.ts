@@ -36,6 +36,7 @@ interface Product {
   name: string;
   slug: string;
   description?: string;
+  steps?: string;
   category: { _id: string; name: string } | string;
   labels: { _id: string; name: string }[] | string[];
   images: string[];

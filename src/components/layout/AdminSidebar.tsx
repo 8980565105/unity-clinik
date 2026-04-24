@@ -4,10 +4,7 @@ import {
   FolderTree,
   Tag,
   Shirt,
-  Palette,
   Tags,
-  Droplet,
-  Ruler,
   Percent,
   Ticket,
   ShoppingCart,
@@ -44,7 +41,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { RootState } from "@/store";
-import { Layer } from "recharts";
+import { Label } from "recharts";
 
 
 const adminSections = [
@@ -57,13 +54,9 @@ const adminSections = [
     items: [
       { title: "Categories", url: "/categories", icon: FolderTree },
       { title: "SubCategories", url: "/subcategories", icon: FolderTree },
-
       { title: "Brands", url: "/brands", icon: Tag },
       { title: "Types", url: "/types", icon: Shirt },
-      { title: "Fabrics", url: "/fabrics", icon: Palette },
       { title: "Product Labels", url: "/product-labels", icon: Tags },
-      { title: "Colors", url: "/colors", icon: Droplet },
-      { title: "Sizes", url: "/sizes", icon: Ruler },
       { title: "Products", url: "/products", icon: Package },
     ],
   },
@@ -97,6 +90,13 @@ const adminSections = [
     label: "Pages",
     items: [
       { title: "Faqs", url: "/faqs", icon: Columns },
+      { title: "Result", url: "results", icon: Columns },
+    ]
+  },
+  {
+    label: "E-Mail",
+    items: [
+      { title: "Email", url: "/emails", icon: Navigation }
     ]
   },
   {
@@ -125,10 +125,7 @@ const storeOwnerSections = [
       { title: "SubCategories", url: "/store_owner/subcategories", icon: FolderTree },
       { title: "Brands", url: "/store_owner/brands", icon: Tag },
       { title: "Types", url: "/store_owner/types", icon: Shirt },
-      { title: "Fabrics", url: "/store_owner/fabrics", icon: Palette },
       { title: "Product Labels", url: "/store_owner/product-labels", icon: Tags },
-      { title: "Colors", url: "/store_owner/colors", icon: Droplet },
-      { title: "Sizes", url: "/store_owner/sizes", icon: Ruler },
       { title: "Products", url: "/store_owner/products", icon: Package },
 
     ],
@@ -151,7 +148,6 @@ const storeOwnerSections = [
   {
     label: "Customers",
     items: [
-      // { title: "Store", url: "/store_owner/stores", icon: Users },
       { title: "Users", url: "/store_owner/users", icon: Users },
       { title: "Customer Reviews", url: "/store_owner/customer-reviews", icon: Star },
       { title: "Wishlist", url: "/store_owner/wishlists", icon: Heart },
@@ -162,7 +158,15 @@ const storeOwnerSections = [
     label: "Pages",
     items: [
       { title: "Faqs", url: "/store_owner/faqs", icon: Columns },
+      { title: "Result", url: "results", icon: Columns },
 
+
+    ]
+  },
+  {
+    label: "E-Mail",
+    items: [
+      { title: "Email", url: "/emails", icon: Navigation }
     ]
   },
   {
@@ -177,7 +181,7 @@ const storeOwnerSections = [
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
+
 export function AdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();

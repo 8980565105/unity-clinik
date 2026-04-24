@@ -7,16 +7,17 @@ import {
   getCustomerReviewById,
   updateReviewsStatus,
   createCustomerReview,
+  updateReviews,
   fetchPublicProductReviews,
 } from "./customerReviewsThunk";
 
 interface CustomerReviewState {
-  customerReviews: any[]; // Admin/store panel list
-  publicReviews: any[]; // Frontend product page reviews
+  customerReviews: any[];
+  publicReviews: any[];
   total: number;
   publicTotal: number;
   loading: boolean;
-  submitting: boolean; // For frontend review form submit
+  submitting: boolean;
   error: string | null;
   selectedReview: any | null;
 }
@@ -61,6 +62,22 @@ const customerReviewsSlice = createSlice({
       // ─── Get by ID ──────────────────────────────────────────────────────────
       .addCase(getCustomerReviewById.fulfilled, (state, action) => {
         state.selectedReview = action.payload;
+      })
+
+      .addCase(updateReviews.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateReviews.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.customerReviews.findIndex(
+          (r) => r._id === action.payload._id,
+        );
+        if (index !== -1) state.customerReviews[index] = action.payload;
+      })
+      .addCase(updateReviews.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
 
       // ─── Update status (approve/reject toggle) ──────────────────────────────
