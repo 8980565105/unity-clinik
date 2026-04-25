@@ -198,7 +198,7 @@
 .font-h2 {
   font-family: var(--font-family-h2);
   font-style: normal; /* Italianno is already cursive */
-  font-weight: 400;    /* regular weight */
+  font-weight: var(--font-weight-medium);    /* regular weight */
   font-size: var(--font-size-h2);
   
 }

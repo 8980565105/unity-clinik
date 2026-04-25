@@ -19,6 +19,9 @@ import { fetchUserOrders, cancelOrder } from "../../features/orders/orderThunk";
 import { addReview } from "../../features/reivews/reviewsThunk";
 import { resetReviewStatus } from "../../features/reivews/reviewsSlice";
 import toast, { Toaster } from "react-hot-toast";
+import OrderTracking from "../../pages/orderTraking";
+import Row from "../ui/Row";
+import Section from "../ui/Section";
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +34,8 @@ export default function Orders() {
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+  const [trackingOrder, setTrackingOrder] = useState(null);
   const [reviewData, setReviewData] = useState({
     rating: 5,
     title: "",
@@ -42,7 +47,7 @@ export default function Orders() {
   );
   const sortRef = useRef(null);
   const filterRef = useRef(null);
-  const limit = 5;
+  const limit = 10;
   const dispatch = useDispatch();
   useEffect(() => {
     if (reviewSuccess) {
@@ -159,257 +164,291 @@ export default function Orders() {
     setIsViewOpen(false);
     setIsCancelOpen(false);
   };
+
+  const openTracking = (order) => {
+    setTrackingOrder(order);
+    setIsTrackingOpen(true);
+  };
+
   if (loading) return <p className="text-center py-10">Loading orders...</p>;
   return (
     <div>
       <Toaster position="top-center" />
-      <div className="w-full flex flex-row items-center justify-between gap-3 sm:gap-5 mb-[18px]">
-        <div className="w-[226px] flex items-center box-shadow rounded-[3px] px-[10px] py-[6px]">
-          <Search className="text-[#BCBCBC] mr-[15px]" size={20} />
-          <input
-            type="text"
-            placeholder="Search anything.."
-            className="w-full outline-none"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-[10px] sm:gap-[17px]">
-          <div className="relative" ref={filterRef}>
-            <button
-              onClick={() => {
-                setIsFilterOpen(!isFilterOpen);
-                setIsSortOpen(false);
-              }}
-              className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isFilterOpen ? "bg-secondary text-primary" : "bg-primary text-secondary hover:bg-secondary hover:text-primary"}`}
-            >
-              <span className="hidden md:inline capitalize">Filter by </span>
-              <SlidersHorizontal size={18} />
-            </button>
-
-            {isFilterOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50 max-h-[300px] overflow-y-auto">
+      <Section>
+        <Row>
+          <div className="w-full flex flex-row items-center justify-between gap-3 sm:gap-5 mb-[18px]">
+            <div className="w-[226px] flex items-center box-shadow rounded-[3px] px-[10px] py-[6px]">
+              <Search className="text-[#BCBCBC] mr-[15px]" size={20} />
+              <input
+                type="text"
+                placeholder="Search anything.."
+                className="w-full outline-none"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-[10px] sm:gap-[17px]">
+              <div className="relative" ref={filterRef}>
                 <button
                   onClick={() => {
-                    setStatusFilter("all");
-                    setIsFilterOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${statusFilter === "all" ? "text-primary font-bold" : ""}`}
-                >
-                  All Status
-                </button>
-                {statusOptions.map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => {
-                      setStatusFilter(status);
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 capitalize ${statusFilter === status ? "text-primary font-bold" : "text-gray-700"}`}
-                  >
-                    {status.replace("_", " ")}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="relative" ref={sortRef}>
-            <button
-              onClick={() => {
-                setIsSortOpen(!isSortOpen);
-                setIsFilterOpen(false);
-              }}
-              className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isSortOpen ? "text-primary" : "bg-primary text-secondary hover:bg-secondary hover:text-primary"}`}
-            >
-              <span className="hidden md:inline capitalize">Sort by</span>
-              <SortDesc size={18} />
-            </button>
-
-            {isSortOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                <button
-                  onClick={() => {
-                    setPaymentFilter("all");
+                    setIsFilterOpen(!isFilterOpen);
                     setIsSortOpen(false);
                   }}
-                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "all" ? "text-primary font-bold" : ""}`}
+                  className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isFilterOpen ? "bg-secondary text-primary" : "bg-primary text-secondary hover:bg-secondary hover:text-primary"}`}
                 >
-                  All Orders
-                </button>
-                <button
-                  onClick={() => {
-                    setPaymentFilter("Online");
-                    setIsSortOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "Online" ? " text-primary font-bold" : "text-gray-700"}`}
-                >
-                  Online Payment
-                </button>
-                <button
-                  onClick={() => {
-                    setPaymentFilter("COD");
-                    setIsSortOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "COD" ? " text-primary font-bold" : "text-gray-700"}`}
-                >
-                  Cash on Delivery
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <table className="hidden min-[980px]:table w-full box-shadow rounded-[10px] border-collapse overflow-hidden">
-        <thead className="light-color text-20px text-dark">
-          <tr>
-            <th className="p-[12px] px-[30px] py-[10px] text-left font-normal">
-              #
-            </th>
-            <th className="p-[12px] py-[10px] text-left flex gap-[7px] items-center font-normal">
-              Order ID{" "}
-              <img src={sortImg} className="h-[14px] w-[14px]" alt="sort" />
-            </th>
-            <th className="p-[12px] py-[10px] text-left font-normal">Date</th>
-            <th className="p-[12px] py-[10px] text-left font-normal">Price</th>
-            <th className="p-[12px] py-[10px] text-left font-normal">Tax</th>
-
-            <th className="p-[12px] py-[10px] text-left font-normal">Paid</th>
-            <th className="p-[12px] py-[10px] text-left font-normal">
-              Address
-            </th>
-            <th className="p-[12px] py-[10px] text-left font-normal">Status</th>
-            <th className="p-[12px] py-[10px] px-[30px] text-center font-normal">
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredOrders.length > 0 ? (
-            filteredOrders.map((order, index) => (
-              <tr
-                key={order._id}
-                className="border-b light-border border-0.5 text-p sec-text-color"
-              >
-                <td className="p-3 px-[30px] h-[75px]">
-                  {index + 1 + (page - 1) * limit}
-                </td>
-                <td className="p-3 h-[75px]">{order.order_id || order._id}</td>
-                <td className="p-3 h-[75px]">{formatDate(order.createdAt)}</td>
-                <td className="p-3 h-[75px]">
-                  ₹{order.total_price?.toLocaleString()}
-                </td>
-
-                <td className="p-3 h-[75px]">
-                  ₹{(order.total_price * 0.1).toLocaleString("en-IN")}
-                </td>
-                <td className="p-3 h-[75px]">
-                  <span
-                    className={`flex justify-center items-center px-2 py-1 text-[12px] font-medium rounded-[3px] w-[60px] ${
-                      order.payment_method === "Online"
-                        ? "bg-[rgba(62,232,99,10%)] text-[#3EE878]"
-                        : "bg-[rgba(235,23,36,10%)] text-[#EB1724]"
-                    }`}
-                  >
-                    {order.payment_method}
+                  <span className="hidden md:inline capitalize">
+                    Filter by{" "}
                   </span>
-                </td>
-                <td className="p-3 h-[75px]">
-                  {" "}
-                  {order.shippingAddress?.address || "-"}
-                </td>
-                <td className="p-3 h-[75px]">
-                  <span
-                    className={`flex justify-center items-center px-2 py-2 text-[12px] font-medium rounded-[3px] w-[98px] ${
-                      order.status === "completed"
-                        ? "bg-[rgba(62,232,99,10%)] text-[#3EE878]"
-                        : order.status === "pending"
-                          ? "bg-[rgba(235,23,36,10%)] text-[#EB1724]"
-                          : order.status === "cancelled"
-                            ? "bg-[rgba(239,68,68,10%)] text-red-500"
-                            : order.status === "shipped"
-                              ? " bg-purple-100 text-purple-700"
-                              : order.status === "ready_to_ship"
-                                ? "bg-blue-100 text-blue-700"
-                                : "bg-yellow-100 text-yellow-600"
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </td>
-                <td className="p-3 px-[30px] h-[75px]">
-                  <div className="flex justify-center items-center gap-[10px] sec-text-color">
-                    <button onClick={() => openReviewModal(order)}>
-                      <MessageCircleMore size={20} />
-                    </button>
-                    <button onClick={() => openViewModal(order)}>
-                      <Eye size={20} />
-                    </button>
-                    {order.status !== "cancelled" && (
-                      <button
-                        onClick={() => openCancelModal(order)}
-                        className="text-red-500"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    )}
-                    <MoreVertical size={20} />
-                  </div>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="8" className="text-center py-6 text-gray-400">
-                No results found.
-              </td>
-            </tr>
-          )}
+                  <SlidersHorizontal size={18} />
+                </button>
 
-          {totalPages > 1 && (
-            <tr>
-              <td colSpan="8" className="px-[30px] py-[20px]">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-14 sec-text-color">
-                  <p className="sec-text-color text-p">
-                    Showing <span>{total === 0 ? 0 : start}</span> to{" "}
-                    <span>{end}</span> of <span>{total}</span> entries
-                  </p>
-                  <div className="flex items-center gap-[10px]">
+                {isFilterOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg z-50 max-h-[300px] overflow-y-auto">
                     <button
-                      className="flex gap-[8px] items-center text-light text-p mr-[10px]"
-                      onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                      disabled={page === 1}
+                      onClick={() => {
+                        setStatusFilter("all");
+                        setIsFilterOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${statusFilter === "all" ? "text-primary font-bold" : ""}`}
                     >
-                      <ChevronLeftIcon size={16} /> Back
+                      All Status
                     </button>
-                    {Array.from({ length: totalPages }, (_, i) => (
+                    {statusOptions.map((status) => (
                       <button
-                        key={i}
-                        onClick={() => setPage(i + 1)}
-                        className={`w-[34px] h-[34px] text-light p-1 text-14 rounded-[3px] ${
-                          page === i + 1 ? "light-color " : "box-shadow"
-                        }`}
+                        key={status}
+                        onClick={() => {
+                          setStatusFilter(status);
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 capitalize ${statusFilter === status ? "text-primary font-bold" : "text-gray-700"}`}
                       >
-                        {i + 1}
+                        {status.replace("_", " ")}
                       </button>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative" ref={sortRef}>
+                <button
+                  onClick={() => {
+                    setIsSortOpen(!isSortOpen);
+                    setIsFilterOpen(false);
+                  }}
+                  className={`w-full md:w-[120px] flex items-center justify-between text-p box-shadow px-[10px] py-[6px] transition ${isSortOpen ? "text-primary" : "bg-primary text-secondary hover:bg-secondary hover:text-primary"}`}
+                >
+                  <span className="hidden md:inline capitalize">Sort by</span>
+                  <SortDesc size={18} />
+                </button>
+
+                {isSortOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                     <button
-                      className="flex gap-[8px] items-center text-light text-p ml-[10px]"
-                      onClick={() =>
-                        setPage((p) => Math.min(p + 1, totalPages))
-                      }
-                      disabled={page === totalPages}
+                      onClick={() => {
+                        setPaymentFilter("all");
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "all" ? "text-primary font-bold" : ""}`}
                     >
-                      Next <ChevronRightIcon size={16} />
+                      All Orders
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPaymentFilter("Online");
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "Online" ? " text-primary font-bold" : "text-gray-700"}`}
+                    >
+                      Online Payment
+                    </button>
+                    <button
+                      onClick={() => {
+                        setPaymentFilter("COD");
+                        setIsSortOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm  ${paymentFilter === "COD" ? " text-primary font-bold" : "text-gray-700"}`}
+                    >
+                      Cash on Delivery
                     </button>
                   </div>
-                </div>
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+                )}
+              </div>
+            </div>
+          </div>
+        </Row>
+        <Row>
+          <table className="hidden min-[980px]:table w-full box-shadow rounded-[10px] border-collapse overflow-hidden">
+            <thead className="light-color text-20px text-dark">
+              <tr>
+                <th className="p-[12px] px-[30px] py-[10px] text-left font-normal">
+                  #
+                </th>
+                <th className="p-[12px] py-[10px] text-left flex gap-[7px] items-center font-normal">
+                  Order ID{" "}
+                  <img src={sortImg} className="h-[14px] w-[14px]" alt="sort" />
+                </th>
+                <th className="p-[12px] py-[10px] text-left font-normal">
+                  Date
+                </th>
+                <th className="p-[12px] py-[10px] text-left font-normal">
+                  Price
+                </th>
+                <th className="p-[12px] py-[10px] text-left font-normal">
+                  Tax
+                </th>
+
+                <th className="p-[12px] py-[10px] text-left font-normal">
+                  Paid
+                </th>
+                <th className="p-[12px] py-[10px] text-left font-normal">
+                  Address
+                </th>
+                <th className="p-[12px] py-[10px] text-left font-normal">
+                  Status
+                </th>
+                <th className="p-[12px] py-[10px] px-[30px] text-center font-normal">
+                  Action
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredOrders.length > 0 ? (
+                filteredOrders.map((order, index) => (
+                  <tr
+                    key={order._id}
+                    className="border-b light-border border-0.5 text-p sec-text-color"
+                  >
+                    <td className="p-3 px-[30px] h-[75px]">
+                      {index + 1 + (page - 1) * limit}
+                    </td>
+                    <td className="p-3 h-[75px]">
+                      {order.order_id || order._id}
+                    </td>
+                    <td className="p-3 h-[75px]">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="p-3 h-[75px]">
+                      ₹{order.total_price?.toLocaleString()}
+                    </td>
+
+                    <td className="p-3 h-[75px]">
+                      ₹{(order.total_price * 0.1).toLocaleString("en-IN")}
+                    </td>
+                    <td className="p-3 h-[75px]">
+                      <span
+                        className={`flex justify-center items-center px-2 py-1 text-[12px] font-medium rounded-[3px] w-[60px] ${
+                          order.payment_method === "Online"
+                            ? "bg-[rgba(62,232,99,10%)] text-[#3EE878]"
+                            : "bg-[rgba(235,23,36,10%)] text-[#EB1724]"
+                        }`}
+                      >
+                        {order.payment_method}
+                      </span>
+                    </td>
+                    <td className="p-3 h-[75px]">
+                      {" "}
+                      {order.shippingAddress?.address || "-"}
+                    </td>
+                    <td className="p-3 h-[75px]">
+                      <span
+                        className={`flex justify-center items-center px-2 py-2 text-[12px] font-medium rounded-[3px] w-[98px] ${
+                          order.status === "completed"
+                            ? "bg-[rgba(62,232,99,10%)] text-[#3EE878]"
+                            : order.status === "pending"
+                              ? "bg-[rgba(235,23,36,10%)] text-[#EB1724]"
+                              : order.status === "cancelled"
+                                ? "bg-[rgba(239,68,68,10%)] text-red-500"
+                                : order.status === "shipped"
+                                  ? " bg-purple-100 text-purple-700"
+                                  : order.status === "ready_to_ship"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : "bg-yellow-100 text-yellow-600"
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="p-3 px-[30px] h-[75px]">
+                      <div className="flex justify-center items-center gap-[10px] sec-text-color">
+                        <button onClick={() => openReviewModal(order)}>
+                          <MessageCircleMore size={20} />
+                        </button>
+                        <button onClick={() => openViewModal(order)}>
+                          <Eye size={20} />
+                        </button>
+                        {order.status !== "cancelled" && (
+                          <button
+                            onClick={() => openCancelModal(order)}
+                            className="text-red-500"
+                          >
+                            <Trash2 size={20} />
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() => openTracking(order)}
+                          className="hover:text-blue-500 transition-colors"
+                          title="Track Order"
+                        >
+                          <MoreVertical size={20} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center py-6 text-gray-400">
+                    No results found.
+                  </td>
+                </tr>
+              )}
+
+              {totalPages > 1 && (
+                <tr>
+                  <td colSpan="8" className="px-[30px] py-[20px]">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-14 sec-text-color">
+                      <p className="sec-text-color text-p">
+                        Showing <span>{total === 0 ? 0 : start}</span> to{" "}
+                        <span>{end}</span> of <span>{total}</span> entries
+                      </p>
+                      <div className="flex items-center gap-[10px]">
+                        <button
+                          className="flex gap-[8px] items-center text-light text-p mr-[10px]"
+                          onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                          disabled={page === 1}
+                        >
+                          <ChevronLeftIcon size={16} /> Back
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => setPage(i + 1)}
+                            className={`w-[34px] h-[34px] text-light p-1 text-14 rounded-[3px] ${
+                              page === i + 1 ? "light-color " : "box-shadow"
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                        <button
+                          className="flex gap-[8px] items-center text-light text-p ml-[10px]"
+                          onClick={() =>
+                            setPage((p) => Math.min(p + 1, totalPages))
+                          }
+                          disabled={page === totalPages}
+                        >
+                          Next <ChevronRightIcon size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </Row>
+      </Section>
 
       {isViewOpen && selectedOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity">
@@ -617,6 +656,17 @@ export default function Orders() {
           </div>
         </div>
       )}
+
+      {isTrackingOpen && trackingOrder && (
+        <OrderTracking
+          order={trackingOrder}
+          onClose={() => {
+            setIsTrackingOpen(false);
+            setTrackingOrder(null);
+          }}
+        />
+      )}
+
       <OrderCardMobile
         orders={filteredOrders}
         total={filteredOrders.length}

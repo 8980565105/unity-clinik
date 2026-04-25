@@ -6,6 +6,8 @@ import {
   updateOwnProfile,
 } from "../../features/auth/authThunk";
 import toast, { Toaster } from "react-hot-toast";
+import Section from "../ui/Section";
+import Row from "../ui/Row";
 
 function AccountDetails({ onSwitchForget }) {
   const { user, loading } = useSelector((state) => state.auth);
@@ -74,87 +76,91 @@ function AccountDetails({ onSwitchForget }) {
 
       {loading && <p className="text-sm text-gray-400 mb-2">Loading...</p>}
 
-      <div className="space-y-4 mt-4">
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          {/* ── Name ────────────────────────────────── */}
-          <div className="flex flex-col mb-4">
-            <input
-              type="text"
-              name="name"
-              placeholder="Name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2 "
-            />
-          </div>
+      <Section>
+        <Row>
+          <div className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              {/* ── Name ────────────────────────────────── */}
+              <div className="flex flex-col mb-4">
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2 "
+                />
+              </div>
 
-          {/* ── Email ───────────────────────────────── */}
-          <div>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
-            />
-          </div>
+              {/* ── Email ───────────────────────────────── */}
+              <div>
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
+                />
+              </div>
 
-          {/* ── Mobile ──────────────────────────────── */}
-          <div className="flex flex-col">
-            <input
-              type="text"
-              name="mobile_number"
-              placeholder="Enter mobile number"
-              value={formData.mobile_number}
-              onChange={handleChange}
-              className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
-            />
-          </div>
+              {/* ── Mobile ──────────────────────────────── */}
+              <div className="flex flex-col">
+                <input
+                  type="text"
+                  name="mobile_number"
+                  placeholder="Enter mobile number"
+                  value={formData.mobile_number}
+                  onChange={handleChange}
+                  className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
+                />
+              </div>
 
-          {/* ── Gender ──────────────────────────────── */}
-          <div className="flex flex-col">
-            <select
-              name="gender"
-              value={formData.gender}
-              onChange={handleChange}
-              className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
-            >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
+              {/* ── Gender ──────────────────────────────── */}
+              <div className="flex flex-col">
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
+                >
+                  <option value="">Select gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
 
-          {/* ── Date of Birth ───────────────────────── */}
-          <div className="flex flex-col">
-            <input
-              type={formData.date_of_birth ? "date" : "text"}
-              placeholder="Date of Birth"
-              onFocus={(e) => (e.target.type = "date")}
-              onBlur={(e) => {
-                if (!e.target.value) e.target.type = "text";
-              }}
-              name="date_of_birth"
-              value={formData.date_of_birth}
-              onChange={handleChange}
-              className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
-            />
-          </div>
+              {/* ── Date of Birth ───────────────────────── */}
+              <div className="flex flex-col">
+                <input
+                  type={formData.date_of_birth ? "date" : "text"}
+                  placeholder="Date of Birth"
+                  onFocus={(e) => (e.target.type = "date")}
+                  onBlur={(e) => {
+                    if (!e.target.value) e.target.type = "text";
+                  }}
+                  name="date_of_birth"
+                  value={formData.date_of_birth}
+                  onChange={handleChange}
+                  className="w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
+                />
+              </div>
 
-          <Button
-            type="submit"
-            disabled={loading}
-            variant="common"
-            // className="!min-w-[185px] flex items-center justify-between"
-          >
-            {loading ? "Updating..." : "Update Profile"}
-          </Button>
-        </form>
-      </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                variant="common"
+                // className="!min-w-[185px] flex items-center justify-between"
+              >
+                {loading ? "Updating..." : "Update Profile"}
+              </Button>
+            </form>
+          </div>
+        </Row>
+      </Section>
     </>
   );
 }

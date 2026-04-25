@@ -199,7 +199,7 @@ export default function ProductCard({ product, setShowLoginPopup }) {
   return (
     <>
       <Link to={`/products/${product._id}`}>
-        <div className="bg-gray-100 rounded-2xl border p-3 w-full max-w-[300px] hover:shadow-lg transition-all group">
+        <div className="bg-gray-100 rounded-2xl border p-3 w-full max-w-[500px] hover:shadow-lg transition-all group">
           <div className="relative">
             <img
               src={displayedImage}

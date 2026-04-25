@@ -205,8 +205,8 @@ const staticProducts = [
   },
 ];
 
-const CARD_W = 270;
-const GAP = 20;
+const CARD_W = 320;
+const GAP = 40;
 const STEP = CARD_W + GAP;
 
 export default function NewArrivals({ setShowLoginPopup }) {
@@ -246,7 +246,6 @@ export default function NewArrivals({ setShowLoginPopup }) {
     }, 310);
   };
 
-  // ✅ Prev = scroll RIGHT (show previous items) = decrease index
   const handlePrev = () => {
     if (isAnimating.current || total === 0 || isCenter) return;
     isAnimating.current = true;
@@ -263,7 +262,6 @@ export default function NewArrivals({ setShowLoginPopup }) {
     }, 310);
   };
 
-  // ✅ Set initial position
   useEffect(() => {
     if (trackRef.current && total > 0) {
       trackRef.current.style.transition = "none";
@@ -315,7 +313,7 @@ export default function NewArrivals({ setShowLoginPopup }) {
             {(isCenter ? items : tripled).map((product, i) => (
               <div
                 key={`${product._id}-${i}`}
-                className="flex-shrink-0 w-[270px]"
+                className="flex-shrink-0 w-[320px]"
               >
                 <ProductCard
                   product={product}

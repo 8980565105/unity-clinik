@@ -10,13 +10,13 @@ const NavBtn = ({ direction, onClick, disabled, variant = "default" }) => {
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-[50px] h-10  rounded border flex items-center justify-center transition-all duration-150
+      className={`w-[50px] h-[50px]  rounded-full border flex items-center justify-center transition-all duration-150
         ${variants[variant]} 
         ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer active:scale-95"}`}
     >
       <svg
-        width="16"
-        height="16"
+        width="20"
+        height="20"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.5"

@@ -38,8 +38,9 @@ export default function OrderCardMobile({
   const end = Math.min(page * limit, total);
 
   return (
-    <div className="hidden max-[980px]:block [box-shadow:0_2px_4px_rgba(0,0,0,25%)] rounded-[10px] overflow-hidden">
-      <div className="block">
+    // <div className="hidden max-[980px]:block [box-shadow:0_2px_4px_rgba(0,0,0,25%)] rounded-[10px] overflow-hidden">
+    <div >
+      {/* <div className="block">
         <div className="flex items-center gap-10 light-color text-20px text-dark font-normal p-2 px-[12px]">
           <span className="text-black text-p ">#</span>
           <span className="text-black text-p flex gap-[5px] items-center">
@@ -47,9 +48,9 @@ export default function OrderCardMobile({
             <img src={sortImg} alt={sortImg} className="h-[14px] w-[14px]" />
           </span>
         </div>
-      </div>
+      </div> */}
 
-      {orders.map((order, index) => (
+      {/* {orders.map((order, index) => (
         <div key={order._id} className="border-b">
           <div
             className="flex justify-between items-center px-[12px] py-[15px]"
@@ -147,7 +148,7 @@ export default function OrderCardMobile({
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

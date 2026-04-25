@@ -69,24 +69,53 @@ function Countsection() {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (!startAnimation) return;
-    const intervals = StatsData.map((stat, index) => {
-      let start = Math.floor(stat.count * 0.7);
-      const end = stat.count;
-      return setInterval(() => {
-        start += Math.ceil((end - start) / 8);
-        setCounts((prev) => {
-          const updated = [...prev];
-          updated[index] = start;
-          return updated;
-        });
-        if (start >= end) clearInterval(intervals[index]);
-      }, 50);
-    });
-    return () => intervals.forEach((i) => clearInterval(i));
-  }, [startAnimation]);
+  // useEffect(() => {
+  //   if (!startAnimation) return;
+  //   const intervals = StatsData.map((stat, index) => {
+  //     let start = Math.floor(stat.count * 0.7);
+  //     const end = stat.count;
+  //     return setInterval(() => {
+  //       start += Math.ceil((end - start) / 8);
+  //       setCounts((prev) => {
+  //         const updated = [...prev];
+  //         updated[index] = start;
+  //         return updated;
+  //       });
+  //       if (start >= end) clearInterval(intervals[index]);
+  //     }, 50);
+  //   });
+  //   return () => intervals.forEach((i) => clearInterval(i));
+  // }, [startAnimation]);
 
+
+  useEffect(() => {
+  if (!startAnimation) return;
+
+  const intervals = StatsData.map((stat, index) => {
+    let current = 0;
+    const end = stat.count;
+
+    const step = Math.ceil(end / 10);
+
+    return setInterval(() => {
+      current += step;
+
+      if (current >= end) {
+        current = end;
+      }
+
+      setCounts((prev) => {
+        const updated = [...prev];
+        updated[index] = current;
+        return updated;
+      });
+
+      if (current >= end) clearInterval(intervals[index]);
+    }, 80); 
+  });
+
+  return () => intervals.forEach(clearInterval);
+}, [startAnimation]);
   return (
     <div ref={sectionRef}>
       <Section className="bg-[#053946] py-20 px-6 font-sans">
@@ -109,17 +138,19 @@ function Countsection() {
           {loading ? (
             <p className="text-white text-center">Loading...</p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {StatsData.map((stat, index) => (
                 <div
                   key={index}
-                  className="flex gap-3 items-center text-start bg-white group hover:-translate-y-2 transition-all"
+                  className="flex gap-3 items-center  bg-white group hover:-translate-y-2 transition-all"
                   style={{
                     borderRadius: "40px 100px 40px 110px",
                     paddingTop: "20px",
                     paddingLeft: "24px",
                     paddingRight: "20px",
                     paddingBottom: "20px",
+                    height: "250px",
+                    width: "100%",
                   }}
                 >
                   <div
@@ -127,12 +158,12 @@ function Countsection() {
                   >
                     {stat.icon}
                   </div>
-                  <div>
-                    <p className="text-[40px] text-gray-400 font-bold mb-1">
+                  <div className="text-center">
+                    <p className="text-[40px] text-black font-bold mb-1">
                       {counts[index]}
                       {stat.suffix}
                     </p>
-                    <p className="text-gray-400 text-sm uppercase tracking-wider">
+                    <p className="text-black">
                       {stat.label}
                     </p>
                   </div>

@@ -2,6 +2,7 @@ import React from "react";
 import { Phone, ArrowRight } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Section from "../ui/Section";
+import Button from "../ui/Button";
 
 function ContactHome() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ function ContactHome() {
           </div>
 
           <div className="z-10">
-            <button
+            {/* <button
               onClick={() => navigate("/contact-us")}
               className="group flex items-center gap-2 bg-[#1e293b] hover:bg-[#334155] text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 shadow-lg transform hover:-translate-y-1"
             >
@@ -46,7 +47,19 @@ function ContactHome() {
                 size={18}
                 className="group-hover:translate-x-1 transition-transform"
               />
-            </button>
+            </button> */}
+
+            <Button
+              variant="common"
+              onClick={() => navigate("/contact-us")}
+              className="rounded-full group flex items-center gap-2"
+            >
+              Contact Us
+              <ArrowRight
+                size={18}
+                className="group-hover:translate-x-1 transition-transform"
+              />
+            </Button>
           </div>
 
           <div className="absolute -top-10 -left-10 w-32 h-32 bg-[#8bc34a]/10 rounded-full" />

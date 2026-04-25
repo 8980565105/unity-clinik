@@ -130,7 +130,7 @@ export default function Footer() {
   })();
 
   return (
-    <footer className="mt-[25px] md:mt-[50px]">
+    <footer>
       <Row
         className="flex items-center justify-between px-[10px] py-[16px] cursor-pointer md:hidden border-t border-[#BCBCBC]"
         onClick={handleToggle}
@@ -159,7 +159,7 @@ export default function Footer() {
           opacity: isMobile ? (isOpen ? 1 : 0) : 1,
         }}
       >
-        <Section className="bg-[var(--theme-bg-rgba)]">
+        <Section className="bg-gray-400/80">
           <Row className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="space-y-[22px] max-w-[280px] w-full">
               <Link
@@ -172,14 +172,14 @@ export default function Footer() {
                   className="h-auto w-[200px]"
                 />
               </Link>
-              <div className="flex items-center gap-[10px] text-sm text-primary hover:ms-4">
+              <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
                 <div className="w-[20px]">
                   <MapPin className="mt-1" size={22} />
                 </div>
 
                 <p>{contactAddress}</p>
               </div>
-              <div className="flex items-center gap-[10px] text-sm text-primary hover:ms-4">
+              <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
                 <div className="w-[20px]">
                   <TfiEmail className="mt-1" size={20} />
                 </div>
@@ -190,7 +190,7 @@ export default function Footer() {
                   {contactEmail}
                 </Link>
               </div>
-              <div className="flex items-center gap-[10px] text-sm text-primary hover:ms-4">
+              <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
                 <div className="w-[20px]">
                   <BsTelephone className="mt-1" size={20} />
                 </div>
@@ -198,7 +198,7 @@ export default function Footer() {
               </div>
             </div>
             <div>
-              <h2 className="font-regular text-20px text-primary  mb-[35px] tracking-[3%]">
+              <h2 className="font-semibold text-20px text-black  mb-[35px] tracking-[3%]">
                 NAVIGATION LINKS
                 <span className="theme-border-block w-[45px]"></span>
               </h2>
@@ -207,7 +207,7 @@ export default function Footer() {
                   navigationLinks?.map((item) => (
                     <li
                       key={item._id}
-                      className="text-primary  hover:text-black hover:underline hover:ms-4"
+                      className="text-black  hover:text-black hover:underline hover:ms-4"
                     >
                       <Link to={item.url}>{item.label}</Link>
                     </li>
@@ -215,7 +215,7 @@ export default function Footer() {
               </ul>
             </div>
             <div>
-              <h2 className="font-regular text-20px text-primary  mb-[35px] tracking-[3%]">
+              <h2 className="font-semibold text-20px text-black  mb-[35px] tracking-[3%]">
                 CUSTOMER SUPPORT
                 <span className="theme-border-block w-[45px]"></span>
               </h2>
@@ -224,7 +224,7 @@ export default function Footer() {
                   supportLinks?.map((item) => (
                     <li
                       key={item._id}
-                      className="text-primary  hover:text-black hover:underline hover:ms-4"
+                      className="text-black  hover:text-black hover:underline hover:ms-4"
                     >
                       <Link to={item.url}>{item.label}</Link>
                     </li>
@@ -232,10 +232,10 @@ export default function Footer() {
               </ul>
             </div>
             <div>
-              <h2 className="font-regular text-20px text-primary  mb-[35px] tracking-[3%]">
+              <h2 className="font-semibold text-20px text-black  mb-[35px] tracking-[3%]">
                 JOIN NOW !<span className="theme-border-block w-[45px]"></span>
               </h2>
-              <p className="text-sm mb-3 text-primary">{footertext}</p>
+              <p className="text-sm mb-3 text-black">{footertext}</p>
 
               <div className="flex flex-col sm:flex-row mb-4 gap-2">
                 <div className="relative w-full">
@@ -281,14 +281,16 @@ export default function Footer() {
             </div>
           </Row>
         </Section>
-        <Section className="bg-primary !py-[0px] !md:py-[0px]">
+        <Section className="bg-gray-600 !py-[0px] !md:py-[0px]">
           <Row className="flex justify-between items-center py-4">
             <div className="text-white">
               <span>©</span> <span>{copyright}</span>
             </div>
             <div className="flex gap-3 justify-end items-center">
               {socialLinks.map((link, index) => {
-                const { icon: IconComponent } = getSocialIcon(link.platform);
+                const { icon: IconComponent, color } = getSocialIcon(
+                  link.platform,
+                );
                 return (
                   <Link
                     key={index}
@@ -298,7 +300,8 @@ export default function Footer() {
                   >
                     <IconComponent
                       size={30}
-                      className="text-white hover:text-black"
+                      style={{ color: color }}
+                      className="transition-transform hover:scale-110"
                     />
                   </Link>
                 );

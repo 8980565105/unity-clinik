@@ -18,6 +18,7 @@ import ContactHome from "../components/home/ContactHome.jsx";
 import Countsection from "../components/home/Countsection.jsx";
 import Topdoctor from "../components/home/Topdoctor.jsx";
 import SEO from "../components/seo/seo.js";
+import Hero1 from "../components/home/hero1.jsx";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -37,13 +38,16 @@ const Home = () => {
       />
       <div className="text-center">
         <Toaster position="top center" />
-        <Hero />
+
+        <Hero1 />
+
+        {/* <Hero /> */}
         <Topdoctor />
         <Bestsellers setShowLoginPopup={setShowLoginPopup} />
         <CategoriesSection />
         <NewArrivals setShowLoginPopup={setShowLoginPopup} />
         <TrendingClothes setShowLoginPopup={setShowLoginPopup} />
-        <ShortBanner />
+        {/* <ShortBanner /> */}
         <FeaturedProducts setShowLoginPopup={setShowLoginPopup} />
         <Countsection />
         <RecommendedSection setShowLoginPopup={setShowLoginPopup} />

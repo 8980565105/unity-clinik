@@ -6,8 +6,8 @@ import Section from "../ui/Section";
 import ProductCard from "../productcard/ProductCard";
 import Heading from "../ui/Heading";
 
-const CARD_W = 270;
-const GAP = 20;
+const CARD_W = 320;
+const GAP = 40;
 const STEP = CARD_W + GAP;
 
 export default function NewArrivals({ setShowLoginPopup }) {
@@ -136,7 +136,7 @@ export default function NewArrivals({ setShowLoginPopup }) {
             {(isCenter ? items : tripled).map((product, i) => (
               <div
                 key={`${product._id}-${i}`}
-                className="flex-shrink-0 w-[270px]"
+                className="flex-shrink-0 w-[320px]"
               >
                 <ProductCard
                   product={product}

@@ -6,8 +6,8 @@ import ProductCard from "../productcard/ProductCard.jsx";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading.jsx";
 
-const CARD_W = 270;
-const GAP = 20;
+const CARD_W = 320;
+const GAP = 40;
 const STEP = CARD_W + GAP;
 
 const RecommendedSection = ({ setShowLoginPopup }) => {
@@ -19,7 +19,7 @@ const RecommendedSection = ({ setShowLoginPopup }) => {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const isAnimating = useRef(false);
-  const [currentIndex, setCurrentIndex] = useState(total);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isCenter, setIsCenter] = useState(false);
 
   const tripled = total > 0 ? [...items, ...items, ...items] : [];
@@ -52,7 +52,8 @@ const RecommendedSection = ({ setShowLoginPopup }) => {
   useEffect(() => {
     if (trackRef.current && total > 0) {
       trackRef.current.style.transition = "none";
-      trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+      // trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+      trackRef.current.style.transform = `translateX(0px)`;
     }
   }, [total]);
 
@@ -128,7 +129,7 @@ const RecommendedSection = ({ setShowLoginPopup }) => {
             {(isCenter ? items : tripled).map((product, i) => (
               <div
                 key={`${product._id}-${i}`}
-                className="flex-shrink-0 w-[270px]"
+                className="flex-shrink-0 w-[320px]"
               >
                 <ProductCard
                   product={product}

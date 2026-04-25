@@ -6,11 +6,11 @@ import Section from "../ui/Section";
 import ProductCard from "../productcard/ProductCard";
 import Heading from "../ui/Heading";
 
-const CARD_W = 270;
-const GAP = 20;
+const CARD_W = 320;
+const GAP = 40;
 const STEP = CARD_W + GAP;
 
-export default function NewArrivals({ setShowLoginPopup }) {
+export default function TrendingClothes({ setShowLoginPopup }) {
   const { products = [], loading } = useSelector((state) => state.products);
 
   const items = products.filter((product) =>
@@ -21,7 +21,7 @@ export default function NewArrivals({ setShowLoginPopup }) {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const isAnimating = useRef(false);
-  const [currentIndex, setCurrentIndex] = useState(total);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isCenter, setIsCenter] = useState(false);
 
   const tripled = total > 0 ? [...items, ...items, ...items] : [];
@@ -55,7 +55,9 @@ export default function NewArrivals({ setShowLoginPopup }) {
   useEffect(() => {
     if (trackRef.current && total > 0) {
       trackRef.current.style.transition = "none";
-      trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+      // trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+          trackRef.current.style.transform = `translateX(0px)`;
+
     }
   }, [total]);
 
@@ -120,7 +122,7 @@ export default function NewArrivals({ setShowLoginPopup }) {
       <Row>
         <Heading
           title={"Trending Product"}
-          className="!mb-[0px] pt-[20px] !justify-start !md:mb-[45px]"
+          className="!mb-[0px] pt-[20px] !md:mb-[45px]"
         />
 
         {!isCenter && (
@@ -143,7 +145,7 @@ export default function NewArrivals({ setShowLoginPopup }) {
             {(isCenter ? items : tripled).map((product, i) => (
               <div
                 key={`${product._id}-${i}`}
-                className="flex-shrink-0 w-[270px]"
+                className="flex-shrink-0 w-[320px]"
               >
                 <ProductCard
                   product={product}

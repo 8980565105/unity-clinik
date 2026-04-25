@@ -110,6 +110,15 @@ const Wishlist = ({ product }) => {
         }
       }
 
+      const addResult = await dispatch(
+        addToCart({
+          cart_id,
+          product_id,
+          variant_id,
+          quantity: selectedQuantity,
+        }),
+      ).unwrap();
+
       if (selectedQuantity > 1) {
         const cartData = await dispatch(fetchCart(cart_id)).unwrap();
         console.log("cart after add:", cartData);

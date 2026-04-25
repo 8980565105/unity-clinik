@@ -125,9 +125,11 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             {/* <Route path="orders" element={<Orders />} /> */}
             {/* <Route path="address" element={<Address />} /> */}
-            {/* <Route path="account-details" element={<AccountDetails />} /> */}
+            <Route path="account-details" element={<AccountDetails />} />
             {/* <Route path="logout" /> */}
           </Route>
+          {/* <Route path="/account-details" element={<AccountDetails />} /> */}
+
           <Route path="/cart" element={<Cart />}></Route>
           <Route path="/updatecart" element={<Updatecart />}></Route>
           <Route path="/checkout" element={<Checkout />}></Route>

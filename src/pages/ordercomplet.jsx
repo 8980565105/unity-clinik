@@ -9,7 +9,7 @@ export default function OrderComplete() {
   const navigate = useNavigate();
 
   return (
-    <Section className="flex items-center justify-center bg-[#f5f7fa]">
+    <Section className="flex items-center justify-center bg-[#f5f7fa] !py-[180px]">
       <Row className="flex flex-col items-center text-center">
         <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mb-6">
           <Check className="text-white w-8 h-8" />

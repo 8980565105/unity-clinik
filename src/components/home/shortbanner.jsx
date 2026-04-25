@@ -4,6 +4,7 @@ import Row from "../ui/Row";
 import b2 from "../../assets/b2.png";
 import { ArrowRight } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
+import Button from "../ui/Button";
 
 export default function ShortBanner() {
   const Navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function ShortBanner() {
               <p className="text-sm md:text-base font-medium text-white/90 max-w-[420px]">
                 Save 6% on medicines, 20% on lab tests & enjoy FREE delivery.
               </p>
-              <button
+              {/* <button
                 onClick={() => Navigate("/shop")}
                 className="group flex items-center gap-2 bg-[#1e293b] hover:bg-[#334155] text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 shadow-lg transform hover:-translate-y-1"
               >
@@ -43,7 +44,18 @@ export default function ShortBanner() {
                   size={18}
                   className="group-hover:translate-x-1 transition-transform"
                 />
-              </button>
+              </button> */}
+
+              <Button
+                variant="common"
+                className="group flex gap-2 items-center rounded-full transition-all duration-300 transform"
+              >
+                Explore Now
+                <ArrowRight
+                  size={18}
+                  className="group-hover:translate-x-1 transition-transform"
+                />
+              </Button>
             </div>
             <div className="flex justify-end items-end mt-4 md:mt-0">
               <img

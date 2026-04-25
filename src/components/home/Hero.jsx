@@ -66,7 +66,6 @@ export default function Hero() {
               <div
                 className="relative w-full min-h-[220px] lg:min-h-[680px]"
                 className="relative w-full min-h-[220px] lg:min-h-[930px]"
-
                 style={{
                   backgroundImage: slide.background_image_url
                     ? `url(${getImageUrl(slide.background_image_url)})`

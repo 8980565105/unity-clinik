@@ -225,7 +225,7 @@ const Header = () => {
   })();
 
   return (
-    <header className="w-full mb-[5px] md:mb-[10px] bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary">
+    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary">
       <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]">
         <button
           className="custom-lg:hidden text-light transition-colors duration-300 border rounded-[3px] p-[5px] border-[#D2AF9F]"
@@ -262,11 +262,11 @@ const Header = () => {
                     <>
                       <Link
                         to={item.path}
-                        className={`relative cursor-pointer transition-all duration-300 pb-[10px] flex items-center
+                        className={`relative cursor-pointer transition-all duration-300 pb-[10px] flex items-center text-[18px]
                           ${
                             isShopActive
                               ? "text-primary font-medium"
-                              : "text-primary"
+                              : "text-black hover:text-primary"
                           }
                           after:content-['•••'] after:absolute after:left-[52%] after:-bottom-[4px]
                           after:-translate-x-1/2 after:text-[20px] after:tracking-[3px]
@@ -440,11 +440,11 @@ ${
                     <NavLink
                       to={item.path}
                       className={({ isActive }) =>
-                        `relative cursor-pointer transition-all duration-300 pb-[10px]
+                        `relative cursor-pointer transition-all duration-300 pb-[10px] text-[18px]
                         ${
                           isActive
                             ? "text-primary font-medium after:opacity-100"
-                            : "text-primary  after:opacity-0 hover:after:opacity-100"
+                            : "text-black hover:text-primary  after:opacity-0 hover:after:opacity-100"
                         }
                         after:content-['•••'] after:absolute after:left-[52%] after:-bottom-[4px]
                         after:-translate-x-1/2 after:text-[20px] after:tracking-[3px]
@@ -469,7 +469,8 @@ ${
           <div className="relative hidden custom-lg:block group">
             <Button
               variant="common"
-              className="!min-w-[113px] !py-[7px] !px-[8px] flex items-center"
+              className="!min-w-[113px] !py-[10px] !px-[20px] flex items-center rounded-full"
+              // className="mt-3 w-full border text-white hover:text-white rounded-full py-2 flex items-center justify-center gap-2 transition"
               onClick={() => {
                 if (!token) setIsLoginOpen(true);
               }}
@@ -485,10 +486,7 @@ ${
                 </>
               ) : (
                 <>
-                  <span
-                    className="inline-block  "
-                    title={user?.name || "User"}
-                  >
+                  <span className="inline-block  " title={user?.name || "User"}>
                     {user?.name || "User"}
                   </span>
                   <ChevronDown
@@ -500,7 +498,7 @@ ${
             </Button>
 
             <div className="absolute right-0 mt-2 w-[280px] bg-white rounded-[10px] form-shadow z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-              <div className="p-[17px] text-light text-p flex justify-between border-b border-[#989696]">
+              <div className="p-[17px] text-black flex justify-between border-b border-[#989696]">
                 {!token ? (
                   <>
                     <span>Welcome User!</span>
@@ -523,26 +521,31 @@ ${
                   </>
                 )}
               </div>
-              <ul className="text-light text-p p-[17px]">
-                <li className="py-[10px] text-primary hover:text-[var(--theme-hover-color)]">
+              <ul className=" pb-[10px]">
+                <li className="text-black p-[17px]">
                   <button
-                    onClick={() => openProtectedLink("/my-account")}
+                    onClick={() =>
+                      openProtectedLink("/my-account/account-details")
+                    }
                     className="flex items-center gap-[15px] w-full"
                   >
                     <SvgComponent />
                     <span>My Profile</span>
                   </button>
                 </li>
-                <li className="py-[8px] text-primary hover:text-[var(--theme-hover-color)]">
+                <div className="border border-[#989696]"> </div>
+                <li className="p-[17px]">
                   <button
-                    onClick={() => openProtectedLink("/my-account/orders")}
+                    onClick={() => openProtectedLink("/orders")}
                     className="flex items-center gap-[15px] w-full"
                   >
                     <Package size={18} />
                     <span>Orders</span>
                   </button>
                 </li>
-                <li className="py-[8px] text-primary hover:text-[var(--theme-hover-color)]">
+                <div className="border border-[#989696]"> </div>
+
+                <li className="p-[17px]">
                   <button
                     onClick={() => openProtectedLink("/wishlist")}
                     className="flex items-center gap-[15px] w-full"
@@ -551,42 +554,43 @@ ${
                     <span>Wishlist</span>
                   </button>
                 </li>
+                {/* <div className="border border-[#989696]"> </div> */}
               </ul>
             </div>
           </div>
 
-          <button
-            onClick={() => openProtectedLink("/wishlist")}
-            className="relative text-primary "
-          >
-            {isWishlistActive ? (
-              <Heart className="w-6 h-6 fill-primary " />
-            ) : (
-              <Heart className="w-6 h-6" />
-            )}
-            {wishlistCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[12px] rounded-full w-4 h-4 flex items-center justify-center">
-                {wishlistCount}
-              </span>
-            )}
-          </button>
+          <div className="flex justify-center items-center gap-4">
+            <button
+              onClick={() => openProtectedLink("/wishlist")}
+              className="relative text-black "
+            >
+              {isWishlistActive ? (
+                <Heart className="w-7 h-7 text-primary fill-primary " />
+              ) : (
+                <Heart className="w-7 h-7" />
+              )}
+              {wishlistCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[12px] rounded-full w-4 h-4 flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
+            </button>
 
-          <button
-            className={`relative ${
-              isCartActive
-                ? "text-primary"
-                : "text-primary"
-            }`}
-            onClick={() => openProtectedLink("/cart")}
-          >
-            <FontAwesomeIcon icon={faCartShopping} className="w-6 h-6" />
+            <button
+              className={`relative ${
+                isCartActive ? "text-primary" : "text-black"
+              }`}
+              onClick={() => openProtectedLink("/cart")}
+            >
+              <FontAwesomeIcon icon={faCartShopping} className="w-7 h-7" />
 
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </button>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[10px] rounded-full w-4 h-4 flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </Row>
 
@@ -758,7 +762,7 @@ ${
               </div>
               <div className="py-4 px-4 cursor-pointer">
                 <button
-                  onClick={() => openProtectedLink("/my-account/orders")}
+                  onClick={() => openProtectedLink("/orders")}
                   className="flex items-center gap-[15px]"
                 >
                   <Package size={20} /> Orders
