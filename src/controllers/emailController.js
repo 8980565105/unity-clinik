@@ -4,7 +4,6 @@ const { sendResponse } = require("../utils/response");
 const getEmail = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", status, isDownload } = req.query;
-
     const query = {};
     if (search) {
       query.email = { $regex: search, $options: "i" };

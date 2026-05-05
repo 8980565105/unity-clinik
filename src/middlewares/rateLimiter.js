@@ -4,22 +4,26 @@ const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 મિનિટનો સમય
   max: 100, // દરેક IP માટે 10 મિનિટમાં વધુમાં વધુ 100 રિક્વેસ્ટ
-  skip: (req) => req.ip === "127.0.0.1",
   skip: (req) => {
-    req.ip === "localhost:3030";
+    const ip = req.ip;
+
+    return (
+      ip === "127.0.0.1" || // localhost
+      ip === "::1"  // ipv6 localhost
+    ); //aa ip ma limit nay ave local ma
   },
+
   message: {
     status: 429,
     message: "Too many requests, try again later.",
   },
-  standardHeaders: true, // Rate limit info ને `RateLimit-*` હેડર્સમાં બતાવશે
-  legacyHeaders: false, // `X-RateLimit-*` હેડર્સને બંધ કરશે
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
-// Auth routes માટે strict limiter
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10, // Login attempts limit
+  max: 10,
   message: { success: false, message: "Too many login attempts." },
 });
 

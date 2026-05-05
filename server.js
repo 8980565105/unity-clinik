@@ -12,13 +12,11 @@ const navbarRoutes = require("./src/routes/navbarRoutes");
 const footerRoutes = require("./src/routes/footerRoutes");
 const brandRoutes = require("./src/routes/brandRoutes");
 const typeRoutes = require("./src/routes/typeRoutes");
-// const fabricRoutes = require("./src/routes/fabricRoutes");
 const discountRoutes = require("./src/routes/discountRoutes");
 const categoryRoutes = require("./src/routes/categoryRoutes");
 const subcategoryRoutes = require("./src/routes/subcategoryRoutes");
 const productLabelRoutes = require("./src/routes/productLabelRoutes");
 const productRoutes = require("./src/routes/productRoutes");
-// const productVariantRoutes = require("./src/routes/productVariantRoutes");
 const couponRoutes = require("./src/routes/couponRoutes");
 const warehouseRoutes = require("./src/routes/warehouseRoutes");
 const orderRoutes = require("./src/routes/orderRoutes");
@@ -27,14 +25,17 @@ const cartRoutes = require("./src/routes/cartRoutes");
 const wishlistRoutes = require("./src/routes/wishlistRoutes");
 const contactUsRoutes = require("./src/routes/contactUsRoutes");
 const customerReviewRoutes = require("./src/routes/customerReviewRoutes");
-// const colorRoutes = require("./src/routes/colorRoutes");
 const sizeRoutes = require("./src/routes/sizeRoutes");
 const uploadsRoutes = require("./src/routes/upload");
 const storeRoutes = require("./src/routes/storeRoutes");
 const dashboardRoutes = require("./src/routes/dashboardRoutes");
 const faqs = require("./src/routes/faqsRoute");
 const resultsRoutes = require("./src/routes/resultsRoutes");
-const emailsRoutes = require("./src/routes/emailRoutes")
+const emailsRoutes = require("./src/routes/emailRoutes");
+const sliderRoutes = require("./src/routes/sliderRoutes");
+// const systemsettingRoutes = require("./src/routes/systemsettingRoutes");
+const systemsettingRoutes = require("./src/routes/systemsettingRoutes");
+
 const helmet = require("helmet");
 
 const mongoose = require("mongoose");
@@ -111,8 +112,6 @@ app.use(
   }),
 );
 
-// Helmet તમારા HTTP હેડર્સને સિક્યોર કરે છે, જેથી હેકર્સ સહેલાઈથી જાણી ન શકે કે તમે કઈ ટેકનોલોજી વાપરો છો.
-
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -139,9 +138,9 @@ app.use(
 );
 
 app.use(express.json());
-// app.use("/api/", limiter);
+app.use("/api", limiter);
 app.use("/uploads", express.static("uploads"));
-app.use("/api/auth", authRoutes, authLimiter);
+app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/stores", storeRoutes);
@@ -150,13 +149,11 @@ app.use("/api/navbar", navbarRoutes);
 app.use("/api/footer", footerRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/types", typeRoutes);
-// app.use("/api/fabrics", fabricRoutes);
 app.use("/api/discounts", discountRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subcategoryRoutes);
 app.use("/api/product-labels", productLabelRoutes);
 app.use("/api/products", productRoutes);
-// app.use("/api/products/:product_id/variants", productVariantRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/warehouses", warehouseRoutes);
 app.use("/api/orders", orderRoutes);
@@ -165,13 +162,15 @@ app.use("/api/carts", cartRoutes);
 app.use("/api/wishlists", wishlistRoutes);
 app.use("/api/contact-us", contactUsRoutes);
 app.use("/api/customer-reviews", customerReviewRoutes);
-// app.use("/api/colors", colorRoutes);
-// app.use("/api/sizes", sizeRoutes);
 app.use("/api/uploads", uploadsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/faqs", faqs);
-app.use("/api/results",resultsRoutes);
-app.use("/api/emails",emailsRoutes)
+app.use("/api/results", resultsRoutes);
+app.use("/api/emails", emailsRoutes);
+app.use("/api/slide", sliderRoutes);
+app.use("/api/system-setting", systemsettingRoutes);
+
+app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
 
 app.use(errorHandler);
 

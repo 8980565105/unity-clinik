@@ -8,7 +8,7 @@ const {
   deleteEmails,
   bulkDeleteEmails,
   getPublicEmail,
-} = require("../controllers/emailController"); // ✅ one "l" - matches your actual file
+} = require("../controllers/emailController"); 
 
 router.get("/", getEmail);
 router.get("/public", getPublicEmail);

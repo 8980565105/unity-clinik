@@ -1,8 +1,124 @@
 const Payment = require("../models/Payment");
 const OrderItem = require("../models/OrderItem");
+const Order = require("../models/Order");
 const Product = require("../models/Product");
+// const Razorpay = require("razorpay");
+const razorpay = require("../config/razorpay");
+const crypto = require("crypto");
 const { sendResponse } = require("../utils/response");
 const mongoose = require("mongoose");
+
+// const razorpay = new Razorpay({
+//   key_id: process.env.RAZORPAY_KEY_ID,
+//   key_secret: process.env.RAZORPAY_KEY_SECRET,
+// });
+
+const createRazorpayOrder = async (req, res) => {
+  try {
+    const { amount, order_id } = req.body;
+
+    const options = {
+      amount: amount * 100,
+      currency: "INR",
+      receipt: "receipt_" + order_id,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    sendResponse(res, true, order, "Razorpay order created");
+  } catch (err) {
+    console.log("RAZORPAY ERROR FULL:", err); // 👈 ADD THIS
+    console.log("RAZORPAY ERROR MSG:", err.message);
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+const verifyRazorpayPayment = async (req, res) => {
+  try {
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      order_id,
+      user_id,
+    } = req.body;
+
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return sendResponse(res, false, null, "Invalid signature");
+    }
+
+    // ✅ SAVE PAYMENT
+    const payment = await Payment.create({
+      user_id,
+      order_id,
+      payment_method: "Online",
+      amount_paid: payment.amount / 100,
+      transaction_id: razorpay_payment_id,
+      status: "completed",
+    });
+
+    // ✅ UPDATE ORDER
+    await Order.findByIdAndUpdate(order_id, {
+      payment_status: "paid",
+      transaction_id: razorpay_payment_id,
+    });
+
+    sendResponse(res, true, payment, "Payment verified");
+  } catch (err) {
+    sendResponse(
+      res,
+      false,
+      null,
+      err?.error?.description || err.message || "Payment error",
+    );
+  }
+};
+
+const razorpayWebhook = async (req, res) => {
+  try {
+    const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    const signature = req.headers["x-razorpay-signature"];
+
+    const expected = crypto
+      .createHmac("sha256", secret)
+      // .update(req.body)
+      .update(req.body.toString())
+      .digest("hex");
+
+    if (signature !== expected) {
+      return res.status(400).send("Invalid webhook");
+    }
+
+    const event = JSON.parse(req.body);
+
+    if (event.event === "payment.captured") {
+      const payment = event.payload.payment.entity;
+
+      // ✅ Update DB
+      await Payment.findOneAndUpdate(
+        { transaction_id: payment.id },
+        { status: "completed" },
+      );
+
+      await Order.findOneAndUpdate(
+        { transaction_id: payment.id },
+        { payment_status: "paid" },
+      );
+    }
+
+    res.status(200).send("OK");
+  } catch (err) {
+    res.status(500).send("Webhook error");
+  }
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GET ALL PAYMENTS
@@ -124,7 +240,12 @@ const createPayment = async (req, res) => {
         console.error("store_owner_id auto-resolve failed:", e.message);
       }
     }
-    if (!resolvedStoreOwnerId && items && Array.isArray(items) && items.length > 0) {
+    if (
+      !resolvedStoreOwnerId &&
+      items &&
+      Array.isArray(items) &&
+      items.length > 0
+    ) {
       const firstItem = items[0];
       const createdBy =
         firstItem?.product_id?.createdBy?._id ||
@@ -204,6 +325,9 @@ const bulkDeletePayments = async (req, res) => {
 };
 
 module.exports = {
+  createRazorpayOrder,
+  razorpayWebhook,
+  verifyRazorpayPayment,
   getPayments,
   getPaymentById,
   createPayment,

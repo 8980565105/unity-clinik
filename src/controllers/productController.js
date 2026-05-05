@@ -79,37 +79,11 @@ const buildPipeline = ({
               as: "type",
             },
           },
-          // {
-          //   $lookup: {
-          //     from: "fabrics",
-          //     localField: "fabric_id",
-          //     foreignField: "_id",
-          //     as: "fabric",
-          //   },
-          // },
-          // {
-          //   $lookup: {
-          //     from: "colors",
-          //     localField: "color_id",
-          //     foreignField: "_id",
-          //     as: "color",
-          //   },
-          // },
-          // {
-          //   $lookup: {
-          //     from: "sizes",
-          //     localField: "size_id",
-          //     foreignField: "_id",
-          //     as: "size",
-          //   },
-          // },
+          
           {
             $addFields: {
               brand_id: { $arrayElemAt: ["$brand", 0] },
               type_id: { $arrayElemAt: ["$type", 0] },
-              // fabric_id: { $arrayElemAt: ["$fabric", 0] },
-              // color_id: { $arrayElemAt: ["$color", 0] },
-              // size_id: { $arrayElemAt: ["$size", 0] },
             },
           },
           {
@@ -154,10 +128,9 @@ const getPublicProducts = async (req, res) => {
       isDownload = "false",
       categories,
       brands,
-      // sizes,
+     
       types,
-      // fabrics,
-      // colors,
+    
       minPrice,
       maxPrice,
     } = req.query;
@@ -197,14 +170,6 @@ const getPublicProducts = async (req, res) => {
         $in: brandsArray.map((id) => new mongoose.Types.ObjectId(id)),
       };
     }
-    // if (sizes) {
-    //   const sizesArray = Array.isArray(sizes)
-    //     ? sizes
-    //     : String(sizes).split(",");
-    //   variantMatch.size_id = {
-    //     $in: sizesArray.map((id) => new mongoose.Types.ObjectId(id)),
-    //   };
-    // }
     if (types) {
       const typesArray = Array.isArray(types)
         ? types
@@ -213,18 +178,6 @@ const getPublicProducts = async (req, res) => {
         $in: typesArray.map((id) => new mongoose.Types.ObjectId(id)),
       };
     }
-    // if (fabrics) {
-    //   const fabricsArray = Array.isArray(fabrics) ? fabrics : String(fabrics).split(",");
-    //   variantMatch.fabric_id = {
-    //     $in: fabricsArray.map((id) => new mongoose.Types.ObjectId(id)),
-    //   };
-    // }
-    // if (colors) {
-    //   const colorsArray = Array.isArray(colors) ? colors : String(colors).split(",");
-    //   variantMatch.color_id = {
-    //     $in: colorsArray.map((id) => new mongoose.Types.ObjectId(id)),
-    //   };
-    // }
     if (minPrice || maxPrice) {
       variantMatch.price = {};
       if (minPrice) variantMatch.price.$gte = Number(minPrice);
@@ -355,17 +308,13 @@ const getPublicProductById = async (req, res) => {
     const product = await Product.findById(req.params.id)
       .populate("category_id", "name")
       .populate("discount_id")
-      // .populate("offer_ids") // ✅ populate offers
       .lean();
 
     if (!product) return sendResponse(res, false, null, "Product not found");
 
     const variants = await ProductVariant.find({ product_id: product._id })
       .populate("brand_id", "name")
-      // .populate("fabric_id", "name")
       .populate("type_id", "name")
-      // .populate("size_id", "name")
-      // .populate("color_id", "name code")
       .lean();
 
     sendResponse(
@@ -387,7 +336,6 @@ const getProductById = async (req, res) => {
     const product = await Product.findById(req.params.id)
       .populate("category_id", "name")
       .populate("discount_id")
-      // .populate("offer_ids") // ✅ populate offers
       .lean();
 
     if (!product) return sendResponse(res, false, null, "Product not found");
@@ -400,10 +348,7 @@ const getProductById = async (req, res) => {
 
     const variants = await ProductVariant.find({ product_id: product._id })
       .populate("brand_id", "name")
-      // .populate("fabric_id", "name")
       .populate("type_id", "name")
-      // .populate("size_id", "name")
-      // .populate("color_id", "name code")
       .lean();
 
     sendResponse(
@@ -429,7 +374,6 @@ const createProduct = async (req, res) => {
       category_id,
       status,
       discount_id,
-      // offer_ids,
       variants,
       sections,
     } = req.body;
@@ -516,11 +460,6 @@ const updateProduct = async (req, res) => {
     if (!isOwnerOrAdmin(req, product)) {
       return sendResponse(res, false, null, "Forbidden: Not your product");
     }
-
-    // ✅ Update offer_ids array
-    // if (Array.isArray(offer_ids)) {
-    //   productData.offer_ids = offer_ids.filter((oid) => oid);
-    // }
 
     const updatedProduct = await Product.findByIdAndUpdate(id, productData, {
       new: true,

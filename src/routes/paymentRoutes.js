@@ -7,12 +7,19 @@ const {
   updatePayment,
   deletePayment,
   bulkDeletePayments,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+  razorpayWebhook,
 } = require("../controllers/paymentController");
 
 const {
   authMiddleware,
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
+
+router.post("/razorpay-order", createRazorpayOrder);
+router.post("/verify", verifyRazorpayPayment);
+router.post("/webhook", razorpayWebhook);
 
 router.use(authMiddleware);
 
