@@ -101,26 +101,6 @@ const SizeFilterItem = ({ name, isChecked, onChange }) => (
   </label>
 );
 
-// const ColorFilterItem = ({ name, hex, isChecked, onChange, border }) => {
-//   const dropShadowStyle = `drop-shadow(0px 0px 4px rgba(0, 0, 0, 0.25))`;
-//   return (
-//     <div
-//       className="flex flex-col items-center p-1 cursor-pointer w-1/6"
-//       onClick={() => onChange(name)}
-//     >
-//       <div
-//         className={`w-[22px] h-[22px] rounded-full transition-all duration-150
-//           ${border ? "border border-gray-300" : ""}
-//           ${isChecked ? "ring-2 ring-pink-500 ring-offset-2" : ""}`}
-//         style={{ backgroundColor: hex, filter: dropShadowStyle }}
-//       />
-//       <span className="text-[10px] text-[#989696] font-regular mt-1">
-//         {name}
-//       </span>
-//     </div>
-//   );
-// };
-
 const CollapsibleFilter = ({
   title,
   onReset,
@@ -488,11 +468,10 @@ export default function WomenCollections() {
     } else {
       setSelectedCategories([]);
     }
-    // setSelectedSizes(getArray("size"));
-    // setSelectedColors(getArray("color"));
+
     setSelectedBrands(getArray("brand"));
     setSelectedTypes(getArray("type"));
-    // setSelectedFabrics(getArray("fabric"));
+ 
 
     const discountIds = getArray("discount");
     if (discountIds.length > 0) {

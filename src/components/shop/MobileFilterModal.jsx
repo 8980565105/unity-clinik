@@ -7,7 +7,6 @@ import {
 } from "./WomenCollections";
 import { fetchCategories } from "../../features/categories/categoriesThunk";
 import { fetchsubCategories } from "../../features/subcategories/subcategoriesThunk";
-
 import { fetchBrands } from "../../features/brands/brandsThunk";
 import { fetchtypes } from "../../features/types/typeThunk";
 import { fetchDiscounts } from "../../features/discounts/discountsThunk";
@@ -26,9 +25,6 @@ const MobileFilterModal = ({
   selectedTypes,
   handleTypeChange,
   handleResetTypes,
-  // selectedFabrics,
-  // handleFabricChange,
-  // handleResetFabrics,
   selectedDiscounts,
   handleDiscountChange,
   handleResetDiscounts,
@@ -45,11 +41,9 @@ const MobileFilterModal = ({
   const toggleFilter = (filterId) => {
     setOpenFilter((prev) => (prev === filterId ? null : filterId));
   };
-
   const { items: subcategories = [], loading: subcatLoading } = useSelector(
     (state) => state.subcategories,
   );
-
   const { products } = useSelector((state) => state.products);
   const { brands = [], loading: brandLoading } = useSelector(
     (state) => state.brands,
@@ -57,26 +51,12 @@ const MobileFilterModal = ({
   const { types = [], loading: typesLoading } = useSelector(
     (state) => state.types,
   );
-  // const { fabrics = [], loading: fabricsLoading } = useSelector(
-  //   (state) => state.fabrics,
-  // );
   const { discounts = [], loading: discountsLoading } = useSelector(
     (state) => state.discounts,
   );
   const { productLabels = [], loading: labelsLoading } = useSelector(
     (state) => state.productLabels,
   );
-
-  useEffect(() => {
-    dispatch(fetchCategories());
-    dispatch(fetchsubCategories());
-    dispatch(fetchBrands());
-    dispatch(fetchtypes());
-    dispatch(fetchDiscounts());
-    dispatch(fetchProductLabels());
-  }, [dispatch]);
-
-
   const subCategoryCountsById = Array.isArray(products)
     ? products.reduce((acc, product) => {
         const catId = product.category_id;
@@ -190,7 +170,7 @@ const MobileFilterModal = ({
               setMaxPrice={setMaxPrice}
               isMobile={false}
             />
-           
+
             <CollapsibleFilter
               title="Brands"
               isOpen={openFilter === "Brands"}

@@ -10,34 +10,11 @@ import feature1 from "../assets/feature1.png";
 import feature2 from "../assets/feature2.png";
 import feature3 from "../assets/feature3.png";
 import SEO from "../components/seo/seo.js";
-
-const STATIC_FEATURES = [
-  {
-    icon: feature1,
-    title: "Shipping Worldwide",
-    desc: "We deliver to all the locations across the world.",
-  },
-  {
-    icon: feature2,
-    title: "14 Days Return",
-    desc: "We believe in satisfying and delighting our customers",
-  },
-  {
-    icon: feature3,
-    title: "Security Payment",
-    desc: "Security is a priority at MYcra.in and we make every effort to...",
-  },
-  {
-    icon: feature3,
-    title: "Security Payment",
-    desc: "Security is a priority at MYcra.in and we make every effort to...",
-  },
-];
-
+import Loding from "../components/loding/loding.jsx";
 export default function AboutPage() {
   const dispatch = useDispatch();
-  const { pages } = useSelector((state) => state.pages);
-
+  // const { pages, loading } = useSelector((state) => state.pages);
+  const { pages, slugLoading } = useSelector((state) => state.pages);
   useEffect(() => {
     dispatch(fetchPageBySlug("about"));
   }, [dispatch]);
@@ -48,14 +25,14 @@ export default function AboutPage() {
     (section) => section.type === "feature" && section.status === "active",
   );
 
-  const features = apiFeatures?.length > 0 ? apiFeatures : STATIC_FEATURES;
-
+  const features = apiFeatures || [];
   const sortedFeatures = [...features].sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0),
   );
 
   return (
     <>
+      {slugLoading && <Loding />}
       <SEO
         title={aboutPage?.meta_title}
         description={aboutPage?.meta_description}

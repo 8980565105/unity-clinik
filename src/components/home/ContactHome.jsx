@@ -3,18 +3,17 @@ import { Phone, ArrowRight } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import Section from "../ui/Section";
 import Button from "../ui/Button";
+import Row from "../ui/Row";
 
 function ContactHome() {
   const navigate = useNavigate();
 
   return (
     <Section className="py-16 px-4 bg-[#fdf8f4]">
-      <div className="max-w-6xl mx-auto">
+      <Row className="">
         <div
           className="relative overflow-hidden bg-white shadow-xl flex flex-col md:flex-row items-center justify-between p-8 md:p-12 border-2 border-[#e9e1d8]"
-          style={{
-            borderRadius: "40px 100px 40px 110px",
-          }}
+          style={{}}
         >
           <div className="flex-1 text-center md:text-left z-10">
             <h2 className="text-3xl md:text-4xl font-extrabold text-[#1a2b3c] leading-tight mb-2">
@@ -38,17 +37,6 @@ function ContactHome() {
           </div>
 
           <div className="z-10">
-            {/* <button
-              onClick={() => navigate("/contact-us")}
-              className="group flex items-center gap-2 bg-[#1e293b] hover:bg-[#334155] text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 shadow-lg transform hover:-translate-y-1"
-            >
-              Contact Us
-              <ArrowRight
-                size={18}
-                className="group-hover:translate-x-1 transition-transform"
-              />
-            </button> */}
-
             <Button
               variant="common"
               onClick={() => navigate("/contact-us")}
@@ -74,7 +62,7 @@ function ContactHome() {
             </svg>
           </div>
         </div>
-      </div>
+      </Row>
     </Section>
   );
 }

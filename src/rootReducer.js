@@ -28,6 +28,9 @@ import settingReducer from "./features/setting/settingSlice";
 import resultReducer from "./features/results/resultsSlice";
 import dashboardReducer from "./features/dashboard/dashboardSlice";
 import emailsReducer from "./features/emails/emailSlice";
+import slideReducer from "./features/slides/slideSlice";
+import SystemSettingsReducer from "./features/systemsetting/systemsettingSlice";
+
 
 export const rootReducer = {
   auth: authReducer,
@@ -60,4 +63,6 @@ export const rootReducer = {
   results: resultReducer,
   dashboard: dashboardReducer,
   emails: emailsReducer,
+   slides: slideReducer,
+  systemseting: SystemSettingsReducer,
 };

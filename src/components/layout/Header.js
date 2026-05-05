@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCartShopping, faGift } from "@fortawesome/free-solid-svg-icons";
+import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as farHeart } from "@fortawesome/free-regular-svg-icons";
 import {
   ChevronDown,
@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import ShopIcon from "../icons/shop";
 import HeaderLogo from "../../assets/logo.png";
-import bannerImg from "../../assets/banner.png";
-import banner1 from "../../assets/banner1.png";
+// import bannerImg from "../../assets/banner.png";
+// import banner1 from "../../assets/banner1.png";
 import WhiteLogin from "../../assets/white login.png";
 import SvgComponent from "../icons/login";
 import { useDispatch, useSelector } from "react-redux";
@@ -300,8 +300,8 @@ const Header = () => {
                                   className={`relative px-5 py-3 cursor-pointer flex justify-between items-center text-sm transition-all
 ${
   activeParent === parent._id
-    ? "bg-white text-[var(--theme-color)] font-semibold"
-    : "text-gray-700 hover:bg-white"
+    ? "bg-white text-primary font-medium"
+    : "text-black font-medium hover:bg-white"
 }`}
                                 >
                                   <span>{parent.name}</span>
@@ -314,7 +314,7 @@ ${
                               {activeParent ? (
                                 <>
                                   <div className="flex justify-between items-center px-8 pt-8 ">
-                                    <p className="text-primary text-sm mb-4">
+                                    <p className="text-black font-medium text-sm mb-4">
                                       Sub Categories
                                     </p>
                                     <Button
@@ -322,7 +322,7 @@ ${
                                         navigate("/collections");
                                         setIsMegaMenuOpen(false);
                                       }}
-                                      className="text-primary transition-colors hover:text-[var(--theme-hover-color)] hover:underline"
+                                      className="text-black font-medium hover:text-primary hover:underline"
                                     >
                                       All SubCategories
                                     </Button>
@@ -351,7 +351,7 @@ ${
                                                   handleCategoryClick(sub.name)
                                                 }
                                               >
-                                                <div className="w-[80px] h-[80px] rounded-full overflow-hidden border-2 border-[#D2AF9F] group-hover:scale-105 transition-transform">
+                                                <div className="w-[80px] h-[80px] rounded-full overflow-hidden border-2 border-primary mt-0.5 group-hover:scale-105 transition-transform">
                                                   <img
                                                     src={
                                                       sub.isStatic
@@ -364,7 +364,7 @@ ${
                                                     className="w-full h-full object-cover"
                                                   />
                                                 </div>
-                                                <p className="mt-2 text-sm text-primary group-hover:text-[var(--theme-hover-color)]">
+                                                <p className="mt-2 text-sm font-medium text-black group-hover:text-primary">
                                                   {sub.name}
                                                 </p>
                                               </div>

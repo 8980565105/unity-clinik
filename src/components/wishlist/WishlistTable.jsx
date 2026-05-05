@@ -160,17 +160,39 @@ const Wishlist = ({ product }) => {
   };
 
   const getDiscountedPrice = (item) => {
-    const discount = item?.product_id?.discount_id?.value || 0;
-    const originalPrice = Number(item?.variant_id?.price || 0);
+    const originalPrice = Number(
+      item?.variant_id?.price || item?.variant?.price || 0,
+    );
+    const offerPrice = Number(
+      item?.variant_id?.offerprice || item?.variant?.offerprice || 0,
+    );
 
-    let discountedPrice =
-      discount > 0
-        ? originalPrice - (originalPrice * discount) / 100
+    if (offerPrice > 0 && offerPrice < originalPrice) {
+      const discountPercent = Math.floor(
+        ((originalPrice - offerPrice) / originalPrice) * 100 + 0.5,
+      );
+      return {
+        discount: discountPercent,
+        originalPrice,
+        discountedPrice: offerPrice,
+      };
+    }
+
+    const discountValue =
+      item?.product_id?.discount_id?.value ||
+      item?.product?.discount_id?.value ||
+      0;
+
+    const discountedPrice =
+      discountValue > 0
+        ? Math.round(originalPrice - (originalPrice * discountValue) / 100)
         : originalPrice;
 
-    discountedPrice = Math.round(discountedPrice);
-
-    return { discount, originalPrice, discountedPrice };
+    return {
+      discount: discountValue,
+      originalPrice,
+      discountedPrice,
+    };
   };
 
   useEffect(() => {

@@ -32,7 +32,7 @@ export default function Customerreviews() {
   const tripled = total > 0 ? [...allReviews, ...allReviews, ...allReviews] : [];
 
   useEffect(() => {
-    dispatch(fetchAllReviews({ page: 1, limit: 12 }));
+    dispatch(fetchAllReviews());
   }, [dispatch]);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createPayment } from "./paymentThunk";
+import { createPayment, createRazorpayOrder, verifyRazorpayPayment } from "./paymentThunk";
 
 const initialState = {
   payment: null,
@@ -19,6 +19,25 @@ const paymentSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+
+     
+      .addCase(createRazorpayOrder.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(createRazorpayOrder.fulfilled, (state, action) => {
+        state.loading = false;
+        state.razorOrder = action.payload;
+      })
+      .addCase(createRazorpayOrder.rejected, (state) => {
+        state.loading = false;
+      })
+
+  
+      .addCase(verifyRazorpayPayment.fulfilled, (state, action) => {
+        state.success = true;
+        state.payment = action.payload;
+      })
+
       .addCase(createPayment.pending, (state) => {
         state.loading = true;
         state.error = null;

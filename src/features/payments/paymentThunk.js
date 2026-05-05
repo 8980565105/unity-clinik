@@ -1,6 +1,33 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
+export const createRazorpayOrder = createAsyncThunk(
+  "payments/createRazorpayOrder",
+  async (data, { rejectWithValue }) => {
+    try {
+      // const res = await api.post("", data);
+      const res = await api.post(ROUTES.payments.createOrder , data);
+      return res.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  },
+);
+
+// 🔥 Verify Payment
+export const verifyRazorpayPayment = createAsyncThunk(
+  "payments/verifyRazorpayPayment",
+  async (data, { rejectWithValue }) => {
+    try {
+      // const res = await api.post("/payment/verify", data);
+      const res = await api.post(ROUTES.payments.verify, data);
+
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  },
+);
 
 export const createPayment = createAsyncThunk(
   "payments/createPayment",

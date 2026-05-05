@@ -11,8 +11,8 @@ import Section from "../ui/Section";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading";
 
-const CARD_W = 270;
-const GAP = 20;
+const CARD_W = 320;
+const GAP = 40;
 const STEP = CARD_W + GAP;
 
 export default function SimilarProducts({
@@ -128,6 +128,7 @@ export default function SimilarProducts({
     <Section>
       <Row>
         <Heading title={"Similar Products"} />
+      
         {!isCenter && (
           <div className="flex items-center justify-end gap-3 mb-4">
             <NavBtn direction="left" onClick={handlePrev} variant="primary" />
@@ -146,7 +147,7 @@ export default function SimilarProducts({
             }}
           >
             {(isCenter ? similarProducts : tripled).map((p, i) => (
-              <div key={`${p._id}-${i}`} className="flex-shrink-0 w-[270px]">
+              <div key={`${p._id}-${i}`} className="flex-shrink-0 w-[320px]">
                 <ProductCard
                   product={p}
                   setShowLoginPopup={setShowLoginPopup}

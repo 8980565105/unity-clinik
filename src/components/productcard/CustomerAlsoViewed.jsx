@@ -13,8 +13,8 @@ import ProductCard from "../productcard/ProductCard";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading";
 
-const CARD_W = 270;
-const GAP = 20;
+const CARD_W = 320;
+const GAP = 40;
 const STEP = CARD_W + GAP;
 
 export default function CustomerAlsoViewed({
@@ -142,7 +142,7 @@ export default function CustomerAlsoViewed({
             {(isCenter ? items : tripled).map((product, i) => (
               <div
                 key={`${product._id}-${i}`}
-                className="flex-shrink-0 w-[270px]"
+                className="flex-shrink-0 w-[320px]"
               >
                 <ProductCard
                   product={product}

@@ -33,6 +33,10 @@ import Result from "./pages/Result";
 import { HelmetProvider } from "react-helmet-async";
 import NotFound from "./pages/notfound";
 import OrderComplete from "./pages/ordercomplet";
+import PrivacyPolicy from "./pages/privecy-policy";
+import RefundPolicy from "./pages/Return-Refund-Policy";
+import TermService from "./pages/Terms-of-service";
+import ShippingPolicy from "./pages/shippingPolicy";
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -123,13 +127,8 @@ function App() {
           <Route path="/contact-us" element={<ContactUs />} />
           <Route path="/my-account" element={<MyAccount />}>
             <Route path="dashboard" element={<Dashboard />} />
-            {/* <Route path="orders" element={<Orders />} /> */}
-            {/* <Route path="address" element={<Address />} /> */}
             <Route path="account-details" element={<AccountDetails />} />
-            {/* <Route path="logout" /> */}
           </Route>
-          {/* <Route path="/account-details" element={<AccountDetails />} /> */}
-
           <Route path="/cart" element={<Cart />}></Route>
           <Route path="/updatecart" element={<Updatecart />}></Route>
           <Route path="/checkout" element={<Checkout />}></Route>
@@ -139,8 +138,11 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/results" element={<Result />} />
           <Route path="/ordercompleted" element={<OrderComplete />} />
-          <Route path="orders" element={<Orders />} />
-
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refundpolicy" element={<RefundPolicy />} />
+          <Route path="/termService" element={<TermService />} />
+          <Route path="/shippingpolicy" element={<ShippingPolicy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />

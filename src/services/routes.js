@@ -95,6 +95,8 @@ export const ROUTES = {
   },
   payments: {
     getAll: "/payments",
+    createOrder: "/payments/razorpay-order",
+    verify: "/payments/verify",
   },
   contact: {
     getAll: "/contact-us",
@@ -145,5 +147,12 @@ export const ROUTES = {
 
   emails: {
     create: "/emails",
+  },
+  slide: {
+    getPublic: "/slide/public",
+  },
+
+  SystemSettings: {
+    get: "/system-setting/public",
   },
 };

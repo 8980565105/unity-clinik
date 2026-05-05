@@ -11,6 +11,7 @@ import { updateLocalQuantity } from "../../features/cart/cartSlice";
 import { Link } from "react-router-dom";
 import { getImageUrl } from "../utils/helper";
 import { Toaster } from "react-hot-toast";
+import Loding from "../loding/loding";
 
 export default function CartItem() {
   const { items = [], loading } = useSelector((state) => state.cart);
@@ -24,7 +25,7 @@ export default function CartItem() {
     }
   }, [dispatch, user]);
 
-  if (loading) return <p className="text-center py-10">Loading cart...</p>;
+  if (loading) return <Loding className="!h-[300px]" />;
   if (!items.length)
     return <p className="text-center mb-[100px] py-10">Your cart is empty.</p>;
 
@@ -71,12 +72,35 @@ export default function CartItem() {
       .then(() => dispatch(fetchCart(cart_id)));
   };
 
+  // const getDiscountedPrice = (item) => {
+  //   const discount = item?.product_id?.discount_id?.value || 0;
+  //   const originalPrice = item?.variant_id?.price || 0;
+  //   const discountedPrice =
+  //     discount > 0
+  //       ? originalPrice - (originalPrice * discount) / 100
+  //       : originalPrice;
+  //   return { discount, originalPrice, discountedPrice };
+  // };
+
   const getDiscountedPrice = (item) => {
+    const originalPrice = Number(item?.variant_id?.price || 0);
+    const offerPrice = Number(item?.variant_id?.offerprice || 0);
+
+    if (offerPrice > 0 && offerPrice < originalPrice) {
+      const discountPercent = Math.floor(
+        ((originalPrice - offerPrice) / originalPrice) * 100 + 0.5,
+      );
+      return {
+        discount: discountPercent,
+        originalPrice,
+        discountedPrice: offerPrice,
+      };
+    }
+
     const discount = item?.product_id?.discount_id?.value || 0;
-    const originalPrice = item?.variant_id?.price || 0;
     const discountedPrice =
       discount > 0
-        ? originalPrice - (originalPrice * discount) / 100
+        ? Math.round(originalPrice - (originalPrice * discount) / 100)
         : originalPrice;
     return { discount, originalPrice, discountedPrice };
   };

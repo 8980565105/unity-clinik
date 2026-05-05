@@ -74,7 +74,7 @@ function AccountDetails({ onSwitchForget }) {
     <>
       <Toaster />
 
-      {loading && <p className="text-sm text-gray-400 mb-2">Loading...</p>}
+      {/* {loading && <p className="text-sm text-gray-400 mb-2">Loading...</p>} */}
 
       <Section>
         <Row>

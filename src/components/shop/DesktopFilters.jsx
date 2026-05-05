@@ -69,8 +69,8 @@ const DesktopFilters = ({
     (state) => state.productLabels,
   );
   useEffect(() => {
-    dispatch(fetchCategories({ status: "active" }));
-    dispatch(fetchsubCategories({ status: "active" }));
+    // dispatch(fetchCategories({ status: "active" }));
+    // dispatch(fetchsubCategories({ status: "active" }));
     // dispatch(fetchSizes({ status: "active" }));
     dispatch(fetchBrands({ status: "active" }));
     dispatch(fetchtypes({ status: "active" }));

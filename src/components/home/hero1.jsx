@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
@@ -7,61 +7,22 @@ import { useSelector, useDispatch } from "react-redux";
 import { FaHeart, FaStar, FaGoogle } from "react-icons/fa";
 import { getImageUrl } from "../utils/helper";
 import Button from "../ui/Button";
-import a1 from "../../assets/a1.png";
-import a2 from "../../assets/a2.webp";
-import a3 from "../../assets/a3.png";
-import d1 from "../../assets/d1.webp";
-import d2 from "../../assets/d2.webp";
-import d4 from "../../assets/d4.webp";
-import be2 from "../../assets/be2.webp";
-import d6 from "../../assets/d6.webp";
-import { Star } from "lucide-react";
-
+import { fetchSlides } from "../../features/slides/slideThunk";
+import g from "../../assets/g.png";
 export default function Hero1() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const slides = [
-    {
-      title: "Grade 6 had me worried...now my confidence is back",
-      description:
-        "I was really worried about Grade 6 hair loss. Treatment ke baad amazing results mile...",
-      button: "Shop Now",
-      link: "/shop",
-      location: "Punjab, IN",
-      user: {
-        name: "Sunny",
-        age: 36,
-        review:
-          "I was really worried about Grade 6 hair loss. Treatment ke baad amazing results mile...",
-      },
-      images: {
-        main: d2,
-        before: be2,
-        after: a2,
-      },
-    },
-    {
-      title: "Hair fall control treatment",
-      description:
-        "I was really worried about Grade 6 hair loss. Treatment ke baad amazing results mile...",
-      button: "Explore",
-      link: "/contact-us",
+  const { slides, loading, error } = useSelector((state) => state.slides);
 
-      location: "Delhi, IN",
-      user: {
-        name: "Rahul",
-        age: 32,
-        review:
-          "Hair fall control treatment worked really well. Confidence is back.",
-      },
-      images: {
-        main: d4,
-        before: d1,
-        after: d6,
-      },
-    },
-  ];
+  useEffect(() => {
+    dispatch(fetchSlides());
+  }, [dispatch]);
+
+  const hero1Data = slides
+    .filter((s) => s.section === "hero1" && s.status === "active")
+    .flatMap((s) => s.hero1Slides || [])
+    .filter((slide) => slide.status === "active");
 
   const settings = {
     dots: true,
@@ -78,11 +39,25 @@ export default function Hero1() {
     ),
   };
 
+  if (loading)
+    return (
+      <div className="h-[800px] flex items-center justify-center">
+        Loading...
+      </div>
+    );
+  if (error)
+    return (
+      <div className="h-[800px] flex items-center justify-center text-red-500">
+        {error}
+      </div>
+    );
+  if (!hero1Data.length) return null;
+
   return (
     <>
       <Slider {...settings} className="w-full">
-        {slides.map((slide, index) => (
-          <div key={index}>
+        {hero1Data.map((slide, index) => (
+          <div key={slide._id || index}>
             <div className="hidden lg:block relative h-[800px] w-full overflow-hidden">
               <div
                 className="absolute w-full h-full bg-primary 
@@ -93,110 +68,123 @@ export default function Hero1() {
                 [clip-path:polygon(100%_100%,100%_60%,0%_52%,0%_100%)]"
               />
               <div className="relative z-10 flex items-center justify-between h-full px-20">
-                <div className="text-left flex flex-col justify-between h-full max-w-[700px] py-[30px] mb-10">
+                <div className="text-left flex flex-col justify-between h-full w-full py-[30px] mb-[55px]">
                   <div className="text-white">
                     <p className="mt-5 text-[20px] uppercase">
                       HAIR GROWTH TREATMENT BY DOCTORS
                     </p>
-                    <h1 className="text-[50px] font-bold leading-none my-5">
+                    <h1 className="text-[70px] font-bold leading-none my-10">
                       {slide.title}
                     </h1>
                     <p className="text-white text-[18px] mb-10">
                       {slide.description}
                     </p>
                     <Button
-                      onClick={() => navigate(slide.link)}
+                      onClick={() => navigate(slide.button_link || "/shop")}
                       variant="commone"
                       className="!bg-white !text-primary rounded-full min-w-[150px]"
                     >
-                      {slide.button}
+                      {slide.button_name || "Shop Now"}
                     </Button>
                   </div>
-                  <div className="flex gap-6 justify-center items-center">
-                    <div className="w-[180px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
-                      <h2 className="text-3xl font-bold text-gray-800">1L+</h2>
-                      <p className="text-gray-600 mt-1">Customers</p>
+                  <div className="flex gap-5 justify-start items-center">
+                    <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
+                      <h2 className="text-[40px] font-bold text-gray-800">
+                        1L+
+                      </h2>
+                      <p className="text-gray-600 mt-1 text-[20px]">
+                        Customers
+                      </p>
                       <div className="absolute -bottom-5 bg-white rounded-full w-12 h-12 flex items-center justify-center shadow">
-                        <FaHeart className="text-red-400 text-xl" />
+                        <FaHeart className="text-red-400" size={28} />
                       </div>
                     </div>
-                    <div className="w-[180px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
-                      <h2 className="text-3xl font-bold text-gray-800">95%</h2>
-                      <p className="text-gray-600 mt-1">Saw results*</p>
+                    <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
+                      <h2 className="text-[40px] font-bold text-gray-800">
+                        95%
+                      </h2>
+                      <p className="text-gray-600 mt-1 text-[20px]">
+                        Saw results*
+                      </p>
                       <div className="absolute -bottom-5 bg-white rounded-full w-12 h-12 flex items-center justify-center shadow">
-                        <FaStar className="text-yellow-400 text-xl" />
+                        <FaStar className="text-yellow-400" size={28} />
                       </div>
                     </div>
-                    <div className="w-[180px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
-                      <h2 className="text-3xl font-bold text-gray-800">4.8</h2>
-                      <p className="text-gray-600 mt-1">Ratings</p>
+                    <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
+                      <h2 className="text-[40px] font-bold text-gray-800">
+                        4.8
+                      </h2>
+                      <p className="text-gray-600 mt-1 text-[20px]">Ratings</p>
                       <div className="absolute -bottom-5 bg-white rounded-full w-12 h-12 flex items-center justify-center shadow">
-                        <FaGoogle className="text-red-500 text-xl" />
+                        <img src={g} className="w-[50px] h-[50px]" />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="w-[420px] h-[500px]">
-                  <div className="z-20 absolute top-3 right-3 text-[40px] text-white">
+                <div className="w-full  flex  flex-col items-end">
+                  <div className="z-20 absolute top-3 right-4 text-[40px] text-white">
                     {slide.location}
                   </div>
-                  <div className="relative w-[420px] h-[500px] flex justify-center">
-                    <div className="absolute -top-[74px] right-55 w-[260px] h-[500px] z-10">
+                  <div className="relative w-[620px] h-[700px] flex justify-center">
+                    <div className="absolute top-[18px] w-[350px] h-[400px] z-10">
                       <img
-                        src={slide.images.main}
+                        src={getImageUrl(slide.mainImage)}
                         alt=""
-                        className="w-[260px] h-[400px] object-cover"
+                        className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="absolute bottom-10 z-20 left-0 w-[180px] h-[200px] rounded-xl shadow-md">
-                      <div className="relative">
-                        <img
-                          src={slide.images.before}
-                          alt=""
-                          className="w-[180px] h-[200px] object-cover"
-                        />
-                        <p className="absolute bottom-[2%] text-white uppercase left-[50%]">
-                          before
-                        </p>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-10 z-20 right-0 w-[180px] h-[200px] rounded-xl shadow-md">
-                      <div className="relative">
-                        <img
-                          src={slide.images.after}
-                          alt=""
-                          className="w-[180px] h-[200px] object-cover"
-                        />
-                        <p className="absolute bottom-[2%] text-white uppercase left-[50%]">
-                          After
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="z-10">
-                    <div className="flex gap-1 items-center">
-                      <span className="font-bold text-[20px]">
-                        {slide.user.name},
-                      </span>
-                      <span className="text-[20px]">Age {slide.user.age}</span>
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar
-                            key={i}
-                            className="text-yellow-400"
-                            size={20}
+
+                    <div className=" absolute bottom-[100px] z-20">
+                      <div className="flex justify-center gap-4 items-start">
+                        <div className="relative">
+                          <img
+                            src={getImageUrl(slide.beforeImage)}
+                            alt=""
+                            className="w-[250px] h-[250px] object-cover"
                           />
-                        ))}
+                          <p className="absolute bottom-[2%] text-white uppercase left-[37%] font-bold">
+                            before
+                          </p>
+                        </div>
+
+                        <div className="relative">
+                          <img
+                            src={getImageUrl(slide.afterImage)}
+                            alt=""
+                            className="w-[250px] h-[250px] object-cover"
+                          />
+                          <p className="absolute bottom-[2%] text-white uppercase left-[37%] font-bold">
+                            After
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-left line-clamp-3">
-                      {slide.user.review}
-                    </p>
+                    <div className="z-10 -bottom-10 absolute">
+                      <div className="flex gap-1 items-center">
+                        <span className="font-bold text-[20px]">
+                          {slide.name},
+                        </span>
+                        <span className="text-[20px]">Age {slide.age}</span>
+                        <div className="flex items-center">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar
+                              key={i}
+                              className="text-yellow-400"
+                              size={20}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-left line-clamp-3 text-[20px]">
+                        {slide.review}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
+
             <div className="block lg:hidden mx-2 my-2">
               <div
                 className="rounded-[20px] overflow-hidden"
@@ -206,7 +194,7 @@ export default function Hero1() {
                   <div className="flex flex-col gap-2 flex-shrink-0">
                     <div className="relative w-[115px] h-[108px] rounded-[12px] overflow-hidden shadow-lg">
                       <img
-                        src={slide.images.before}
+                        src={getImageUrl(slide.beforeImage)}
                         alt="before"
                         className="w-full h-full object-cover"
                       />
@@ -219,15 +207,15 @@ export default function Hero1() {
                     </div>
                     <div className="relative w-[115px] h-[108px] rounded-[12px] overflow-hidden shadow-lg">
                       <img
-                        src={slide.images.after}
-                        alt="before2"
+                        src={getImageUrl(slide.afterImage)}
+                        alt="after"
                         className="w-full h-full object-cover"
                       />
                       <span
                         className="absolute bottom-[6px] left-[8px] text-white text-[10px] font-bold uppercase tracking-wider"
                         style={{ textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
                       >
-                        Before
+                        After
                       </span>
                     </div>
                   </div>
@@ -240,17 +228,18 @@ export default function Hero1() {
                         {slide.title}
                       </h1>
                       <Button
+                        onClick={() => navigate(slide.button_link || "/shop")}
                         variant="commone"
                         className="!bg-white !text-primary rounded-full min-w-[150px]"
                       >
-                        {slide.button}
+                        {slide.button_name || "Shop Now"}
                       </Button>
                     </div>
                   </div>
                 </div>
                 <div className="relative w-full mt-[-6px]">
                   <img
-                    src={slide.images.main}
+                    src={getImageUrl(slide.mainImage)}
                     alt="main"
                     className="w-full object-contain object-top"
                     style={{ height: "340px" }}
@@ -278,14 +267,12 @@ export default function Hero1() {
                     {
                       val: "4.8",
                       label: "Ratings",
-                      icon: <FaGoogle className="text-blue-500" size={17} />,
+                      icon: <FaGoogle className="text-red-500" size={17} />,
                     },
                   ].map((s, i, arr) => (
                     <div
                       key={s.label}
-                      className={`flex-1 flex flex-col items-center py-4 gap-[3px] ${
-                        i < arr.length - 1 ? "border-r border-gray-200" : ""
-                      }`}
+                      className={`flex-1 flex flex-col items-center py-4 gap-[3px] ${i < arr.length - 1 ? "border-r border-gray-200" : ""}`}
                     >
                       <span className="text-[22px] font-extrabold text-gray-800 leading-none">
                         {s.val}

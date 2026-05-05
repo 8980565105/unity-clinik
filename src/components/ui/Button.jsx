@@ -9,7 +9,7 @@ const Button = ({
 }) => {
   const variants = {
     common:
-      "bg-primary text-white text-[18px] min-w-[200px] py-[8px] md:py-[15px] hover:bg-[var(--theme-hover-color)] hover:text-white",
+      "bg-primary text-white text-[18px] min-w-[100px] py-[8px] md:py-[15px] hover:bg-[var(--theme-hover-color)] hover:text-white",
     secondary:
       "bg-secondary text-white hover:text-secondary hover:bg-primary text-[18px] min-w-[200px] py-[8px] md:py-[15px] box-shadow",
     outline:

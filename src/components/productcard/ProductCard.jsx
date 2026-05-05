@@ -14,6 +14,7 @@ import {
 } from "../../features/cart/cartThunk";
 import toast from "react-hot-toast";
 import Button from "../ui/Button";
+import StarRating from "../reviews/starrating";
 
 function CountdownTimer({ endDate }) {
   const calcTimeLeft = useCallback(() => {
@@ -61,21 +62,31 @@ export default function ProductCard({ product, setShowLoginPopup }) {
   const productReviewData = reviewsState?.productReviews?.[product?._id];
   const [addingToCart, setAddingToCart] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
-  const getDiscountedPrice = (product) => {
-    const originalPrice = product?.variants?.[0]?.price || 0;
-    const discount = product?.discount?.value || 0;
-    const discountType = product?.discount?.type || "none";
-    let discountedPrice = originalPrice;
-    if (discountType === "percentage") {
-      discountedPrice = originalPrice - (originalPrice * discount) / 100;
-    } else if (discountType === "flat") {
-      discountedPrice = originalPrice - discount;
+
+  const getPriceData = (product) => {
+    const variant = product?.variants?.[0];
+
+    const originalPrice = variant?.price || 0;
+    const offerPrice = variant?.offerprice || originalPrice;
+
+    let discountPercent = 0;
+
+    if (originalPrice > offerPrice) {
+      const rawDiscount = ((originalPrice - offerPrice) / originalPrice) * 100;
+
+      const decimal = rawDiscount % 1;
+
+      if (decimal >= 0.5) {
+        discountPercent = Math.ceil(rawDiscount);
+      } else {
+        discountPercent = Math.floor(rawDiscount);
+      }
     }
+
     return {
       originalPrice,
-      discountedPrice,
-      discountValue: discount,
-      discountType,
+      offerPrice,
+      discountPercent,
     };
   };
   const { productReviews } = useSelector((state) => state.reviews);
@@ -195,65 +206,60 @@ export default function ProductCard({ product, setShowLoginPopup }) {
   const currentSelectedColor = selectedColor || uniqueColors[0]?.code;
   const currentVariant = getVariantForColor(product, currentSelectedColor);
   const isOutOfStock = currentVariant?.stock_quantity === 0;
+  const priceData = getPriceData(product);
 
   return (
     <>
       <Link to={`/products/${product._id}`}>
-        <div className="bg-gray-100 rounded-2xl border p-3 w-full max-w-[500px] hover:shadow-lg transition-all group">
+        <div className="rounded-2xl border p-3 w-full max-w-[500px] hover:shadow-lg transition-all group bg-white h-full">
           <div className="relative">
             <img
               src={displayedImage}
               alt={product.name}
               className="w-full rounded-xl h-[250px] object-cover transition-transform duration-300 group-hover:scale-105"
             />
-            {reviewData.total > 0 && (
-              <span className="absolute bottom-0 left-0 bg-white text-black text-xs px-2 py-1 rounded-bl-xl shadow">
-                <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <Star size={14} className="text-yellow-500 fill-yellow-500" />
-                  <span>{reviewData.average}</span>
-                  <span>({reviewData.total})</span>
-                </div>
-              </span>
-            )}
-
-            
           </div>
 
-          <div className="mt-3">
-            <p className="text-sm text-gray-700 line-clamp-2 h-[40px] leading-[20px]">
+          <div className="mt-3 flex flex-col flex-grow">
+            <p className="text-[16px] font-semibold line-clamp-2 h-[40px] leading-[20px] text-left">
               {product.name}
             </p>
-
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-lg font-semibold text-black">
-                ₹{getDiscountedPrice(product).discountedPrice}
-              </span>
-
-              {getDiscountedPrice(product).discountValue > 0 && (
-                <>
-                  <span className="line-through text-gray-400 text-sm">
-                    ₹{getDiscountedPrice(product).originalPrice}
-                  </span>
-
-                  <span className="bg-green-100 text-green-600 text-xs px-2 py-1 rounded">
-                    {getDiscountedPrice(product).discountType === "percentage"
-                      ? `${getDiscountedPrice(product).discountValue}% Off`
-                      : `₹${getDiscountedPrice(product).discountValue} Off`}
-                  </span>
-                </>
+            <div className="h-[22px]">
+              {reviewData.total > 0 && (
+                <StarRating
+                  rating={Number(reviewData.average)}
+                  total={reviewData.total}
+                />
               )}
             </div>
 
+            <div className="flex flex-wrap items-end gap-2 mt-1">
+              <p className="text-[18px] font-semibold text-black">
+                ₹{priceData.offerPrice}
+              </p>
+              <div className="flex gap-1">
+                {priceData.discountPercent > 0 && (
+                  <p className="line-through text-gray-400 text-[16px]">
+                    ₹{priceData.originalPrice}
+                  </p>
+                )}
+
+                {priceData.discountPercent > 0 && (
+                  <span className="text-primary text-[14px]">
+                    {priceData.discountPercent}% OFF
+                  </span>
+                )}
+              </div>
+            </div>
             <Button
               onClick={(e) => {
                 e.preventDefault();
                 handleAddToCart(product);
               }}
-              variant="common"
-              className="mt-3 w-full border text-white hover:text-white rounded-full py-2 flex items-center justify-center gap-2 transition"
+              variant="outline"
+              className="mt-3 w-full border text-primary hover:text-white rounded-full  flex items-center justify-center gap-2 transition"
             >
-              <FontAwesomeIcon icon={faCartShopping} />
-              ADD TO CART
+              ADD
             </Button>
           </div>
         </div>

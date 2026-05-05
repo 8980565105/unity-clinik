@@ -10,13 +10,11 @@ import {
   FaYoutube,
 } from "react-icons/fa";
 import { BsTelephone } from "react-icons/bs";
-import { ChevronDown, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import visaImg from "../../assets/visa.png";
 import mastercardImg from "../../assets/mastercard.png";
 import discoverImg from "../../assets/discover.png";
 import paypalImg from "../../assets/paypal.png";
-import googlePlay from "../../assets/googlePlay.png";
-import appleStore from "../../assets/appleStore.png";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
 import { Link } from "react-router-dom";
@@ -44,8 +42,6 @@ export default function Footer() {
   const { footers = [], loading } = useSelector((state) => state.footer);
   const { info: storeInfo } = useSelector((state) => state.store);
   const socialLinks = storeInfo?.social_links || [];
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [emailInput, setEmailInput] = useState("");
   const {
     loading: emailLoading,
@@ -71,17 +67,6 @@ export default function Footer() {
     ]
       .filter(Boolean)
       .join(", ") || "215, Dhara Arcade near Lajamani Chowk, Surat";
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleToggle = () => {
-    if (isMobile) setIsOpen((prev) => !prev);
-  };
 
   useEffect(() => {
     dispatch(fetchFooter({ isPublic: true }));
@@ -131,35 +116,11 @@ export default function Footer() {
 
   return (
     <footer>
-      <Row
-        className="flex items-center justify-between px-[10px] py-[16px] cursor-pointer md:hidden border-t border-[#BCBCBC]"
-        onClick={handleToggle}
-      >
-        <p className="text-[14px] text-black font-medium">
-          About MYcra Fashion
-        </p>
-        <ChevronDown
-          size={18}
-          className={`transition-transform duration-300 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </Row>
       <div
         ref={contentRef}
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${
-          isMobile ? "" : "max-h-none opacity-100"
-        }`}
-        style={{
-          maxHeight: isMobile
-            ? isOpen
-              ? `${contentRef.current?.scrollHeight}px`
-              : "0px"
-            : "none",
-          opacity: isMobile ? (isOpen ? 1 : 0) : 1,
-        }}
+        className="overflow-hidden transition-all duration-500 ease-in-out "
       >
-        <Section className="bg-gray-400/80">
+        <Section className="bg-[var(--ef3a96-9)]">
           <Row className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="space-y-[22px] max-w-[280px] w-full">
               <Link
@@ -281,7 +242,7 @@ export default function Footer() {
             </div>
           </Row>
         </Section>
-        <Section className="bg-gray-600 !py-[0px] !md:py-[0px]">
+        <Section className="bg-primary !py-[0px] !md:py-[0px]">
           <Row className="flex justify-between items-center py-4">
             <div className="text-white">
               <span>©</span> <span>{copyright}</span>
@@ -300,8 +261,8 @@ export default function Footer() {
                   >
                     <IconComponent
                       size={30}
-                      style={{ color: color }}
-                      className="transition-transform hover:scale-110"
+                      // style={{ color: color }}
+                      className="transition-transform hover:scale-110 text-white"
                     />
                   </Link>
                 );

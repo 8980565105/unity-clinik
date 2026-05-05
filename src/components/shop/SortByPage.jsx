@@ -53,7 +53,7 @@ const SortByPage = ({ isOpen, onClose, selectedSort, onSelectSort }) => {
             {sortOptions.map((option) => {
               const isSelected = selectedSort === option.value;
               const iconColor = "rgba(0,0,0,0.7)";
-              const bgColor = isSelected ? "bg-pink-50" : "hover:bg-gray-50";
+              const bgColor = isSelected ? "bg-[#005c99]/50" : "hover:bg-gray-50";
               const textColor = "text-black/70";
 
               return (
@@ -77,10 +77,10 @@ const SortByPage = ({ isOpen, onClose, selectedSort, onSelectSort }) => {
 
                   <div
                     className={`h-[15px] w-[15px] rounded-full border-[1px] flex items-center justify-center 
-                                        ${isSelected ? "border-[#EF3A96]" : "border-gray-300"}`}
+                                        ${isSelected ? "border-primary" : "border-gray-300"}`}
                   >
                     {isSelected && (
-                      <div className="h-[9px] w-[9px] rounded-full bg-[#EF3A96]"></div>
+                      <div className="h-[9px] w-[9px] rounded-full bg-primary"></div>
                     )}
                   </div>
                 </div>

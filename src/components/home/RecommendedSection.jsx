@@ -52,7 +52,6 @@ const RecommendedSection = ({ setShowLoginPopup }) => {
   useEffect(() => {
     if (trackRef.current && total > 0) {
       trackRef.current.style.transition = "none";
-      // trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
       trackRef.current.style.transform = `translateX(0px)`;
     }
   }, [total]);

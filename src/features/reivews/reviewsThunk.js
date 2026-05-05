@@ -34,7 +34,7 @@ export const fetchProductReviews = createAsyncThunk(
 
 export const fetchAllReviews = createAsyncThunk(
   "reviews/fetchAllReviews",
-  async ({ page = 1, limit = 10 } = {}, { rejectWithValue }) => {
+  async ({ page = 1, limit = 100 } = {}, { rejectWithValue }) => {
     try {
       const response = await api.get(
         `${ROUTES.customerReviews.getPublic}?page=${page}&limit=${limit}`

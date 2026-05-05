@@ -4,7 +4,11 @@ import Button from "../ui/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCart } from "../../features/cart/cartThunk";
 import { getImageUrl } from "../utils/helper";
-import { createPayment } from "../../features/payments/paymentThunk";
+import {
+  createPayment,
+  createRazorpayOrder,
+  verifyRazorpayPayment,
+} from "../../features/payments/paymentThunk";
 import { createOrder } from "../../features/orders/orderThunk";
 import toast, { Toaster } from "react-hot-toast";
 import { clearCart } from "../../features/cart/cartSlice";
@@ -21,6 +25,10 @@ export default function OrderSummary({ formData }) {
   const [cardNumber, setCardNumber] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
+
+
+     const key = process.env.REACT_APP_RAZORPAY_KEY;
+
 
   useEffect(() => {
     const cart_id = localStorage.getItem("cart_id");
@@ -70,11 +78,13 @@ export default function OrderSummary({ formData }) {
 
   const handlePlaceOrder = async () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
+
     if (!userLS || !userLS._id) {
       toast("Please login before placing order");
       return navigate("/login");
     }
 
+    // 🔹 Validation same
     const requiredFields = {
       email: "Email Address",
       firstName: "First Name",
@@ -97,13 +107,7 @@ export default function OrderSummary({ formData }) {
       return toast("Select a payment method");
     }
 
-    if (selectedPayment === "credit_card") {
-      if (!cardNumber || !expiryDate || !cvv) {
-        setPaymentError("Please fill all credit card details");
-        return;
-      }
-    }
-
+    // 🔹 STEP 1: Create Order (same)
     const orderData = {
       user_id: userLS._id,
       items,
@@ -122,19 +126,16 @@ export default function OrderSummary({ formData }) {
     };
 
     const orderAction = await dispatch(createOrder(orderData));
-    console.log("ORDER ACTION:", orderAction); // આ add કરો
 
     if (!createOrder.fulfilled.match(orderAction)) {
-      toast(
-        "Order failed: " + (orderAction.payload?.message || "Unknown error"),
-      );
+      toast("Order failed");
       return;
     }
-    const orderId =
-      orderAction.payload?.data?._id || orderAction.payload?._id || null;
+
+    const orderId = orderAction.payload?.data?._id || orderAction.payload?._id;
 
     if (!orderId) {
-      toast("Order created but ID missing!");
+      toast("Order ID missing");
       return;
     }
 
@@ -153,11 +154,180 @@ export default function OrderSummary({ formData }) {
       payment_method: selectedPayment,
       status: selectedPayment === "cod" ? "pending" : "completed",
     };
-    await dispatch(createPayment(paymentPayload));
-    dispatch(clearCart());
-    toast("Order placed successfully!");
-    navigate("/ordercompleted");
+
+    // 🟢 COD FLOW (same)
+    if (selectedPayment === "cod") {
+      await dispatch(createPayment(paymentPayload));
+      dispatch(clearCart());
+      toast("Order placed successfully!");
+      return navigate("/ordercompleted");
+    }
+
+    // 🔥 RAZORPAY FLOW START
+    const razorRes = await dispatch(
+      createRazorpayOrder({
+        amount: total,
+        order_id: orderId,
+      }),
+    );
+
+    // const razorOrder = razorRes.payload?.data;
+    // return res.data.data;
+    const razorOrder = razorRes.payload;
+
+    if (!razorOrder) {
+      toast("Payment initialization failed");
+      return;
+    }
+
+
+    const options = {
+      key: key,
+      amount: razorOrder.amount,
+      currency: "INR",
+      name: "Unity Clinic",
+      description: "Order Payment",
+      order_id: razorOrder.id,
+
+      handler: async function (response) {
+        const verifyRes = await dispatch(
+          verifyRazorpayPayment({
+            ...response,
+            order_id: orderId,
+            user_id: userLS._id,
+          }),
+        );
+
+        if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) {
+          toast("Payment verification failed ❌");
+          return;
+        }
+
+        await dispatch(
+          createPayment({
+            ...paymentPayload,
+            transaction_id: response.razorpay_payment_id,
+            status: "completed",
+          }),
+        );
+
+        dispatch(clearCart());
+        toast("Payment Successful ✅");
+        navigate("/ordercompleted");
+      },
+
+      prefill: {
+        name: user?.name,
+        email: user?.email,
+      },
+
+      theme: {
+        color: "#F43297",
+      },
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
   };
+
+  // const handlePlaceOrder = async () => {
+  //   const userLS = JSON.parse(localStorage.getItem("user"));
+  //   if (!userLS || !userLS._id) {
+  //     toast("Please login before placing order");
+  //     return navigate("/login");
+  //   }
+
+  //   const requiredFields = {
+  //     email: "Email Address",
+  //     firstName: "First Name",
+  //     lastName: "Last Name",
+  //     address: "Address",
+  //     country: "Country",
+  //     state: "State",
+  //     city: "City",
+  //     pincode: "Pin Code",
+  //   };
+
+  //   for (const [key, label] of Object.entries(requiredFields)) {
+  //     if (!formData[key] || formData[key].trim() === "") {
+  //       toast(`Please enter ${label}`);
+  //       return;
+  //     }
+  //   }
+
+  //   if (!selectedPayment) {
+  //     return toast("Select a payment method");
+  //   }
+
+  //   // if (selectedPayment === "credit_card") {
+  //   //   if (!cardNumber || !expiryDate || !cvv) {
+  //   //     setPaymentError("Please fill all credit card details");
+  //   //     return;
+  //   //   }
+  //   // }
+
+  //   if (selectedPayment === "cod") {
+  //     await dispatch(createPayment(paymentPayload));
+  //     dispatch(clearCart());
+  //     toast("Order placed successfully!");
+  //     return navigate("/ordercompleted");
+  //   }
+
+  //   const orderData = {
+  //     user_id: userLS._id,
+  //     items,
+  //     total_price: total,
+  //     coupon_id: null,
+  //     payment_method: getBackendPaymentMethod(selectedPayment),
+  //     shippingAddress: {
+  //       firstName: formData.firstName,
+  //       lastName: formData.lastName,
+  //       address: formData.address,
+  //       state: formData.state,
+  //       city: formData.city,
+  //       pincode: formData.pincode,
+  //       phone: formData.phone,
+  //     },
+  //   };
+
+  //   const orderAction = await dispatch(createOrder(orderData));
+  //   console.log("ORDER ACTION:", orderAction); // આ add કરો
+
+  //   if (!createOrder.fulfilled.match(orderAction)) {
+  //     toast(
+  //       "Order failed: " + (orderAction.payload?.message || "Unknown error"),
+  //     );
+  //     return;
+  //   }
+  //   const orderId =
+  //     orderAction.payload?.data?._id || orderAction.payload?._id || null;
+
+  //   if (!orderId) {
+  //     toast("Order created but ID missing!");
+  //     return;
+  //   }
+
+  //   const storeOwnerId = getStoreOwnerId();
+
+  //   const paymentPayload = {
+  //     user_id: userLS._id,
+  //     order_id: orderId,
+  //     store_owner_id: storeOwnerId,
+  //     items,
+  //     subtotal,
+  //     taxes,
+  //     shipping,
+  //     total,
+  //     amount_paid: selectedPayment === "cod" ? 0 : total,
+  //     payment_method: selectedPayment,
+  //     status: selectedPayment === "cod" ? "pending" : "completed",
+  //   };
+  //   await dispatch(createPayment(paymentPayload));
+  //   dispatch(clearCart());
+  //   toast("Order placed successfully!");
+  //   navigate("/ordercompleted");
+  // };
+
   return (
     <>
       <Toaster position="top center" />

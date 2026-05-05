@@ -23,8 +23,8 @@ const STATIC_CATEGORIES = [
   { _id: "s8", name: "Kurti", image_url: kurtiImg, isStatic: true },
 ];
 
-const CARD_W = 174;
-const GAP = 20;
+const CARD_W = 250;
+const GAP = 40;
 const STEP = CARD_W + GAP;
 
 const CategoriesSection = () => {
@@ -39,29 +39,39 @@ const CategoriesSection = () => {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const isAnimating = useRef(false);
-  const initializedRef = useRef(false); 
+  const initializedRef = useRef(false);
 
   const [currentIndex, setCurrentIndex] = useState(total);
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [isCenter, setIsCenter] = useState(false);
 
-  const isCenter = total <= visibleCount;
   const tripled = total > 0 ? [...filtered, ...filtered, ...filtered] : [];
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new ResizeObserver(() => {
-      if (containerRef.current) {
-        setVisibleCount(Math.floor(containerRef.current.offsetWidth / STEP));
-      }
-    });
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+    if (total > 0) setCurrentIndex(total);
+  }, [total]);
 
   useEffect(() => {
-    if (!trackRef.current || total === 0 || initializedRef.current) return;
-    initializedRef.current = true;
-    setCurrentIndex(total);
+    const checkCenter = () => {
+      if (!containerRef.current) return;
+      const width = containerRef.current.offsetWidth;
+      const visible = Math.floor(width / STEP);
+      setIsCenter(total <= visible);
+    };
+
+    const timeout = setTimeout(checkCenter, 0);
+    window.addEventListener("resize", checkCenter);
+
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("resize", checkCenter);
+    };
+  }, [total]);
+
+  useEffect(() => {
+    if (trackRef.current && total > 0) {
+      trackRef.current.style.transition = "none";
+      trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+    }
   }, [total]);
 
   const slideTo = (newIndex, withAnimation = true) => {
@@ -85,7 +95,7 @@ const CategoriesSection = () => {
         slideTo(resetTo, false);
       }
       isAnimating.current = false;
-    }, 310);
+    }, 300);
   };
 
   const handlePrev = () => {
@@ -125,26 +135,35 @@ const CategoriesSection = () => {
             style={{
               gap: `${GAP}px`,
               willChange: "transform",
+              transform: isCenter ? "none" : `translateX(-${total * STEP}px)`,
             }}
           >
             {(isCenter ? filtered : tripled).map((cat, i) => (
               <div
                 key={`${cat._id}-${i}`}
-                className="flex-shrink-0 w-[150px] px-2 cursor-pointer"
+                className="flex-shrink-0 w-[250px] px-2 cursor-pointer"
                 onClick={() => navigate(`/shop?category=${cat.name}`)}
               >
-                <div className="group border border-gray-100 rounded-xl overflow-hidden hover:border-gray-300 transition-all duration-200">
-                  <div className="relative w-full aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                <div className="group border bg-gradient-to-b from-[#f2fafc] to-[#d1eaff] border-gray-100 rounded-xl overflow-hidden hover:border-primary transition-all duration-200">
+                  <div className="text-center text-[18px] capitalize text-primary min-h-[44px] flex items-center justify-center font-semibold px-1 pt-1">
+                    {cat.name}
+                  </div>
+
+                  <div className="relative w-full aspect-square flex items-center justify-center overflow-hidden">
                     <img
-                      src={cat.isStatic ? cat.image_url : getImageUrl(cat.image_url)}
+                      src={
+                        cat.isStatic
+                          ? cat.image_url
+                          : getImageUrl(cat.image_url)
+                      }
                       alt={cat.name}
                       className="w-[90%] h-[90%] object-cover transition-transform duration-300 group-hover:scale-[1.05]"
                     />
-                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   </div>
-                  <div className="px-2 py-3 text-center text-[13px] text-gray-800 min-h-[44px] flex items-center justify-center">
+                  {/* <div className="px-2 py-3 text-center text-[18px] capitalize text-primary min-h-[44px] flex items-center justify-center">
                     {cat.name}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ))}

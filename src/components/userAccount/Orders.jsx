@@ -22,6 +22,7 @@ import toast, { Toaster } from "react-hot-toast";
 import OrderTracking from "../../pages/orderTraking";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
+import Loding from "../loding/loding";
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -170,7 +171,7 @@ export default function Orders() {
     setIsTrackingOpen(true);
   };
 
-  if (loading) return <p className="text-center py-10">Loading orders...</p>;
+  if (loading) return <Loding className="!h-[300px]" />;
   return (
     <div>
       <Toaster position="top-center" />
@@ -447,6 +448,56 @@ export default function Orders() {
               )}
             </tbody>
           </table>
+        </Row>
+      </Section>
+
+      <Section>
+        <Row>
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-4 w-full  mx-auto">
+            <div className="flex justify-between items-center border-b pb-3 mb-3">
+              <div>
+                <h2 className="font-semibold text-gray-800">ORD-140</h2>
+                <p className="text-sm text-gray-500">4 May 2026</p>
+              </div>
+
+              <span className="text-xs font-semibold bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                PENDING
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <img
+                src="https://via.placeholder.com/80"
+                alt="product"
+                className="w-20 h-20 object-cover rounded-lg border"
+              />
+
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-800 text-sm md:text-base">
+                  Stage 3 Hair Regrowth Kit for 26-40+
+                </h3>
+
+                <div className="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                  <span className="bg-gray-100 px-2 py-0.5 rounded">
+                    Qty: 1
+                  </span>
+                  <span className="font-semibold text-black">₹1849.00</span>
+                </div>
+              </div>
+
+              <button className="border border-blue-500 text-blue-500 px-4 py-1.5 rounded-lg text-sm hover:bg-blue-50 transition">
+                Rate Item
+              </button>
+            </div>
+
+            <div className="mt-4 border-t pt-3 flex justify-between items-center">
+              <h3 className="font-semibold text-lg">Total: ₹1849</h3>
+
+              <span className="text-xs text-gray-400 uppercase tracking-wide">
+                PHONEPE
+              </span>
+            </div>
+          </div>
         </Row>
       </Section>
 

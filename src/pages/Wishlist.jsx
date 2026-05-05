@@ -1,4 +1,3 @@
-
 import SecondarySection from "../components/ui/SecondarySection";
 import WishlistTable from "../components/wishlist/WishlistTable";
 import Section from "../components/ui/Section";
@@ -8,6 +7,7 @@ import { fetchPages } from "../features/pages/pagesThunk";
 import { useEffect } from "react";
 import { getImageUrl } from "../components/utils/helper";
 import wishlistBg from "../assets/wishlistbg.png";
+import Loding from "../components/loding/loding";
 const staticBg = {
   sections: [
     {
@@ -21,7 +21,7 @@ const staticBg = {
 };
 export default function Wishlist() {
   const dispatch = useDispatch();
-  const { pages } = useSelector((state) => state.pages);
+  const { pages, slugLoading } = useSelector((state) => state.pages);
   const { products } = useSelector((state) => state.products);
 
   useEffect(() => {
@@ -30,6 +30,8 @@ export default function Wishlist() {
 
   const wishlistpage =
     pages.find((page) => page.slug === "wishlist") || staticBg;
+
+  if (slugLoading) return <Loding />;
   return (
     <>
       {wishlistpage?.sections.map((section) => (

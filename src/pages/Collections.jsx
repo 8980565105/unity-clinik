@@ -14,13 +14,6 @@ import Heading from "../components/ui/Heading";
 import SEO from "../components/seo/seo";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 
-const STATIC_CATEGORIES = [
-  { _id: "1", name: "Saree", image_url: shoppingImg, parent_id: null },
-  { _id: "2", name: "Kurti", image_url: kurtiImg, parent_id: null },
-  { _id: "3", name: "Jeans", image_url: JeansImg, parent_id: null },
-  { _id: "4", name: "Jewellery", image_url: jewelleryImg, parent_id: null },
-  { _id: "5", name: "Crop Tops", image_url: cropImg, parent_id: null },
-];
 const CARD_W = 170;
 const GAP = 16;
 const STEP = CARD_W + GAP;
@@ -61,10 +54,7 @@ export default function Collections({ products = [] }) {
     return false;
   };
 
-  const parentCategories =
-    categories.length > 0
-      ? categories.filter(isParentCategory)
-      : STATIC_CATEGORIES;
+  const parentCategories = categories.filter(isParentCategory);
 
   const getParentId = (sub) => {
     if (!sub.parent_id) return null;
@@ -94,7 +84,7 @@ export default function Collections({ products = [] }) {
   const isAnimating = useRef(false);
   const initializedRef = useRef(false);
   const [currentIndex, setCurrentIndex] = useState(total);
-  const [visibleCount, setVisibleCount] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(5);
   useEffect(() => {
     if (!containerRef.current) return;
     const measure = () => {
@@ -105,8 +95,8 @@ export default function Collections({ products = [] }) {
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
-  const isCenter = visibleCount !== null && total <= visibleCount;
-  const isReady = visibleCount !== null;
+  const isCenter = total <= visibleCount;
+  const isReady = true;
   useEffect(() => {
     if (!trackRef.current || total === 0 || initializedRef.current || !isReady)
       return;
@@ -188,49 +178,47 @@ export default function Collections({ products = [] }) {
           )}
 
           <div className="overflow-hidden" ref={containerRef}>
-            {isReady && (
-              <div
-                ref={trackRef}
-                className={`flex ${isCenter ? "justify-center" : "justify-start"}`}
-                style={{
-                  gap: `${GAP}px`,
-                  willChange: "transform",
-                }}
-              >
-                {(isCenter ? parentCategories : tripled).map((cat, i) => {
-                  const isActive = selectedCategory
-                    ? String(cat._id) === String(selectedCategory._id)
-                    : false;
-                  return (
+            <div
+              ref={trackRef}
+              className={`flex ${isCenter ? "justify-center" : "justify-start"}`}
+              style={{
+                gap: `${GAP}px`,
+                willChange: "transform",
+              }}
+            >
+              {(isCenter ? parentCategories : tripled).map((cat, i) => {
+                const isActive = selectedCategory
+                  ? String(cat._id) === String(selectedCategory._id)
+                  : false;
+                return (
+                  <div
+                    key={`${cat._id}-${i}`}
+                    onClick={() => handleCategoryClick(cat)}
+                    className="flex-shrink-0 text-center cursor-pointer"
+                  >
                     <div
-                      key={`${cat._id}-${i}`}
-                      onClick={() => handleCategoryClick(cat)}
-                      className="flex-shrink-0 text-center cursor-pointer"
-                    >
-                      <div
-                        className={`rounded-xl p-4 flex items-center justify-center h-[150px] w-[150px] border transition-all duration-200
+                      className={`rounded-xl p-4 flex items-center justify-center h-[150px] w-[150px] border transition-all duration-200
                           ${
                             isActive
                               ? "border-primary border-2 bg-[var(primary-color)] shadow-md"
                               : "border-gray-200 hover:shadow-lg hover:border-gray-300"
                           }`}
-                      >
-                        <img
-                          src={getImageUrl(cat.image_url)}
-                          alt={cat.name}
-                          className="h-[80px] object-contain"
-                        />
-                      </div>
-                      <p
-                        className={`mt-3 text-sm font-medium transition-colors duration-200 ${isActive ? "text-primary" : "text-gray-800"}`}
-                      >
-                        {cat.name}
-                      </p>
+                    >
+                      <img
+                        src={getImageUrl(cat.image_url)}
+                        alt={cat.name}
+                        className="h-[80px] object-contain"
+                      />
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                    <p
+                      className={`mt-3 text-sm font-medium transition-colors duration-200 ${isActive ? "text-primary" : "text-gray-800"}`}
+                    >
+                      {cat.name}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </Row>
       </Section>

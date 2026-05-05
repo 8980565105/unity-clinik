@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ProductCard from "../productcard/ProductCard";
+import Loding from "../loding/loding";
 const ProductGrid = ({ products = [], loading, setShowLoginPopup }) => {
   const [visibleCount, setVisibleCount] = useState(6);
   const handleLoadMore = () => {
@@ -9,7 +10,8 @@ const ProductGrid = ({ products = [], loading, setShowLoginPopup }) => {
   const visibleProducts = products.slice(0, visibleCount);
   return (
     <div className="mt-[50px]">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-[10px] md:gap-[30px]">
+       {visibleProducts.length > 0 ? "": <Loding/>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[10px] md:gap-[30px]">
         {visibleProducts.length > 0 ? (
           visibleProducts.map((product, index) => (
             <ProductCard
@@ -19,7 +21,10 @@ const ProductGrid = ({ products = [], loading, setShowLoginPopup }) => {
             />
           ))
         ) : (
-          <p>No products found.</p>
+          <>
+          {/* <p>No products found.</p> */}
+          {/* <Loding/> */}
+          </>
         )}
       </div>
 

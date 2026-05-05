@@ -87,7 +87,11 @@ export default function ContactSection() {
               onChange={handleChange}
               required
             />
-            <Button type="submit" variant="common">
+            <Button
+              type="submit"
+              variant="common"
+              className="mt-3 border text-primary hover:text-white rounded-full  flex items-center justify-center gap-2 transition"
+            >
               Send Message
             </Button>
           </form>

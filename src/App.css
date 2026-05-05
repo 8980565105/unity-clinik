@@ -78,8 +78,8 @@
   --font-weight-reguler: 400;
   --font-style-main: italic;
   --font-size-h1: 80px;
-   --font-size-h2: 50px;
-   --font-mobile-h2:22px;
+   --font-size-h2: 58px;
+   --font-mobile-h2:28px;
   --font-size-p: 16px;
 
    --font-inter: 'Inter', sans-serif;
@@ -520,4 +520,34 @@
 }
 .animate-fadeInUp {
   animation: fadeInUp 0.55s ease forwards;
+}
+
+/* loding  */
+
+.loader {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loader::before {
+  content: "";
+  width: 40px;
+  height: 20px;
+  border-radius: 50px;
+  background: linear-gradient(to right, #1f5c57 50%, #f4b400 50%);
+  animation: rotateCapsule 1s linear infinite;
+}
+
+@keyframes rotateCapsule {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

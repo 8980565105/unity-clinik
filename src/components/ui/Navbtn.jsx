@@ -10,7 +10,7 @@ const NavBtn = ({ direction, onClick, disabled, variant = "default" }) => {
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-[50px] h-[50px]  rounded-full border flex items-center justify-center transition-all duration-150
+      className={`w-[35px] h-[35px] md:h-[50px] md:w-[50px]  rounded-full border flex items-center justify-center transition-all duration-150
         ${variants[variant]} 
         ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer active:scale-95"}`}
     >

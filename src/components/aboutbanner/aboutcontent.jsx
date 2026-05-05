@@ -8,56 +8,51 @@ import Section from "../ui/Section";
 import Row from "../ui/Row";
 import faqBg from "../../assets/size-bg.png";
 
-const STATIC_CONTENT = [
-  {
-    _id: "static-c1",
-    title: "Our Story",
-    description:
-      "Founded with a vision to redefine everyday fashion, we curate collections that blend style, comfort, and affordability. Every piece in our store is handpicked to ensure the best quality for our customers.",
-    image_url: faqBg,
-    is_button: true,
-    button_name: "Read More",
-    button_link: "/shop",
-    order: 1,
-    status: "active",
-    isStatic: true,
-  },
-  {
-    _id: "static-c2",
-    title: "Our Mission",
-    description:
-      "Our mission is to empower individuals to express themselves through fashion. We believe that great style should not come at a great cost, and we work hard to deliver value with every purchase.",
-    image_url: faqBg,
-    is_button: true,
-    button_name: "Read More",
-    button_link: "/shop",
-    order: 2,
-    status: "active",
-    isStatic: true,
-  },
-  {
-    _id: "static-c3",
-    title: "Why Choose Us",
-    description:
-      "With a wide range of styles, sizes, and budgets, we have something for everyone. Our dedicated team ensures a seamless shopping experience from browsing to delivery.",
-    image_url: faqBg,
-    is_button: true,
-    button_name: "Read More",
-    button_link: "/shop",
-    order: 3,
-    status: "active",
-    isStatic: true,
-  },
-];
+// const STATIC_CONTENT = [
+//   {
+//     _id: "static-c1",
+//     title: "Our Story",
+//     description:
+//       "Founded with a vision to redefine everyday fashion, we curate collections that blend style, comfort, and affordability. Every piece in our store is handpicked to ensure the best quality for our customers.",
+//     image_url: faqBg,
+//     is_button: true,
+//     button_name: "Read More",
+//     button_link: "/shop",
+//     order: 1,
+//     status: "active",
+//     isStatic: true,
+//   },
+//   {
+//     _id: "static-c2",
+//     title: "Our Mission",
+//     description:
+//       "Our mission is to empower individuals to express themselves through fashion. We believe that great style should not come at a great cost, and we work hard to deliver value with every purchase.",
+//     image_url: faqBg,
+//     is_button: true,
+//     button_name: "Read More",
+//     button_link: "/shop",
+//     order: 2,
+//     status: "active",
+//     isStatic: true,
+//   },
+//   {
+//     _id: "static-c3",
+//     title: "Why Choose Us",
+//     description:
+//       "With a wide range of styles, sizes, and budgets, we have something for everyone. Our dedicated team ensures a seamless shopping experience from browsing to delivery.",
+//     image_url: faqBg,
+//     is_button: true,
+//     button_name: "Read More",
+//     button_link: "/shop",
+//     order: 3,
+//     status: "active",
+//     isStatic: true,
+//   },
+// ];
 
 export default function AboutContent() {
   const dispatch = useDispatch();
   const { pages } = useSelector((state) => state.pages);
-
-  // useEffect(() => {
-  //   dispatch(fetchPageBySlug("about"));
-  // }, [dispatch]);
-
   const aboutPage = pages?.find((page) => page.slug === "about");
 
   const apiContentSections = aboutPage?.sections?.filter(
@@ -65,7 +60,7 @@ export default function AboutContent() {
   );
 
   const contentList =
-    apiContentSections?.length > 0 ? apiContentSections : STATIC_CONTENT;
+    apiContentSections?.length > 0 ? apiContentSections : "";
 
   const sortedContent = [...contentList].sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0),

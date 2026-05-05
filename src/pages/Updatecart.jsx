@@ -145,7 +145,7 @@ function Updatecart() {
                   ₹
                   {Math.round(
                     getDiscountedPrice(item).discountedPrice,
-                  ).toLocaleString("en-IN")}{" "}
+                  ).toLocaleString("en-IN")}
                   * {item.quantity}
                 </td>
                 <td className="px-3 xl:px-6 pt-[40px] pb-[20px] text-center">
@@ -207,7 +207,7 @@ function Updatecart() {
             </div>
           ))}
         </div>
-        <div className="text-end mt-5">
+        <div className="text-end my-5">
           <Button variant="common" onClick={() => navigate("/cart")}>
             Add To Cart
           </Button>
