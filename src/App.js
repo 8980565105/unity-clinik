@@ -130,7 +130,7 @@ function App() {
             <Route path="account-details" element={<AccountDetails />} />
           </Route>
           <Route path="/cart" element={<Cart />}></Route>
-          <Route path="/updatecart" element={<Updatecart />}></Route>
+          {/* <Route path="/updatecart" element={<Updatecart />}></Route> */}
           <Route path="/checkout" element={<Checkout />}></Route>
           <Route path="/products/:id" element={<Product />}></Route>
           <Route path="/wishlist" element={<Wishlist />}></Route>

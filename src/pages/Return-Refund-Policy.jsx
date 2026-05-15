@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import Heading from "../components/ui/Heading";
-
+import SEO from "../components/seo/seo";
 
 export default function RefundPolicy() {
   const dispatch = useDispatch();
@@ -21,17 +21,24 @@ export default function RefundPolicy() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <Heading title={"Return & Refund Policy"} />
+    <>
+      <SEO
+        title={"Return & Refund Policy"}
+        description={"Return & Refund Description"}
+      />
 
-      {data?.general?.refundPolicy ? (
-        <div
-          className="prose prose-gray max-w-none"
-          dangerouslySetInnerHTML={{ __html: data.general.refundPolicy }}
-        />
-      ) : (
-        <p className="text-gray-500">No Return & refund Policy available.</p>
-      )}
-    </div>
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <Heading title={"Return & Refund Policy"} />
+
+        {data?.general?.refundPolicy ? (
+          <div
+            className="prose prose-gray max-w-none"
+            dangerouslySetInnerHTML={{ __html: data.general.refundPolicy }}
+          />
+        ) : (
+          <p className="text-gray-500">No Return & refund Policy available.</p>
+        )}
+      </div>
+    </>
   );
 }

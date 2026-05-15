@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import Heading from "../components/ui/Heading";
+import SEO from "../components/seo/seo";
 
 export default function TermService() {
   const dispatch = useDispatch();
@@ -20,17 +21,27 @@ export default function TermService() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <Heading title={"Terms of Service"} />
+    <>
 
-      {data?.general?.termService ? (
-        <div
-          className="prose prose-gray max-w-none"
-          dangerouslySetInnerHTML={{ __html: data.general.termService }}
-        />
-      ) : (
-        <p className="text-gray-500">No Terms-of-service available.</p>
-      )}
-    </div>
+
+ <SEO
+        title={"Terms & Service"}
+        description={"terms & service Description"}
+      />
+
+
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <Heading title={"Terms of Service"} />
+
+        {data?.general?.termService ? (
+          <div
+            className="prose prose-gray max-w-none"
+            dangerouslySetInnerHTML={{ __html: data.general.termService }}
+          />
+        ) : (
+          <p className="text-gray-500">No Terms-of-service available.</p>
+        )}
+      </div>
+    </>
   );
 }

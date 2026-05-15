@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import Heading from "../components/ui/Heading";
+import SEO from "../components/seo/seo";
 
 export default function PrivacyPolicy() {
   const dispatch = useDispatch();
@@ -20,16 +21,20 @@ export default function PrivacyPolicy() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <Heading title={"Privacy Policy"} />
-      {data?.general?.privacyPolicy ? (
-        <div
-          className="prose prose-gray max-w-none"
-          dangerouslySetInnerHTML={{ __html: data.general.privacyPolicy }}
-        />
-      ) : (
-        <p className="text-gray-500">No privacy policy available.</p>
-      )}
-    </div>
+    <>
+      <SEO title={"Privacy Policy "} description={"Privacy Policy Description"} />
+
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <Heading title={"Privacy Policy"} />
+        {data?.general?.privacyPolicy ? (
+          <div
+            className="prose prose-gray max-w-none"
+            dangerouslySetInnerHTML={{ __html: data.general.privacyPolicy }}
+          />
+        ) : (
+          <p className="text-gray-500">No privacy policy available.</p>
+        )}
+      </div>
+    </>
   );
 }

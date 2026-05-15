@@ -9,6 +9,7 @@ import CouponCard from "../components/cart/CouponCard";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCoupons } from "../features/coupons/couponsThunk";
+import SEO from "../components/seo/seo";
 
 export default function Cart() {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -45,6 +46,12 @@ export default function Cart() {
 
   return (
     <>
+
+     <SEO
+        title={"Cart page"}
+        description={"Cart Description"}
+      />
+
       <CartProgress currentStep={1} />
       <Section>
         <Row>
@@ -91,15 +98,6 @@ export default function Cart() {
                       APPLY COUPON
                     </Button>
                   </div>
-
-                  <Link to="/updatecart">
-                    <Button
-                      variant="common"
-                      className="uppercase !text-18 md:min-w-[181px] self-center md:self-auto"
-                    >
-                      UPDATE CART
-                    </Button>
-                  </Link>
                 </div>
               </div>
             )}
