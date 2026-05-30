@@ -1,7 +1,7 @@
 import React from "react";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
-import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import Button from "../components/ui/Button";
 import { useNavigate } from "react-router-dom";
 

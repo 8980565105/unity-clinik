@@ -97,6 +97,8 @@ export const ROUTES = {
     getAll: "/payments",
     createOrder: "/payments/razorpay-order",
     verify: "/payments/verify",
+    verifyPhonePePayment: "/payments/phonepe/verify",
+    createPhonePeOrder: "/payments/phonepe/initiate",
   },
   contact: {
     getAll: "/contact-us",

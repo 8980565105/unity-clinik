@@ -29,20 +29,78 @@ export default function CouponCard({
         .filter(Boolean),
     ),
   ];
+
+  // const filteredCoupons = coupons.filter((coupon) => {
+  //   if (coupon.apply_type === "allproducts") {
+  //     return true;
+  //   }
+
+  //   if (coupon.apply_type === "specificproducts") {
+  //     return items.some((item) =>
+  //       coupon.products?.some(
+  //         (product) =>
+  //           String(product?._id || product) === String(item?.product_id?._id),
+  //       ),
+  //     );
+  //   }
+
+  //   if (coupon.apply_type === "specificsubcategory") {
+  //     return items.some((item) => {
+  //       const product = item?.product_id;
+
+  //       const possibleIds = [product?.category_id].filter(Boolean).map(String);
+
+  //       console.log("possibleIds", possibleIds);
+
+  //       console.log("couponSubCategories", coupon.subcategories);
+
+  //       return coupon.subcategories?.some((subcategory) =>
+  //         possibleIds.includes(String(subcategory?._id || subcategory)),
+  //       );
+  //     });
+  //   }
+  //   return false;
+  // });
+
   const filteredCoupons = coupons.filter((coupon) => {
-    const couponOwnerId = coupon?.createdBy?._id
-      ? String(coupon.createdBy._id)
-      : coupon?.createdBy
-        ? String(coupon.createdBy)
-        : null;
+    if (coupon.apply_type === "allproducts") {
+      return true;
+    }
 
-    if (!couponOwnerId) return false;
-    return cartProductOwnerIds.includes(couponOwnerId);
+    if (coupon.apply_type === "specificproducts") {
+      return items.some((item) =>
+        coupon.products?.some(
+          (product) =>
+            String(product?._id || product) === String(item?.product_id?._id),
+        ),
+      );
+    }
+
+    if (coupon.apply_type === "specificsubcategory") {
+      return items.some((item) => {
+        const product = item?.product_id;
+
+        const productSubCategoryId = String(
+          product?.category_id?._id ||
+            product?.category_id ||
+            product?.parent_id?._id ||
+            product?.parent_id ||
+            product?.subcategory_id?._id ||
+            product?.subcategory_id ||
+            product?.subcategory?._id ||
+            product?.subcategory ||
+            "",
+        );
+
+        return coupon.subcategories?.some(
+          (subcategory) =>
+            String(subcategory?._id || subcategory) === productSubCategoryId,
+        );
+      });
+    }
+
+    return false;
   });
-
-  if (filteredCoupons.length === 0) {
-    return null;
-  }
 
   return (
     <>
@@ -69,14 +127,9 @@ export default function CouponCard({
                   {coupon.code}
                 </h2>
               </div>
-              <div className="h-[40px] w-[40px] border light-border rounded-full flex items-center justify-center overflow-hidden p-[2px]">
-                <Link to="/home">
-                  <img src={logo} alt="Logo" className="object-contain" />
-                </Link>
-              </div>
             </div>
             <p className="sec-text-color font-medium text-[12px] mt-[10px]">
-              {coupon.description}
+              {coupon.name}
             </p>
             <p className="text-[12px] font-medium text-primary mt-[5px] cursor-pointer hover:underline">
               *Terms & conditions

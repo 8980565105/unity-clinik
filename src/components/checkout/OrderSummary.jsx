@@ -8,10 +8,13 @@ import {
   createPayment,
   createRazorpayOrder,
   verifyRazorpayPayment,
+  createPhonePeOrder,
+  verifyPhonePePayment,
 } from "../../features/payments/paymentThunk";
 import { createOrder } from "../../features/orders/orderThunk";
 import toast, { Toaster } from "react-hot-toast";
 import { clearCart } from "../../features/cart/cartSlice";
+
 export default function OrderSummary({ formData }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -26,9 +29,16 @@ export default function OrderSummary({ formData }) {
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
 
+  const [appliedCoupon] = useState(() => {
+    try {
+      const saved = localStorage.getItem("applied_coupon");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
-     const key = process.env.REACT_APP_RAZORPAY_KEY;
-
+  const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY;
 
   useEffect(() => {
     const cart_id = localStorage.getItem("cart_id");
@@ -37,20 +47,87 @@ export default function OrderSummary({ formData }) {
     }
   }, [dispatch, user]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const phonePeTxn = params.get("phonepe_txn");
+    const phonePeOrderId = params.get("order_id");
+    if (phonePeTxn && phonePeOrderId) {
+      (async () => {
+        const verifyRes = await dispatch(
+          verifyPhonePePayment({
+            transaction_id: phonePeTxn,
+            order_id: phonePeOrderId,
+          }),
+        );
+        if (verifyPhonePePayment.fulfilled.match(verifyRes)) {
+          dispatch(clearCart());
+          localStorage.removeItem("applied_coupon");
+          toast("PhonePe Payment Successful ✅");
+          navigate("/ordercompleted");
+        } else {
+          toast("PhonePe Payment Verification Failed ❌");
+        }
+      })();
+    }
+  }, []);
+
   if (loading) return <p>Loading cart...</p>;
   if (!items.length)
     return <p className="text-center mb-[100px]">Your cart is empty.</p>;
 
+  // const getDiscountedPrice = (item) => {
+  //   const originalPrice = Number(item?.variant_id?.price || 0);
+  //   const offerPrice = Number(item?.variant_id?.offerprice || 0);
+  //   if (offerPrice > 0 && offerPrice < originalPrice) {
+  //     return {
+  //       discount: Math.round(
+  //         ((originalPrice - offerPrice) / originalPrice) * 100,
+  //       ),
+  //       originalPrice,
+  //       discountedPrice: offerPrice,
+  //     };
+  //   }
+  //   const discount = item?.product_id?.discount_id?.value || 0;
+  //   const discountedPrice =
+  //     discount > 0
+  //       ? originalPrice - (originalPrice * discount) / 100
+  //       : originalPrice;
+  //   return { discount, originalPrice, discountedPrice };
+  // };
+
   const getDiscountedPrice = (item) => {
+    // selected pack data from DB
+    const originalPrice = Number(
+      item?.original_price || item?.variant_id?.price || 0,
+    );
+
+    const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
+
+    // pack price discount
+    if (offerPrice > 0 && offerPrice < originalPrice) {
+      return {
+        discount: Math.round(
+          ((originalPrice - offerPrice) / originalPrice) * 100,
+        ),
+        originalPrice,
+        discountedPrice: offerPrice,
+      };
+    }
+
+    // fallback product discount
     const discount = item?.product_id?.discount_id?.value || 0;
-    const originalPrice = item?.variant_id?.price || 0;
+
     const discountedPrice =
       discount > 0
         ? originalPrice - (originalPrice * discount) / 100
         : originalPrice;
-    return { discount, originalPrice, discountedPrice };
-  };
 
+    return {
+      discount,
+      originalPrice,
+      discountedPrice,
+    };
+  };
   const subtotal = items.reduce(
     (sum, item) =>
       sum + getDiscountedPrice(item).discountedPrice * (item.quantity || 1),
@@ -58,7 +135,23 @@ export default function OrderSummary({ formData }) {
   );
   const taxes = Number((subtotal * 0.1).toFixed(2));
   const shipping = 0;
-  const total = Number((subtotal + taxes + shipping).toFixed(2));
+  const totalBeforeCoupon = Number((subtotal + taxes + shipping).toFixed(2));
+
+  let couponDiscount = 0;
+  if (appliedCoupon) {
+    couponDiscount =
+      appliedCoupon.discount_type === "fixed"
+        ? appliedCoupon.discount_value
+        : (totalBeforeCoupon * appliedCoupon.discount_value) / 100;
+    if (appliedCoupon.max_discount_amount) {
+      couponDiscount = Math.min(
+        couponDiscount,
+        appliedCoupon.max_discount_amount,
+      );
+    }
+  }
+
+  const total = Number((totalBeforeCoupon - couponDiscount).toFixed(2));
 
   const getBackendPaymentMethod = (method) => {
     if (method === "cod") return "COD";
@@ -67,24 +160,19 @@ export default function OrderSummary({ formData }) {
 
   const getStoreOwnerId = () => {
     if (!items || items.length === 0) return null;
-
-    const storeOwnerId =
+    return (
       items[0]?.product_id?.createdBy?._id ||
       items[0]?.product_id?.createdBy ||
-      null;
-
-    return storeOwnerId;
+      null
+    );
   };
 
-  const handlePlaceOrder = async () => {
-    const userLS = JSON.parse(localStorage.getItem("user"));
-
+  const validateForm = (userLS) => {
     if (!userLS || !userLS._id) {
       toast("Please login before placing order");
-      return navigate("/login");
+      navigate("/login");
+      return false;
     }
-
-    // 🔹 Validation same
     const requiredFields = {
       email: "Email Address",
       firstName: "First Name",
@@ -95,24 +183,25 @@ export default function OrderSummary({ formData }) {
       city: "City",
       pincode: "Pin Code",
     };
-
     for (const [key, label] of Object.entries(requiredFields)) {
       if (!formData[key] || formData[key].trim() === "") {
         toast(`Please enter ${label}`);
-        return;
+        return false;
       }
     }
-
     if (!selectedPayment) {
-      return toast("Select a payment method");
+      toast("Select a payment method");
+      return false;
     }
+    return true;
+  };
 
-    // 🔹 STEP 1: Create Order (same)
+  const createNewOrder = async (userLS) => {
     const orderData = {
       user_id: userLS._id,
       items,
       total_price: total,
-      coupon_id: null,
+      coupon_id: appliedCoupon?._id || null,
       payment_method: getBackendPaymentMethod(selectedPayment),
       shippingAddress: {
         firstName: formData.firstName,
@@ -124,71 +213,61 @@ export default function OrderSummary({ formData }) {
         phone: formData.phone,
       },
     };
-
     const orderAction = await dispatch(createOrder(orderData));
-
     if (!createOrder.fulfilled.match(orderAction)) {
-      toast("Order failed");
-      return;
+      toast("Order creation failed ❌");
+      return null;
     }
-
     const orderId = orderAction.payload?.data?._id || orderAction.payload?._id;
-
     if (!orderId) {
-      toast("Order ID missing");
-      return;
+      toast("Order ID missing ❌");
+      return null;
     }
+    return orderId;
+  };
 
+  const handleCOD = async (userLS, orderId) => {
     const storeOwnerId = getStoreOwnerId();
-
-    const paymentPayload = {
-      user_id: userLS._id,
-      order_id: orderId,
-      store_owner_id: storeOwnerId,
-      items,
-      subtotal,
-      taxes,
-      shipping,
-      total,
-      amount_paid: selectedPayment === "cod" ? 0 : total,
-      payment_method: selectedPayment,
-      status: selectedPayment === "cod" ? "pending" : "completed",
-    };
-
-    // 🟢 COD FLOW (same)
-    if (selectedPayment === "cod") {
-      await dispatch(createPayment(paymentPayload));
-      dispatch(clearCart());
-      toast("Order placed successfully!");
-      return navigate("/ordercompleted");
-    }
-
-    // 🔥 RAZORPAY FLOW START
-    const razorRes = await dispatch(
-      createRazorpayOrder({
-        amount: total,
+    await dispatch(
+      createPayment({
+        user_id: userLS._id,
         order_id: orderId,
+        store_owner_id: storeOwnerId,
+        items,
+        subtotal,
+        taxes,
+        shipping,
+        coupon_discount: couponDiscount,
+        total,
+        amount_paid: 0,
+        payment_method: "cod",
+        status: "pending",
       }),
     );
+    dispatch(clearCart());
+    localStorage.removeItem("applied_coupon");
+    toast("Order placed successfully! 🎉");
+    navigate("/ordercompleted");
+  };
 
-    // const razorOrder = razorRes.payload?.data;
-    // return res.data.data;
+  const handleRazorpay = async (userLS, orderId) => {
+    const storeOwnerId = getStoreOwnerId();
+    const razorRes = await dispatch(
+      createRazorpayOrder({ amount: total, order_id: orderId }),
+    );
     const razorOrder = razorRes.payload;
-
     if (!razorOrder) {
-      toast("Payment initialization failed");
+      toast("Razorpay initialization failed ❌");
       return;
     }
 
-
     const options = {
-      key: key,
+      key: razorpayKey,
       amount: razorOrder.amount,
       currency: "INR",
       name: "Unity Clinic",
       description: "Order Payment",
       order_id: razorOrder.id,
-
       handler: async function (response) {
         const verifyRes = await dispatch(
           verifyRazorpayPayment({
@@ -197,140 +276,122 @@ export default function OrderSummary({ formData }) {
             user_id: userLS._id,
           }),
         );
-
         if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) {
           toast("Payment verification failed ❌");
           return;
         }
-
         await dispatch(
           createPayment({
-            ...paymentPayload,
-            transaction_id: response.razorpay_payment_id,
+            user_id: userLS._id,
+            order_id: orderId,
+            store_owner_id: storeOwnerId,
+            items,
+            subtotal,
+            taxes,
+            shipping,
+            coupon_discount: couponDiscount, // ✅
+            total,
+            amount_paid: total,
+            payment_method: selectedPayment,
             status: "completed",
+            transaction_id: response.razorpay_payment_id,
           }),
         );
-
         dispatch(clearCart());
+        localStorage.removeItem("applied_coupon"); // ✅
         toast("Payment Successful ✅");
         navigate("/ordercompleted");
       },
-
       prefill: {
-        name: user?.name,
-        email: user?.email,
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email || user?.email,
+        contact: formData.phone || "",
       },
-
-      theme: {
-        color: "#F43297",
-      },
+      config:
+        selectedPayment === "credit_card"
+          ? {
+              display: {
+                blocks: {
+                  banks: {
+                    name: "Pay via Card",
+                    instruments: [{ method: "card" }],
+                  },
+                },
+                sequence: ["block.banks"],
+                preferences: { show_default_blocks: false },
+              },
+            }
+          : {},
+      theme: { color: "#F43297" },
     };
-
     const rzp = new window.Razorpay(options);
+    rzp.on("payment.failed", (response) => {
+      toast(`Payment failed: ${response.error.description} ❌`);
+    });
     rzp.open();
   };
 
-  // const handlePlaceOrder = async () => {
-  //   const userLS = JSON.parse(localStorage.getItem("user"));
-  //   if (!userLS || !userLS._id) {
-  //     toast("Please login before placing order");
-  //     return navigate("/login");
-  //   }
+  const handlePhonePe = async (userLS, orderId) => {
+    const storeOwnerId = getStoreOwnerId();
+    const phonePeRes = await dispatch(
+      createPhonePeOrder({
+        amount: total,
+        order_id: orderId,
+        user_id: userLS._id,
+        redirect_url: `${window.location.origin}/payment/phonepe/callback?order_id=${orderId}`,
+      }),
+    );
+    if (!createPhonePeOrder.fulfilled.match(phonePeRes)) {
+      toast("PhonePe initialization failed ❌");
+      return;
+    }
+    const paymentUrl =
+      phonePeRes.payload?.data?.paymentUrl || phonePeRes.payload?.paymentUrl;
+    if (!paymentUrl) {
+      toast("PhonePe payment URL missing ❌");
+      return;
+    }
+    await dispatch(
+      createPayment({
+        user_id: userLS._id,
+        order_id: orderId,
+        store_owner_id: storeOwnerId,
+        items,
+        subtotal,
+        taxes,
+        shipping,
+        coupon_discount: couponDiscount,
+        total,
+        amount_paid: 0,
+        payment_method: "PhonePe",
+        status: "pending",
+      }),
+    );
+    toast("Redirecting to PhonePe... 📱");
+    window.location.href = paymentUrl;
+  };
 
-  //   const requiredFields = {
-  //     email: "Email Address",
-  //     firstName: "First Name",
-  //     lastName: "Last Name",
-  //     address: "Address",
-  //     country: "Country",
-  //     state: "State",
-  //     city: "City",
-  //     pincode: "Pin Code",
-  //   };
+  const handlePlaceOrder = async () => {
+    const userLS = JSON.parse(localStorage.getItem("user"));
+    if (!validateForm(userLS)) return;
+    const orderId = await createNewOrder(userLS);
+    if (!orderId) return;
+    if (selectedPayment === "cod") await handleCOD(userLS, orderId);
+    else if (selectedPayment === "PhonePe")
+      await handlePhonePe(userLS, orderId);
+    else await handleRazorpay(userLS, orderId);
+  };
 
-  //   for (const [key, label] of Object.entries(requiredFields)) {
-  //     if (!formData[key] || formData[key].trim() === "") {
-  //       toast(`Please enter ${label}`);
-  //       return;
-  //     }
-  //   }
-
-  //   if (!selectedPayment) {
-  //     return toast("Select a payment method");
-  //   }
-
-  //   // if (selectedPayment === "credit_card") {
-  //   //   if (!cardNumber || !expiryDate || !cvv) {
-  //   //     setPaymentError("Please fill all credit card details");
-  //   //     return;
-  //   //   }
-  //   // }
-
-  //   if (selectedPayment === "cod") {
-  //     await dispatch(createPayment(paymentPayload));
-  //     dispatch(clearCart());
-  //     toast("Order placed successfully!");
-  //     return navigate("/ordercompleted");
-  //   }
-
-  //   const orderData = {
-  //     user_id: userLS._id,
-  //     items,
-  //     total_price: total,
-  //     coupon_id: null,
-  //     payment_method: getBackendPaymentMethod(selectedPayment),
-  //     shippingAddress: {
-  //       firstName: formData.firstName,
-  //       lastName: formData.lastName,
-  //       address: formData.address,
-  //       state: formData.state,
-  //       city: formData.city,
-  //       pincode: formData.pincode,
-  //       phone: formData.phone,
-  //     },
-  //   };
-
-  //   const orderAction = await dispatch(createOrder(orderData));
-  //   console.log("ORDER ACTION:", orderAction); // આ add કરો
-
-  //   if (!createOrder.fulfilled.match(orderAction)) {
-  //     toast(
-  //       "Order failed: " + (orderAction.payload?.message || "Unknown error"),
-  //     );
-  //     return;
-  //   }
-  //   const orderId =
-  //     orderAction.payload?.data?._id || orderAction.payload?._id || null;
-
-  //   if (!orderId) {
-  //     toast("Order created but ID missing!");
-  //     return;
-  //   }
-
-  //   const storeOwnerId = getStoreOwnerId();
-
-  //   const paymentPayload = {
-  //     user_id: userLS._id,
-  //     order_id: orderId,
-  //     store_owner_id: storeOwnerId,
-  //     items,
-  //     subtotal,
-  //     taxes,
-  //     shipping,
-  //     total,
-  //     amount_paid: selectedPayment === "cod" ? 0 : total,
-  //     payment_method: selectedPayment,
-  //     status: selectedPayment === "cod" ? "pending" : "completed",
-  //   };
-  //   await dispatch(createPayment(paymentPayload));
-  //   dispatch(clearCart());
-  //   toast("Order placed successfully!");
-  //   navigate("/ordercompleted");
-  // };
+  const paymentMethods = [
+    { value: "cod", label: "Cash on Delivery" },
+    { value: "PhonePe", label: "PhonePe" },
+    { value: "razorpay", label: "Razorpay" },
+    { value: "credit_card", label: "Credit Card" },
+  ];
 
   return (
     <>
-      <Toaster position="top center" />
+      <Toaster position="top-center" />
       <div className="w-full rounded-[3px] py-[45px] px-[22px] light-color">
         <h2 className="text-[22px] text-black mb-[50px] text-center">
           Order Summary
@@ -338,9 +399,11 @@ export default function OrderSummary({ formData }) {
             <span className="theme-border-block w-[34px] h-[2px] rounded-[10px] block"></span>
           </div>
         </h2>
+
         <div className="pb-[10px] text-p">
           {items.reduce((sum, item) => sum + (item.quantity || 1), 0)} items
         </div>
+
         {items.map((item, index) => (
           <div
             key={item._id || index}
@@ -355,7 +418,7 @@ export default function OrderSummary({ formData }) {
                       : getImageUrl(item.product_id?.images?.[0])
                   }
                   alt={item.product_id?.name}
-                  className="w-full h-[122px] md:h-[150px] object-cover"
+                  className="w-full h-[122px] md:h-[150px] object-contain"
                 />
               </Link>
               <span className="absolute top-[-10px] right-[-10px] w-[22px] h-[22px] bg-white text-black text-p rounded-full flex items-center justify-center">
@@ -373,22 +436,32 @@ export default function OrderSummary({ formData }) {
             </div>
           </div>
         ))}
+
         <div className="border-t pb-[30px] space-y-[14px] text-p text-light">
           <div className="flex justify-between text-black">
             <span>Subtotal</span>
             <span>₹ {Math.round(subtotal).toLocaleString("en-IN")}</span>
           </div>
+
           <div className="flex justify-between">
             <span>Shipping</span>
             <span>Free</span>
           </div>
+
           <div className="flex justify-between">
             <span>Taxes (10%)</span>
             <span>₹ {Math.round(taxes).toLocaleString("en-IN")}</span>
           </div>
-          <div className="text-theme text-[12px] border-b border-[#BCBCBC] pb-[30px]">
-            Promo Gift Certificate
-          </div>
+
+          {appliedCoupon && couponDiscount > 0 && (
+            <div className="flex justify-between text-green-600">
+              <span>Coupon ({appliedCoupon.code}):</span>
+              <span>
+                - ₹{Math.round(couponDiscount).toLocaleString("en-IN")}
+              </span>
+            </div>
+          )}
+
           <div className="flex justify-between text-p text-black">
             <span>Total (₹)</span>
             <span className="text-20px font-medium">
@@ -396,36 +469,30 @@ export default function OrderSummary({ formData }) {
             </span>
           </div>
         </div>
+
         <div className="text-light text-14 space-y-[10px]">
-          {["cod", "paypal", "credit_card"].map((method) => (
+          {paymentMethods.map(({ value, label }) => (
             <label
-              key={method}
+              key={value}
               className="flex items-center gap-2 cursor-pointer text-p"
             >
               <input
                 type="radio"
                 name="payment"
-                value={method}
-                checked={selectedPayment === method}
+                value={value}
+                checked={selectedPayment === value}
                 onChange={(e) => setSelectedPayment(e.target.value)}
                 className="peer appearance-none w-4 h-4 border-[1px] checked:border-[3px] border-black rounded-full
-                        border-[#000000] checked:border-[#F43297]
-                        transition-all duration-200"
+                  border-[#000000] checked:border-[#F43297] transition-all duration-200"
               />
-              <span className="capitalize">
-                {method === "cod"
-                  ? "Cash on Delivery"
-                  : method === "credit_card"
-                    ? "Credit Card"
-                    : "PayPal"}
+              <span className="capitalize flex items-center gap-2">
+                {label}
               </span>
             </label>
           ))}
+
           {selectedPayment === "credit_card" && (
-            <div className="space-y-[19px] text-light text-14">
-              <p className="text-light text-[12px] mb-[5px]">
-                Pay with your credit card via authorize net.
-              </p>
+            <div className="space-y-[19px] text-light text-14 mt-3">
               <input
                 type="text"
                 placeholder="Card Number"
@@ -433,6 +500,7 @@ export default function OrderSummary({ formData }) {
                 onChange={(e) =>
                   setCardNumber(e.target.value.replace(/\D/g, ""))
                 }
+                maxLength={16}
                 className="input-common w-full"
               />
               <div className="flex gap-[13px]">
@@ -451,15 +519,18 @@ export default function OrderSummary({ formData }) {
                     setCvv(e.target.value.replace(/\D/g, ""));
                     if (paymentError) setPaymentError("");
                   }}
+                  maxLength={4}
                   className="input-common flex-1"
                 />
               </div>
             </div>
           )}
+
           {paymentError && (
             <p className="text-red-500 text-sm mt-2">{paymentError}</p>
           )}
         </div>
+
         <div className="text-center mt-[50px]">
           <Button
             variant="common"
@@ -467,7 +538,11 @@ export default function OrderSummary({ formData }) {
             onClick={handlePlaceOrder}
             disabled={paymentLoading}
           >
-            {paymentLoading ? "PROCESSING..." : "PLACE ORDER"}
+            {paymentLoading
+              ? "PROCESSING..."
+              : selectedPayment === "PhonePe"
+                ? "PAY WITH PHONEPE"
+                : "PLACE ORDER"}
           </Button>
         </div>
       </div>

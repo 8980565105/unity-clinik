@@ -1,6 +1,6 @@
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import { FaPlay } from "react-icons/fa";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 import Button from "../components/ui/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../features/auth/authThunk";
@@ -13,6 +13,7 @@ const RegistrationForm = ({ onClose }) => {
   const { loading } = useSelector((state) => state.auth);
   const { info: storeInfo } = useSelector((state) => state.store);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -99,9 +100,7 @@ const RegistrationForm = ({ onClose }) => {
             className="mx-auto mb-6"
           />
 
-          <h1 class="text-3xl font-bold text-primary">
-            Create Account
-          </h1>
+          <h1 class="text-3xl font-bold text-primary">Create Account</h1>
           <p class="text-gray-500 mt-2">Join the Unity Hair family</p>
         </div>
 
@@ -128,7 +127,7 @@ const RegistrationForm = ({ onClose }) => {
               className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
             />
           </div>
-          <div>
+          {/* <div>
             <input
               type="password"
               name="password"
@@ -138,6 +137,25 @@ const RegistrationForm = ({ onClose }) => {
               required
               className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
             />
+          </div> */}
+
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="input-common w-full border light-border rounded-md px-5 py-3 pr-12 focus:outline-none focus:ring-2"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm gap-4 w-full pt-[26px]">

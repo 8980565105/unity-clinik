@@ -73,36 +73,68 @@ export default function CartItem() {
   };
 
   // const getDiscountedPrice = (item) => {
+  //   const originalPrice = Number(item?.variant_id?.price || 0);
+  //   const offerPrice = Number(item?.variant_id?.offerprice || 0);
+
+  //   if (offerPrice > 0 && offerPrice < originalPrice) {
+  //     const discountPercent = Math.floor(
+  //       ((originalPrice - offerPrice) / originalPrice) * 100 + 0.5,
+  //     );
+  //     return {
+  //       discount: discountPercent,
+  //       originalPrice,
+  //       discountedPrice: offerPrice,
+  //     };
+  //   }
+
   //   const discount = item?.product_id?.discount_id?.value || 0;
-  //   const originalPrice = item?.variant_id?.price || 0;
   //   const discountedPrice =
   //     discount > 0
-  //       ? originalPrice - (originalPrice * discount) / 100
+  //       ? Math.round(originalPrice - (originalPrice * discount) / 100)
   //       : originalPrice;
   //   return { discount, originalPrice, discountedPrice };
   // };
 
+  // const getDiscountedPrice = (item) => {
+  //   const originalPrice = Number(item?.variant_id?.price || 0);
+  //   const offerPrice = Number(item?.variant_id?.offerprice || 0);
+
+  //   if (offerPrice > 0 && offerPrice < originalPrice) {
+  //     const discountPercent = Math.round(
+  //       ((originalPrice - offerPrice) / originalPrice) * 100,
+  //     );
+  //     return {
+  //       discount: discountPercent,
+  //       originalPrice,
+  //       discountedPrice: offerPrice,
+  //     };
+  //   }
+
+  //   const discount = item?.product_id?.discount_id?.value || 0;
+  //   const discountedPrice =
+  //     discount > 0
+  //       ? Math.round(originalPrice - (originalPrice * discount) / 100)
+  //       : originalPrice;
+
+  //   return { discount, originalPrice, discountedPrice };
+  // };
   const getDiscountedPrice = (item) => {
-    const originalPrice = Number(item?.variant_id?.price || 0);
-    const offerPrice = Number(item?.variant_id?.offerprice || 0);
+    const originalPrice = Number(
+      item?.original_price || item?.variant_id?.price || 0,
+    );
 
-    if (offerPrice > 0 && offerPrice < originalPrice) {
-      const discountPercent = Math.floor(
-        ((originalPrice - offerPrice) / originalPrice) * 100 + 0.5,
-      );
-      return {
-        discount: discountPercent,
-        originalPrice,
-        discountedPrice: offerPrice,
-      };
-    }
+    const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
 
-    const discount = item?.product_id?.discount_id?.value || 0;
-    const discountedPrice =
-      discount > 0
-        ? Math.round(originalPrice - (originalPrice * discount) / 100)
-        : originalPrice;
-    return { discount, originalPrice, discountedPrice };
+    const discountPercent =
+      originalPrice > offerPrice
+        ? Math.round(((originalPrice - offerPrice) / originalPrice) * 100)
+        : 0;
+
+    return {
+      discount: discountPercent,
+      originalPrice,
+      discountedPrice: offerPrice,
+    };
   };
 
   return (

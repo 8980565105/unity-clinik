@@ -2,7 +2,6 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
-
 const getAuthHeaders = () => ({
   "Content-Type": "application/json",
   Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -40,18 +39,35 @@ export const fetchCart = createAsyncThunk(
     }
   },
 );
+// export const addToCart = createAsyncThunk(
+//   "cart/addToCart",
+//   async (
+//     { cart_id, product_id, variant_id, quantity },
+//     { rejectWithValue },
+//   ) => {
+//     try {
+//       const res = await api.post(
+//         ROUTES.cart.addItem,
+//         { cart_id, product_id, variant_id, quantity },
+//         { headers: getAuthHeaders() },
+//       );
+//       return res.data.data;
+//     } catch (err) {
+//       return rejectWithValue(err.response?.data || "Add to cart failed");
+//     }
+//   },
+// );
+
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async (
-    { cart_id, product_id, variant_id, quantity },
-    { rejectWithValue },
-  ) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const res = await api.post(
-        ROUTES.cart.addItem,
-        { cart_id, product_id, variant_id, quantity },
-        { headers: getAuthHeaders() },
-      );
+      console.log("THUNK PAYLOAD", payload);
+
+      const res = await api.post(ROUTES.cart.addItem, payload, {
+        headers: getAuthHeaders(),
+      });
+
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Add to cart failed");

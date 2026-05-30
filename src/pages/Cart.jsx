@@ -46,11 +46,7 @@ export default function Cart() {
 
   return (
     <>
-
-     <SEO
-        title={"Cart page"}
-        description={"Cart Description"}
-      />
+      <SEO title={"Cart page"} description={"Cart Description"} />
 
       <CartProgress currentStep={1} />
       <Section>

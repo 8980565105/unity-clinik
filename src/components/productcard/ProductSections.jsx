@@ -4,19 +4,88 @@ import { getImageUrl } from "../utils/helper";
 import Heading from "../ui/Heading";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
+import { Plus, Minus, ChevronUp, ChevronDown } from "lucide-react";
 
-export default function ProductSections({ sections }) {
-  const activeSections = (sections || []).filter(
-    (sec) => sec?.data?.status === true || sec?.data?.status === undefined,
-  );
+function FaqItem({ faq }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <>
-      {activeSections.map((section, idx) => (
-        <SectionRenderer key={idx} section={section} />
-      ))}
-    </>
+    <div className="border-b border-[#e7e7e7]">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between text-left py-8 group"
+      >
+        <h3 className="text-[18px] md:text-[22px] font-bold text-[#081b4b] pr-4 transition">
+          {faq.question}
+        </h3>
+
+        <div className="flex-shrink-0 text-[#707070]">
+          {open ? <Minus size={24} /> : <Plus size={24} />}
+        </div>
+      </button>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          open ? "max-h-[500px] pb-8" : "max-h-0"
+        }`}
+      >
+        <div className="flex gap-6 items-start">
+          <p className="text-[#5f6c86] text-[18px] leading-8">{faq.answer}</p>
+        </div>
+      </div>
+    </div>
   );
 }
+
+const Faq2Item = ({ item, isOpen, onToggle }) => {
+  return (
+    <div
+      className={`rounded-[28px] border transition-all duration-300 overflow-hidden mb-5 bg-white
+      ${isOpen ? "border-[#005b9f] shadow-sm" : "border-[#d7dde5]"}`}
+    >
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between px-5 md:px-8 py-5 md:py-7 text-left"
+      >
+        <div className="flex items-center gap-3 md:gap-4">
+          {item?.image && (
+            <img
+              src={
+                item.image?.startsWith("http")
+                  ? item.image
+                  : getImageUrl(item.image)
+              }
+              alt={item.title}
+              className="w-10 h-10 md:w-12 md:h-12 object-contain rounded-full"
+            />
+          )}
+
+          <h3 className="text-[20px] md:text-[28px] font-bold text-[#0b1c48]">
+            {item.question || item.title}
+          </h3>
+        </div>
+
+        <div className="min-w-[42px] min-h-[42px] rounded-full bg-[#005b9f] flex items-center justify-center">
+          {isOpen ? (
+            <ChevronUp size={20} className="text-white" />
+          ) : (
+            <ChevronDown size={20} className="text-white" />
+          )}
+        </div>
+      </button>
+
+      <div
+        className={`transition-all duration-500 ease-in-out overflow-hidden ${
+          isOpen ? "max-h-[500px]" : "max-h-0"
+        }`}
+      >
+        <div className="px-5 md:px-8 pb-6 md:pb-8 text-[#5f6c86] text-[15px] md:text-[18px] leading-[1.9] border-t border-[#edf0f4]">
+          <div className="pt-5">{item.answer || item.description}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function HowCard({ item }) {
   const [open, setOpen] = useState(false);
@@ -100,12 +169,27 @@ function HowCard({ item }) {
   );
 }
 
+export default function ProductSections({ sections }) {
+  const activeSections = (sections || []).filter(
+    (sec) => sec?.data?.status === true || sec?.data?.status === undefined,
+  );
+  return (
+    <>
+      {activeSections.map((section, idx) => (
+        <SectionRenderer key={idx} section={section} />
+      ))}
+    </>
+  );
+}
+
 function SectionRenderer({ section, setShowLoginPopup }) {
   const { type, data } = section;
   const items = data?.items || [];
 
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [faq2OpenIndex, setFaq2OpenIndex] = useState(0);
+  const [sliderPosition, setSliderPosition] = useState({});
   const { product, products, loading, error } = useSelector(
     (state) => state.products,
   );
@@ -131,6 +215,21 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         behavior: "smooth",
       });
     }
+  };
+
+  const handleSliderMove = (e, index) => {
+    const container = e.currentTarget.getBoundingClientRect();
+
+    const clientX = e.touches?.[0]?.clientX || e.clientX;
+
+    let position = ((clientX - container.left) / container.width) * 100;
+
+    position = Math.max(0, Math.min(100, position));
+
+    setSliderPosition((prev) => ({
+      ...prev,
+      [index]: position,
+    }));
   };
 
   switch (type) {
@@ -576,6 +675,34 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         </Section>
       );
 
+    case "Image Banner Section":
+      return (
+        <Section className="py-10">
+          <Row>
+            <div className="space-y-6">
+              {(data?.items || []).map((item, i) => (
+                <div key={i} className="">
+                  <div className="w-full mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#382454]/10 border border-gray-100">
+                    {item.image && (
+                      <img
+                        src={
+                          item.image.startsWith("http")
+                            ? item.image
+                            : getImageUrl(item.image)
+                        }
+                        alt={item.title || "Banner"}
+                        className="w-full h-auto object-cover"
+                      />
+                    )}
+                  </div>
+                  {/* </div> */}
+                </div>
+              ))}
+            </div>
+          </Row>
+        </Section>
+      );
+
     case "use and Others points":
       return (
         <>
@@ -618,6 +745,215 @@ function SectionRenderer({ section, setShowLoginPopup }) {
             </Row>
           </Section>
         </>
+      );
+
+    case "FAQ 1":
+      return (
+        <Section className="py-14 bg-white">
+          <Row>
+            <div className="max-w-4xl mx-auto">
+              {data?.title && (
+                <h2 className="text-center text-[34px] font-extrabold uppercase text-[#0c1c4c] tracking-tight">
+                  {data.title}
+                </h2>
+              )}
+
+              {data?.description && (
+                <p className="text-center text-[#5f6c86] mt-5 text-[20px] leading-8 max-w-3xl mx-auto">
+                  {data.description}
+                </p>
+              )}
+
+              <div className="mt-12 border-t border-[#e7e7e7]">
+                {(data?.questions || []).map((faq, i) => (
+                  <FaqItem key={i} faq={faq} />
+                ))}
+              </div>
+            </div>
+          </Row>
+        </Section>
+      );
+
+    case "FAQ 2":
+      return (
+        <Section className="py-14 bg-[#f8f9fa]">
+          <Row>
+            <div className="max-w-[1600px] mx-auto w-full">
+              {data?.title && (
+                <div className="text-center mb-8 md:mb-10">
+                  <h2 className="text-[28px] md:text-[42px] font-extrabold text-[#0b1c48]">
+                    {data.title}
+                  </h2>
+
+                  <div className="w-[80px] md:w-[95px] h-[5px] bg-[#005b9f] rounded-full mx-auto mt-3" />
+                </div>
+              )}
+
+              {data?.description && (
+                <p className="text-center text-[#5f6c86] text-[15px] md:text-[18px] mb-8 md:mb-10 max-w-3xl mx-auto">
+                  {data.description}
+                </p>
+              )}
+
+              <div className="space-y-5">
+                {(data?.questions || []).map((faq, i) => (
+                  <Faq2Item
+                    key={i}
+                    item={faq}
+                    isOpen={faq2OpenIndex === i}
+                    onToggle={() =>
+                      setFaq2OpenIndex(faq2OpenIndex === i ? null : i)
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          </Row>
+        </Section>
+      );
+
+    case "Before & After":
+      return (
+        <Section className="py-16 bg-[#f8f9fa]">
+          <Row>
+            {/* heading */}
+            <div className="text-center mb-10">
+              <h2 className="text-[28px] md:text-[42px] font-extrabold text-[#0b1c48]">
+                {data?.title}
+              </h2>
+
+              <div className="w-[90px] h-[5px] bg-[#005b9f] rounded-full mx-auto mt-3" />
+
+              {data?.description && (
+                <p className="text-[#5f6c86] mt-4 text-[15px] md:text-[18px]">
+                  {data.description}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-10">
+              {(data?.items || []).map((item, i) => {
+                const position = sliderPosition[i] ?? 50;
+
+                return (
+                  <div
+                    key={i}
+                    className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none touch-none"
+                    onMouseDown={(e) => handleSliderMove(e, i)}
+                    onMouseMove={(e) => {
+                      if (e.buttons === 1) {
+                        handleSliderMove(e, i);
+                      }
+                    }}
+                    onTouchStart={(e) => handleSliderMove(e, i)}
+                    onTouchMove={(e) => handleSliderMove(e, i)}
+                  >
+                    {/* AFTER IMAGE FIXED */}
+                    <img
+                      src={getImageUrl(item.afterImage)}
+                      alt="after"
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      draggable={false}
+                    />
+
+                    {/* BEFORE IMAGE FIXED + HIDE */}
+                    <img
+                      src={getImageUrl(item.beforeImage)}
+                      alt="before"
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      draggable={false}
+                      style={{
+                        clipPath: `inset(0 ${100 - position}% 0 0)`,
+                      }}
+                    />
+
+                    <div
+                      className="absolute top-0 bottom-0 z-30"
+                      style={{
+                        left: `${position}%`,
+                        transform: "translateX(-50%)",
+                      }}
+                    >
+                      <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
+
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div className="w-[30px] h-[30px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize">
+                          <div className="flex gap-[3px]"></div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                      BEFORE
+                    </div>
+
+                    <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                      AFTER
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Row>
+        </Section>
+      );
+
+    case "Why Choose Unity Hair":
+      return (
+        <Section className="py-16 bg-[#eef5f8]">
+          <Row>
+            <div className="text-center mb-10">
+              <h2 className="text-[28px] md:text-[42px] font-extrabold text-[#0f172a] capitalize">
+                {data?.title}
+              </h2>
+
+              {data?.description && (
+                <p className="text-[#64748b] text-sm md:text-base mt-2">
+                  {data.description}
+                </p>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7">
+              {(data?.items || []).map((item, i) => (
+                <div
+                  key={i}
+                  className="
+              bg-white rounded-[34px]
+              p-7 md:p-8
+              min-h-[360px]
+              transition-all duration-300
+              hover:-translate-y-2
+              hover:shadow-xl
+              border border-[#edf2f7]
+            "
+                >
+                  {item?.image && (
+                    <div className="mb-5">
+                      <img
+                        src={
+                          item.image.startsWith("http")
+                            ? item.image
+                            : getImageUrl(item.image)
+                        }
+                        alt={item.title}
+                        className="w-[82px] h-[82px] rounded-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <h3 className="text-[22px] md:text-[28px] font-bold text-[#0f172a] mb-4 leading-tight">
+                    {item.title}
+                  </h3>
+
+                  <p className="text-[#667085] text-[15px] md:text-[17px] leading-[2]">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Row>
+        </Section>
       );
 
     default:

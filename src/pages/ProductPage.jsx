@@ -82,8 +82,8 @@ export default function Product() {
   const isCenter = allReviews.length <= visible;
 
   // if (loading) return <p className="text-center py-10">Loading product...</p>;
-    if (loading) return <Loding />;
-  
+  if (loading) return <Loding />;
+
   if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
   if (!product) return <p className="text-center py-10">No Product Found.</p>;
 
@@ -94,14 +94,16 @@ export default function Product() {
         <Row>
           <Breadcrumb />
         </Row>
-        <Row className="grid grid-cols-1 lg:grid-cols-2 gap-[30px]">
-          <ProductGallery
-            product={product}
-            activeVariant={selectedVariant}
-            selectedColor={selectedColor}
-            setSelectedColor={setSelectedColor}
-          />
-          <div>
+        <Row className="grid grid-cols-1 lg:grid-cols-[48%_52%] gap-[40px] items-start">
+          <div className="lg:sticky lg:top-[100px] self-start h-fit">
+            <ProductGallery
+              product={product}
+              activeVariant={selectedVariant}
+              selectedColor={selectedColor}
+              setSelectedColor={setSelectedColor}
+            />
+          </div>
+          <div className="min-w-0">
             <ProductInfo
               product={product}
               setSelectedVariant={setSelectedVariant}
@@ -111,6 +113,7 @@ export default function Product() {
             />
 
             <div className="border-dashed border-b-[2px] light-border my-5"></div>
+
             <ProductTabs product={product} selectedVariant={selectedVariant} />
           </div>
         </Row>

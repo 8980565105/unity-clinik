@@ -18,8 +18,8 @@ import Topdoctor from "../components/home/Topdoctor.jsx";
 import SEO from "../components/seo/seo.js";
 import Hero1 from "../components/home/hero1.jsx";
 import BannerSlider from "../components/home/SliderBanner.jsx";
-import banner12 from ".././assets/banner12.png";
-import banner12res from ".././assets/banner12res.png";
+// import banner12 from ".././assets/banner12.png";
+// import banner12res from ".././assets/banner12res.png";
 import Section from "../components/ui/Section.jsx";
 import Loding from "../components/loding/loding.jsx";
 import { getImageUrl } from "../components/utils/helper.js";
@@ -35,7 +35,7 @@ const Home = () => {
   const desktopImg = getImageUrl(banner2?.banner2?.image);
   const mobileImg = getImageUrl(banner2?.banner2?.mobileimg);
 
-  const { loading: productLoading } = useSelector((state) => state.products);
+  // const { loading: productLoading } = useSelector((state) => state.products);
   useEffect(() => {
     dispatch(fetchPageBySlug("Home"));
     dispatch(fetchProducts());

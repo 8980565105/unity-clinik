@@ -37,6 +37,7 @@ import PrivacyPolicy from "./pages/privecy-policy";
 import RefundPolicy from "./pages/Return-Refund-Policy";
 import TermService from "./pages/Terms-of-service";
 import ShippingPolicy from "./pages/shippingPolicy";
+import PhonePeCallback from "./components/payment/PhonePeCallback";
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -143,6 +144,7 @@ function App() {
           <Route path="/refundpolicy" element={<RefundPolicy />} />
           <Route path="/termService" element={<TermService />} />
           <Route path="/shippingpolicy" element={<ShippingPolicy />} />
+          <Route path="/payment/phonepe/callback" element={<PhonePeCallback />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />

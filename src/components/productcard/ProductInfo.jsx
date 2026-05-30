@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Handbag, Star } from "lucide-react";
 import Button from "../ui/Button";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import HeartIcon from "../icons/HeartIcon";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -13,12 +13,74 @@ import { useAddToWishlist } from "../wishlist/handleAddTowishlist";
 import toast, { Toaster } from "react-hot-toast";
 import { getImageUrl } from "../utils/helper";
 
-const getProductId = (item) => {
+const LS_KEY = "product_step_selections";
+const saveStepSelection = (stepIndex, slug) => {
+  if (!slug || slug.trim() === "") return;
+  try {
+    const existing = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    existing[`step_${stepIndex}`] = slug.trim();
+    localStorage.setItem(LS_KEY, JSON.stringify(existing));
+  } catch (_) {}
+};
+
+const getStepSelectedSlug = (stepIndex) => {
+  try {
+    const existing = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    return existing[`step_${stepIndex}`] || "";
+  } catch (_) {
+    return "";
+  }
+};
+
+const isVariantSelectedForStep = (variant, stepIndex, currentProductId) => {
+  const variantSlug = variant.slug?.trim();
+
+  if (variantSlug && variantSlug !== "") {
+    const savedSlug = getStepSelectedSlug(stepIndex);
+    return savedSlug === variantSlug;
+  }
+
   const pid =
-    typeof item.product_id === "object"
-      ? item.product_id?._id
-      : item.product_id;
-  return pid && pid !== "" && pid !== "none" && pid !== null ? pid : null;
+    typeof variant.product_id === "object"
+      ? variant.product_id?._id
+      : variant.product_id;
+  if (!pid || pid === "" || pid === "none" || pid === null) return false;
+  return String(pid) === String(currentProductId);
+};
+
+const getVariantLink = (variant) => {
+  const pid =
+    typeof variant.product_id === "object"
+      ? variant.product_id?._id
+      : variant.product_id;
+  if (pid && pid !== "" && pid !== "none" && pid !== null) {
+    return `/products/${pid}`;
+  }
+  return "#";
+};
+
+const autoSaveCurrentProductSlug = (product) => {
+  if (!product?.slug) return;
+  const currentSlug = product.slug;
+
+  const steps =
+    product?.sections?.find((s) => s.type === "Multi Step Selection")?.data
+      ?.steps || [];
+
+  let nonPackStepIndex = 0;
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    if (step.display_type === "Pack") continue;
+
+    const matchedVariant = (step.variants || []).find(
+      (v) => v.slug?.trim() === currentSlug,
+    );
+    if (matchedVariant) {
+      saveStepSelection(nonPackStepIndex, currentSlug);
+      break;
+    }
+    nonPackStepIndex++;
+  }
 };
 
 export default function ProductInfo({
@@ -30,6 +92,19 @@ export default function ProductInfo({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const currentProductId = product?._id;
+
+  const [selectionTick, setSelectionTick] = useState(0);
+
+  useEffect(() => {
+    if (product) {
+      autoSaveCurrentProductSlug(product);
+      setSelectionTick((t) => t + 1);
+    }
+  }, [product?._id]);
+
+  const [selectedPack, setSelectedPack] = useState(null);
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -47,27 +122,19 @@ export default function ProductInfo({
   }, [productReviews, product?._id]);
 
   const [activeVariant, setActiveVariant] = useState(null);
-  const selectAgeSection = (product?.sections || []).find(
-    (sec) =>
-      sec.type === "Select your age" &&
-      (sec.data?.status === true || sec.data?.status === undefined),
-  );
-  const [selectedAge, setSelectedAge] = useState(null);
 
-  const scalpSection = (product?.sections || []).find(
-    (sec) =>
-      sec.type === "Select your scalp type" &&
-      (sec.data?.status === true || sec.data?.status === undefined),
-  );
+  useEffect(() => {
+    const packStep = product?.sections
+      ?.find((s) => s.type === "Multi Step Selection")
+      ?.data?.steps?.find((step) => step.display_type === "Pack");
 
-  const Selectyourconcern = (product?.sections || []).find(
-    (sec) =>
-      sec.type === "Select your concern" &&
-      (sec.data?.status === true || sec.data?.status === undefined),
-  );
-
-  const [selectedScalp, setSelectedScalp] = useState(null);
-  const [selectedConcern, setSelectedConcern] = useState(null);
+    if (packStep?.variants?.length) {
+      const defaultPack =
+        packStep.variants.find((v) => Number(v.badge) === 1) ||
+        packStep.variants[0];
+      setSelectedPack(defaultPack);
+    }
+  }, [product]);
 
   useEffect(() => {
     if (product?.variants?.length > 0) {
@@ -92,18 +159,28 @@ export default function ProductInfo({
     }
   }, [selectedColor, product?.variants, setSelectedVariant]);
 
-  const getPriceData = (product) => {
-    const variant = product?.variants?.[0];
-    const originalPrice = variant?.price || 0;
-    const offerPrice = variant?.offerprice || originalPrice;
+  const getPriceData = () => {
+    const originalPrice = selectedPack?.price || activeVariant?.price || 0;
+    const offerPrice =
+      selectedPack?.offerprice || activeVariant?.offerprice || originalPrice;
     let discountPercent = 0;
     if (originalPrice > offerPrice) {
-      const rawDiscount = ((originalPrice - offerPrice) / originalPrice) * 100;
-      discountPercent = Math.floor(rawDiscount + 0.5);
+      discountPercent = Math.round(
+        ((originalPrice - offerPrice) / originalPrice) * 100,
+      );
     }
     return { originalPrice, offerPrice, discountPercent };
   };
-  const priceData = getPriceData(product);
+
+  const priceData = getPriceData();
+
+  const handleVariantClick = (variant, nonPackStepIndex) => {
+    const slug = variant.slug?.trim();
+    if (slug && slug !== "") {
+      saveStepSelection(nonPackStepIndex, slug);
+      setSelectionTick((t) => t + 1);
+    }
+  };
 
   const handleAddToCart = async () => {
     if (!token) {
@@ -133,14 +210,18 @@ export default function ProductInfo({
         ).unwrap();
         cartId = newCart._id;
       }
-      await dispatch(
-        addToCart({
-          cart_id: cartId,
-          product_id: product._id,
-          variant_id: activeVariant._id,
-          quantity: 1,
-        }),
-      ).unwrap();
+
+      const payload = {
+        cart_id: cartId,
+        product_id: product._id,
+        variant_id: activeVariant._id,
+        quantity: 1,
+        pack_of: Number(selectedPack?.badge || 1),
+        price: Number(selectedPack?.offerprice || 0),
+        original_price: Number(selectedPack?.price || 0),
+      };
+
+      await dispatch(addToCart(payload)).unwrap();
       await dispatch(fetchCart(cartId));
       navigate("/cart");
     } catch (err) {
@@ -156,57 +237,271 @@ export default function ProductInfo({
 
   const { handleAddToWishlist } = useAddToWishlist(setShowLoginPopup);
 
-  const ScalpCard = ({ item, i, selectedIdx, onSelect }) => {
-    const productId = getProductId(item);
+  const renderSteps = () => {
+    const allSteps = (product?.sections || [])
+      .filter(
+        (s) =>
+          s.type === "Multi Step Selection" &&
+          (s.data?.status === true || s.data?.status === undefined),
+      )
+      .flatMap((s) =>
+        (s.data?.steps || []).filter(
+          (step) => step?.status === true || step?.status === undefined,
+        ),
+      );
 
-    if (!productId) return null;
+    let nonPackStepIndex = 0;
 
-    const cardContent = (
-      <div className="flex flex-col items-center h-full w-20">
-        <div
-          className={`flex items-center justify-center relative w-20 h-20 max-md:w-14 max-md:h-14 rounded-xl border ${
-            selectedIdx === i
-              ? "border-primary text-primary border-2"
-              : "border-brand-primary"
-          }`}
-        >
-          <img
-            src={getImageUrl(item.image)}
-            alt={item.name}
-            className="w-full h-full object-cover rounded-xl"
-          />
+    return allSteps.map((step, stepIdx) => {
+      const uiType = step?.display_type || "Text";
+      const isPack = uiType === "Pack";
+
+      const currentNonPackIndex = isPack ? -1 : nonPackStepIndex;
+      if (!isPack) nonPackStepIndex++;
+
+      return (
+        <div key={stepIdx} className="mb-8">
+          <h3 className="text-[18px] md:text-[22px] font-bold mb-4">
+            {step.title}
+          </h3>
+          {step.description && (
+            <p className="text-gray-600 mb-4">{step.description}</p>
+          )}
+
+          {uiType === "Text" && (
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-4 min-w-max pb-2">
+                {(step?.variants || []).map((variant, variantIdx) => {
+                  const link = getVariantLink(variant);
+                  const isSelected = isVariantSelectedForStep(
+                    variant,
+                    currentNonPackIndex,
+                    currentProductId,
+                  );
+                  return (
+                    <Link
+                      key={variantIdx}
+                      to={link}
+                      onClick={() =>
+                        handleVariantClick(variant, currentNonPackIndex)
+                      }
+                    >
+                      <button
+                        className={`min-w-[130px] h-[52px] px-5 rounded-[14px]
+                        border font-semibold text-[16px] transition-all duration-300
+                        ${
+                          isSelected
+                            ? "bg-[#005BAA] text-white border-[#005BAA]"
+                            : "bg-white text-[#005BAA] border-[#005BAA]"
+                        }`}
+                      >
+                        {variant.title}
+                      </button>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {uiType === "Text with img" && (
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-4 min-w-max pb-2">
+                {(step?.variants || []).map((variant, variantIdx) => {
+                  const link = getVariantLink(variant);
+                  const isSelected = isVariantSelectedForStep(
+                    variant,
+                    currentNonPackIndex,
+                    currentProductId,
+                  );
+                  return (
+                    <Link
+                      key={variantIdx}
+                      to={link}
+                      className="flex-shrink-0"
+                      onClick={() =>
+                        handleVariantClick(variant, currentNonPackIndex)
+                      }
+                    >
+                      <div className="w-[105px] text-center cursor-pointer">
+                        <div
+                          className={`rounded-[14px] border p-[6px]
+                          transition-all duration-300 overflow-hidden
+                          ${isSelected ? "border-[#005BAA]" : "border-[#DADADA]"}`}
+                        >
+                          <div className="bg-[#EAF4FC] rounded-[10px] overflow-hidden">
+                            <img
+                              src={getImageUrl(variant.image)}
+                              alt={variant.title}
+                              className="w-full h-[92px] object-cover"
+                            />
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p
+                            className={`text-[15px] font-semibold leading-[20px]
+                            ${isSelected ? "text-[#005BAA]" : "text-black"}`}
+                          >
+                            {variant.title}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {uiType === "Upgrade Product" && (
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-4 min-w-max pb-2">
+                {(step?.variants || []).map((variant, variantIdx) => {
+                  const link = getVariantLink(variant);
+                  const isSelected = isVariantSelectedForStep(
+                    variant,
+                    currentNonPackIndex,
+                    currentProductId,
+                  );
+                  return (
+                    <Link
+                      key={variantIdx}
+                      to={link}
+                      className="flex-shrink-0"
+                      onClick={() =>
+                        handleVariantClick(variant, currentNonPackIndex)
+                      }
+                    >
+                      <div
+                        className={`w-[150px] rounded-[18px] overflow-hidden border
+                        transition-all duration-300 cursor-pointer
+                        ${
+                          isSelected
+                            ? "border-[#005BAA] border-2 shadow-md"
+                            : "border-[#005BAA]"
+                        }`}
+                      >
+                        <div className="bg-[#EAF4FC] h-[115px] overflow-hidden">
+                          <img
+                            src={getImageUrl(variant.image)}
+                            alt={variant.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div
+                          className={`px-3 py-3 min-h-[72px]
+                          flex items-center justify-center text-center transition-all
+                          ${
+                            isSelected
+                              ? "bg-[#005BAA] text-white"
+                              : "bg-white text-black"
+                          }`}
+                        >
+                          <p className="text-[15px] font-semibold leading-[22px]">
+                            {variant.title}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {uiType === "Pack" && (
+            <div className="mt-2">
+              <h3 className="text-[34px] font-semibold mb-5">
+                Size : Pack of {selectedPack?.badge || 1}
+              </h3>
+              <div className="overflow-x-auto scrollbar-hide">
+                <div className="flex gap-6 min-w-max pb-2">
+                  {(step?.variants || []).map((variant, variantIdx) => {
+                    const savePercentage =
+                      variant.price > 0
+                        ? (
+                            ((variant.price - variant.offerprice) /
+                              variant.price) *
+                            100
+                          ).toFixed(1)
+                        : 0;
+                    const isPackSelected =
+                      String(selectedPack?.badge) === String(variant.badge);
+                    return (
+                      <div
+                        key={variantIdx}
+                        onClick={() =>
+                          setSelectedPack({
+                            badge: variant.badge,
+                            price: Number(variant.price),
+                            offerprice: Number(variant.offerprice),
+                            image: variant.image,
+                          })
+                        }
+                        className={`w-[180px] rounded-[10px] bg-[#F8F8F8] border overflow-hidden
+                        transition-all duration-300 cursor-pointer hover:shadow-lg
+                        ${
+                          isPackSelected
+                            ? "border-[#18A84B] border-2"
+                            : "border-[#D6D6D6]"
+                        }`}
+                      >
+                        <div
+                          className={`h-[30px] flex items-center justify-center text-white font-bold text-[14px]
+                          ${isPackSelected ? "bg-[#18A84B]" : "bg-[#4A5568]"}`}
+                        >
+                          SAVE {savePercentage}%
+                        </div>
+                        <div className="h-[125px] flex items-center justify-center px-4 py-3">
+                          <img
+                            src={getImageUrl(variant.image)}
+                            alt="pack"
+                            className="max-h-[95px] object-contain"
+                          />
+                        </div>
+                        <div className="px-3">
+                          <div className="bg-[#17243D] text-white rounded-[5px] text-center py-[8px] font-semibold text-[16px]">
+                            Pack of {variant.badge}
+                          </div>
+                        </div>
+                        <div className="text-center py-3">
+                          <p className="text-[#7B7B7B] text-[15px] line-through">
+                            MRP: ₹{variant.price}
+                          </p>
+                          <h2 className="text-[38px] font-bold leading-none text-black mt-1">
+                            ₹{variant.offerprice}
+                          </h2>
+                        </div>
+                        {variantIdx === 1 && (
+                          <div className="bg-[#18A84B] text-white text-center text-[15px] font-semibold py-[7px]">
+                            Most Popular
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="p-2 text-center flex-1 flex flex-col justify-center">
-          <p
-            className={`text-sm font-semibold mb-0.5 ${selectedIdx === i ? "text-primary" : "text-black"}`}
-          >
-            {item.name}
-          </p>
-        </div>
-      </div>
-    );
-
-    return (
-      <Link
-        key={i}
-        to={`/products/${productId}`}
-        className="cursor-pointer transition-all duration-200"
-      >
-        {cardContent}
-      </Link>
-    );
+      );
+    });
   };
 
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+
       <p className="text-theme pt-[20px] md:pt-0">
         No Side Effects <span className="text-[#BCBCBC]"> | </span> Clinically
         Tested
       </p>
+
       <p className="text-[24px] pb-[12px] lowercase capitalize font-bold">
         {product.name}
       </p>
+
       <div className="flex items-end gap-2">
         <span className="text-[26px] font-semibold text-black">
           ₹{priceData.offerPrice}
@@ -265,107 +560,7 @@ export default function ProductInfo({
       </div>
 
       <div className="mt-[15px] space-y-[28px]">
-        {scalpSection &&
-          (scalpSection.data?.items || []).some((item) =>
-            getProductId(item),
-          ) && (
-            <div className="space-y-[16px]">
-              <h3 className="text-[18px] font-semibold">
-                {scalpSection.data?.title || "Select your scalp type"}
-              </h3>
-              <div className="gap-2 flex flex-wrap">
-                {(scalpSection.data?.items || []).map((item, i) => {
-                  const productId = getProductId(item);
-                  if (!productId) return null;
-                  return (
-                    <Link
-                      key={i}
-                      to={`/products/${productId}`}
-                      className="cursor-pointer transition-all duration-200"
-                    >
-                      <div className="flex flex-col items-center h-full w-20">
-                        <div className="flex items-center justify-center relative w-20 h-20 max-md:w-14 max-md:h-14 rounded-xl border border-brand-primary">
-                          <img
-                            src={getImageUrl(item.image)}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                        </div>
-                        <div className="p-2 text-center flex-1 flex flex-col justify-center">
-                          <p className="text-sm font-semibold mb-0.5 text-black">
-                            {item.name}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-        {selectAgeSection &&
-          (selectAgeSection.data?.items || []).some((item) =>
-            getProductId(item),
-          ) && (
-            <div className="space-y-[16px]">
-              <span className="text-[18px] font-semibold">
-                {selectAgeSection.data?.title || "Select your age"}
-              </span>
-              <div className="flex gap-[10px] flex-wrap">
-                {(selectAgeSection.data?.items || []).map((item, i) => {
-                  const productId = getProductId(item);
-                  if (!productId) return null;
-                  return (
-                    <Link key={i} to={`/products/${productId}`}>
-                      <button className="min-w-[80px] h-[40px] px-[14px] flex items-center justify-center rounded-[10px] text-[14px] font-medium border transition-all duration-200 bg-white text-gray-700 border-black hover:border-primary hover:border-2">
-                        {item.name}
-                      </button>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-        {Selectyourconcern &&
-          (Selectyourconcern.data?.items || []).some((item) =>
-            getProductId(item),
-          ) && (
-            <div className="space-y-[16px]">
-              <h3 className="text-[18px] font-semibold">
-                {Selectyourconcern.data?.title || "Select your concern"}
-              </h3>
-              <div className="gap-2 flex flex-wrap">
-                {(Selectyourconcern.data?.items || []).map((item, i) => {
-                  const productId = getProductId(item);
-                  if (!productId) return null;
-                  return (
-                    <Link
-                      key={i}
-                      to={`/products/${productId}`}
-                      className="cursor-pointer transition-all duration-200"
-                    >
-                      <div className="flex flex-col items-center h-full w-20">
-                        <div className="flex items-center justify-center relative w-20 h-20 max-md:w-14 max-md:h-14 rounded-xl border border-brand-primary">
-                          <img
-                            src={getImageUrl(item.image)}
-                            alt={item.name}
-                            className="w-full h-full object-cover rounded-xl"
-                          />
-                        </div>
-                        <div className="p-2 text-center flex-1 flex flex-col justify-center">
-                          <p className="text-sm font-semibold mb-0.5 text-black">
-                            {item.name}
-                          </p>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+        <div key={selectionTick}>{renderSteps()}</div>
 
         <div className="flex flex-col sm:flex-row gap-[17px] pt-[10px]">
           <Button
@@ -376,6 +571,7 @@ export default function ProductInfo({
             <HeartIcon className="h-[22px] w-[22px]" />
             Wishlist
           </Button>
+
           <Button
             variant="common"
             className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px]"

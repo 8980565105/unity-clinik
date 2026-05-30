@@ -1,6 +1,6 @@
 import { FaPlay } from "react-icons/fa";
 import Button from "../components/ui/Button";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 import { loginUser } from "../features/auth/authThunk";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
@@ -14,6 +14,7 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
   const { loading } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const { token } = useSelector((state) => state.auth);
+  const [showPassword, setShowPassword] = useState(false);
   const { info: storeInfo } = useSelector((state) => state.store);
 
   const handleChange = (e) => {
@@ -84,9 +85,7 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
             alt="Logo"
             className="mx-auto mb-6"
           />
-          <h1 class="text-3xl font-bold text-primary">
-            Welcome Back
-          </h1>
+          <h1 class="text-3xl font-bold text-primary">Welcome Back</h1>
 
           <p class="text-gray-500 mt-2">Login to your Unity Hair account</p>
         </div>
@@ -103,7 +102,7 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
               className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
             />
           </div>
-          <div>
+          {/* <div>
             <input
               type="password"
               name="password"
@@ -113,6 +112,24 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
               required
               className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
             />
+          </div> */}
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="input-common w-full border light-border rounded-md px-5 py-3 pr-12 focus:outline-none focus:ring-2"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center text-sm gap-4 w-full pt-[26px]">
@@ -136,7 +153,6 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
         </form>
 
         <div className="text-center mt-[30px] text-p">
-
           <span>Don't have an account?</span>
           <span
             onClick={onSwitchRegister}
