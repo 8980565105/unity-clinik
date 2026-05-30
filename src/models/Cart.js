@@ -1,5 +1,29 @@
 const mongoose = require("mongoose");
 
+// const cartItemSchema = new mongoose.Schema(
+//   {
+//     product_id: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "Product",
+//       required: true,
+//     },
+//     variant_id: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "ProductVariant",
+//       required: true,
+//     },
+//     quantity: { type: Number, default: 1 },
+
+//     store_owner_id: {
+//       type: mongoose.Schema.Types.ObjectId,
+//       ref: "User",
+//       required: false,
+//       default: null,
+//     },
+//   },
+//   { _id: true },
+// );
+
 const cartItemSchema = new mongoose.Schema(
   {
     product_id: {
@@ -7,12 +31,32 @@ const cartItemSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
+
     variant_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductVariant",
       required: true,
     },
-    quantity: { type: Number, default: 1 },
+
+    quantity: {
+      type: Number,
+      default: 1,
+    },
+
+    pack_of: {
+      type: Number,
+      default: 1,
+    },
+
+    price: {
+      type: Number,
+      default: 0,
+    },
+
+    original_price: {
+      type: Number,
+      default: 0,
+    },
 
     store_owner_id: {
       type: mongoose.Schema.Types.ObjectId,

@@ -112,7 +112,6 @@ orderSchema.pre("save", async function (next) {
       .slice(0, 8);
     this.order_number = `ORD-${datePart}-${randomPart}`;
   }
-  // next();
 });
 
 module.exports = mongoose.model("Order", orderSchema);

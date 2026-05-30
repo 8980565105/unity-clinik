@@ -4,6 +4,87 @@ const { sendResponse } = require("../utils/response");
 const ProductVariant = require("../models/ProductVariant");
 const mongoose = require("mongoose");
 
+// helper function
+const normalizeSections = (sections = []) => {
+  return (Array.isArray(sections) ? sections : []).map((section) => ({
+    type: section.type || "",
+
+    data: {
+      status: section?.data?.status ?? true,
+
+      title: section?.data?.title || "",
+
+      description: section?.data?.description || "",
+
+      image: section?.data?.image || "",
+
+      // FAQ
+      questions: (section?.data?.questions || []).map((q) => ({
+        question: q.question || "",
+        answer: q.answer || "",
+        image: q.image || "",
+      })),
+
+      // Why Choose + Before After
+      items: (section?.data?.items || []).map((item) => ({
+        name: item.name || "",
+
+        title: item.title || "",
+
+        description: item.description || "",
+
+        image: item.image || "",
+
+        beforeImage: item.beforeImage || "",
+
+        afterImage: item.afterImage || "",
+
+        usPoint: item.usPoint || "",
+
+        otherPoint: item.otherPoint || "",
+
+        product_id:
+          item.product_id && mongoose.Types.ObjectId.isValid(item.product_id)
+            ? item.product_id
+            : null,
+      })),
+
+      // Multi Step
+      steps: (section?.data?.steps || []).map((step) => ({
+        status: step?.status ?? true,
+
+        title: step?.title || "",
+
+        display_type: step?.display_type || "Text",
+
+        description: step?.description || "",
+
+        variants: (step?.variants || []).map((variant) => ({
+          title: variant.title || "",
+
+          description: variant.description || "",
+
+          image: variant.image || "",
+
+          slug: variant.slug || "",
+
+          badge: variant.badge || "",
+
+          product_id:
+            variant.product_id &&
+            mongoose.Types.ObjectId.isValid(variant.product_id)
+              ? variant.product_id
+              : null,
+
+          price: Number(variant.price || 0),
+
+          offerprice: Number(variant.offerprice || 0),
+        })),
+      })),
+    },
+  }));
+};
+
 // ─────────────────────────────────────────────────────────────────
 // Helper: ownership check — storeId based
 // ─────────────────────────────────────────────────────────────────
@@ -79,7 +160,7 @@ const buildPipeline = ({
               as: "type",
             },
           },
-          
+
           {
             $addFields: {
               brand_id: { $arrayElemAt: ["$brand", 0] },
@@ -128,9 +209,9 @@ const getPublicProducts = async (req, res) => {
       isDownload = "false",
       categories,
       brands,
-     
+
       types,
-    
+
       minPrice,
       maxPrice,
     } = req.query;
@@ -379,14 +460,12 @@ const createProduct = async (req, res) => {
     } = req.body;
 
     let productImages = [];
-    if (req.files && req.files.length > 0) {
-      productImages = req.files.map((file) => `/uploads/${file.filename}`);
-    } else if (req.body.images) {
-      productImages = Array.isArray(req.body.images)
-        ? req.body.images
-        : [req.body.images];
-    }
 
+    if (req.files && req.files.length > 0) {
+      productImages = req.files[0] ? `/uploads/${req.files[0].filename}` : "";
+    } else if (req.body.images) {
+      productImages = req.body.images;
+    }
     const storeId =
       req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
 
@@ -395,13 +474,80 @@ const createProduct = async (req, res) => {
       slug: slugify(name, { lower: true, strict: true }),
       description,
       steps,
-      category_id,
+      category_id: Array.isArray(category_id) ? category_id : [category_id],
       discount_id: discount_id || null,
       status: status || "active",
       images: productImages,
       createdBy: req.user._id,
       storeId,
-      sections: Array.isArray(sections) ? sections : [],
+
+      // sections: (typeof sections === "string"
+      //   ? JSON.parse(sections)
+      //   : Array.isArray(sections)
+      //     ? sections
+      //     : []
+      // ).map((section) => ({
+      //   ...section,
+
+      //   data: {
+      //     ...section.data,
+
+      //     status: section?.data?.status ?? true,
+
+      //     title: section?.data?.title || "",
+
+      //     description: section?.data?.description || "",
+
+      //     image: section?.data?.image || "",
+
+      //     questions: (section?.data?.questions || []).map((q) => ({
+      //       question: q.question || "",
+      //       answer: q.answer || "",
+      //       image: q.image || "",
+      //     })),
+
+      //     items: (section?.data?.items || []).map((item) => ({
+      //       name: item.name || "",
+
+      //       title: item.title || "",
+
+      //       description: item.description || "",
+
+      //       image: item.image || "",
+      //       beforeImage: item.beforeImage || "",
+      //       afterImage: item.afterImage || "",
+
+      //       usPoint: item.usPoint || "",
+
+      //       otherPoint: item.otherPoint || "",
+
+      //       product_id:
+      //         item.product_id &&
+      //         mongoose.Types.ObjectId.isValid(item.product_id)
+      //           ? item.product_id
+      //           : null,
+      //     })),
+
+      //     steps: (section?.data?.steps || []).map((step) => ({
+      //       ...step,
+      //       status: step?.status ?? true,
+
+      //       variants: (step.variants || []).map((variant) => ({
+      //         ...variant,
+      //         slug: variant.slug || "",
+      //         product_id:
+      //           variant.product_id &&
+      //           mongoose.Types.ObjectId.isValid(variant.product_id)
+      //             ? variant.product_id
+      //             : null,
+      //       })),
+      //     })),
+      //   },
+      // })),
+
+      sections: normalizeSections(
+        typeof sections === "string" ? JSON.parse(sections) : sections,
+      ),
     });
 
     const savedProduct = await product.save();
@@ -447,42 +593,79 @@ const createProduct = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// PUT /products/:id
-// ═══════════════════════════════════════════════════════════════════
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { variants, ...productData } = req.body;
+
+    const { variants, sections, ...productData } = req.body;
 
     const product = await Product.findById(id);
-    if (!product) return sendResponse(res, false, null, "Product not found");
+
+    if (!product) {
+      return sendResponse(res, false, null, "Product not found");
+    }
+
     if (!isOwnerOrAdmin(req, product)) {
       return sendResponse(res, false, null, "Forbidden: Not your product");
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(id, productData, {
-      new: true,
-    });
+    let parsedSections = [];
+
+    if (sections) {
+      parsedSections =
+        typeof sections === "string" ? JSON.parse(sections) : sections;
+    }
+
+    product.name = productData.name || product.name;
+
+    product.description = productData.description || "";
+
+    product.steps = productData.steps || "";
+
+    product.category_id = Array.isArray(productData.category_id)
+      ? productData.category_id
+      : [productData.category_id];
+
+    product.status = productData.status || product.status;
+
+    if (productData.images) {
+      product.images = productData.images;
+    }
+
+  
+    product.sections = normalizeSections(parsedSections);
+    const updatedProduct = await product.save();
 
     if (Array.isArray(variants)) {
       for (const v of variants) {
         if (v._id) {
-          await ProductVariant.findByIdAndUpdate(v._id, v, { new: true });
+          await ProductVariant.findByIdAndUpdate(
+            v._id,
+            {
+              ...v,
+              price: Number(v.price),
+              stock_quantity: Number(v.stock_quantity),
+              offerprice: Number(v.offerprice),
+              ProductWeight: Number(v.ProductWeight),
+              ProductHeight: Number(v.ProductHeight),
+              ProductWidth: Number(v.ProductWidth),
+              ProductLength: Number(v.ProductLength),
+            },
+            { new: true },
+          );
         } else {
-          const newVariant = new ProductVariant({ ...v, product_id: id });
-          await newVariant.save();
+          await new ProductVariant({
+            ...v,
+            product_id: id,
+          }).save();
         }
       }
     }
 
-    sendResponse(
-      res,
-      true,
-      updatedProduct,
-      "Product and variants updated successfully",
-    );
+    sendResponse(res, true, updatedProduct, "Product updated successfully");
   } catch (err) {
+    console.error("UPDATE ERROR:", err);
+
     sendResponse(res, false, null, err.message);
   }
 };

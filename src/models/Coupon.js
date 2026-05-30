@@ -2,15 +2,15 @@ const mongoose = require("mongoose");
 
 const couponSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true }, 
+    name: { type: String, required: true },
     code: { type: String, required: true, unique: true },
     description: { type: String, required: false },
     discount_type: {
       type: String,
-      enum: ["percentage", "fixed"],
+      enum: ["percentage", "fixed", "freeshipping"],
       required: true,
     },
-    discount_value: { type: Number, required: true },
+    discount_value: { type: Number, default: 0 },
     min_purchase_amount: { type: Number, default: 0 },
     max_discount_amount: { type: Number, default: null },
     usage_limit: { type: Number, default: null },
@@ -22,6 +22,28 @@ const couponSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+
+    apply_type: {
+      type: String,
+      enum: ["allproducts", "specificproducts", "specificsubcategory"],
+      default: "allproducts",
+    },
+
+    products: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+
+    subcategories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+
+        ref: "subCategory",
+      },
+    ],
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

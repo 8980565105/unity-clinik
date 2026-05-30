@@ -1,17 +1,15 @@
-
-
 const Coupon = require("../models/Coupon");
 const { sendResponse } = require("../utils/response");
 const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
-const generateCouponCode = (length = 8) => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < length; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-};
+// const generateCouponCode = (length = 8) => {
+//   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+//   let code = "";
+//   for (let i = 0; i < length; i++) {
+//     code += chars.charAt(Math.floor(Math.random() * chars.length));
+//   }
+//   return code;
+// };
 
 const getCoupons = async (req, res) => {
   try {
@@ -80,7 +78,9 @@ const getCoupons = async (req, res) => {
 
 const getCouponById = async (req, res) => {
   try {
-    const coupon = await Coupon.findById(req.params.id);
+    const coupon = await Coupon.findById(req.params.id)
+      .populate("products", "name")
+      .populate("subcategories", "name");
     if (!coupon) return sendResponse(res, false, null, "Coupon not found");
     sendResponse(res, true, coupon, "Coupon retrieved successfully");
   } catch (err) {
@@ -90,17 +90,18 @@ const getCouponById = async (req, res) => {
 
 const createCoupon = async (req, res) => {
   try {
-    let { code } = req.body;
+    let { code, discount_type } = req.body;
 
-    if (!code) {
-      code = generateCouponCode();
-      req.body.code = code;
+    if (discount_type === "freeshipping") {
+      req.body.discount_value = 0;
     }
 
     const existingCoupon = await Coupon.findOne({ code });
     if (existingCoupon) {
       return sendResponse(res, false, null, "Coupon code already exists");
     }
+
+    req.body.code = code.toUpperCase();
 
     const coupon = new Coupon({ ...req.body, createdBy: req.user.id });
     const savedCoupon = await coupon.save();

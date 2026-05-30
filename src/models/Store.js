@@ -61,7 +61,7 @@ storeSchema.pre("save", function (next) {
   if (this.isModified("name")) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-  // next();
+  
 });
 
 module.exports = mongoose.model("Store", storeSchema);

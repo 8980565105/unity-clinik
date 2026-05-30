@@ -88,10 +88,7 @@ const findUserForOtp = async (email, rawDomain) => {
     const store = await Store.findOne({ domain })
       .select("_id name domain")
       .lean();
-    // console.log(
-    //   `[OTP] Store DB lookup (domain="${domain}"):`,
-    //   store ? `FOUND → "${store.name}" (id=${store._id})` : "NOT FOUND",
-    // );
+    
 
     if (store) {
       const user = await User.findOne({ email, storeId: store._id });
