@@ -1,4 +1,3 @@
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
@@ -54,6 +53,19 @@ export const cancelOrder = createAsyncThunk(
       });
       if (res.data.success) return res.data.data;
       return rejectWithValue(res.data.message || "Failed to cancel order");
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  },
+);
+
+export const fetchOrderTracking = createAsyncThunk(
+  "orders/fetchOrderTracking",
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const res = await api.get(`${ROUTES.orders.getAll}/${orderId}/tracking`);
+      if (res.data.success) return res.data.data;
+      return rejectWithValue(res.data.message);
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }

@@ -74,10 +74,7 @@ function AccountDetails({ onSwitchForget }) {
     <>
       <Toaster />
 
-      {/* {loading && <p className="text-sm text-gray-400 mb-2">Loading...</p>} */}
 
-      <Section>
-        <Row>
           <div className="space-y-4">
             <form className="space-y-4" onSubmit={handleSubmit}>
               {/* ── Name ────────────────────────────────── */}
@@ -153,14 +150,11 @@ function AccountDetails({ onSwitchForget }) {
                 type="submit"
                 disabled={loading}
                 variant="common"
-                // className="!min-w-[185px] flex items-center justify-between"
               >
                 {loading ? "Updating..." : "Update Profile"}
               </Button>
             </form>
           </div>
-        </Row>
-      </Section>
     </>
   );
 }

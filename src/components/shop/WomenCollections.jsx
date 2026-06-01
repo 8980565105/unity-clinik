@@ -387,11 +387,8 @@ export default function WomenCollections() {
   }, [dispatch, page, limit]);
 
   const [selectedCategories, setSelectedCategories] = useState([]);
-  // const [selectedSizes, setSelectedSizes] = useState([]);
-  // const [selectedColors, setSelectedColors] = useState([]);
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
-  // const [selectedFabrics, setSelectedFabrics] = useState([]);
   const [selectedDiscounts, setSelectedDiscounts] = useState([]);
   const [selectedLabels, setSelectedLabels] = useState([]);
   const [isBestSeller, setIsBestSeller] = useState(false);
@@ -414,14 +411,18 @@ export default function WomenCollections() {
     [],
   );
 
+  // const handleCategoryChange = (name) => {
+  //   setSelectedCategories((prev) => (prev.includes(name) ? [] : [name]));
+  // };
   const handleCategoryChange = (name) => {
-    setSelectedCategories((prev) => (prev.includes(name) ? [] : [name]));
+    setSelectedCategories((prev) =>
+      prev.includes(name)
+        ? prev.filter((item) => item !== name)
+        : [...prev, name],
+    );
   };
-  // const handleSizeChange = createToggleHandler(setSelectedSizes);
-  // const handleColorChange = createToggleHandler(setSelectedColors);
   const handleBrandChange = createToggleHandler(setSelectedBrands);
   const handleTypeChange = createToggleHandler(setSelectedTypes);
-  // const handleFabricChange = createToggleHandler(setSelectedFabrics);
 
   const handleDiscountChange = (id, name) => {
     setSelectedDiscounts((prev) =>
@@ -441,11 +442,8 @@ export default function WomenCollections() {
 
   const handleClearAllFilters = () => {
     setSelectedCategories([]);
-    // setSelectedSizes([]);
-    // setSelectedColors([]);
     setSelectedBrands([]);
     setSelectedTypes([]);
-    // setSelectedFabrics([]);
     setSelectedDiscounts([]);
     setSelectedLabels([]);
     setIsBestSeller(false);
@@ -471,7 +469,6 @@ export default function WomenCollections() {
 
     setSelectedBrands(getArray("brand"));
     setSelectedTypes(getArray("type"));
- 
 
     const discountIds = getArray("discount");
     if (discountIds.length > 0) {
@@ -514,11 +511,8 @@ export default function WomenCollections() {
     const params = new URLSearchParams();
     if (selectedCategories.length)
       params.set("category", selectedCategories.join(","));
-    // if (selectedSizes.length) params.set("size", selectedSizes.join(","));
-    // if (selectedColors.length) params.set("color", selectedColors.join(","));
     if (selectedBrands.length) params.set("brand", selectedBrands.join(","));
     if (selectedTypes.length) params.set("type", selectedTypes.join(","));
-    // if (selectedFabrics.length) params.set("fabric", selectedFabrics.join(","));
     if (selectedDiscounts.length)
       params.set("discount", selectedDiscounts.map((d) => d.name).join(","));
     if (selectedLabels.length)
@@ -535,11 +529,8 @@ export default function WomenCollections() {
     }, 0);
   }, [
     selectedCategories,
-    // selectedSizes,
-    // selectedColors,
     selectedBrands,
     selectedTypes,
-    // selectedFabrics,
     selectedDiscounts,
     selectedLabels,
     minPrice,
@@ -550,13 +541,11 @@ export default function WomenCollections() {
       ...selectedCategories.map((v) => ({
         type: "category",
         value: v,
-        label: v,
+        label: subcategories.find((c) => c._id === v)?.name || v,
       })),
-      // ...selectedSizes.map((v) => ({ type: "size", value: v, label: v })),
-      // ...selectedColors.map((v) => ({ type: "color", value: v, label: v })),
+
       ...selectedBrands.map((v) => ({ type: "brand", value: v, label: v })),
       ...selectedTypes.map((v) => ({ type: "type", value: v, label: v })),
-      // ...selectedFabrics.map((v) => ({ type: "fabric", value: v, label: v })),
       ...selectedDiscounts.map((d) => ({
         type: "discount",
         value: d.id,
@@ -578,11 +567,8 @@ export default function WomenCollections() {
     return arr;
   }, [
     selectedCategories,
-    // selectedSizes,
-    // selectedColors,
     selectedBrands,
     selectedTypes,
-    // selectedFabrics,
     selectedDiscounts,
     selectedLabels,
     minPrice,
@@ -606,33 +592,6 @@ export default function WomenCollections() {
       return [String(t)];
     });
 
-  // const productFabricNames = (p) =>
-  //   (p?.variants || []).flatMap((v) => {
-  //     const f = v?.fabric || v?.fabrics;
-  //     if (!f) return [];
-  //     if (Array.isArray(f)) return f.map((x) => x?.name || x);
-  //     if (typeof f === "object") return [f?.name].filter(Boolean);
-  //     return [String(f)];
-  //   });
-
-  // const productSizes = (p) =>
-  //   (p?.variants || []).flatMap((v) => {
-  //     const s = v?.sizes || v?.size || v?.available_sizes;
-  //     if (!s) return [];
-  //     if (Array.isArray(s))
-  //       return s.map((x) => (typeof x === "object" ? x?.name || x : x));
-  //     return [String(s)];
-  //   });
-
-  // const productColors = (p) =>
-  //   (p?.variants || []).flatMap((v) => {
-  //     const c = v?.color || v?.colors;
-  //     if (!c) return [];
-  //     if (Array.isArray(c))
-  //       return c.map((x) => (typeof x === "object" ? x?.name || x : x));
-  //     return [String(c)];
-  //   });
-
   const matchesFilters = (p) => {
     if (isBestSeller) {
       const hasBestSeller = (p?.variants || []).some(
@@ -642,19 +601,16 @@ export default function WomenCollections() {
     }
 
     if (selectedCategories.length > 0) {
-      const catName = subcategories.find((c) => c._id === p.category_id)?.name;
-      if (!selectedCategories.includes(catName)) return false;
+      const productCategoryIds = Array.isArray(p.category_id)
+        ? p.category_id.map(String)
+        : [String(p.category_id)];
+
+      const hasMatch = selectedCategories.some((catId) =>
+        productCategoryIds.includes(String(catId)),
+      );
+
+      if (!hasMatch) return false;
     }
-
-    // if (selectedSizes.length > 0) {
-    //   const sizes = productSizes(p);
-    //   if (!selectedSizes.some((s) => sizes.includes(s))) return false;
-    // }
-
-    // if (selectedColors.length > 0) {
-    //   const colors = productColors(p);
-    //   if (!selectedColors.some((c) => colors.includes(c))) return false;
-    // }
 
     if (selectedBrands.length > 0) {
       const brands = productBrandNames(p);
@@ -666,10 +622,6 @@ export default function WomenCollections() {
       if (!selectedTypes.some((t) => types.includes(t))) return false;
     }
 
-    // if (selectedFabrics.length > 0) {
-    //   const fabrics = productFabricNames(p);
-    //   if (!selectedFabrics.some((f) => fabrics.includes(f))) return false;
-    // }
     if (selectedDiscounts.length > 0) {
       const productDiscId = String(
         p?.discount_id?._id || p?.discount_id || p?.discount || "",
@@ -706,11 +658,8 @@ export default function WomenCollections() {
   }, [
     products,
     selectedCategories,
-    // selectedSizes,
-    // selectedColors,
     selectedBrands,
     selectedTypes,
-    // selectedFabrics,
     selectedDiscounts,
     selectedLabels,
     isBestSeller,
@@ -795,21 +744,12 @@ export default function WomenCollections() {
             selectedCategories={selectedCategories}
             handleCategoryChange={handleCategoryChange}
             handleResetCategories={() => setSelectedCategories([])}
-            // selectedSizes={selectedSizes}
-            // handleSizeChange={handleSizeChange}
-            // handleResetSizes={() => setSelectedSizes([])}
-            // selectedColors={selectedColors}
-            // handleColorChange={handleColorChange}
-            // handleResetColors={() => setSelectedColors([])}
             selectedBrands={selectedBrands}
             handleBrandChange={handleBrandChange}
             handleResetBrands={() => setSelectedBrands([])}
             selectedTypes={selectedTypes}
             handleTypeChange={handleTypeChange}
             handleResetTypes={() => setSelectedTypes([])}
-            // selectedFabrics={selectedFabrics}
-            // handleFabricChange={handleFabricChange}
-            // handleResetFabrics={() => setSelectedFabrics([])}
             selectedDiscounts={selectedDiscounts}
             handleDiscountChange={handleDiscountChange}
             handleResetDiscounts={() => setSelectedDiscounts([])}
@@ -870,21 +810,12 @@ export default function WomenCollections() {
               selectedCategories={selectedCategories}
               handleCategoryChange={handleCategoryChange}
               handleResetCategories={() => setSelectedCategories([])}
-              // selectedSizes={selectedSizes}
-              // handleSizeChange={handleSizeChange}
-              // handleResetSizes={() => setSelectedSizes([])}
-              // selectedColors={selectedColors}
-              // handleColorChange={handleColorChange}
-              // handleResetColors={() => setSelectedColors([])}
               selectedBrands={selectedBrands}
               handleBrandChange={handleBrandChange}
               handleResetBrands={() => setSelectedBrands([])}
               selectedTypes={selectedTypes}
               handleTypeChange={handleTypeChange}
               handleResetTypes={() => setSelectedTypes([])}
-              // selectedFabrics={selectedFabrics}
-              // handleFabricChange={handleFabricChange}
-              // handleResetFabrics={() => setSelectedFabrics([])}
               selectedDiscounts={selectedDiscounts}
               handleDiscountChange={handleDiscountChange}
               handleResetDiscounts={() => setSelectedDiscounts([])}
@@ -919,9 +850,21 @@ export default function WomenCollections() {
                     {showingResults}
                   </span>{" "}
                   results for "
+                  {/* <span className="font-medium text-black">
+                    {selectedCategories.length > 0
+                      ? 
+                      selectedCategories.join(", ")
+                      : "Products"}
+                  </span> */}
                   <span className="font-medium text-black">
                     {selectedCategories.length > 0
-                      ? selectedCategories.join(", ")
+                      ? selectedCategories
+                          .map(
+                            (id) =>
+                              subcategories.find((c) => c._id === id)?.name,
+                          )
+                          .filter(Boolean)
+                          .join(", ")
                       : "Products"}
                   </span>
                   "
@@ -961,14 +904,6 @@ export default function WomenCollections() {
                             setSelectedCategories((p) =>
                               p.filter((x) => x !== value),
                             );
-                          // if (type === "size")
-                          //   setSelectedSizes((p) =>
-                          //     p.filter((x) => x !== value),
-                          //   );
-                          // if (type === "color")
-                          //   setSelectedColors((p) =>
-                          //     p.filter((x) => x !== value),
-                          //   );
                           if (type === "brand")
                             setSelectedBrands((p) =>
                               p.filter((x) => x !== value),
@@ -977,10 +912,6 @@ export default function WomenCollections() {
                             setSelectedTypes((p) =>
                               p.filter((x) => x !== value),
                             );
-                          // if (type === "fabric")
-                          //   setSelectedFabrics((p) =>
-                          //     p.filter((x) => x !== value),
-                          //   );
                           if (type === "discount")
                             setSelectedDiscounts((p) =>
                               p.filter((d) => d.id !== value),
@@ -1002,21 +933,6 @@ export default function WomenCollections() {
                   </>
                 ) : null}
               </div>
-
-              
-              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-[30px]">
-                {trendingProducts.length > 0 &&
-                  trendingProducts
-                    .slice(0, 2)
-                    .map((product) => (
-                      <TrandingCard
-                        key={product._id || product.id}
-                        product={product}
-                      />
-                    ))}
-              </div> */}
-
-
 
               <ProductGrid
                 products={sortedProducts}
@@ -1045,6 +961,5 @@ export {
   CollapsibleFilter,
   FilterItemCheckbox,
   SizeFilterItem,
-  // ColorFilterItem,
   PriceRangeFilter,
 };

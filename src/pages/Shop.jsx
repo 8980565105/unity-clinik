@@ -30,12 +30,15 @@ export default function Shop() {
 
   const { items = [] } = useSelector((state) => state.cart);
   const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-  const totalPrice = items.reduce((sum, item) => {
+  const totalPrice = (items || []).reduce((sum, item) => {
+    if (!item) return sum;
+
     const price =
-      Number(item?.variant_id?.offerprice) > 0
-        ? Number(item?.variant_id?.offerprice)
-        : Number(item?.variant_id?.price || 0);
-    return sum + price * (item.quantity || 1);
+      Number(item?.variant_id?.offerprice ?? 0) > 0
+        ? Number(item?.variant_id?.offerprice ?? 0)
+        : Number(item?.variant_id?.price ?? 0);
+
+    return sum + price * Number(item?.quantity ?? 1);
   }, 0);
 
   useEffect(() => {
@@ -90,7 +93,7 @@ export default function Shop() {
             <span className="text-gray-500">|</span>
 
             <span className="text-sm font-semibold">
-              ₹{totalPrice.toLocaleString("en-IN")}
+              ₹{totalPrice ? totalPrice.toLocaleString("en-IN") : "0"}
             </span>
 
             <svg

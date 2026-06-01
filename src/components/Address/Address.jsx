@@ -1,150 +1,282 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchMyAddress,
-  updateMyAddress,
-  updateUserAddressById,
-} from "../../features/address/addressThunk";
-import { clearAddressStatus } from "../../features/address/addressSlice";
 import Button from "../ui/Button";
-import toast, { Toaster } from "react-hot-toast";
+import { Plus } from "lucide-react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
-function Address({ userId = null }) {
-  const dispatch = useDispatch();
-  const { address, loading, error, successMessage } = useSelector(
-    (state) => state.address,
-  );
+function Address() {
+  const [showForm, setShowForm] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [addresses, setAddresses] = useState([]);
 
   const [formData, setFormData] = useState({
+    fullName: "",
+    phone: "",
+    house: "",
     street: "",
     city: "",
     state: "",
-    country: "",
+    country: "India",
     zip_code: "",
   });
 
-  useEffect(() => {
-    dispatch(fetchMyAddress());
-  }, [dispatch, userId]);
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get("http://localhost:5000/api/users/me", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setAddresses(res.data.data.user.addresses || []);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   useEffect(() => {
-    if (address) {
-      setFormData({
-        street: address.street || "",
-        city: address.city || "",
-        state: address.state || "",
-        country: address.country || "",
-        zip_code: address.zip_code || "",
-      });
-    }
-  }, [address]);
-  useEffect(() => {
-    if (successMessage) {
-      toast.success(successMessage);
-      dispatch(clearAddressStatus());
-    }
-    if (error) {
-      toast.error(error);
-      dispatch(clearAddressStatus());
-    }
-  }, [successMessage, error, dispatch]);
+    fetchProfile();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const resetForm = () => {
+    setFormData({
+      fullName: "",
+      phone: "",
+      house: "",
+      street: "",
+      city: "",
+      state: "",
+      country: "India",
+      zip_code: "",
+    });
 
-    if (userId) {
-      dispatch(updateUserAddressById({ id: userId, addressData: formData }));
-    } else {
-      dispatch(updateMyAddress(formData));
+    setEditIndex(null);
+  };
+
+  const saveAddressesToDB = async (updatedAddresses) => {
+    try {
+      setLoading(true);
+
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        "http://localhost:5000/api/users/me",
+        {
+          addresses: updatedAddresses,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      toast.success("Address saved successfully");
+
+      fetchProfile();
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to save address");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    let updatedAddresses = [];
+
+    if (editIndex !== null) {
+      updatedAddresses = [...addresses];
+
+      updatedAddresses[editIndex] = formData;
+    } else {
+      updatedAddresses = [...addresses, formData];
+    }
+
+    setAddresses(updatedAddresses);
+
+    await saveAddressesToDB(updatedAddresses);
+
+    resetForm();
+    setShowForm(false);
+  };
+
+  const handleEdit = (index) => {
+    setFormData(addresses[index]);
+    setEditIndex(index);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (index) => {
+    const updated = addresses.filter((_, i) => i !== index);
+
+    setAddresses(updated);
+
+    await saveAddressesToDB(updated);
+  };
+
   return (
-    <div>
-      <Toaster />
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold">Saved Addresses</h2>
 
-      <div className="bg-white shadow-md rounded-lg p-6 border border-gray-100">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Street Address
-              </label>
-              <input
-                name="street"
-                value={formData.street}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none transition"
-                placeholder="123 Street Name"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                City
-              </label>
-              <input
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
-                placeholder="Surat"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                State
-              </label>
-              <input
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
-                placeholder="Gujarat"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Country
-              </label>
-              <input
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
-                placeholder="India"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Zip Code
-              </label>
-              <input
-                type="text"
-                name="zip_code"
-                value={formData.zip_code}
-                onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:primary outline-none"
-                placeholder="395001"
-              />
-            </div>
-          </div>
-
-          <div className="pt-4">
-            <Button type="submit" variant="common" disabled={loading}>
-              {loading ? "Processing..." : "Save Address"}
-            </Button>
-          </div>
-        </form>
+        <button
+          onClick={() => {
+            resetForm();
+            setShowForm(true);
+          }}
+          className="flex items-center gap-2 text-primary font-medium"
+        >
+          <Plus size={18} />
+          Add New
+        </button>
       </div>
+
+      <div className="grid md:grid-cols-2 gap-5">
+        {addresses.map((item, index) => (
+          <div
+            key={index}
+            className="border border-blue-200 rounded-xl p-5 bg-white"
+          >
+            <div className="space-y-2">
+              <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm font-semibold">
+                {item.fullName}
+              </span>
+
+              <p>
+                House No:
+                {item.house}
+              </p>
+
+              <p>{item.street}</p>
+
+              <p>
+                {item.city},{item.state} -{item.zip_code}
+              </p>
+
+              <p>{item.phone}</p>
+            </div>
+
+            <div className="border-t mt-4 pt-3 flex gap-4">
+              <button
+                onClick={() => handleEdit(index)}
+                className="text-blue-600 font-medium"
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => handleDelete(index)}
+                className="text-red-500 font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-3xl">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-semibold">
+                {editIndex !== null ? "Edit Address" : "Add Address"}
+              </h2>
+
+              <button onClick={() => setShowForm(false)}>✕</button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="grid md:grid-cols-2 gap-4">
+                <input
+                  name="fullName"
+                  placeholder="Full Name"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className="border p-3 rounded-lg"
+                />
+
+                <input
+                  name="phone"
+                  placeholder="Phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="border p-3 rounded-lg"
+                />
+
+                <input
+                  name="house"
+                  placeholder="House No"
+                  value={formData.house}
+                  onChange={handleChange}
+                  className="border p-3 rounded-lg"
+                />
+
+                <input
+                  name="street"
+                  placeholder="Street"
+                  value={formData.street}
+                  onChange={handleChange}
+                  className="border p-3 rounded-lg"
+                />
+
+                <input
+                  name="city"
+                  placeholder="City"
+                  value={formData.city}
+                  onChange={handleChange}
+                  className="border p-3 rounded-lg"
+                />
+
+                <input
+                  name="state"
+                  placeholder="State"
+                  value={formData.state}
+                  onChange={handleChange}
+                  className="border p-3 rounded-lg"
+                />
+
+                <input
+                  name="zip_code"
+                  placeholder="Zip Code"
+                  value={formData.zip_code}
+                  onChange={handleChange}
+                  className="border p-3 rounded-lg"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button type="button" onClick={() => setShowForm(false)}>
+                  Cancel
+                </Button>
+
+                <Button type="submit" disabled={loading}>
+                  {loading
+                    ? "Saving..."
+                    : editIndex !== null
+                      ? "Update"
+                      : "Save Address"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

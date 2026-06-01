@@ -1,261 +1,534 @@
-import { ArrowLeft, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  MapPin,
+  Plus,
+  X,
+  Phone,
+  ShoppingBag,
+  Tag,
+  Star,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getImageUrl } from "../utils/helper";
+import axios from "axios";
+import toast from "react-hot-toast";
+import Button from "../ui/Button";
 
-export default function CheckoutForm({ formData, setFormData }) {
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [selectedState, setSelectedState] = useState("");
-  const [cities, setCities] = useState([]);
+function ProductPopup({ item, onClose }) {
+  const navigate = useNavigate();
+  if (!item) return null;
 
-  useEffect(() => {
-    async function fetchCountries() {
-      try {
-        const res = await fetch(
-          "https://countriesnow.space/api/v0.1/countries/positions",
-        );
-        const json = await res.json();
-        if (json?.data) setCountries(json.data.map((c) => c.name));
-      } catch (err) {
-        console.error("Error loading countries:", err);
-      }
-    }
-    fetchCountries();
-  }, []);
+  const originalPrice = Number(
+    item?.original_price || item?.variant_id?.price || 0,
+  );
+  const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
+  const discountedPrice =
+    offerPrice > 0 && offerPrice < originalPrice ? offerPrice : originalPrice;
+  const discount =
+    originalPrice > discountedPrice
+      ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
+      : item?.product_id?.discount_id?.value || 0;
 
-  useEffect(() => {
-    async function fetchStates() {
-      if (!formData.country) {
-        setStates([]);
+  const imgSrc =
+    item.variant_id?.images?.length > 0
+      ? getImageUrl(item.variant_id.images[0])
+      : getImageUrl(item.product_id?.images?.[0]);
+
+  const productId = item.product_id?._id;
+  const categories = item.product_id?.categories || [];
+
+  const handleViewFull = () => {
+    onClose();
+    navigate(`/products/${productId}`);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-[420px] shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          className="relative bg-gray-50 flex items-center justify-center px-8 pt-8 pb-6"
+          style={{ position: "relative" }}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            <X size={16} />
+          </button>
+          <img
+            src={imgSrc}
+            alt={item.product_id?.name}
+            className="w-[200px] h-[200px] object-contain hover:scale-110 transition-transform duration-500"
+          />
+        </div>
+
+        <div className="px-6 pb-6 pt-4">
+          {categories.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {categories.map((cat, i) => (
+                <span
+                  key={i}
+                  className="text-[11px] font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-3 py-1 rounded-full uppercase tracking-wide"
+                >
+                  {cat?.name || cat}
+                </span>
+              ))}
+            </div>
+          )}
+
+          <h3 className="text-[18px] font-bold text-gray-900 leading-snug mb-3">
+            {item.product_id?.name}
+          </h3>
+
+          <div className="flex items-center gap-3 mb-5">
+            <span className="text-[22px] font-bold text-gray-900">
+              ₹{Math.round(discountedPrice).toLocaleString("en-IN")}
+            </span>
+            {originalPrice > discountedPrice && (
+              <span className="text-[14px] text-gray-400 line-through">
+                ₹{Math.round(originalPrice).toLocaleString("en-IN")}
+              </span>
+            )}
+            {discount > 0 && (
+              <span className="flex items-center gap-1 text-[12px] font-bold text-green-600 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full">
+                <Star size={10} fill="currentColor" />
+                SAVE {discount}%
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={handleViewFull}
+            className="w-full bg-primary text-white font-semibold text-[14px] py-3.5 rounded-xl transition-colors"
+          >
+            View Full Details
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({
+    fullName: "",
+    phone: "",
+    house: "",
+    street: "",
+    city: "",
+    state: "",
+    country: "India",
+    zip_code: "",
+  });
+
+  const handleChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const required = [
+      "fullName",
+      "phone",
+      "house",
+      "street",
+      "city",
+      "state",
+      "zip_code",
+    ];
+    for (const key of required) {
+      if (!form[key]?.trim()) {
+        toast.error(`Please fill: ${key}`);
         return;
       }
-      try {
-        const response = await fetch(
-          "https://countriesnow.space/api/v0.1/countries/states",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ country: formData.country }),
-          },
-        );
-
-        const data = await response.json();
-        setStates(data.data.states);
-      } catch (error) {
-        console.error("Error loading states:", error);
-      }
     }
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      const updated = [...existingAddresses, form];
+      await axios.put(
+        "http://localhost:5000/api/users/me",
+        { addresses: updated },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      toast.success("Address saved!");
+      onSaved(updated, updated.length - 1);
+      onClose();
+    } catch {
+      toast.error("Failed to save address");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStates();
-  }, [formData.country]);
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[18px] font-semibold text-gray-900">
+            Add New Address
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700 transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { name: "fullName", placeholder: "Full Name *" },
+              { name: "phone", placeholder: "Phone *" },
+              { name: "house", placeholder: "House No / Flat *" },
+              { name: "street", placeholder: "Street / Area *" },
+              { name: "city", placeholder: "City *" },
+              { name: "state", placeholder: "State *" },
+              { name: "zip_code", placeholder: "Zip Code *" },
+              { name: "country", placeholder: "Country" },
+            ].map(({ name, placeholder }) => (
+              <input
+                key={name}
+                name={name}
+                placeholder={placeholder}
+                value={form[name]}
+                onChange={handleChange}
+                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+              />
+            ))}
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold disabled:opacity-60 transition-colors"
+            >
+              {loading ? "Saving..." : "Save Address"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function SelectedAddressCard({ address }) {
+  if (!address) return null;
+  return (
+    <div className="border-2 border-primary rounded-2xl p-4 mt-3 bg-white shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <span className="bg-primary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide">
+            {address.city || address.fullName}
+          </span>
+          <span className="font-semibold text-sm text-gray-800 line-clamp-1">
+            {address.street}
+          </span>
+        </div>
+        <span className="text-[11px] font-bold text-primary bg-blue-50 border border-primary px-2.5 py-1 rounded-lg tracking-wide flex-shrink-0">
+          SELECTED
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">
+            Delivery Address
+          </p>
+          <p className="text-sm text-gray-700 leading-relaxed">
+            {address.house}, {address.street}
+          </p>
+          <p className="text-sm text-gray-700">
+            {address.city}, {address.state} - {address.zip_code}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">
+            Contact Details
+          </p>
+          <div className="flex items-center gap-2 text-sm text-gray-700">
+            <div className="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Phone size={13} className="text-blue-600" />
+            </div>
+            {address.phone}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReviewOrder({ items }) {
+  const [popupItem, setPopupItem] = useState(null);
+
+  if (!items || items.length === 0) return null;
+
+  const getDiscountedPrice = (item) => {
+    const originalPrice = Number(
+      item?.original_price || item?.variant_id?.price || 0,
+    );
+    const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
+    if (offerPrice > 0 && offerPrice < originalPrice)
+      return { originalPrice, discountedPrice: offerPrice };
+    const discount = item?.product_id?.discount_id?.value || 0;
+    const discountedPrice =
+      discount > 0
+        ? originalPrice - (originalPrice * discount) / 100
+        : originalPrice;
+    return { originalPrice, discountedPrice };
+  };
+
+  return (
+    <>
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <ShoppingBag size={16} className="text-gray-500" />
+            <span className="text-[15px] font-semibold text-gray-900">
+              Review your order
+            </span>
+          </div>
+          <Link
+            to="/shop"
+            className="flex items-center gap-1.5 text-primary text-sm font-medium hover:underline"
+          >
+            <ArrowLeft size={14} />
+            Continue Shopping
+          </Link>
+        </div>
+
+        <div className="divide-y divide-gray-200">
+          {items.map((item, index) => {
+            const { originalPrice, discountedPrice } = getDiscountedPrice(item);
+            const qty = item.quantity || 1;
+            const imgSrc =
+              item.variant_id?.images?.length > 0
+                ? getImageUrl(item.variant_id.images[0])
+                : getImageUrl(item.product_id?.images?.[0]);
+
+            return (
+              <div
+                key={item._id || index}
+                className="flex gap-4 px-5 py-4 items-start"
+              >
+                <button
+                  onClick={() => setPopupItem(item)}
+                  className="flex-shrink-0 focus:outline-none"
+                >
+                  <div className="w-[80px] h-[80px] overflow-hidden bg-gray-50 hover:scale-110 transition-transform duration-500">
+                    <img
+                      src={imgSrc}
+                      alt={item.product_id?.name}
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </div>
+                </button>
+
+                <div className="flex-1 min-w-0">
+                  <button
+                    onClick={() => setPopupItem(item)}
+                    className="text-left focus:outline-none"
+                  >
+                    <p className="text-[18px] font-semibold text-gray-800 leading-tight mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                      {item.product_id?.name}
+                    </p>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[15px] font-bold text-gray-900">
+                      ₹{Math.round(discountedPrice).toLocaleString("en-IN")}
+                    </span>
+                    {originalPrice > discountedPrice && (
+                      <span className="text-[12px] text-gray-400 line-through">
+                        ₹{Math.round(originalPrice).toLocaleString("en-IN")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex-shrink-0 text-right">
+                  <span className="inline-block bg-gray-100 text-gray-700 text-[12px] font-semibold px-3 py-1 rounded-lg">
+                    QTY: {qty}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {popupItem && (
+        <ProductPopup item={popupItem} onClose={() => setPopupItem(null)} />
+      )}
+    </>
+  );
+}
+
+export default function CheckoutForm({ formData, setFormData }) {
+  const { items = [] } = useSelector((state) => state.cart);
+
+  const [addresses, setAddresses] = useState([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [fetchingAddresses, setFetchingAddresses] = useState(true);
 
   useEffect(() => {
-    if (!selectedState) {
-      setCities([]);
-      setFormData({ ...formData, city: "" });
-      return;
-    }
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("http://localhost:5000/api/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const savedAddresses = res.data?.data?.user?.addresses || [];
+        setAddresses(savedAddresses);
+        if (savedAddresses.length > 0) {
+          syncFormData(savedAddresses, 0);
+        }
+      } catch (err) {
+        console.error("Failed to load addresses:", err);
+      } finally {
+        setFetchingAddresses(false);
+      }
+    };
+    fetchProfile();
+  }, []);
 
-    async function fetchCities() {
-      const res = await fetch(
-        "https://countriesnow.space/api/v0.1/countries/state/cities",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            country: formData.country,
-            state: selectedState,
-          }),
-        },
-      );
-      const json = await res.json();
-      if (json?.data) setCities(json.data);
-      else setCities([]);
-    }
+  const syncFormData = (addrs, index) => {
+    const a = addrs[index];
+    if (!a) return;
+    setFormData((prev) => ({
+      ...prev,
+      firstName: a.fullName?.split(" ")?.[0] || a.fullName || "",
+      lastName: a.fullName?.split(" ")?.slice(1)?.join(" ") || "",
+      address: `${a.house}, ${a.street}`,
+      country: a.country || "India",
+      state: a.state || "",
+      city: a.city || "",
+      pincode: a.zip_code || "",
+      phone: a.phone || "",
+    }));
+  };
 
-    fetchCities();
-  }, [selectedState]);
+  const handleSelectChange = (e) => {
+    const idx = Number(e.target.value);
+    setSelectedIndex(idx);
+    syncFormData(addresses, idx);
+  };
+
+  const handleAddressSaved = (updatedAddresses, newIndex) => {
+    setAddresses(updatedAddresses);
+    setSelectedIndex(newIndex);
+    syncFormData(updatedAddresses, newIndex);
+  };
+
+  const selectedAddress = addresses[selectedIndex] || null;
 
   return (
     <div className="flex-1">
-      <div className="mb-[30px]">
-        <h2 className="text-20px ">Contact Information</h2>
-        <span className="theme-border-block w-[59px] h-[2px] rounded-[10px] block mb-[12px]"></span>
-        <p className="text-p text-light  mb-[30px]">
-          We’ll use this email to send you details and updates about your order.
-        </p>
-        <input
-          type="email"
-          placeholder="Email Address"
-          className="input-common"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        />
-      </div>
+      <ReviewOrder items={items} />
 
-      <div className="mb-[30px]">
-        <h2 className="text-20px">Billing Details</h2>
-        <span className="theme-border-block w-[59px] h-[2px] rounded-[10px] block mb-[12px]"></span>
-        <p className="text-p text-light  mb-[30px]">
-          Enter the address where you want your order delivered.
-        </p>
-        <div className="space-y-[10px] md:space-y-[28px] mb-[30px] ">
-          <select
-            className={`input-common w-full appearance-none ${!formData.country ? "text-[#BCBCBC]" : "text-black"}`}
-            value={formData.country || ""}
-            onChange={(e) => {
-              setFormData({
-                ...formData,
-                country: e.target.value,
-                state: "",
-                city: "",
-              });
-              setSelectedState("");
-              setCities([]);
-            }}
-          >
-            <option value="" disabled className="text-[#BCBCBC]">
-              Select Country
-            </option>
-            {countries.map((countryName, idx) => (
-              <option key={idx} value={countryName} className="text-black">
-                {countryName}
-              </option>
-            ))}
-          </select>
-
-          <div className="bloxk sm:flex  gap-[10px] md:gap-[27px]">
-            <input
-              type="text"
-              placeholder="First Name"
-              className="input-common mb-[10px] sm:mb-0"
-              value={formData.firstName}
-              onChange={(e) =>
-                setFormData({ ...formData, firstName: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              className="input-common"
-              value={formData.lastName}
-              onChange={(e) =>
-                setFormData({ ...formData, lastName: e.target.value })
-              }
-            />
-          </div>
-          <input
-            type="text"
-            placeholder="Address"
-            className="input-common"
-            value={formData.address}
-            onChange={(e) =>
-              setFormData({ ...formData, address: e.target.value })
-            }
-          />
-        </div>
-        <div className="flex items-center mb-[30px] gap-[12px]">
-          <Plus size={16} />
-          <p className="text-p text-light">Add State, City And etc...</p>
-        </div>
-        <div className="space-y-[10px] md:space-y-[28px] mb-[30px]">
-          <div className="block sm:flex gap-[10px] md:gap-[27px]">
-            <select
-              className={`input-common mb-[10px] w-full appearance-none sm:mb-0 ${!formData.state ? "text-[#BCBCBC]" : "text-black"}`}
-              value={formData.state || ""}
-              onChange={(e) => {
-                setSelectedState(e.target.value);
-                setFormData({ ...formData, state: e.target.value });
-              }}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center">
+                <MapPin size={15} className="text-blue-600" />
+              </div>
+              <div>
+                <h2 className="text-[15px] font-semibold text-gray-900">
+                  Delivery Address
+                </h2>
+                <p className="text-[12px] text-gray-400">
+                  Select where to send your order
+                </p>
+              </div>
+            </div>
+            <Button
+            variant="outline"
+              onClick={() => setShowPopup(true)}
+              className="flex items-center gap-1.5  font-semibold text-[13px] hover:underline"
             >
-              <option value="" disabled className="text-[#BCBCBC]">
-                Select State
-              </option>
-              {states.map((state, index) => (
-                <option key={index} value={state.name} className="text-black">
-                  {state.name}
-                </option>
-              ))}
-            </select>
-            <select
-              className={`input-common w-full appearance-none ${!formData.city ? "text-[#BCBCBC]" : "text-black"}`}
-              value={formData.city || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, city: e.target.value })
-              }
-              disabled={!selectedState || cities.length === 0}
-            >
-              <option value="" className="text-[#BCBCBC]">
-                Select City
-              </option>
-              {cities.map((cityName, idx) => (
-                <option key={idx} value={cityName} className="text-black">
-                  {cityName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="bloxk sm:flex gap-[10px] md:gap-[27px]">
-            <input
-              type="text"
-              placeholder="Pin Code"
-              className="input-common mb-[10px] sm:mb-0"
-              value={formData.pincode}
-              onChange={(e) =>
-                setFormData({ ...formData, pincode: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Phone (Optional)"
-              className="input-common"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-            />
+              <Plus size={15} />
+              Add New
+            </Button>
           </div>
         </div>
-        <div className="flex items-center">
-          <input type="checkbox" className="mr-2 " />
-          <label className="text-p text-light">
-            Use same address for billing
-          </label>
+
+        <div className="px-5 py-4">
+          {fetchingAddresses ? (
+            <div className="flex items-center gap-3 py-4">
+              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-gray-400">Loading addresses...</p>
+            </div>
+          ) : addresses.length === 0 ? (
+            <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center">
+              <MapPin size={32} className="text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm font-medium mb-1">
+                No saved addresses
+              </p>
+              <p className="text-gray-400 text-xs mb-4">
+                Add your delivery address to continue
+              </p>
+              <button
+                onClick={() => setShowPopup(true)}
+                className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+              >
+                <Plus size={15} />
+                Add New Address
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="relative">
+                <select
+                  value={selectedIndex}
+                  onChange={handleSelectChange}
+                  className="w-full border-[1.5px] border-gray-200 bg-white text-gray-800 rounded-xl px-4 py-3 text-sm font-medium appearance-none focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary cursor-pointer transition-all"
+                >
+                  {addresses.map((addr, idx) => (
+                    <option key={idx} value={idx}>
+                      {addr.city?.toUpperCase() || addr.fullName?.toUpperCase()}{" "}
+                      – Saved Address
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                  ▾
+                </span>
+              </div>
+              <SelectedAddressCard address={selectedAddress} />
+            </>
+          )}
         </div>
       </div>
-
-      <div className="mb-[30px]">
-        <h2 className="text-20px mb-[10px]">Shipping Options</h2>
-        <div className="input-common flex justify-between">
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              name="shipping"
-              checked
-              readOnly
-              className="accent-[#F43297] w-5 h-5 rounded-full cursor-pointer"
-            />
-            <span className="text-[#BCBCBC]">Free Shipping</span>
-          </label>
-          <span className="text-p sec-text-color">FREE</span>
-        </div>
-      </div>
-
-      <div className="flex flex-col pb-[30px] border-b light-border text-p text-light">
-        <label className="flex items-center pb-[10px]">
-          <input type="checkbox" className="mr-[12px]" />
-          <span>Add a note to order</span>
-        </label>
-        <label className="flex items-center">
-          <input type="checkbox" className="mr-[12px]" />
-          <span>Create an account?</span>
-        </label>
-      </div>
-
-      <Link to="/cart" className="flex gap-[12px] items-center mt-[30px]">
-        <ArrowLeft size={16} />
+      <Link
+        to="/cart"
+        className="flex gap-2 items-center text-sm text-gray-500 hover:text-gray-700 transition-colors mt-2 mb-8"
+      >
+        <ArrowLeft size={15} />
         Back to cart
       </Link>
+
+      {showPopup && (
+        <AddAddressPopup
+          onClose={() => setShowPopup(false)}
+          onSaved={handleAddressSaved}
+          existingAddresses={addresses}
+        />
+      )}
     </div>
   );
 }

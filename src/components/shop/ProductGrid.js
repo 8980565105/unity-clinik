@@ -22,8 +22,7 @@ const ProductGrid = ({ products = [], loading, setShowLoginPopup }) => {
           ))
         ) : (
           <>
-          {/* <p>No products found.</p> */}
-          {/* <Loding/> */}
+         
           </>
         )}
       </div>

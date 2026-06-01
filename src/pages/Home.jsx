@@ -39,6 +39,7 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchPageBySlug("Home"));
     dispatch(fetchProducts());
+    //  dispatch(fetchSystemSettings());
   }, [dispatch]);
 
   return (

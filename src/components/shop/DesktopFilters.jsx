@@ -7,7 +7,6 @@ import {
 import { fetchCategories } from "../../features/categories/categoriesThunk";
 import { fetchsubCategories } from "../../features/subcategories/subcategoriesThunk";
 import { useDispatch, useSelector } from "react-redux";
-// import { fetchSizes } from "../../features/sizes/sizesThunk";
 import { fetchBrands } from "../../features/brands/brandsThunk";
 import { fetchtypes } from "../../features/types/typeThunk";
 import { fetchDiscounts } from "../../features/discounts/discountsThunk";
@@ -16,12 +15,6 @@ const DesktopFilters = ({
   selectedCategories = [],
   handleCategoryChange,
   handleResetCategories,
-  // selectedSizes = [],
-  // handleSizeChange,
-  // handleResetSizes,
-  // selectedColors = [],
-  // handleColorChange,
-  // handleResetColors,
   selectedBrands = [],
   handleBrandChange,
   handleResetBrands,
@@ -53,9 +46,6 @@ const DesktopFilters = ({
     loading,
     error,
   } = useSelector((state) => state.products);
-  // const { sizes = [], loading: sizeLoading } = useSelector(
-  //   (state) => state.sizes,
-  // );
   const { brands = [], loading: brandLoading } = useSelector(
     (state) => state.brands,
   );
@@ -69,23 +59,29 @@ const DesktopFilters = ({
     (state) => state.productLabels,
   );
   useEffect(() => {
-    // dispatch(fetchCategories({ status: "active" }));
-    // dispatch(fetchsubCategories({ status: "active" }));
-    // dispatch(fetchSizes({ status: "active" }));
     dispatch(fetchBrands({ status: "active" }));
     dispatch(fetchtypes({ status: "active" }));
     dispatch(fetchDiscounts({ status: "active" }));
     dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
-  const subCategoryCountsById = Array.isArray(products)
-    ? products.reduce((acc, product) => {
-        const catId = product.category_id;
+
+  const subCategoryCountsById = {};
+
+  products?.forEach((product) => {
+    if (Array.isArray(product.category_id)) {
+      product.category_id.forEach((cat) => {
+        const catId = typeof cat === "object" ? cat._id : cat;
+
         if (catId) {
-          acc[catId] = (acc[catId] || 0) + 1;
+          subCategoryCountsById[catId] =
+            (subCategoryCountsById[catId] || 0) + 1;
         }
-        return acc;
-      }, {})
-    : {};
+      });
+    } else if (product.category_id) {
+      subCategoryCountsById[product.category_id] =
+        (subCategoryCountsById[product.category_id] || 0) + 1;
+    }
+  });
 
   const brandCounts = Array.isArray(products)
     ? products.reduce((acc, product) => {
@@ -147,8 +143,8 @@ const DesktopFilters = ({
                   key={cat._id}
                   name={cat.name}
                   count={subCategoryCountsById[cat._id] || 0}
-                  isChecked={selectedCategories.includes(cat.name)}
-                  onChange={handleCategoryChange}
+                  isChecked={selectedCategories.includes(cat._id)}
+                  onChange={() => handleCategoryChange(cat._id)}
                 />
               ))
           ) : (
@@ -168,36 +164,11 @@ const DesktopFilters = ({
         onToggle={() => toggleFilter("Price")}
       />
 
-      {/* <CollapsibleFilter
-        title="Size"
-        isOpen={openFilter === "Size"}
-        onToggle={() => toggleFilter("Size")}
-        isSelected={selectedSizes.length > 0}
-        onReset={handleResetSizes}
-        showButtons={true}
-      >
-        <div className="grid grid-cols-2 gap-2 px-3 py-3">
-          {sizeLoading ? (
-            <p className="text-sm text-gray-500">Loading sizes...</p>
-          ) : sizes.length > 0 ? (
-            sizes.map((size) => (
-              <FilterItemCheckbox
-                key={size._id}
-                name={size.name}
-                isChecked={selectedSizes.includes(size.name)}
-                onChange={handleSizeChange}
-              />
-            ))
-          ) : (
-            <p className="text-sm text-gray-500">No sizes found.</p>
-          )}
-        </div>
-      </CollapsibleFilter> */}
-
       <CollapsibleFilter
         title="Brands"
         isOpen={openFilter === "Brands"}
         onToggle={() => toggleFilter("Brands")}
+        z
         isSelected={selectedBrands.length > 0}
         onReset={handleResetBrands}
         showButtons={true}
@@ -247,7 +218,6 @@ const DesktopFilters = ({
           )}
         </div>
       </CollapsibleFilter>
-
 
       <CollapsibleFilter
         title="Discounts"
