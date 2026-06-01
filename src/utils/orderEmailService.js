@@ -403,13 +403,10 @@ const sendOrderRTO = async (
   );
 };
 
-// ─── Admin Email helper ───────────────────────────────────────────────────────
 const ADMIN = () => {
-  console.log("[Admin Email Debug] ADMIN_EMAIL =", process.env.ADMIN_EMAIL);
   return process.env.ADMIN_EMAIL || null;
 };
 
-// ─── Admin base template ─────────────────────────────────────────────────────
 const adminBase = (body, preview = "") => `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -703,7 +700,6 @@ const sendAdminOrderRTO = async (
   );
 };
 
-// ─── Exports ──────────────────────────────────────────────────────────────────
 module.exports = {
   // User emails
   sendOrderPlaced,

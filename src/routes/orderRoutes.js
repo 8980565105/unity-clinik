@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { getOrderTracking } = require("../controllers/orderController");
 const {
   getOrders,
   getPublicUserOrders,
@@ -29,7 +30,7 @@ const {
 
 router.get("/public", authMiddleware, getPublicUserOrders);
 router.use(authMiddleware);
-router.get("/", getOrders); 
+router.get("/", getOrders);
 router.get("/:id", getOrderById);
 router.post("/", createOrder);
 router.put("/:id", authorizeMinRole("store_user"), updateOrder);
@@ -54,5 +55,5 @@ router.get(
   generatePackingSlip,
 );
 router.get("/:id/invoice", authorizeMinRole("store_owner"), generateInvoice);
-
+router.get("/:id/tracking", authMiddleware, getOrderTracking);
 module.exports = router;

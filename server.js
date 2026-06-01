@@ -35,7 +35,7 @@ const emailsRoutes = require("./src/routes/emailRoutes");
 const sliderRoutes = require("./src/routes/sliderRoutes");
 // const systemsettingRoutes = require("./src/routes/systemsettingRoutes");
 const systemsettingRoutes = require("./src/routes/systemsettingRoutes");
-
+const webhookRoutes = require("./src/routes/webhookRoutes");
 const helmet = require("helmet");
 
 const mongoose = require("mongoose");
@@ -142,6 +142,7 @@ app.use("/api", limiter);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/settings", settingRoutes);
+app.use("/api/webhooks", webhookRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/stores", storeRoutes);
 app.use("/api/pages", pageRoutes);

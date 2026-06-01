@@ -7,9 +7,6 @@ const path = require("path");
 
 const deleteOldProfilePicture = (filename) => {
   if (!filename || filename.startsWith("http")) return;
-
-  // const filePath = path.join(__dirname, "../uploads", filename);
-
   const safeFilename = path.basename(filename);
   const filePath = path.join(__dirname, "../uploads", safeFilename);
 
@@ -19,12 +16,6 @@ const deleteOldProfilePicture = (filename) => {
     });
   }
 
-  // if (fs.existsSync(filePath)) {
-  //   fs.unlink(filePath, (err) => {
-  //     if (err)
-  //       console.error("[Upload] Failed to delete old image:", err.message);
-  //   });
-  // }
 };
 
 const getUsers = async (req, res) => {
@@ -130,7 +121,8 @@ const createUser = async (req, res) => {
       password,
       role = "store_user",
       mobile_number,
-      address,
+      // address,
+      addresses,
       gender,
       date_of_birth,
       domain,
@@ -141,19 +133,8 @@ const createUser = async (req, res) => {
     let resolvedStoreId = bodyStoreId || null;
     let storeDomain = domain || "";
 
-    // if (!resolvedStoreId && domain) {
-    //   const store = await Store.findOne({
-    //     domain: domain.toLowerCase().trim(),
-
-    //   });
-    //   if (store) {
-    //     resolvedStoreId = store._id;
-    //     storeDomain = store.domain;
-    //   }
-    // }
 
     if (!resolvedStoreId && domain) {
-      // સુરક્ષા માટે: પહેલા ખાતરી કરો કે domain એક સ્ટ્રિંગ જ છે
       const safeDomain =
         typeof domain === "string"
           ? domain.toLowerCase().trim()
@@ -202,7 +183,8 @@ const createUser = async (req, res) => {
       password: password || "Temp1234!",
       role,
       mobile_number,
-      address,
+      // address,
+      addresses,
       gender,
       date_of_birth,
       profile_picture,
@@ -245,7 +227,8 @@ const updateUser = async (req, res) => {
       password,
       role,
       mobile_number,
-      address,
+      // address,
+      addresses,
       gender,
       date_of_birth,
     } = req.body;
@@ -270,7 +253,8 @@ const updateUser = async (req, res) => {
       name,
       email,
       mobile_number,
-      address,
+      // address,
+      addresses,
       gender,
       date_of_birth,
     };
@@ -417,7 +401,8 @@ const updateOwnProfile = async (req, res) => {
       name,
       email,
       mobile_number,
-      address,
+      // address,
+      addresses,
       gender,
       date_of_birth,
       password,
@@ -427,7 +412,8 @@ const updateOwnProfile = async (req, res) => {
       name,
       email,
       mobile_number,
-      address,
+      // address,
+      addresses,
       gender,
       date_of_birth,
     };

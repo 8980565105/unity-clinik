@@ -9,6 +9,20 @@ const orderSchema = new mongoose.Schema(
     },
     total_price: { type: Number, required: true },
 
+    shipping_charge: {
+      type: Number,
+      default: 0,
+    },
+
+    coupon_discount: {
+      type: Number,
+      default: 0,
+    },
+
+    subtotal: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: [
@@ -42,11 +56,6 @@ const orderSchema = new mongoose.Schema(
       ref: "Coupon",
       required: false,
     },
-    discount_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Discount",
-      default: null,
-    },
 
     order_number: { type: String, unique: true },
 
@@ -74,7 +83,15 @@ const orderSchema = new mongoose.Schema(
     courier: {
       partner: {
         type: String,
-        enum: ["Delhivery", "Blue Dart", "DTDC", "Shiprocket", "Custom", ""],
+        enum: [
+          "ithink",
+          "Delhivery",
+          "Blue Dart",
+          "DTDC",
+          "Shiprocket",
+          "Custom",
+          "",
+        ],
         default: "",
       },
       name: { type: String, default: "" },
@@ -83,8 +100,9 @@ const orderSchema = new mongoose.Schema(
       pickup_date: { type: Date },
       dispatched_at: { type: Date },
       delivered_at: { type: Date },
+      last_status: { type: String, default: "" },
+      last_updated: { type: Date },
     },
-
     status_history: [
       {
         status: String,
