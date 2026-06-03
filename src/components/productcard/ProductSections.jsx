@@ -5,6 +5,10 @@ import Heading from "../ui/Heading";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { Plus, Minus, ChevronUp, ChevronDown } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, Autoplay } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 function FaqItem({ faq }) {
   const [open, setOpen] = useState(false);
@@ -87,85 +91,85 @@ const Faq2Item = ({ item, isOpen, onToggle }) => {
   );
 };
 
-function HowCard({ item }) {
-  const [open, setOpen] = useState(false);
+function HowCard({ item, onLearnMore }) {
   return (
-    <>
+    <div
+      className="
+      how-card
+      relative
+      flex-shrink-0
+      w-[485px]
+      min-h-[160px]
+      rounded-[32px]
+      bg-[#005B99]
+      overflow-hidden
+      p-4
+      flex
+      flex-col
+      justify-between
+    "
+    >
+      <div className="absolute -top-8 -right-8 w-[180px] h-[180px] rounded-full bg-[#1b6daa]" />
+
       <div
-        className="how-card relative flex-shrink-0 rounded-[2rem] p-5 flex flex-col justify-between overflow-hidden snap-start"
-        style={{
-          background: "var(--primary-color, #1a5fb4)",
-          width: "clamp(260px, 75vw, 460px)",
-          minHeight: "180px",
-        }}
-      >
-        <div className="absolute -top-[30px] -left-[30px] w-[160px] h-[160px] rounded-full bg-white/10" />
-        <div className="absolute top-[10px] left-[10px] w-[100px] h-[100px] rounded-full bg-white/5" />
+        className="
+        absolute
+        top-0
+        right-0
+        w-[70px]
+        h-[70px]
+        bg-white
+        rounded-bl-[55px]
+        z-10
+      "
+      />
 
-        {item.image && (
-          <img
-            src={
-              item.image.startsWith("http")
-                ? item.image
-                : getImageUrl(item.image)
-            }
-            alt={item.name}
-            className="absolute -top-4 -right-1 w-20 h-20 object-contain"
-          />
-        )}
+      {/* Icon */}
+      {item.image && (
+        <img
+          src={getImageUrl(item.image)}
+          alt={item.name}
+          className="
+          absolute
+          top-[-8px]
+          right-[0px]
+          w-14
+          h-14
+          object-contain
+          z-20
+        "
+        />
+      )}
 
-        <div className="relative z-10 flex flex-col flex-1 pr-16">
-          <h3 className="text-base font-extrabold text-white mb-2">
-            {item.name}
-          </h3>
+      <div className="relative z-20 flex-1 flex flex-col">
+        <h3 className="text-white text-[22px] font-extrabold mb-2 pr-12">
+          {item.name}
+        </h3>
 
-          <p className="text-xs text-blue-100 mb-4 font-medium">
-            {item.description}
-          </p>
+        <p className="text-gray-200 text-sm leading-relaxed line-clamp-2 pr-6">
+          {item.description}
+        </p>
 
-          <div className="mt-auto">
-            <button
-              onClick={() => setOpen(true)}
-              className="bg-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-gray-50 transition shadow-sm"
-              style={{ color: "var(--primary-color, #1a5fb4)" }}
-            >
-              Learn More
-            </button>
-          </div>
+        <div className="mt-auto pt-5">
+          <button
+            onClick={() => onLearnMore(item)}
+            className="
+            bg-white
+            text-[#005B99]
+            px-6
+            py-3
+            rounded-xl
+            font-bold
+            text-sm
+            hover:bg-gray-50
+            transition
+          "
+          >
+            Learn More
+          </button>
         </div>
       </div>
-
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl w-[90%] max-w-md p-6 text-center relative shadow-xl">
-            <button
-              onClick={() => setOpen(false)}
-              className="absolute top-0 right-0 text-white hover:text-black hover:bg-primary text-lg bg-primary p-2 rounded-tr-2xl rounded"
-            >
-              ✕
-            </button>
-
-            {item.image && (
-              <img
-                src={
-                  item.image.startsWith("http")
-                    ? item.image
-                    : getImageUrl(item.image)
-                }
-                alt={item.name}
-                className="w-12 h-12 mx-auto mb-3 object-contain"
-              />
-            )}
-
-            <h2 className="text-xl font-bold mb-2">{item.name}</h2>
-
-            <p className="text-gray-500 text-sm leading-relaxed">
-              {item.description}
-            </p>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }
 
@@ -190,6 +194,9 @@ function SectionRenderer({ section, setShowLoginPopup }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [faq2OpenIndex, setFaq2OpenIndex] = useState(0);
   const [sliderPosition, setSliderPosition] = useState({});
+
+  const [selectedItem, setSelectedItem] = useState(null);
+
   const { product, products, loading, error } = useSelector(
     (state) => state.products,
   );
@@ -235,123 +242,58 @@ function SectionRenderer({ section, setShowLoginPopup }) {
   switch (type) {
     case "Root Cause Section":
       return (
-        <Section className="py-16 bg-[#f8f9fa]">
+        <Section className="py-16 bg-[#f8f9fa] overflow-hidden">
           <Row>
             <Heading title={data.title} />
+
             {data.description && (
-              <p className="flex justify-center items-center text-gray-400 text-sm mb-10">
+              <p className="text-center text-gray-500 text-sm mb-10">
                 {data.description}
               </p>
             )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {items.map((item, i) => {
-                const stepColors = [
-                  "#6366f1",
-                  "#0ea5e9",
-                  "#10b981",
-                  "#f59e0b",
-                  "#ec4899",
-                  "#f97316",
-                ];
-                const color = stepColors[i % stepColors.length];
-                return (
-                  <div
-                    key={i}
-                    className="group relative bg-white rounded-[20px] overflow-hidden
-                           border border-gray-100
-                           opacity-0 translate-y-6 animate-fadeInUp
-                           hover:-translate-y-2 hover:shadow-2xl transition-all duration-300"
-                    style={{
-                      animationDelay: `${i * 120}ms`,
-                      animationFillMode: "forwards",
-                    }}
-                  >
+            <Row>
+              <Swiper
+                modules={[Pagination, Autoplay]}
+                pagination={{ clickable: true }}
+                autoplay={{
+                  delay: 3000,
+                  disableOnInteraction: false,
+                }}
+                loop
+                spaceBetween={30}
+                slidesPerView={3}
+                className="rootCauseSwiper !pb-16 "
+              >
+                {items.map((item, i) => (
+                  <SwiperSlide key={i}>
                     <div
-                      className="relative w-full overflow-hidden"
-                      style={{ aspectRatio: "4/3.5", background: "#f1f5f9" }}
+                      className="
+          group
+          rounded-[28px]
+          bg-[#f5f5f5]
+        p-2
+          transition-all
+          duration-300
+          border-2
+          border-transparent
+          hover:border-[#163d73]
+          hover:shadow-xl
+        "
                     >
-                      {item.image ? (
-                        <img
-                          src={getImageUrl(item.image)}
-                          alt={item.name}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <svg
-                            width="52"
-                            height="52"
-                            viewBox="0 0 52 52"
-                            fill="none"
-                          >
-                            <circle
-                              cx="26"
-                              cy="26"
-                              r="24"
-                              stroke={color}
-                              strokeWidth="1.5"
-                              strokeDasharray="4 3"
-                            />
-                            <circle
-                              cx="26"
-                              cy="26"
-                              r="14"
-                              fill={color}
-                              fillOpacity="0.12"
-                            />
-                            <path
-                              d="M20 26l4 4 8-8"
-                              stroke={color}
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </div>
-                      )}
-
-                      {item.step && (
-                        <div
-                          className="absolute bottom-3 left-3 text-white text-xs font-medium px-4 py-1.5 rounded-lg"
-                          style={{ background: color }}
-                        >
-                          Step {item.step}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="relative px-5 pt-6 pb-5">
-                      <div
-                        className="absolute -top-[18px] right-4 w-9 h-9 rounded-full flex items-center justify-center
-                               text-white text-[13px] font-semibold shadow-md
-                               transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-12"
-                        style={{ background: color }}
-                      >
-                        {i + 1}
-                      </div>
-
-                      {item.name && (
-                        <p className="font-semibold text-sm text-gray-900 mb-2 pr-6 leading-snug">
-                          {item.name}
-                        </p>
-                      )}
-                      {item.description && (
-                        <p className="text-xs text-gray-500 leading-relaxed">
-                          {item.description}
-                        </p>
-                      )}
-
-                      <div
-                        className="absolute bottom-0 left-0 h-[3px] w-0 group-hover:w-full
-                               transition-all duration-500 ease-out"
-                        style={{ background: color }}
+                      <img
+                        src={getImageUrl(item.image)}
+                        alt={`root-cause-${i}`}
+                        className="
+            w-full
+            rounded-[20px]
+            object-contain
+          "
                       />
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </Row>
           </Row>
         </Section>
       );
@@ -363,36 +305,76 @@ function SectionRenderer({ section, setShowLoginPopup }) {
             <Heading title={data.title} />
 
             {data.description && (
-              <p className="flex justify-center items-center text-gray-400 text-sm mb-10">
+              <p className="text-center text-gray-500 text-sm mb-10">
                 {data.description}
               </p>
             )}
 
-            <div className="relative overflow-hidden">
-              <div
-                ref={scrollRef}
-                onScroll={handleScroll}
-                className="flex gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-4"
-              >
-                {items.map((item, i) => (
-                  <HowCard key={i} item={item} />
-                ))}
-              </div>
+            <div
+              ref={scrollRef}
+              className="
+    flex
+    gap-6
+    overflow-x-auto
+    no-scrollbar
+    pb-4
+    snap-x
+    snap-mandatory
+  "
+            >
+              {items.map((item, i) => (
+                <HowCard key={i} item={item} onLearnMore={setSelectedItem} />
+              ))}
             </div>
 
             {items.length > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
+              <div className="flex justify-center gap-2 mt-6">
                 {items.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => scrollToIndex(i)}
-                    className={`h-2.5 rounded-full transition-all duration-300 ${
-                      activeIndex === i
-                        ? "w-8 bg-[var(--primary-color,#1a5fb4)]"
-                        : "w-2.5 bg-gray-300"
+                    className={`h-2 rounded-full ${
+                      activeIndex === i ? "w-8 bg-[#005B9F]" : "w-2 bg-gray-300"
                     }`}
                   />
                 ))}
+              </div>
+            )}
+
+            {selectedItem && (
+              <div className="fixed inset-0 z-[999] bg-black/50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-[30px] w-full max-w-[480px] relative p-10">
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    className="
+                absolute
+                top-4
+                right-4
+                w-10
+                h-10
+                rounded-full
+                bg-gray-100
+              "
+                  >
+                    ✕
+                  </button>
+
+                  {selectedItem.image && (
+                    <img
+                      src={getImageUrl(selectedItem.image)}
+                      alt={selectedItem.name}
+                      className="w-20 h-20 mx-auto object-contain mb-6"
+                    />
+                  )}
+
+                  <h2 className="text-center text-[48px] font-bold mb-4">
+                    {selectedItem.name}
+                  </h2>
+
+                  <p className="text-center text-[#6b7280] text-[22px] leading-[1.7]">
+                    {selectedItem.description}
+                  </p>
+                </div>
               </div>
             )}
           </Row>

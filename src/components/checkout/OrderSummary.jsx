@@ -157,8 +157,8 @@ export default function OrderSummary({ formData }) {
     ? calculateShipping(subtotal, paymentType, settings)
     : 0;
 
-  const total = Number((subtotal + shipping).toFixed(2));
-
+  // const total = Number((subtotal + shipping).toFixed(2));
+  const total = Number((subtotal + shipping).toFixed(0));
   const totalSaved = itemDiscount + couponDiscount;
 
   const partialCodAdvance = calculatePartialCodAdvance(total, settings);
@@ -170,14 +170,14 @@ export default function OrderSummary({ formData }) {
     return "Online";
   };
 
-  const getStoreOwnerId = () => {
-    if (!items || items.length === 0) return null;
-    return (
-      items[0]?.product_id?.createdBy?._id ||
-      items[0]?.product_id?.createdBy ||
-      null
-    );
-  };
+  // const getStoreOwnerId = () => {
+  //   if (!items || items.length === 0) return null;
+  //   return (
+  //     items[0]?.product_id?.createdBy?._id ||
+  //     items[0]?.product_id?.createdBy ||
+  //     null
+  //   );
+  // };
 
   const validateForm = (userLS) => {
     if (!userLS || !userLS._id) {
@@ -206,23 +206,6 @@ export default function OrderSummary({ formData }) {
   };
 
   const createNewOrder = async (userLS) => {
-    // const orderData = {
-    //   user_id: userLS._id,
-    //   items,
-    //   total_price: total,
-    //   shipping_charge: shipping,
-    //   coupon_id: appliedCoupon?._id || null,
-    //   payment_method: getBackendPaymentMethod(selectedPayment),
-    //   shippingAddress: {
-    //     firstName: formData.firstName,
-    //     lastName: formData.lastName,
-    //     address: formData.address,
-    //     state: formData.state,
-    //     city: formData.city,
-    //     pincode: formData.pincode,
-    //     phone: formData.phone,
-    //   },
-    // };
     const orderData = {
       user_id: userLS._id,
       items,
@@ -261,7 +244,7 @@ export default function OrderSummary({ formData }) {
   };
 
   const handleCOD = async (userLS, orderId) => {
-    const storeOwnerId = getStoreOwnerId();
+    // const storeOwnerId = getStoreOwnerId();
     if (isPartialCod && partialCodAdvance > 0) {
       await handleRazorpayAmount(
         userLS,
@@ -275,7 +258,7 @@ export default function OrderSummary({ formData }) {
       createPayment({
         user_id: userLS._id,
         order_id: orderId,
-        store_owner_id: storeOwnerId,
+        // store_owner_id: storeOwnerId,
         items,
         subtotal,
         shipping,
@@ -298,11 +281,26 @@ export default function OrderSummary({ formData }) {
     amount,
     paymentMethod = selectedPayment,
   ) => {
-    const storeOwnerId = getStoreOwnerId();
+    // const storeOwnerId = getStoreOwnerId();
     const razorRes = await dispatch(
-      createRazorpayOrder({ amount, order_id: orderId }),
+      createRazorpayOrder({
+        amount,
+        order_id: orderId,
+      }),
     );
+    if (!createRazorpayOrder.fulfilled.match(razorRes)) {
+      console.log("RAZOR ERROR", razorRes);
+      toast(razorRes.payload || "Razorpay order failed");
+      return;
+    }
+    console.log("RAZOR RESPONSE =", razorRes);
+    console.log("RAZOR PAYLOAD =", razorRes.payload);
+    console.log("WINDOW RAZORPAY =", window.Razorpay);
+    console.log("RAZOR RESPONSE", razorRes);
+    console.log("RAZOR PAYLOAD", razorRes.payload);
+
     const razorOrder = razorRes.payload;
+    console.log(razorOrder);
     if (!razorOrder) {
       toast("Razorpay initialization failed ❌");
       return;
@@ -333,7 +331,7 @@ export default function OrderSummary({ formData }) {
           createPayment({
             user_id: userLS._id,
             order_id: orderId,
-            store_owner_id: storeOwnerId,
+            // store_owner_id: storeOwnerId,
             items,
             subtotal,
             shipping,
@@ -369,7 +367,7 @@ export default function OrderSummary({ formData }) {
   };
 
   const handlePhonePe = async (userLS, orderId) => {
-    const storeOwnerId = getStoreOwnerId();
+    // const storeOwnerId = getStoreOwnerId();
     const phonePeRes = await dispatch(
       createPhonePeOrder({
         amount: total,
@@ -392,7 +390,7 @@ export default function OrderSummary({ formData }) {
       createPayment({
         user_id: userLS._id,
         order_id: orderId,
-        store_owner_id: storeOwnerId,
+        // store_owner_id: storeOwnerId,
         items,
         subtotal,
         shipping,

@@ -561,3 +561,19 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* produc detail page section */
+.rootCauseSwiper {
+  /* width: 100%; */
+  overflow: visible !important;
+}
+
+.rootCauseSwiper .swiper-wrapper {
+  align-items: stretch;
+}
+
+.rootCauseSwiper .swiper-pagination {
+  position: relative !important;
+  margin-top: 30px;
+  bottom: auto !important;
+}
