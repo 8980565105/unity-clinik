@@ -1,16 +1,16 @@
 const { default: slugify } = require("slugify");
 const Type = require("../models/Type");
 const { sendResponse } = require("../utils/response");
-const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
+// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
 // ═══════════════════════════════════════════════════════════════════
 // PUBLIC — Frontend mate (domain thhi storeId resolve)
 // ═══════════════════════════════════════════════════════════════════
 const getPublicTypes = async (req, res) => {
   try {
-    if (!req.storeFilter || !req.storeFilter.storeId) {
-      return res.json({ success: true, data: [] });
-    }
+    // if (!req.storeFilter || !req.storeFilter.storeId) {
+    //   return res.json({ success: true, data: [] });
+    // }
 
     const types = await Type.find({
       status: "active",
@@ -40,7 +40,7 @@ const getTypes = async (req, res) => {
     if (status && ["active", "inactive"].includes(status))
       query.status = status;
 
-    applyOwnershipFilter(req, query);
+    // applyOwnershipFilter(req, query);
 
     if (download) {
       const types = await Type.find(query).sort({ createdAt: -1 });

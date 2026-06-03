@@ -1,19 +1,34 @@
 const Navbar = require("../models/Navbar");
 const { sendResponse } = require("../utils/response");
-const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
+// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
+
+// const getPublicNavbars = async (req, res) => {
+//   try {
+//     if (!req.storeFilter || !req.storeFilter.storeId) {
+//       return res.json({ success: true, data: [] });
+//     }
+
+//     const navbars = await Navbar.find({
+//       status: "active",
+//       storeId: req.storeFilter.storeId,
+//     }).sort({ order: 1 });
+
+//     res.json({ success: true, data: navbars });
+//   } catch (err) {
+//     sendResponse(res, false, null, err.message);
+//   }
+// };
 
 const getPublicNavbars = async (req, res) => {
   try {
-    if (!req.storeFilter || !req.storeFilter.storeId) {
-      return res.json({ success: true, data: [] });
-    }
-
     const navbars = await Navbar.find({
       status: "active",
-      storeId: req.storeFilter.storeId,
     }).sort({ order: 1 });
 
-    res.json({ success: true, data: navbars });
+    res.json({
+      success: true,
+      data: navbars,
+    });
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
@@ -21,18 +36,30 @@ const getPublicNavbars = async (req, res) => {
 
 const getNavbars = async (req, res) => {
   try {
-    let { page = 1, limit = 10, search = "", isDownload = "false", status } = req.query;
+    let {
+      page = 1,
+      limit = 10,
+      search = "",
+      isDownload = "false",
+      status,
+    } = req.query;
     const download = isDownload.toLowerCase() === "true";
 
     const query = {};
     if (search) query.label = { $regex: search, $options: "i" };
-    if (status && ["active", "inactive"].includes(status)) query.status = status;
+    if (status && ["active", "inactive"].includes(status))
+      query.status = status;
 
-    applyOwnershipFilter(req, query);
+    // applyOwnershipFilter(req, query);
 
     if (download) {
       const navbars = await Navbar.find(query).sort({ order: 1 });
-      return sendResponse(res, true, { navbars }, "All navbars retrieved for download");
+      return sendResponse(
+        res,
+        true,
+        { navbars },
+        "All navbars retrieved for download",
+      );
     }
 
     page = parseInt(page);
@@ -70,11 +97,13 @@ const createNavbar = async (req, res) => {
     const { label, url, icon, order, status } = req.body;
 
     if (!label || !url) {
-      return res.status(400).json({ success: false, message: "Label and URL are required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Label and URL are required" });
     }
 
-    const storeId =
-      req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
+    // const storeId =
+    //   req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
 
     const image_url = req.file ? `/uploads/navbar/${req.file.filename}` : null;
 
@@ -85,7 +114,6 @@ const createNavbar = async (req, res) => {
       order: order || 0,
       status: status || "active",
       image_url,
-      storeId,
     });
 
     const savedNavbar = await navbar.save();
@@ -114,10 +142,11 @@ const updateNavbar = async (req, res) => {
     const updatedNavbar = await Navbar.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true }
+      { new: true },
     );
 
-    if (!updatedNavbar) return sendResponse(res, false, null, "Navbar not found");
+    if (!updatedNavbar)
+      return sendResponse(res, false, null, "Navbar not found");
     sendResponse(res, true, updatedNavbar, "Navbar updated successfully");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -133,7 +162,11 @@ const updateNavbarStatus = async (req, res) => {
       return sendResponse(res, false, null, "Invalid status value");
     }
 
-    const navbar = await Navbar.findByIdAndUpdate(id, { status }, { new: true });
+    const navbar = await Navbar.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true },
+    );
     if (!navbar) return sendResponse(res, false, null, "Navbar not found");
 
     sendResponse(res, true, navbar, "Navbar status updated successfully");
@@ -145,7 +178,8 @@ const updateNavbarStatus = async (req, res) => {
 const deleteNavbar = async (req, res) => {
   try {
     const deletedNavbar = await Navbar.findByIdAndDelete(req.params.id);
-    if (!deletedNavbar) return sendResponse(res, false, null, "Navbar not found");
+    if (!deletedNavbar)
+      return sendResponse(res, false, null, "Navbar not found");
     sendResponse(res, true, null, "Navbar deleted successfully");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -155,10 +189,16 @@ const deleteNavbar = async (req, res) => {
 const bulkDeleteNavbars = async (req, res) => {
   try {
     const { ids } = req.body;
-    if (!ids || !Array.isArray(ids) || !ids.length) return sendResponse(res, false, null, "No IDs provided");
+    if (!ids || !Array.isArray(ids) || !ids.length)
+      return sendResponse(res, false, null, "No IDs provided");
 
     const result = await Navbar.deleteMany({ _id: { $in: ids } });
-    sendResponse(res, true, { deletedCount: result.deletedCount }, "Navbars deleted successfully");
+    sendResponse(
+      res,
+      true,
+      { deletedCount: result.deletedCount },
+      "Navbars deleted successfully",
+    );
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }

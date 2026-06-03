@@ -1,6 +1,6 @@
 const Results = require("../models/Results");
 const { sendResponse } = require("../utils/response");
-const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
+// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
 const getResults = async (req, res) => {
   try {
@@ -20,7 +20,7 @@ const getResults = async (req, res) => {
       query.status = status;
     }
 
-    applyOwnershipFilter(req, query);
+    // applyOwnershipFilter(req, query);
 
     if (download) {
       const results = await Results.find(query).sort({ createdAt: -1 });
@@ -64,8 +64,15 @@ const getResultsById = async (req, res) => {
 
 const createResults = async (req, res) => {
   try {
-    const { name, after_image_url, before_image_url,gander,age, description, status } =
-      req.body;
+    const {
+      name,
+      after_image_url,
+      before_image_url,
+      gander,
+      age,
+      description,
+      status,
+    } = req.body;
 
     if (!name) return sendResponse(res, false, null, "Name is required");
     if (!after_image_url)
@@ -73,10 +80,12 @@ const createResults = async (req, res) => {
     if (!before_image_url)
       return sendResponse(res, false, null, "Before image is required");
 
-    const storeId =
-      req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
+    // const storeId =
+    //   req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
 
-    const existing = await Results.findOne({ name, storeId });
+    // const existing = await Results.findOne({ name, storeId });
+    const existing = await Results.findOne({ name });
+
     if (existing) {
       return sendResponse(
         res,
@@ -94,8 +103,6 @@ const createResults = async (req, res) => {
       gander,
       age,
       status: status || "active",
-      createdBy: req.user._id,
-      storeId,
     });
 
     const saved = await newResult.save();
@@ -121,17 +128,20 @@ const updateResults = async (req, res) => {
     const result = await Results.findById(req.params.id);
     if (!result) return sendResponse(res, false, null, "Result not found");
 
-    if (
-      req.user.role === "store_owner" &&
-      result.storeId?.toString() !== req.user.storeId?.toString()
-    ) {
-      return sendResponse(res, false, null, "Forbidden: Not your result");
-    }
+    // if (
+    //   req.user.role === "store_owner" &&
+    //   result.storeId?.toString() !== req.user.storeId?.toString()
+    // ) {
+    //   return sendResponse(res, false, null, "Forbidden: Not your result");
+    // }
 
     const updated = await Results.findByIdAndUpdate(
       req.params.id,
       { name, after_image_url, before_image_url, description, status },
-      { new: true, runValidators: true },
+      {
+        returnDocument: "after",
+        runValidators: true,
+      },
     );
 
     sendResponse(res, true, updated, "Result updated successfully");
@@ -148,17 +158,19 @@ const updateResultsStatus = async (req, res) => {
     const result = await Results.findById(req.params.id);
     if (!result) return sendResponse(res, false, null, "Result not found");
 
-    if (
-      req.user.role === "store_owner" &&
-      result.storeId?.toString() !== req.user.storeId?.toString()
-    ) {
-      return sendResponse(res, false, null, "Forbidden: Not your result");
-    }
+    // if (
+    //   req.user.role === "store_owner" &&
+    //   result.storeId?.toString() !== req.user.storeId?.toString()
+    // ) {
+    //   return sendResponse(res, false, null, "Forbidden: Not your result");
+    // }
 
     const updated = await Results.findByIdAndUpdate(
       req.params.id,
       { status: req.body.status },
-      { new: true },
+      {
+        returnDocument: "after",
+      },
     );
     sendResponse(res, true, updated, "Status updated successfully");
   } catch (err) {
@@ -171,12 +183,12 @@ const deleteResults = async (req, res) => {
     const result = await Results.findById(req.params.id);
     if (!result) return sendResponse(res, false, null, "Result not found");
 
-    if (
-      req.user.role === "store_owner" &&
-      result.storeId?.toString() !== req.user.storeId?.toString()
-    ) {
-      return sendResponse(res, false, null, "Forbidden: Not your result");
-    }
+    // if (
+    //   req.user.role === "store_owner" &&
+    //   result.storeId?.toString() !== req.user.storeId?.toString()
+    // ) {
+    //   return sendResponse(res, false, null, "Forbidden: Not your result");
+    // }
 
     await Results.findByIdAndDelete(req.params.id);
     sendResponse(res, true, null, "Result deleted successfully");
@@ -194,9 +206,9 @@ const bulkDeleteResults = async (req, res) => {
 
     const query = { _id: { $in: ids } };
 
-    if (req.user.role === "store_owner") {
-      query.storeId = req.user.storeId;
-    }
+    // if (req.user.role === "store_owner") {
+    //   query.storeId = req.user.storeId;
+    // }
 
     await Results.deleteMany(query);
     sendResponse(res, true, { ids }, "Bulk delete successful");
@@ -207,12 +219,12 @@ const bulkDeleteResults = async (req, res) => {
 
 const getPublicResults = async (req, res) => {
   try {
-    if (!req.storeFilter?.storeId) {
-      return sendResponse(res, true, [], "No store found");
-    }
+    // if (!req.storeFilter?.storeId) {
+    //   return sendResponse(res, true, [], "No store found");
+    // }
     const results = await Results.find({
       status: "active",
-      storeId: req.storeFilter.storeId,
+      // storeId: req.storeFilter.storeId,
     }).sort({ createdAt: -1 });
 
     sendResponse(res, true, results, "Public results retrieved");

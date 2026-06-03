@@ -19,11 +19,11 @@ router.get("/public", getCoupons);
 router.use(authMiddleware);
 
 router.get("/", getCoupons);
-router.get("/:id", authorizeMinRole("store_owner"), getCouponById);
-router.post("/", authorizeMinRole("store_owner"), createCoupon);
-router.put("/:id", authorizeMinRole("store_owner"), updateCoupon);
-router.put("/:id/status", authorizeMinRole("store_owner"), updateCouponStatus);
-router.delete("/:id", authorizeMinRole("store_owner"), deleteCoupon);
-router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteCoupons);
+router.get("/:id", authorizeMinRole("admin"), getCouponById);
+router.post("/", authorizeMinRole("admin"), createCoupon);
+router.put("/:id", authorizeMinRole("admin"), updateCoupon);
+router.put("/:id/status", authorizeMinRole("admin"), updateCouponStatus);
+router.delete("/:id", authorizeMinRole("admin"), deleteCoupon);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteCoupons);
 
 module.exports = router;

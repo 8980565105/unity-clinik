@@ -29,7 +29,7 @@ const banner1SlideSchema = new mongoose.Schema(
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     badge: { type: String, default: "" },
     bgImage: { type: String, default: null },
-    productimg: { type: String, defulte: null },
+    productimg: { type: String, default: null },
   },
   { _id: true },
 );
@@ -37,7 +37,7 @@ const banner1SlideSchema = new mongoose.Schema(
 const topDoctorSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    cases: { type: String, defult: "" },
+    cases: { type: String, default: "" },
     image: { type: String, default: null },
   },
   { _id: true },
@@ -85,21 +85,10 @@ const sliderSectionSchema = new mongoose.Schema(
     banner2: { type: banner2Schema, default: undefined },
     banner3: { type: banner3Schema, default: undefined },
     banner4: { type: banner4Schema, default: undefined },
-
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
   },
   { timestamps: true },
 );
 
-sliderSectionSchema.index({ section: 1, status: 1, storeId: 1 });
+sliderSectionSchema.index({ section: 1, status: 1 });
 
 module.exports = mongoose.model("Slider", sliderSectionSchema);

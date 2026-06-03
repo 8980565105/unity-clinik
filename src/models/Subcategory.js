@@ -14,12 +14,12 @@ const subcategorySchema = new mongoose.Schema(
       ref: "Category",
       required: [true, "Parent category is required"],
     },
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-      index: true,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    //   index: true,
+    // },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -35,6 +35,6 @@ subcategorySchema.pre("validate", function (next) {
   }
   // next();
 });
-subcategorySchema.index({ name: 1, storeId: 1 }, { unique: true });
+subcategorySchema.index({ name: 1 }, { unique: true });
 
 module.exports = mongoose.model("subCategory", subcategorySchema);

@@ -14,73 +14,69 @@ const {
   authMiddleware,
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
-const {
-  injectPublicStoreFilter,
-  injectOwnershipFilter,
-} = require("../middlewares/ownershipFilter");
 
-// ── PUBLIC route: domain-based store filter (no auth needed)
-// Used by the storefront Footer.jsx component
-router.get("/public", injectPublicStoreFilter, getFooters);
+// router.get("/public", getFooters);
 
-// ── PROTECTED routes ─────────────────────────────────────────────────────────
+// router.use(authMiddleware);
+
+// router.get(
+//   "/",
+//   authorizeMinRole("store_owner"),
+//   getFooters,
+// );
+
+// router.get(
+//   "/:id",
+//   authorizeMinRole("store_owner"),
+//   getFooterById,
+// );
+
+// router.post(
+//   "/",
+//   authorizeMinRole("store_owner"),
+//   createFooter,
+// );
+
+// router.put(
+//   "/:id",
+//   authorizeMinRole("store_owner"),
+//   updateFooter,
+// );
+
+// router.put(
+//   "/:id/status",
+//   authorizeMinRole("store_owner"),
+//   updateFooterStatus,
+// );
+
+// router.delete(
+//   "/:id",
+//   authorizeMinRole("store_owner"),
+//   deleteFooter,
+// );
+
+// router.post(
+//   "/bulk-delete",
+//   authorizeMinRole("store_owner"),
+//   bulkDeleteFooters,
+// );
+
+router.get("/public", getFooters);
+
 router.use(authMiddleware);
 
-// GET all — admin sees all, store_owner sees only their store
-// authorizeMinRole("store_owner") means store_owner OR admin can access
-router.get(
-  "/",
-  authorizeMinRole("store_owner"),
-  injectOwnershipFilter,
-  getFooters,
-);
+router.get("/", authorizeMinRole("user"), getFooters);
 
-// GET by id
-router.get(
-  "/:id",
-  authorizeMinRole("store_owner"),
-  injectOwnershipFilter,
-  getFooterById,
-);
+router.get("/:id", authorizeMinRole("user"), getFooterById);
 
-// CREATE — store_owner adds footer auto-tagged to their storeId
-router.post(
-  "/",
-  authorizeMinRole("store_owner"),
-  injectOwnershipFilter,
-  createFooter,
-);
+router.post("/", authorizeMinRole("admin"), createFooter);
 
-// UPDATE
-router.put(
-  "/:id",
-  authorizeMinRole("store_owner"),
-  injectOwnershipFilter,
-  updateFooter,
-);
+router.put("/:id", authorizeMinRole("admin"), updateFooter);
 
-// UPDATE STATUS
-router.put(
-  "/:id/status",
-  authorizeMinRole("store_owner"),
-  injectOwnershipFilter,
-  updateFooterStatus,
-);
+router.put("/:id/status", authorizeMinRole("admin"), updateFooterStatus);
 
-// DELETE
-router.delete(
-  "/:id",
-  authorizeMinRole("store_owner"),
-  injectOwnershipFilter,
-  deleteFooter,
-);
+router.delete("/:id", authorizeMinRole("admin"), deleteFooter);
 
-// BULK DELETE
-router.post(
-  "/bulk-delete",
-  authorizeMinRole("store_owner"),
-  injectOwnershipFilter,
-  bulkDeleteFooters,
-);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteFooters);
 
 module.exports = router;

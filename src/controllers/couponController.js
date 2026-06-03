@@ -2,14 +2,7 @@ const Coupon = require("../models/Coupon");
 const { sendResponse } = require("../utils/response");
 const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
-// const generateCouponCode = (length = 8) => {
-//   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//   let code = "";
-//   for (let i = 0; i < length; i++) {
-//     code += chars.charAt(Math.floor(Math.random() * chars.length));
-//   }
-//   return code;
-// };
+
 
 const getCoupons = async (req, res) => {
   try {

@@ -3,7 +3,7 @@ const User = require("../models/User");
 const { sendResponse } = require("../utils/response");
 
 const getStoreId = async (req) => {
-  if (req.user?.storeId) return req.user.storeId;
+  // if (req.user?.storeId) return req.user.storeId;
 
   const userId = req.user?._id || req.user?.id;
   if (!userId) return null;
@@ -14,10 +14,10 @@ const getStoreId = async (req) => {
 
 const getUserSettings = async (req, res) => {
   try {
-    const storeId = await getStoreId(req);
-    if (!storeId) return sendResponse(res, false, null, "Store ID not found");
+    // const storeId = await getStoreId(req);
+    // if (!storeId) return sendResponse(res, false, null, "Store ID not found");
 
-    let settings = await SystemSettingModel.findOne({ storeId });
+    let settings = await SystemSettingModel.findOne({});
     if (!settings) {
       settings = {
         razorpaykey: "",
@@ -52,8 +52,8 @@ const getUserSettings = async (req, res) => {
 
 const updateUserSettings = async (req, res) => {
   try {
-    const storeId = await getStoreId(req); // ✅
-    if (!storeId) return sendResponse(res, false, null, "Store ID not found");
+    // const storeId = await getStoreId(req); // ✅
+    // if (!storeId) return sendResponse(res, false, null, "Store ID not found");
 
     const {
       razorpaykey,
@@ -180,7 +180,7 @@ const updateUserSettings = async (req, res) => {
       "ithink.apiUrl": ithink?.apiUrl || "",
       "ithink.pickupAddressId": ithink?.pickupAddressId || "",
       "prepaid.freeThreshold": Number(prepaid?.freeThreshold) || 0,
-     
+
       "prepaid.ranges": (prepaid?.ranges || [])
         .filter((r) => r.from !== "" || r.to !== "" || r.charge !== "")
         .map((r) => ({
@@ -206,7 +206,7 @@ const updateUserSettings = async (req, res) => {
         })),
 
       "cod.freeThreshold": Number(cod?.freeThreshold) || 0,
-      
+
       "partialCod.codType": partialCod?.codType || "fixed",
       "partialCod.value": Number(partialCod?.value) || 0,
       "general.termService": general?.termService || "",
@@ -217,9 +217,13 @@ const updateUserSettings = async (req, res) => {
     };
 
     const updatedDoc = await SystemSettingModel.findOneAndUpdate(
-      { storeId },
-      { $set: updateData },
-      { new: true, upsert: true, runValidators: true },
+      {}, // filter
+      { $set: updateData }, // update data
+      {
+        new: true,
+        upsert: true,
+        runValidators: true,
+      },
     );
 
     return sendResponse(res, true, updatedDoc, "Settings saved successfully");
@@ -236,11 +240,9 @@ const updateUserSettings = async (req, res) => {
 
 const getPublicSettings = async (req, res) => {
   try {
-    const storeFilter = req.storeFilter;
-    if (!storeFilter || !storeFilter.storeId)
-      return sendResponse(res, false, null, "Store not found for this domain");
+    return sendResponse(res, false, null, "Store not found for this domain");
 
-    const settings = await SystemSettingModel.findOne(storeFilter).select(
+    const settings = await SystemSettingModel.findOne({}).select(
       "general prepaid cod partialCod",
     );
 

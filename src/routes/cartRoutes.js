@@ -18,8 +18,8 @@ const {
 } = require("../middlewares/authMiddleware");
 
 router.use(authMiddleware);
-router.get("/", authorizeMinRole("store_owner"), getCarts);
-router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteCartItems);
+router.get("/", authorizeMinRole("admin"), getCarts);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteCartItems);
 router.get("/:id", getCartById);
 router.post("/", createCart);
 router.post("/add-item", addCartItem);

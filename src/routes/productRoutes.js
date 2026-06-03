@@ -15,17 +15,17 @@ const {
   authMiddleware,
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
-const {
-  injectPublicStoreFilter,
-  injectOwnershipFilter,
-} = require("../middlewares/ownershipFilter");
+// const {
+//   injectPublicStoreFilter,
+//   injectOwnershipFilter,
+// } = require("../middlewares/ownershipFilter");
 
 const upload = require("../middlewares/upload");
 
-router.get("/public", injectPublicStoreFilter, getPublicProducts);
+router.get("/public", getPublicProducts);
 router.get("/public/:id", getPublicProductById);
 router.use(authMiddleware);
-router.get("/", injectOwnershipFilter, getProducts);
+router.get("/", getProducts);
 router.get("/:id", authorizeMinRole("store_owner"), getProductById);
 router.post(
   "/",

@@ -1,38 +1,32 @@
 const CustomerReview = require("../models/CustomerReview");
 const Product = require("../models/Product");
-const Store = require("../models/Store");
 const { sendResponse } = require("../utils/response");
-const { resolveStoreByDomain } = require("../config/domainResolver");
 
-const extractDomain = (req) => {
-  try {
-    const origin = req.headers.origin || "";
-    if (origin) {
-      const url = new URL(origin);
-      return url.host;
-    }
-    return req.headers.host?.toLowerCase() || "";
-  } catch {
-    return req.headers.host?.toLowerCase() || "";
-  }
-};
+// const extractDomain = (req) => {
+//   try {
+//     const origin = req.headers.origin || "";
+//     if (origin) {
+//       const url = new URL(origin);
+//       return url.host;
+//     }
+//     return req.headers.host?.toLowerCase() || "";
+//   } catch {
+//     return req.headers.host?.toLowerCase() || "";
+//   }
+// };
 
-const resolveStoreId = async (req) => {
-  try {
-    if (req.user?.storeId) return req.user.storeId;
+// const resolveStoreId = async (req) => {
+//   try {
+//     // if (req.user?.storeId) return req.user.storeId;
 
-    const domain = extractDomain(req);
-    if (domain) {
-      const storeId = await resolveStoreByDomain(domain);
-      if (storeId) return storeId;
-    }
+//     const domain = extractDomain(req);
 
-    return null;
-  } catch (e) {
-    console.error("resolveStoreId error:", e.message);
-    return null;
-  }
-};
+//     return null;
+//   } catch (e) {
+//     console.error("resolveStoreId error:", e.message);
+//     return null;
+//   }
+// };
 
 const getReviews = async (req, res) => {
   try {
@@ -59,16 +53,16 @@ const getReviews = async (req, res) => {
 
     if (userRole === "admin") {
     } else if (userRole === "store_owner") {
-      const storeId = req.user?.storeId;
-      if (!storeId) {
-        return sendResponse(
-          res,
-          false,
-          null,
-          "No storeId found for this owner",
-        );
-      }
-      query.storeId = storeId;
+      // const storeId = req.user?.storeId;
+      // if (!storeId) {
+      //   return sendResponse(
+      //     res,
+      //     false,
+      //     null,
+      //     "No storeId found for this owner",
+      //   );
+      // }
+      // query.storeId = storeId;
     } else {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
     }
@@ -117,12 +111,12 @@ const getReviewById = async (req, res) => {
 
     if (!review) return sendResponse(res, false, null, "Review not found");
 
-    if (
-      req.user?.role === "store_owner" &&
-      review.storeId?.toString() !== req.user.storeId?.toString()
-    ) {
-      return sendResponse(res, false, null, "Forbidden: Not your review");
-    }
+    // if (
+    //   req.user?.role === "store_owner" &&
+    // review.storeId?.toString() !== req.user.storeId?.toString()
+    // ) {
+    //   return sendResponse(res, false, null, "Forbidden: Not your review");
+    // }
 
     sendResponse(res, true, review, "Review retrieved successfully");
   } catch (err) {
@@ -138,31 +132,20 @@ const createReview = async (req, res) => {
       return sendResponse(res, false, null, "product_id is required");
     }
 
-    let storeId = null;
-    try {
-      const product =
-        await Product.findById(product_id).select("storeId createdBy");
-      if (product?.storeId) {
-        storeId = product.storeId;
-      } else {
-        const domain = extractDomain(req);
-        if (domain) {
-          const resolvedId = await resolveStoreByDomain(domain);
-          if (resolvedId) storeId = resolvedId;
-        }
-      }
-    } catch (e) {
-      console.error("storeId resolve failed:", e.message);
+    // let storeId = null;
+    const product = await Product.findById(product_id);
+
+    if (!product) {
+      return sendResponse(res, false, null, "Product not found");
     }
 
     const review = new CustomerReview({
-      user_id: req.user?._id,
+      user_id: req.user._id,
       product_id,
-      storeId,
       rating,
       title,
       comment,
-      is_approved: is_approved !== undefined ? is_approved : false,
+      is_approved: is_approved ?? false,
     });
 
     const savedReview = await review.save();
@@ -177,7 +160,9 @@ const updateReview = async (req, res) => {
     const updatedReview = await CustomerReview.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true },
+      {
+        returnDocument: "after",
+      },
     );
     if (!updatedReview)
       return sendResponse(res, false, null, "Review not found");
@@ -199,17 +184,19 @@ const updateReviewStatus = async (req, res) => {
     const review = await CustomerReview.findById(id);
     if (!review) return sendResponse(res, false, null, "Review not found");
 
-    if (
-      req.user?.role === "store_owner" &&
-      review.storeId?.toString() !== req.user.storeId?.toString()
-    ) {
-      return sendResponse(res, false, null, "Forbidden: Not your review");
-    }
+    // if (
+    //   req.user?.role === "store_owner" &&
+    // review.storeId?.toString() !== req.user.storeId?.toString()
+    // ) {
+    //   return sendResponse(res, false, null, "Forbidden: Not your review");
+    // }
 
     const updated = await CustomerReview.findByIdAndUpdate(
       id,
       { is_approved },
-      { new: true },
+      {
+        returnDocument: "after",
+      },
     );
 
     sendResponse(res, true, updated, "Review status updated successfully");
@@ -222,13 +209,6 @@ const deleteReview = async (req, res) => {
   try {
     const review = await CustomerReview.findById(req.params.id);
     if (!review) return sendResponse(res, false, null, "Review not found");
-
-    if (
-      req.user?.role === "store_owner" &&
-      review.storeId?.toString() !== req.user.storeId?.toString()
-    ) {
-      return sendResponse(res, false, null, "Forbidden: Not your review");
-    }
 
     await CustomerReview.findByIdAndDelete(req.params.id);
     sendResponse(res, true, null, "Review deleted successfully");
@@ -272,7 +252,6 @@ const getPublicReviewsByProduct = async (req, res) => {
     const total = await CustomerReview.countDocuments(query);
     const reviews = await CustomerReview.find(query)
       .populate("user_id", "name")
-      .select("-storeId")
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });
@@ -292,15 +271,14 @@ const getPublicReviews = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    const storeId = await resolveStoreId(req);
-
-    const query = { is_approved: true };
-    if (storeId) query.storeId = storeId;
+    const query = {
+      is_approved: true,
+    };
 
     const total = await CustomerReview.countDocuments(query);
+
     const customerReviews = await CustomerReview.find(query)
       .populate("user_id", "name")
-      .select("-storeId")
       .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit))
       .sort({ createdAt: -1 });

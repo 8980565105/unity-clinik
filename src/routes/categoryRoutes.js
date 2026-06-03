@@ -23,21 +23,21 @@ router.get("/public", injectPublicStoreFilter, getAllCategories);
 router.use(authMiddleware);
 router.get("/", injectOwnershipFilter, getCategories);
 router.get("/all", injectPublicStoreFilter, getAllCategories);
-router.get("/:id", authorizeMinRole("store_owner"), getCategoryById);
+router.get("/:id", authorizeMinRole("admin"), getCategoryById);
 router.post(
   "/",
-  authorizeMinRole("store_owner"),
+  authorizeMinRole("admin"),
   upload.single("image"),
   createCategory,
 );
 router.put(
   "/:id",
-  authorizeMinRole("store_owner"),
+  authorizeMinRole("admin"),
   upload.single("image"),
   updateCategory,
 );
-router.put("/:id/status", authorizeMinRole("store_owner"), updateCategoryStatus);
-router.delete("/:id", authorizeMinRole("store_owner"), deleteCategory);
-router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteCategories);
+router.put("/:id/status", authorizeMinRole("admin"), updateCategoryStatus);
+router.delete("/:id", authorizeMinRole("admin"), deleteCategory);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteCategories);
 
 module.exports = router;

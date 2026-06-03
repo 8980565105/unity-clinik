@@ -6,12 +6,12 @@ const contactUsSchema = new mongoose.Schema(
     email: { type: String, required: true },
     order_number: { type: String },
     message: { type: String, required: true },
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-      index: true,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    //   index: true,
+    // },
     status: { type: String, enum: ["pending", "resolved"], default: "pending" },
   },
   { timestamps: true },

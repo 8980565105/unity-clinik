@@ -1,7 +1,7 @@
 const { default: slugify } = require("slugify");
 const Brand = require("../models/Brand");
 const { sendResponse } = require("../utils/response");
-const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
+// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
 const getPublicBrands = async (req, res) => {
   try {
@@ -37,7 +37,7 @@ const getBrands = async (req, res) => {
       query.status = status;
     }
 
-    applyOwnershipFilter(req, query);
+    // applyOwnershipFilter(req, query);
 
     if (download) {
       const brands = await Brand.find(query).sort({ name: 1 });

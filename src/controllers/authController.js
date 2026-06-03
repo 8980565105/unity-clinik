@@ -88,7 +88,6 @@ const findUserForOtp = async (email, rawDomain) => {
     const store = await Store.findOne({ domain })
       .select("_id name domain")
       .lean();
-    
 
     if (store) {
       const user = await User.findOne({ email, storeId: store._id });
@@ -146,10 +145,7 @@ const login = async (req, res) => {
     }
 
     if (!user) {
-      user = await User.findOne({
-        email,
-        role: { $in: ["admin", "store_owner"] },
-      }).populate("storeId");
+      user = await User.findOne({ email }).populate("storeId");
     }
 
     if (!user) return sendResponse(res, false, null, "Invalid credentials");
@@ -192,7 +188,6 @@ const register = async (req, res) => {
       storeEmail,
       storegstno,
       storePhone,
-      storeWebsite,
       storeLogo,
       storeBanner,
       storeDescription,
@@ -239,7 +234,7 @@ const register = async (req, res) => {
         name,
         email,
         password,
-        role,
+        role: "store_user",
         domain: "",
         storeId: null,
         mobile_number: mobile_number || null,
@@ -267,8 +262,6 @@ const register = async (req, res) => {
           null,
           "Store name and email are required",
         );
-      if (!storeWebsite)
-        return sendResponse(res, false, null, "Store website is required");
 
       const emailTaken = await User.findOne({
         email,
@@ -282,29 +275,19 @@ const register = async (req, res) => {
           "A store owner with this email already exists",
         );
 
-      const finalDomain = cleanDomain(storeWebsite);
       const parsedTheme = parseIfString(storeTheme) || {};
       const parsedStoreAddr = parseIfString(storeAddress);
       const cleanStoreAddr = isEmptyObj(parsedStoreAddr) ? {} : parsedStoreAddr;
 
       const store = await Store.create({
-        name: (typeof storeName === "string" ? storeName.trim() : ""),
-        email: (typeof storeEmail === "string" ? storeEmail.toLowerCase().trim() : ""),
+        name: storeName,
+        email: storeEmail,
         phone: storePhone || "",
-        gst_number: storegstno,
-        website: storeWebsite || "",
-        domain: finalDomain,
+        gst_number: storegstno || "",
         logo: storeLogo || "",
         banner: storeBanner || "",
         description: storeDescription || "",
-        theme: {
-          primaryColor: parsedTheme.primaryColor || "#000000",
-          secondaryColor: parsedTheme.secondaryColor || "#ffffff",
-          buttonColor: parsedTheme.buttonColor || "#007bff",
-          faviconUrl: parsedTheme.faviconUrl || "",
-          logoUrl: parsedTheme.logoUrl || "",
-          fontFamily: parsedTheme.fontFamily || "Roboto",
-        },
+        theme: parsedTheme,
         address: cleanStoreAddr,
         status: "active",
       });
@@ -313,22 +296,21 @@ const register = async (req, res) => {
         name,
         email,
         password,
-        domain: finalDomain,
         role,
-        storeId: store._id,
         mobile_number: mobile_number || null,
         gender: gender || undefined,
         date_of_birth: date_of_birth || null,
         address: cleanAddress,
         profile_picture,
       });
+
       const token = generateToken(user);
       const userObj = user.toObject();
       delete userObj.password;
       userObj.storeId = store;
-      console.log(
-        `[Register] Store owner: ${user.email}, store: ${store.name}, domain: ${finalDomain}`,
-      );
+      // console.log(
+      //   `[Register] Store owner: ${user.email}, store: ${store.name}, domain: ${finalDomain}`,
+      // );
       return sendResponse(
         res,
         true,
@@ -337,38 +319,38 @@ const register = async (req, res) => {
       );
     }
 
-    const finalDomain = cleanDomain(domain || "");
-    if (!finalDomain)
+    // const finalDomain = cleanDomain(domain || "");
+    // if (!finalDomain)
+    //   return sendResponse(
+    //     res,
+    //     false,
+    //     null,
+    //     "Domain is required for store user registration",
+    //   );
+
+    // const store = await Store.findOne({ domain: finalDomain });
+    // if (!store)
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: `Store not found for domain: ${finalDomain}`,
+    //   });
+
+    const alreadyUser = await User.findOne({ email });
+
+    if (alreadyUser) {
       return sendResponse(
         res,
         false,
         null,
-        "Domain is required for store user registration",
+        "Email already registered. Please login.",
       );
-
-    const store = await Store.findOne({ domain: finalDomain });
-    if (!store)
-      return res.status(404).json({
-        success: false,
-        message: `Store not found for domain: ${finalDomain}`,
-      });
-
-    const alreadyInStore = await User.findOne({ email, storeId: store._id });
-    if (alreadyInStore)
-      return sendResponse(
-        res,
-        false,
-        null,
-        "You are already registered in this store. Please login.",
-      );
+    }
 
     const user = await User.create({
       name,
       email,
       password,
-      domain: finalDomain,
       role,
-      storeId: store._id,
       mobile_number: mobile_number || null,
       gender: gender || undefined,
       date_of_birth: date_of_birth || null,
@@ -378,9 +360,9 @@ const register = async (req, res) => {
     const token = generateToken(user);
     const userObj = user.toObject();
     delete userObj.password;
-    console.log(
-      `[Register] Store user: ${user.email}, store: ${store.name}, domain: ${finalDomain}`,
-    );
+    // console.log(
+    //   `[Register] Store user: ${user.email}, store: ${store.name}, domain: ${finalDomain}`,
+    // );
     return sendResponse(
       res,
       true,

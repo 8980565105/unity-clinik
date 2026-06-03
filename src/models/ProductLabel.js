@@ -11,18 +11,18 @@ const productLabelSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-      index: true,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    //   index: true,
+    // },
 
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    // createdBy: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "User",
+    //   required: true,
+    // },
   },
   { timestamps: true },
 );
@@ -34,6 +34,6 @@ productLabelSchema.pre("save", function (next) {
   // next();
 });
 
-productLabelSchema.index({ name: 1, storeId: 1 }, { unique: true });
+productLabelSchema.index({ name: 1 }, { unique: true });
 
 module.exports = mongoose.model("ProductLabel", productLabelSchema);

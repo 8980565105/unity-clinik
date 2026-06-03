@@ -16,14 +16,14 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 
-const {
-  injectPublicStoreFilter,
-  injectOwnershipFilter,
-} = require("../middlewares/ownershipFilter");
+// const {
+//   injectPublicStoreFilter,
+//   injectOwnershipFilter,
+// } = require("../middlewares/ownershipFilter");
 
-router.get("/public", injectPublicStoreFilter, getPublicTypes);
+router.get("/public", getPublicTypes);
 router.use(authMiddleware);
-router.get("/", injectOwnershipFilter, getTypes);
+router.get("/", getTypes);
 router.get("/:id", getTypeById);
 router.post("/", authorizeMinRole("store_owner"), createType);
 router.put("/:id", authorizeMinRole("store_owner"), updateType);

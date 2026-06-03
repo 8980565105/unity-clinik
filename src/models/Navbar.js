@@ -7,11 +7,11 @@ const navbarSchema = new mongoose.Schema(
     order: { type: Number, default: 0 },
     icon: { type: String, default: null },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    // },
   },
   { timestamps: true },
 );

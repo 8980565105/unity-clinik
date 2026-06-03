@@ -6,10 +6,10 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 
-const {
-  injectPublicStoreFilter,
-  injectOwnershipFilter,
-} = require("../middlewares/ownershipFilter");
+// const {
+//   injectPublicStoreFilter,
+//   injectOwnershipFilter,
+// } = require("../middlewares/ownershipFilter");
 
 const {
   getPages,
@@ -22,9 +22,9 @@ const {
   getPageBySlug,
 } = require("../controllers/pageController");
 
-router.get("/get/:slug", injectPublicStoreFilter, getPageBySlug);
+router.get("/get/:slug", getPageBySlug);
 
-router.use(authMiddleware, injectOwnershipFilter);
+router.use(authMiddleware);
 
 router.get("/", authorizeMinRole("store_owner"), getPages);
 router.get("/:id", authorizeMinRole("store_owner"), getPageById);

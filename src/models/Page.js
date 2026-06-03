@@ -35,11 +35,11 @@ const sectionSchema = new mongoose.Schema(
 
 const pageSchema = new mongoose.Schema(
   {
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    // },
     page_name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, lowercase: true },
     description: { type: String },
@@ -60,11 +60,10 @@ const pageSchema = new mongoose.Schema(
 );
 
 pageSchema.index(
-  { slug: 1, storeId: 1 },
+  { slug: 1 },
   {
     unique: true,
     sparse: true,
-    partialFilterExpression: { storeId: { $type: "objectId" } },
   },
 );
 

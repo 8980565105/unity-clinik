@@ -8,17 +8,17 @@ const typeSchema = new mongoose.Schema(
     description: { type: String, default: "" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
 
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-      index: true,
-    },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    //   index: true,
+    // },
+    // createdBy: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "User",
+    //   required: true,
+    // },
   },
   { timestamps: true },
 );
@@ -30,6 +30,6 @@ typeSchema.pre("save", function (next) {
   // next();
 });
 
-typeSchema.index({ name: 1, storeId: 1 }, { unique: true });
+typeSchema.index({ name: 1 }, { unique: true });
 
 module.exports = mongoose.model("Type", typeSchema);

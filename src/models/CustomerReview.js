@@ -12,11 +12,11 @@ const customerReviewSchema = new mongoose.Schema(
       ref: "Product",
       required: true,
     },
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    // },
     rating: { type: Number, required: true, min: 1, max: 5 },
     title: { type: String, required: true },
     comment: { type: String, required: false },

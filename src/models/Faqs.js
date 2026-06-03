@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const faqSchema = new mongoose.Schema(
@@ -24,12 +23,12 @@ const faqSchema = new mongoose.Schema(
       default: "active",
     },
 
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-      index: true,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    //   index: true,
+    // },
 
     banner: {
       image: {
@@ -49,6 +48,6 @@ const faqSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-faqSchema.index({ question: 1, storeId: 1 }, { unique: true });
+faqSchema.index({ question: 1 }, { unique: true });
 
 module.exports = mongoose.model("FAQ", faqSchema);

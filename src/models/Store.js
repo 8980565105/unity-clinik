@@ -14,16 +14,8 @@ const storeSchema = new mongoose.Schema(
     email: { type: String, required: true },
     phone: { type: String },
     gst_number: { type: String },
-    website: { type: String },
 
-    domain: {
-      type: String,
-      unique: true,
-      sparse: true,
-      lowercase: true,
-      trim: true,
-      index: true,
-    },
+   
     logo: { type: String },
     banner: { type: String },
     description: { type: String },
@@ -31,7 +23,6 @@ const storeSchema = new mongoose.Schema(
     theme: {
       primaryColor: { type: String, default: "#000000" },
       secondaryColor: { type: String, default: "#ffffff" },
-      buttonColor: { type: String, default: "#007bff" },
       faviconUrl: { type: String },
       logoUrl: { type: String },
       fontFamily: { type: String, default: "Roboto" },

@@ -79,6 +79,7 @@ const getStores = async (req, res) => {
     sendResponse(res, false, null, err.message);
   }
 };
+
 const getAllStores = async (req, res) => {
   try {
     const stores = await Store.find().select("_id name");
@@ -186,44 +187,37 @@ const bulkDeleteStores = async (req, res) => {
   }
 };
 
-
 const getStoreByDomain = async (req, res) => {
   try {
-    const { resolveStoreByDomain } = require("../config/domainResolver");
-
-    const origin = req.headers.origin || "";
-    let domain = "";
-    if (origin) {
-      const url = new URL(origin);
-      domain = url.host.toLowerCase();
-    } else {
-      domain = (req.headers.host || "").toLowerCase();
-    }
-
-    const store = await Store.findOne({ domain, status: "active" });
+    const store = await Store.findOne().sort({ createdAt: 1 });
 
     if (!store) {
       return res.status(404).json({
         success: false,
-        message: "Store not found for this domain",
+        message: "Store not found",
       });
     }
 
-    res.json({ success: true, data: store });
+    res.json({
+      success: true,
+      data: store,
+    });
   } catch (err) {
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
-
 const getMyStore = async (req, res) => {
   try {
-    const storeId = req.user.storeId;
-    if (!storeId) return sendResponse(res, false, null, "No store assigned");
-    
-    const store = await Store.findById(storeId);
-    if (!store) return sendResponse(res, false, null, "Store not found");
-    
+    const store = await Store.findOne().sort({ createdAt: 1 });
+
+    if (!store) {
+      return sendResponse(res, false, null, "Store not found");
+    }
+
     sendResponse(res, true, store, "Store fetched successfully");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -232,16 +226,18 @@ const getMyStore = async (req, res) => {
 
 const updateMyStore = async (req, res) => {
   try {
-    const storeId = req.user.storeId;
-    if (!storeId) return sendResponse(res, false, null, "No store assigned");
+    const store = await Store.findOne().sort({ createdAt: 1 });
+
+    if (!store) {
+      return sendResponse(res, false, null, "Store not found");
+    }
 
     const updatedStore = await Store.findByIdAndUpdate(
-      storeId,
+      store._id,
       { $set: req.body },
-      { new: true }
+      { new: true },
     );
-    
-    if (!updatedStore) return sendResponse(res, false, null, "Store not found");
+
     sendResponse(res, true, updatedStore, "Store updated successfully");
   } catch (err) {
     sendResponse(res, false, null, err.message);

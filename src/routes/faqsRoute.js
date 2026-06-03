@@ -21,25 +21,20 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 
-const {
-  injectOwnershipFilter,
-  injectPublicStoreFilter,
-} = require("../middlewares/ownershipFilter");
+// const {
+//   injectOwnershipFilter,
+//   injectPublicStoreFilter,
+// } = require("../middlewares/ownershipFilter");
 
-router.get("/public", injectPublicStoreFilter, getPublicFaqs);
-router.get("/banner/public", injectPublicStoreFilter, getFaqBanner);
+router.get("/public", getPublicFaqs);
+router.get("/banner/public", getFaqBanner);
 
 router.use(authMiddleware);
-// router.post(
-//   "/banner",
-//   upload.single("image"),
-//   authorizeMinRole("store_owner"),
-//   saveFaqBanner,
-// );
+
 
 router.post("/banner", upload.single("image"),authorizeMinRole("store_owner"), saveFaqBanner);
 router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeletefaqs);
-router.get("/", injectOwnershipFilter, getfaqs);
+router.get("/", getfaqs);
 router.post("/", authorizeMinRole("store_owner"), createfaqs);
 router.get("/:id", authorizeMinRole("store_owner"), getfaqsById);
 router.put("/:id", authorizeMinRole("store_owner"), updatefaqs);

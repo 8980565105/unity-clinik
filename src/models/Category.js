@@ -10,12 +10,12 @@ const categorySchema = new mongoose.Schema(
     description: { type: String, default: "" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     image_url: { type: String, default: null },
-    storeId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-      default: null,
-      index: true,
-    },
+    // storeId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    //   default: null,
+    //   index: true,
+    // },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -31,6 +31,6 @@ categorySchema.pre("validate", function (next) {
   }
   // next();
 });
-categorySchema.index({ name: 1, storeId: 1 }, { unique: true });
+categorySchema.index({ name: 1 }, { unique: true });
 
 module.exports = mongoose.model("Category", categorySchema);

@@ -154,9 +154,7 @@ const addCartItem = async (req, res) => {
       console.error("store_owner_id resolve failed:", e.message);
     }
 
-    // const existingItem = cart.items.find(
-    //   (item) => item.variant_id.toString() === variant_id,
-    // );
+
 
     const existingItem = cart.items.find(
       (item) =>
@@ -164,38 +162,6 @@ const addCartItem = async (req, res) => {
         Number(item.pack_of) === Number(pack_of),
     );
 
-    // if (existingItem) {
-    //   existingItem.quantity += quantity;
-    //   if (!existingItem.store_owner_id && store_owner_id) {
-    //     existingItem.store_owner_id = store_owner_id;
-    //   }
-    // }
-    // if (existingItem) {
-    //   existingItem.quantity += quantity;
-
-    //   existingItem.price = price;
-    //   existingItem.original_price = original_price;
-    //   existingItem.pack_of = pack_of || 1;
-
-    //   if (!existingItem.store_owner_id && store_owner_id) {
-    //     existingItem.store_owner_id = store_owner_id;
-    //   }
-    // } else {
-    //   // cart.items.push({ product_id, variant_id, quantity, store_owner_id });
-    //   cart.items.push({
-    //     product_id,
-    //     variant_id,
-    //     quantity,
-    //     store_owner_id,
-
-    //     // selected pack save
-    //     price,
-    //     original_price,
-    //     pack_of: pack_of || 1,
-    //   });
-    // }
-
-    // await cart.save();
 
     console.log("REQ BODY", req.body);
 

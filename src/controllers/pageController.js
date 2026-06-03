@@ -4,16 +4,7 @@ const { sendResponse } = require("../utils/response");
 // ─────────────────────────────────────────────────────────
 // Helper: Role based store filter
 // ─────────────────────────────────────────────────────────
-const buildStoreFilter = (req) => {
-  if (req.user?.role === "admin") return {};
-  if (req.user?.role === "store_owner") {
-    return { storeId: req.user.storeId };
-  }
-  if (req.storeFilter?.storeId) {
-    return { storeId: req.storeFilter.storeId };
-  }
-  return {};
-};
+const buildStoreFilter = () => ({});
 
 // ═══════════════════════════════════════════════════════
 // GET /pages
@@ -71,10 +62,6 @@ const getPageBySlug = async (req, res) => {
 
     const query = { slug, status: "active" };
 
-    if (req.storeFilter?.storeId) {
-      query.storeId = req.storeFilter.storeId;
-    }
-
     const page = await Page.findOne(query);
     if (!page) return sendResponse(res, false, null, "Page not found");
 
@@ -105,12 +92,6 @@ const createPage = async (req, res) => {
   try {
     const data = { ...req.body };
 
-    if (req.user.role === "admin") {
-      data.storeId = data.storeId || null;
-    } else {
-      data.storeId = req.user.storeId;
-    }
-
     if (!data.slug && data.page_name) {
       data.slug = data.page_name
         .toLowerCase()
@@ -118,20 +99,19 @@ const createPage = async (req, res) => {
         .replace(/(^-|-$)+/g, "");
     }
 
-    if (data.storeId) {
-      const existing = await Page.findOne({
-        slug: data.slug,
-        storeId: data.storeId,
-      });
-      if (existing) {
-        return sendResponse(
-          res,
-          false,
-          null,
-          `Page with slug "${data.slug}" already exists in your store. Please use a different page name.`,
-        );
-      }
+    const existing = await Page.findOne({
+      slug: data.slug,
+    });
+
+    if (existing) {
+      return sendResponse(
+        res,
+        false,
+        null,
+        `Page with slug "${data.slug}" already exists.`,
+      );
     }
+
     if (Array.isArray(data.sections)) {
       data.sections = data.sections.filter(
         (sec) =>
@@ -167,8 +147,6 @@ const updatePage = async (req, res) => {
     const data = { ...req.body };
     const filter = { _id: req.params.id, ...buildStoreFilter(req) };
 
-    delete data.storeId;
-
     if (!data.slug && data.page_name) {
       data.slug = data.page_name
         .toLowerCase()
@@ -180,21 +158,18 @@ const updatePage = async (req, res) => {
     // Duplicate slug check — same store ma bija page ma
     // ─────────────────────────────────────────────────
     if (data.slug) {
-      const currentPage = await Page.findOne(filter);
-      if (currentPage && currentPage.storeId) {
-        const duplicate = await Page.findOne({
-          slug: data.slug,
-          storeId: currentPage.storeId,
-          _id: { $ne: req.params.id },
-        });
-        if (duplicate) {
-          return sendResponse(
-            res,
-            false,
-            null,
-            `Page with slug "${data.slug}" already exists in your store. Please use a different page name.`,
-          );
-        }
+      const duplicate = await Page.findOne({
+        slug: data.slug,
+        _id: { $ne: req.params.id },
+      });
+
+      if (duplicate) {
+        return sendResponse(
+          res,
+          false,
+          null,
+          `Page with slug "${data.slug}" already exists.`,
+        );
       }
     }
 
@@ -210,7 +185,7 @@ const updatePage = async (req, res) => {
     }
 
     const updated = await Page.findOneAndUpdate(filter, data, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     });
 
@@ -240,7 +215,13 @@ const updatePageStatus = async (req, res) => {
     }
 
     const filter = { _id: req.params.id, ...buildStoreFilter(req) };
-    const page = await Page.findOneAndUpdate(filter, { status }, { new: true });
+    const page = await Page.findOneAndUpdate(
+      filter,
+      { status },
+      {
+        returnDocument: "after",
+      },
+    );
     if (!page) return sendResponse(res, false, null, "Page not found");
 
     sendResponse(res, true, page, "Status updated");
@@ -269,7 +250,8 @@ const deletePage = async (req, res) => {
 const bulkDeletePages = async (req, res) => {
   try {
     const { ids } = req.body;
-    if (!Array.isArray(ids) || ids.length === 0) return sendResponse(res, false, null, "No IDs provided");
+    if (!Array.isArray(ids) || ids.length === 0)
+      return sendResponse(res, false, null, "No IDs provided");
 
     const filter = {
       _id: { $in: ids },

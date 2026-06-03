@@ -15,7 +15,6 @@ const deleteOldProfilePicture = (filename) => {
       if (err) console.error("[Upload] Error:", err.message);
     });
   }
-
 };
 
 const getUsers = async (req, res) => {
@@ -133,7 +132,6 @@ const createUser = async (req, res) => {
     let resolvedStoreId = bodyStoreId || null;
     let storeDomain = domain || "";
 
-
     if (!resolvedStoreId && domain) {
       const safeDomain =
         typeof domain === "string"
@@ -166,30 +164,22 @@ const createUser = async (req, res) => {
         "storeId or domain is required for store_user",
       );
 
-    if (resolvedStoreId) {
-      const exists = await User.findOne({ email, storeId: resolvedStoreId });
-      if (exists)
-        return sendResponse(
-          res,
-          false,
-          null,
-          "A user with this email is already registered in this store",
-        );
+    const exists = await User.findOne({ email });
+
+    if (exists) {
+      return sendResponse(res, false, null, "Email already exists");
     }
 
     const newUser = await User.create({
       name,
       email,
       password: password || "Temp1234!",
-      role,
+      role: role || "store_user",
       mobile_number,
-      // address,
       addresses,
       gender,
       date_of_birth,
       profile_picture,
-      domain: storeDomain,
-      storeId: resolvedStoreId,
     });
 
     return sendResponse(

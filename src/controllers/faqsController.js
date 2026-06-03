@@ -1,6 +1,6 @@
 const Faq = require("../models/Faqs");
 const { sendResponse } = require("../utils/response");
-const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
+// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
 const getPublicFaqs = async (req, res) => {
   try {
@@ -17,10 +17,6 @@ const getPublicFaqs = async (req, res) => {
     }
 
     const filter = { status: "active" };
-
-    if (req.storeFilter?.storeId) {
-      filter.storeId = req.storeFilter.storeId;
-    }
 
     if (category && typeof category === "string" && category !== "all") {
       filter.category = { $regex: category, $options: "i" };
@@ -50,7 +46,7 @@ const getPublicFaqs = async (req, res) => {
 const getfaqs = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", status } = req.query;
-    const filter = { ...req.ownershipQuery };
+    const filter = {};
 
     if (status) filter.status = status;
     if (search) {
@@ -90,10 +86,8 @@ const createfaqs = async (req, res) => {
     if (!question)
       return sendResponse(res, false, null, "Question is required");
 
-    const storeId =
-      req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
+    const existing = await Faq.findOne({ question });
 
-    const existing = await Faq.findOne({ question, storeId });
     if (existing) {
       return sendResponse(
         res,
@@ -102,13 +96,11 @@ const createfaqs = async (req, res) => {
         `Question "${question}" already exists. Please use a different question.`,
       );
     }
-
     const newFaq = new Faq({
       question,
       answer,
       status: status || "active",
       category,
-      storeId,
     });
 
     const saved = await newFaq.save();
@@ -180,10 +172,10 @@ const bulkDeletefaqs = async (req, res) => {
 
 const saveFaqBanner = async (req, res) => {
   try {
-    const storeId =
-      req.user.role === "admin"
-        ? req.body.storeId || null
-        : req.user.storeId;
+    // const storeId =
+    //   req.user.role === "admin"
+    //     ? req.body.storeId || null
+    //     : req.user.storeId;
 
     let image = "";
 
@@ -192,10 +184,10 @@ const saveFaqBanner = async (req, res) => {
     }
 
     // 🔥 find any faq of this store
-    let faq = await Faq.findOne({ storeId });
+    let faq = await Faq.findOne();
 
     if (!faq) {
-      faq = new Faq({ storeId });
+      faq = new Faq();
     }
 
     // ✅ update banner
@@ -208,7 +200,6 @@ const saveFaqBanner = async (req, res) => {
     await faq.save();
 
     res.json({ success: true, data: faq });
-
   } catch (err) {
     res.json({ success: false, message: err.message });
   }
@@ -218,9 +209,9 @@ const getFaqBanner = async (req, res) => {
   try {
     const filter = {};
 
-    if (req.storeFilter?.storeId) {
-      filter.storeId = req.storeFilter.storeId;
-    }
+    // if (req.storeFilter?.storeId) {
+    //   filter.storeId = req.storeFilter.storeId;
+    // }
 
     const faq = await Faq.findOne(filter);
 
@@ -228,7 +219,6 @@ const getFaqBanner = async (req, res) => {
       success: true,
       data: faq?.banner || null,
     });
-
   } catch (err) {
     res.json({ success: false, message: err.message });
   }
@@ -237,7 +227,7 @@ const getFaqBanner = async (req, res) => {
 module.exports = {
   saveFaqBanner,
   getFaqBanner,
-  getPublicFaqs, 
+  getPublicFaqs,
   getfaqs,
   createfaqs,
   updatefaqs,

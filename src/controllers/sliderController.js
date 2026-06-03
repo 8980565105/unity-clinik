@@ -1,6 +1,6 @@
 const Slider = require("../models/Slider");
 const { sendResponse } = require("../utils/response");
-const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
+// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
 const VALID_SECTIONS = [
   "hero1",
@@ -13,10 +13,14 @@ const VALID_SECTIONS = [
 
 const getPublicSlider = async (req, res) => {
   try {
-    if (!req.storeFilter?.storeId) return res.json({ success: true, data: [] });
+    // if (!req.storeFilter?.storeId) return res.json({ success: true, data: [] });
     const { section } = req.query;
-    const query = { status: "active", storeId: req.storeFilter.storeId };
-    if (section && VALID_SECTIONS.includes(section)) query.section = section;
+    const query = {
+      status: "active",
+    };
+    if (section && VALID_SECTIONS.includes(section)) {
+      query.section = section;
+    }
     const sections = await Slider.find(query);
     res.json({ success: true, data: sections });
   } catch (err) {
@@ -62,8 +66,8 @@ const getSlideById = async (req, res) => {
 
 const createSlide = async (req, res) => {
   try {
-    const storeId =
-      req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
+    // const storeId =
+    //   req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
 
     const { section, status, slides, banner2, banner3, banner4 } = req.body;
 
@@ -86,17 +90,18 @@ const createSlide = async (req, res) => {
       if (!banner2 || typeof banner2 !== "object") {
         return sendResponse(res, false, null, "banner2 object is required");
       }
+
       const doc = new Slider({
-        section,
+        section: "banner2",
         status: status || "active",
         banner2: {
           image: banner2.image || null,
           mobileimg: banner2.mobileimg || null,
         },
-        storeId,
-        createdBy: req.user._id,
       });
+
       const saved = await doc.save();
+
       return sendResponse(res, true, saved, "Banner2 created successfully");
     }
 
@@ -111,8 +116,6 @@ const createSlide = async (req, res) => {
           image: banner3.image || null,
           mobileimg: banner3.mobileimg || null,
         },
-        storeId,
-        createdBy: req.user._id,
       });
       const saved = await doc.save();
       return sendResponse(res, true, saved, "Banner3 created successfully");
@@ -122,17 +125,18 @@ const createSlide = async (req, res) => {
       if (!banner4 || typeof banner4 !== "object") {
         return sendResponse(res, false, null, "banner4 object is required");
       }
+
       const doc = new Slider({
-        section,
+        section: "banner4",
         status: status || "active",
         banner4: {
           image: banner4.image || null,
           mobileimg: banner4.mobileimg || null,
         },
-        storeId,
-        createdBy: req.user._id,
       });
+
       const saved = await doc.save();
+
       return sendResponse(res, true, saved, "Banner4 created successfully");
     }
 
@@ -157,8 +161,6 @@ const createSlide = async (req, res) => {
       section,
       status: status || "active",
       [slidesField]: slides,
-      storeId,
-      createdBy: req.user._id,
     });
 
     const saved = await doc.save();

@@ -31,21 +31,21 @@ router.use(authMiddleware);
 
 router.get("/", injectOwnershipFilter, getBrands);
 
-router.get("/:id",authorizeMinRole("store_owner"), getBrandById);
+router.get("/:id",authorizeMinRole("admin"), getBrandById);
 router.post(
   "/",
-  authorizeMinRole("store_owner"),
+  authorizeMinRole("admin"),
   upload.single("image"),
   createBrand,
 );
 router.put(
   "/:id",
-  authorizeMinRole("store_owner"),
+  authorizeMinRole("admin"),
   upload.single("image"),
   updateBrand,
 );
-router.put("/:id/status", authorizeMinRole("store_owner"), updateBrandStatus);
-router.delete("/:id", authorizeMinRole("store_owner"), deleteBrand);
-router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteBrands);
+router.put("/:id/status", authorizeMinRole("admin"), updateBrandStatus);
+router.delete("/:id", authorizeMinRole("admin"), deleteBrand);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteBrands);
 
 module.exports = router;
