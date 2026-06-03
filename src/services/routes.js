@@ -151,7 +151,7 @@ export const ROUTES = {
     create: "/emails",
   },
   slide: {
-    getPublic: "/slide/public",
+    getPublic: "/slider/public",
   },
 
   SystemSettings: {

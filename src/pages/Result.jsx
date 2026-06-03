@@ -89,9 +89,6 @@ export default function Result() {
     setVisibleCount((prev) => prev + 6);
   };
 
-  useEffect(() => {
-    dispatch(fetchPageBySlug("results"));
-  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchResults());

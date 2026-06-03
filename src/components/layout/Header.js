@@ -15,8 +15,6 @@ import {
 } from "lucide-react";
 import ShopIcon from "../icons/shop";
 import HeaderLogo from "../../assets/logo.png";
-// import bannerImg from "../../assets/banner.png";
-// import banner1 from "../../assets/banner1.png";
 import WhiteLogin from "../../assets/white login.png";
 import SvgComponent from "../icons/login";
 import { useDispatch, useSelector } from "react-redux";

@@ -47,7 +47,8 @@ const Home = () => {
       {slugLoading && <Loding />}
       <SEO
         title={homePage?.meta_title}
-        description={homePage?.seo?.meta_description}
+        description={homePage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${homePage?.seo_image}`}
       />
       <div className="text-center">
         <Toaster position="top center" />

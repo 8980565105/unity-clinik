@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { FiBox, FiShoppingCart, FiUsers } from "react-icons/fi";
+import { FiShoppingCart, FiUsers } from "react-icons/fi";
 import { MdCurrencyRupee } from "react-icons/md";
 import { fetchDashboard } from "../../features/dashboard/dashboardThunk";
 import Section from "../ui/Section";

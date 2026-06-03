@@ -46,7 +46,7 @@ const RegistrationForm = ({ onClose }) => {
     data.append("gender", formData.gender);
     data.append("date_of_birth", formData.date_of_birth);
     data.append("domain", window.location.origin);
-
+    data.append("role", "store_user");  
     if (formData.profile_picture instanceof File) {
       data.append("profile_picture", formData.profile_picture);
     }
@@ -127,17 +127,6 @@ const RegistrationForm = ({ onClose }) => {
               className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
             />
           </div>
-          {/* <div>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
-            />
-          </div> */}
 
           <div className="relative">
             <input

@@ -3,7 +3,7 @@ import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
 const BASE_URL = (
-  process.env.REACT_APP_API_URL_IMAGE || "http://localhost:5000"
+  process.env.REACT_APP_API_URL_IMAGE
 ).replace(/\/$/, "");
 
 export const toFullImageUrl = (filename) => {
