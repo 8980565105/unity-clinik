@@ -13,9 +13,7 @@ const getCarts = async (req, res) => {
 
     let query = {};
 
-    if (userRole === "store_owner") {
-      query["items.store_owner_id"] = userId;
-    } else if (userRole === "admin") {
+    if (userRole === "admin") {
     } else {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
     }
@@ -41,18 +39,6 @@ const getCarts = async (req, res) => {
           "price offerprice color size sku image images",
         ) // ✅
         .sort({ createdAt: -1 });
-
-      if (userRole === "store_owner") {
-        carts = carts
-          .map((cart) => ({
-            ...cart.toObject(),
-            items: cart.items.filter(
-              (item) => item.store_owner_id?.toString() === userId.toString(),
-            ),
-          }))
-          .filter((cart) => cart.items.length > 0);
-      }
-
       return sendResponse(res, true, { carts }, "All carts for download");
     }
 
@@ -72,17 +58,6 @@ const getCarts = async (req, res) => {
         "price offerprice color size sku image images",
       ); // ✅
 
-    if (userRole === "store_owner") {
-      carts = carts
-        .map((cart) => ({
-          ...cart.toObject(),
-          items: cart.items.filter(
-            (item) => item.store_owner_id?.toString() === userId.toString(),
-          ),
-        }))
-        .filter((cart) => cart.items.length > 0);
-    }
-
     sendResponse(res, true, {
       carts,
       total,
@@ -100,9 +75,7 @@ const getCartById = async (req, res) => {
       .populate("user_id", "name email")
       .populate({
         path: "items.product_id",
-        select:
-          "name price offerprice image images discount_id createdBy category_id",
-        populate: { path: "discount_id", select: "type value" },
+        select: "name price offerprice image images category_id",
       })
       .populate(
         "items.variant_id",
@@ -128,9 +101,6 @@ const createCart = async (req, res) => {
 
 const addCartItem = async (req, res) => {
   try {
-    // const { cart_id, product_id, variant_id, quantity, price, offerprice } =
-    //   req.body;
-
     const {
       cart_id,
       product_id,
@@ -144,24 +114,11 @@ const addCartItem = async (req, res) => {
     const cart = await Cart.findById(cart_id);
     if (!cart) return sendResponse(res, false, null, "Cart not found");
 
-    let store_owner_id = null;
-    try {
-      const product = await Product.findById(product_id).select("createdBy");
-      if (product?.createdBy) {
-        store_owner_id = product.createdBy;
-      }
-    } catch (e) {
-      console.error("store_owner_id resolve failed:", e.message);
-    }
-
-
-
     const existingItem = cart.items.find(
       (item) =>
         item.variant_id.toString() === variant_id.toString() &&
         Number(item.pack_of) === Number(pack_of),
     );
-
 
     console.log("REQ BODY", req.body);
 
@@ -174,15 +131,12 @@ const addCartItem = async (req, res) => {
 
       existingItem.pack_of = Number(pack_of || 1);
 
-      if (!existingItem.store_owner_id && store_owner_id) {
-        existingItem.store_owner_id = store_owner_id;
-      }
+      
     } else {
       cart.items.push({
         product_id,
         variant_id,
         quantity: Number(quantity || 1),
-        store_owner_id,
 
         price: Number(price || 0),
 
@@ -199,8 +153,7 @@ const addCartItem = async (req, res) => {
     const populatedCart = await Cart.findById(cart._id)
       .populate({
         path: "items.product_id",
-        select: "name price image images discount_id createdBy",
-        populate: { path: "discount_id", select: "type value" },
+        select: "name price image images",
       })
       .populate(
         "items.variant_id",
@@ -245,8 +198,7 @@ const deleteCartItem = async (req, res) => {
     const populatedCart = await Cart.findById(cart._id)
       .populate({
         path: "items.product_id",
-        select: "name price image images discount_id",
-        populate: { path: "discount_id", select: "type value" },
+        select: "name price image images",
       })
       .populate(
         "items.variant_id",

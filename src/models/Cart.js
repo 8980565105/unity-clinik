@@ -35,12 +35,6 @@ const cartItemSchema = new mongoose.Schema(
       default: 0,
     },
 
-    store_owner_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: false,
-      default: null,
-    },
   },
   { _id: true },
 );

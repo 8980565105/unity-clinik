@@ -4,7 +4,6 @@ const { sendResponse } = require("../utils/response");
 const ProductVariant = require("../models/ProductVariant");
 const mongoose = require("mongoose");
 
-// helper function
 const normalizeSections = (sections = []) => {
   return (Array.isArray(sections) ? sections : []).map((section) => ({
     type: section.type || "",
@@ -42,7 +41,8 @@ const normalizeSections = (sections = []) => {
         usPoint: item.usPoint || "",
 
         otherPoint: item.otherPoint || "",
-
+        key: item.key || "",
+        value: item.value || "",
         product_id:
           item.product_id && mongoose.Types.ObjectId.isValid(item.product_id)
             ? item.product_id
@@ -85,17 +85,6 @@ const normalizeSections = (sections = []) => {
   }));
 };
 
-// ─────────────────────────────────────────────────────────────────
-// Helper: ownership check — storeId based
-// ─────────────────────────────────────────────────────────────────
-// const isOwnerOrAdmin = (req, product) => {
-//   if (req.user.role === "admin") return true;
-//   return product.storeId?.toString() === req.user.storeId?.toString();
-// };
-
-// ─────────────────────────────────────────────────────────────────
-// Helper: build aggregation pipeline
-// ─────────────────────────────────────────────────────────────────
 const buildPipeline = ({
   productMatch,
   variantMatch,
@@ -230,14 +219,6 @@ const getPublicProducts = async (req, res) => {
         $options: "i",
       };
     }
-    // if (!req.storeFilter || !req.storeFilter.storeId) {
-    //   return res.json({
-    //     success: true,
-    //     data: { products: [], total: 0, page, pages: 0 },
-    //   });
-    // }
-    // productMatch.storeId = new mongoose.Types.ObjectId(req.storeFilter.storeId);
-
     if (search) {
       productMatch.name = {
         $regex: search,
@@ -326,7 +307,6 @@ const getPublicProducts = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
 const getProducts = async (req, res) => {
   try {
     let {
@@ -443,12 +423,6 @@ const getProductById = async (req, res) => {
 
     if (!product) return sendResponse(res, false, null, "Product not found");
 
-    // if (req.user.role === "store_owner") {
-    // if (!isOwnerOrAdmin(req, product)) {
-    //   return sendResponse(res, false, null, "Forbidden: Not your product");
-    // }
-    // }
-
     const variants = await ProductVariant.find({ product_id: product._id })
       .populate("brand_id", "name")
       .populate("type_id", "name")
@@ -488,28 +462,7 @@ const createProduct = async (req, res) => {
     } else if (req.body.images) {
       productImages = req.body.images;
     }
-    // {
-    //       productImages = req.files[0] ? `/uploads/${req.files[0].filename}` : "";
-    //     } else if (req.body.images) {
-    //       productImages = req.body.images;
-    //     }
-    // const storeId =
-    //   req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
 
-    // const product = new Product({
-    //   name,
-    //   slug: slugify(name, { lower: true, strict: true }),
-    //   description,
-    //   steps,
-    //   category_id: Array.isArray(category_id) ? category_id : [category_id],
-    //   discount_id: discount_id || null,
-    //   status: status || "active",
-    //   images: productImages,
-
-    //   sections: normalizeSections(
-    //     typeof sections === "string" ? JSON.parse(sections) : sections,
-    //   ),
-    // });
     const product = new Product({
       name,
       slug: slugify(name, {
@@ -580,10 +533,6 @@ const updateProduct = async (req, res) => {
     if (!product) {
       return sendResponse(res, false, null, "Product not found");
     }
-
-    // if (!isOwnerOrAdmin(req, product)) {
-    //   return sendResponse(res, false, null, "Forbidden: Not your product");
-    // }
 
     let parsedSections = [];
 
@@ -661,10 +610,6 @@ const updateProductStatus = async (req, res) => {
 
     const product = await Product.findById(id);
     if (!product) return sendResponse(res, false, null, "Product not found");
-    // if (!isOwnerOrAdmin(req, product)) {
-    //   return sendResponse(res, false, null, "Forbidden: Not your product");
-    // }
-
     const updated = await Product.findByIdAndUpdate(
       id,
       { status },
@@ -684,10 +629,6 @@ const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return sendResponse(res, false, null, "Product not found");
-    // if (!isOwnerOrAdmin(req, product)) {
-    //   return sendResponse(res, false, null, "Forbidden: Not your product");
-    // }
-
     await Product.findByIdAndDelete(req.params.id);
     await ProductVariant.deleteMany({ product_id: req.params.id });
     sendResponse(
@@ -709,11 +650,6 @@ const bulkDeleteProducts = async (req, res) => {
     const { ids } = req.body;
     if (!Array.isArray(ids) || ids.length === 0)
       return sendResponse(res, false, null, "No IDs provided");
-
-    // let deleteQuery = { _id: { $in: ids } };
-    // if (req.user.role === "store_owner") {
-    //   deleteQuery.storeId = req.user.storeId;
-    // }
     const deleteQuery = {
       _id: { $in: ids },
     };

@@ -50,19 +50,6 @@ const productSchema = new mongoose.Schema(
       default: "active",
     },
 
-    // storeId: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Store",
-    //   default: null,
-    //   index: true,
-    // },
-
-    // createdBy: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "User",
-    //   required: true,
-    // },
-
     sections: [
       {
         type: {
@@ -159,6 +146,15 @@ const productSchema = new mongoose.Schema(
                 type: String,
                 default: "",
               },
+
+              key: {
+                type: String,
+                default: "",
+              },
+              value: {
+                type: String,
+                default: "",
+              },
             },
           ],
 
@@ -236,8 +232,6 @@ productSchema.pre("save", function (next) {
       strict: true,
     });
   }
-
-  // next();
 });
 
 productSchema.index({ name: 1 }, { unique: true });

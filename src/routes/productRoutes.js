@@ -15,10 +15,6 @@ const {
   authMiddleware,
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
-// const {
-//   injectPublicStoreFilter,
-//   injectOwnershipFilter,
-// } = require("../middlewares/ownershipFilter");
 
 const upload = require("../middlewares/upload");
 

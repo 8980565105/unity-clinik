@@ -111,10 +111,10 @@ const orderSchema = new mongoose.Schema(
         note: { type: String, default: "" },
       },
     ],
-    store_owner_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Store",
-    },
+    // store_owner_id: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Store",
+    // },
 
     invoice_generated: { type: Boolean, default: false },
   },
