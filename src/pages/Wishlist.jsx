@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { getImageUrl } from "../components/utils/helper";
 import wishlistBg from "../assets/wishlistbg.png";
 import Loding from "../components/loding/loding";
+import SEO from "../components/seo/seo";
 const staticBg = {
   sections: [
     {
@@ -22,6 +23,7 @@ const staticBg = {
 export default function Wishlist() {
   const dispatch = useDispatch();
   const { pages, slugLoading } = useSelector((state) => state.pages);
+
   const { products } = useSelector((state) => state.products);
 
   useEffect(() => {
@@ -34,6 +36,12 @@ export default function Wishlist() {
   if (slugLoading) return <Loding />;
   return (
     <>
+      <SEO
+        title={wishlistpage?.meta_title}
+        description={wishlistpage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${wishlistpage?.seo_image}`}
+      />
+
       {wishlistpage?.sections.map((section) => (
         <SecondarySection
           key={section._id}

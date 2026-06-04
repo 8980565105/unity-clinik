@@ -3,6 +3,13 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import Slider from "react-slick";
 import { getImageUrl } from "../utils/helper";
+import { ChevronUp, ChevronDown } from "lucide-react";
+
+const THUMB_SIZE = 80; 
+const THUMB_GAP = 8; 
+const THUMB_STEP = THUMB_SIZE + THUMB_GAP;
+const VISIBLE_THUMBS = 4; 
+const VIEWPORT_H = VISIBLE_THUMBS * THUMB_STEP - THUMB_GAP; 
 
 export default function ProductGallery({
   product,
@@ -13,6 +20,7 @@ export default function ProductGallery({
   const [currentImage, setCurrentImage] = useState(null);
   const [zoomStyle, setZoomStyle] = useState({ display: "none" });
   const [showZoom, setShowZoom] = useState(false);
+  const [thumbIndex, setThumbIndex] = useState(0);
   const imgRef = useRef(null);
 
   const variants = product?.variants || [];
@@ -31,8 +39,6 @@ export default function ProductGallery({
     return Array.from(seen.values());
   }, [variants]);
 
-  
-
   const fullImageUrls = useMemo(() => {
     if (
       Array.isArray(activeVariant?.images) &&
@@ -40,27 +46,39 @@ export default function ProductGallery({
     ) {
       return activeVariant.images.map((img) => getImageUrl(img));
     }
-
     const firstVariant = product?.variants?.[0];
-
     if (Array.isArray(firstVariant?.images) && firstVariant.images.length > 0) {
       return firstVariant.images.map((img) => getImageUrl(img));
     }
-
-    if (product?.images) {
-      return [getImageUrl(product.images)];
-    }
-
+    if (product?.images) return [getImageUrl(product.images)];
     return [];
   }, [activeVariant, product]);
 
   useEffect(() => {
     if (fullImageUrls.length > 0) {
       setCurrentImage(fullImageUrls[0]);
+      setThumbIndex(0);
     } else {
       setCurrentImage(null);
+      setThumbIndex(0);
     }
   }, [activeVariant?._id]);
+
+  const maxIndex = Math.max(0, fullImageUrls.length - VISIBLE_THUMBS);
+  const canUp = thumbIndex > 0;
+  const canDown = thumbIndex < maxIndex;
+
+  const handleUp = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setThumbIndex((i) => Math.max(0, i - 1));
+  };
+
+  const handleDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setThumbIndex((i) => Math.min(maxIndex, i + 1));
+  };
 
   const handleMouseMove = (e) => {
     if (window.innerWidth < 1024) return;
@@ -79,6 +97,7 @@ export default function ProductGallery({
   const handleMouseEnter = () => {
     if (window.innerWidth >= 1024) setShowZoom(true);
   };
+
   const handleMouseLeave = () => {
     setShowZoom(false);
     setZoomStyle({ display: "none" });
@@ -106,26 +125,73 @@ export default function ProductGallery({
   return (
     <div className="flex flex-col md:flex-row gap-[30px] h-[500px]">
       <div
-        className="hidden md:flex md:flex-col gap-[20px] h-[500px] overflow-y-auto hide-scrollbar p-1"
-        style={{
-          scrollBehavior: "smooth",
-          msOverflowStyle: "none",
-          scrollbarWidth: "none",
-        }}
+        className="hidden md:flex md:flex-col items-center"
+        style={{ width: `${THUMB_SIZE}px` }}
       >
-        {fullImageUrls.map((img, index) => (
-          <img
-            key={index}
-            src={img}
-            alt={`Thumbnail ${index}`}
-            onClick={() => setCurrentImage(img)}
-            className={`w-[160px] h-[208px] object-cover rounded-[3px] cursor-pointer transition-all duration-200 ${
-              currentImage === img
-                ? "ring-1 ring-theme scale-[1.02]"
-                : "opacity-50 hover:opacity-100"
+        <button
+          type="button"
+          onClick={handleUp}
+          disabled={!canUp}
+          className={`flex items-center justify-center mb-2 p-1 transition-colors z-10
+            ${
+              canUp
+                ? "text-gray-500 hover:text-[#005BAA] cursor-pointer"
+                : "text-gray-300 cursor-not-allowed"
             }`}
-          />
-        ))}
+        >
+          <ChevronUp size={20} />
+        </button>
+
+        <div
+          className="overflow-hidden"
+          style={{ height: `${VIEWPORT_H}px`, width: `${THUMB_SIZE}px` }}
+        >
+          <div
+            className="flex flex-col transition-transform duration-300 ease-in-out"
+            style={{
+              gap: `${THUMB_GAP}px`,
+              transform: `translateY(-${thumbIndex * THUMB_STEP}px)`,
+            }}
+          >
+            {fullImageUrls.map((img, index) => (
+              <div
+                key={index}
+                onClick={() => setCurrentImage(img)}
+                style={{
+                  width: `${THUMB_SIZE}px`,
+                  height: `${THUMB_SIZE}px`,
+                  flexShrink: 0,
+                }}
+                className={`rounded-xl border-2 overflow-hidden cursor-pointer transition-colors
+                  ${
+                    currentImage === img
+                      ? "border-[#005BAA]"
+                      : "border-transparent hover:border-[#005BAA]"
+                  }`}
+              >
+                <img
+                  src={img}
+                  alt={`Thumbnail ${index}`}
+                  className="w-full h-full object-fill"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDown}
+          disabled={!canDown}
+          className={`flex items-center justify-center mt-2 p-1 transition-colors z-10
+            ${
+              canDown
+                ? "text-gray-500 hover:text-[#005BAA] cursor-pointer"
+                : "text-gray-300 cursor-not-allowed"
+            }`}
+        >
+          <ChevronDown size={20} />
+        </button>
       </div>
 
       <div className="hidden md:block flex-1 relative">
@@ -141,7 +207,6 @@ export default function ProductGallery({
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
             />
-
             {showZoom && (
               <div
                 className="absolute top-0 rounded-[10px] border border-gray-200 shadow-xl pointer-events-none z-50 bg-white"
@@ -155,7 +220,7 @@ export default function ProductGallery({
             )}
           </div>
         ) : (
-          <div className="w-full h-[727px] rounded-[10px] bg-gray-100 flex items-center justify-center text-gray-400">
+          <div className="w-full h-[500px] rounded-[10px] bg-gray-100 flex items-center justify-center text-gray-400">
             No Image Available
           </div>
         )}
@@ -186,7 +251,7 @@ export default function ProductGallery({
                 <img
                   src={img}
                   alt={`Slide ${index}`}
-                  className="w-full h-300px sm:h-[500px] object-cover"
+                  className="w-full h-[300px] sm:h-[500px] object-cover"
                 />
               </div>
             ))}

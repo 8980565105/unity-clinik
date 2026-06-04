@@ -5,7 +5,7 @@ import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
 import { fetchResults } from "../features/results/resultsThunk";
 import SEO from "../components/seo/seo";
-import { fetchPageBySlug } from "../features/pages/pagesThunk";
+import { fetchPageBySlug, fetchPages } from "../features/pages/pagesThunk";
 import Loding from "../components/loding/loding";
 
 const BASE_URL = process.env.REACT_APP_API_URL_IMAGE;
@@ -89,9 +89,9 @@ export default function Result() {
     setVisibleCount((prev) => prev + 6);
   };
 
-
   useEffect(() => {
     dispatch(fetchResults());
+    dispatch(fetchPages());
   }, [dispatch]);
 
   if (slugLoading) return <Loding />;
@@ -99,51 +99,47 @@ export default function Result() {
   return (
     <>
       <SEO
-        title={resultsPage?.meta_title || "result page"}
-        description={resultsPage?.meta_description || "result page description"}
+        title={resultsPage?.meta_title}
+        description={resultsPage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${resultsPage?.seo_image}`}
       />
-      
-        <Section>
-          <Row>
-            <div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
-                {results.slice(0, visibleCount).map((item) => (
-                  <ResultsCard
-                    key={item._id}
-                    item={item}
-                    onOpen={setSelected}
-                  />
-                ))}
-              </div>
 
-              {visibleCount < results.length && (
-                <div className="flex justify-center mt-[50px]">
-                  <button
-                    onClick={handleLoadMore}
-                    className="text-[18px] theme-border text-theme w-[187px] h-[70px] sm:w-[220px] sm:h-[75px] font-medium rounded-[10px] shadow-lg transition duration-300 uppercase"
-                    style={{
-                      boxShadow: "inset 0px 0px 30px ",
-                    }}
-                  >
-                    Load More
-                  </button>
-                </div>
-              )}
-
-              {results.length === 0 && (
-                <div className="text-center text-gray-400 py-20">
-                  No results found.
-                  <Loding/>
-                </div>
-              )}
-
-              {selected && (
-                <Modal data={selected} onClose={() => setSelected(null)} />
-              )}
+      <Section>
+        <Row>
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-7">
+              {results.slice(0, visibleCount).map((item) => (
+                <ResultsCard key={item._id} item={item} onOpen={setSelected} />
+              ))}
             </div>
-          </Row>
-        </Section>
-    
+
+            {visibleCount < results.length && (
+              <div className="flex justify-center mt-[50px]">
+                <button
+                  onClick={handleLoadMore}
+                  className="text-[18px] theme-border text-theme w-[187px] h-[70px] sm:w-[220px] sm:h-[75px] font-medium rounded-[10px] shadow-lg transition duration-300 uppercase"
+                  style={{
+                    boxShadow: "inset 0px 0px 30px ",
+                  }}
+                >
+                  Load More
+                </button>
+              </div>
+            )}
+
+            {results.length === 0 && (
+              <div className="text-center text-gray-400 py-20">
+                No results found.
+                <Loding />
+              </div>
+            )}
+
+            {selected && (
+              <Modal data={selected} onClose={() => setSelected(null)} />
+            )}
+          </div>
+        </Row>
+      </Section>
     </>
   );
 }

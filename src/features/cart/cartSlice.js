@@ -25,22 +25,31 @@ const cartSlice = createSlice({
       state.error = null;
       localStorage.removeItem("cart_id");
     },
+    
     updateLocalQuantity: (state, action) => {
       const { item_id, quantity } = action.payload;
+
       const item = state.items.find((i) => i._id === item_id);
-      if (item) item.quantity = quantity;
+
+      if (item) {
+        item.quantity = quantity;
+      }
+
+      const cartItem = state.cart?.items?.find((i) => i._id === item_id);
+
+      if (cartItem) {
+        cartItem.quantity = quantity;
+      }
     },
   },
   extraReducers: (builder) => {
     builder
 
-      // ── createCart ────────────────────────────────────────────────────────────
       .addCase(createCart.fulfilled, (state, action) => {
         state.cart = action.payload;
         state.items = action.payload?.items || [];
       })
 
-      // ── fetchCart ─────────────────────────────────────────────────────────────
       .addCase(fetchCart.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -55,7 +64,6 @@ const cartSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ── addToCart ─────────────────────────────────────────────────────────────
       .addCase(addToCart.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -70,15 +78,24 @@ const cartSlice = createSlice({
         state.error = action.payload;
       })
 
-      // ── updateCartItem ────────────────────────────────────────────────────────
       .addCase(updateCartItem.fulfilled, (state, action) => {
         const updatedItem = action.payload?.item;
         if (!updatedItem) return;
-        const existing = state.items.find((i) => i._id === updatedItem._id);
-        if (existing) existing.quantity = updatedItem.quantity;
-      })
 
-      // ── deleteCartItem ────────────────────────────────────────────────────────
+        const existing = state.items.find((i) => i._id === updatedItem._id);
+
+        if (existing) {
+          existing.quantity = updatedItem.quantity;
+        }
+
+        const cartExisting = state.cart?.items?.find(
+          (i) => i._id === updatedItem._id,
+        );
+
+        if (cartExisting) {
+          cartExisting.quantity = updatedItem.quantity;
+        }
+      })
       .addCase(deleteCartItem.pending, (state, action) => {
         state.deletingItemId = action.meta.arg?.item_id;
       })

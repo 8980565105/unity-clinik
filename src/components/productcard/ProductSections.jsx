@@ -2,39 +2,43 @@ import Section from "../ui/Section";
 import Row from "../ui/Row";
 import { getImageUrl } from "../utils/helper";
 import Heading from "../ui/Heading";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { Plus, Minus, ChevronUp, ChevronDown } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import Description from "../ui/Description";
+import { useNavigate } from "react-router-dom";
+import ProductCard from "./ProductCard";
+import Solutionstagecard from "./solutionstagecard";
 
-function FaqItem({ faq }) {
-  const [open, setOpen] = useState(false);
-
+function FaqItem({ faq, isOpen, onToggle }) {
   return (
     <div className="border-b border-[#e7e7e7]">
       <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between text-left py-8 group"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between text-left py-5 group"
       >
-        <h3 className="text-[18px] md:text-[22px] font-bold text-[#081b4b] pr-4 transition">
+        <h3 className="text-[12px] md:text-[16px] font-bold text-gray-900 hover:text-primary pr-4">
           {faq.question}
         </h3>
 
         <div className="flex-shrink-0 text-[#707070]">
-          {open ? <Minus size={24} /> : <Plus size={24} />}
+          {isOpen ? <Minus size={24} /> : <Plus size={24} />}
         </div>
       </button>
 
       <div
         className={`overflow-hidden transition-all duration-300 ${
-          open ? "max-h-[500px] pb-8" : "max-h-0"
+          isOpen ? "pb-6" : "max-h-0"
         }`}
       >
         <div className="flex gap-6 items-start">
-          <p className="text-[#5f6c86] text-[18px] leading-8">{faq.answer}</p>
+          <p className="text-gray-500 text-[12px] leading-relaxed">
+            {faq.answer}
+          </p>
         </div>
       </div>
     </div>
@@ -83,7 +87,7 @@ const Faq2Item = ({ item, isOpen, onToggle }) => {
           isOpen ? "max-h-[500px]" : "max-h-0"
         }`}
       >
-        <div className="px-5 md:px-8 pb-6 md:pb-8 text-[#5f6c86] text-[15px] md:text-[18px] leading-[1.9] border-t border-[#edf0f4]">
+        <div className="px-5 md:px-8 pb-6 md:pb-8 text-[#5f6c86] text-[16px] md:text-[18px] leading-[1.9] border-t border-[#edf0f4]">
           <div className="pt-5">{item.answer || item.description}</div>
         </div>
       </div>
@@ -173,14 +177,20 @@ function HowCard({ item, onLearnMore }) {
   );
 }
 
-export default function ProductSections({ sections }) {
+export default function ProductSections({ sections, setShowLoginPopup }) {
   const activeSections = (sections || []).filter(
     (sec) => sec?.data?.status === true || sec?.data?.status === undefined,
   );
+
+  const [faq1OpenIndex, setFaq1OpenIndex] = useState(0);
   return (
     <>
       {activeSections.map((section, idx) => (
-        <SectionRenderer key={idx} section={section} />
+        <SectionRenderer
+          key={idx}
+          section={section}
+          setShowLoginPopup={setShowLoginPopup}
+        />
       ))}
     </>
   );
@@ -194,9 +204,78 @@ function SectionRenderer({ section, setShowLoginPopup }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [faq2OpenIndex, setFaq2OpenIndex] = useState(0);
   const [sliderPosition, setSliderPosition] = useState({});
-
+  const [faq1OpenIndex, setFaq1OpenIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [showAllAttrs, setShowAllAttrs] = useState(false);
+  const [open, setOpen] = useState(true);
+  const [activeSlider, setActiveSlider] = useState(null);
+  const navigate = useNavigate();
 
+  const [visibleCount, setVisibleCount] = useState(
+    typeof window !== "undefined" && window.innerWidth < 768 ? 2 : 4,
+  );
+
+  useEffect(() => {
+    const move = (e) => {
+      if (activeSlider === null) return;
+
+      const container = document.getElementById(`before-after-${activeSlider}`);
+
+      if (!container) return;
+
+      const rect = container.getBoundingClientRect();
+
+      const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+
+      let position = ((clientX - rect.left) / rect.width) * 100;
+
+      position = Math.max(0, Math.min(100, position));
+
+      setSliderPosition((prev) => ({
+        ...prev,
+        [activeSlider]: position,
+      }));
+    };
+
+    const stop = () => {
+      setActiveSlider(null);
+    };
+
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", stop);
+
+    window.addEventListener("touchmove", move, {
+      passive: false,
+    });
+
+    window.addEventListener("touchend", stop);
+
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", stop);
+
+      window.removeEventListener("touchmove", move);
+
+      window.removeEventListener("touchend", stop);
+    };
+  }, [activeSlider]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setVisibleCount(2);
+      } else {
+        setVisibleCount(4);
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const visibleItems = (data?.items || []).slice(0, visibleCount);
   const { product, products, loading, error } = useSelector(
     (state) => state.products,
   );
@@ -246,12 +325,9 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           <Row>
             <Heading title={data.title} />
 
-            {data.description && (
-              <p className="text-center text-gray-500 text-sm mb-10">
-                {data.description}
-              </p>
-            )}
-            <Row>
+            <Description Description={data.description} />
+
+            <Row className="mt-5 overflow-hidden">
               <Swiper
                 modules={[Pagination, Autoplay]}
                 pagination={{ clickable: true }}
@@ -304,15 +380,12 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           <Row>
             <Heading title={data.title} />
 
-            {data.description && (
-              <p className="text-center text-gray-500 text-sm mb-10">
-                {data.description}
-              </p>
-            )}
+            <Description Description={data.description} />
 
             <div
               ref={scrollRef}
               className="
+              mt-5
     flex
     gap-6
     overflow-x-auto
@@ -387,13 +460,9 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           <Row>
             <Heading title={data.title} />
 
-            {data.description && (
-              <p className="flex justify-center items-center text-gray-400 text-sm mb-10">
-                {data.description}
-              </p>
-            )}
+            <Description Description={data.description} />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-5">
               {items.map((item, i) => (
                 <div
                   key={i}
@@ -433,20 +502,33 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           <Row>
             <Heading title={data.title} />
 
-            {data.description && (
-              <p className="flex justify-center items-center text-gray-400 text-sm mb-10">
-                {data.description}
-              </p>
-            )}
-
-            <div className="flex flex-wrap justify-center gap-8">
+            <Description Description={data.description} />
+            <div
+              className="
+    grid
+    grid-cols-1
+    md:grid-cols-2
+    lg:grid-cols-4
+    gap-8
+    mt-5
+    auto-rows-fr
+  "
+            >
               {items.map((item, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-[70px] p-6 w-[280px] text-center shadow-sm hover:shadow-lg transition duration-300 bg-[#f0f8ff]"
+                  className="
+    h-full
+    flex
+    flex-col
+    p-4
+    rounded-3xl
+    bg-gray-50
+    shadow-sm
+  "
                 >
                   {item.image && (
-                    <div className="flex items-center justify-center">
+                    <div className="rounded-full p-2 w-fit overflow-hidden bg-white border border-gray-100 mb-4 hover:shadow-lg transition-all duration-500">
                       <img
                         src={
                           item.image.startsWith("http")
@@ -454,18 +536,18 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                             : `${getImageUrl(item.image)}`
                         }
                         alt={item.name}
-                        className="object-contain"
+                        className="w-16 h-16 object-contain "
                       />
                     </div>
                   )}
                   {item.name && (
-                    <h3 className="font-semibold text-gray-900 text-sm mb-2">
+                    <h3 className="text-[16px] font-bold text-gray-900 mb-1 tracking-tighter">
                       {item.name}
                     </h3>
                   )}
 
                   {item.description && (
-                    <p className="text-xs text-gray-500 leading-relaxed">
+                    <p className="text-[12px] text-gray-800">
                       {item.description}
                     </p>
                   )}
@@ -478,105 +560,67 @@ function SectionRenderer({ section, setShowLoginPopup }) {
 
     case "Treatment Journey Section":
       return (
-        <Section className="py-16 bg-[#f8f9fa]">
+        <Section className="py-20 bg-white">
           <Row>
-            <Heading title={data.title} />
-            {data.description && (
-              <p className="text-center text-gray-400 text-sm mb-10">
-                {data.description}
-              </p>
+            {data.image && (
+              <div className="flex justify-center mb-4">
+                <div className="h-16 w-16 rounded-full flex items-center justify-center text-white shadow-lg">
+                  <img
+                    src={
+                      data.image.startsWith("http")
+                        ? data.image
+                        : getImageUrl(data.image)
+                    }
+                    alt={data.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch mt-6">
-              {items.map((item, i) => {
-                const colors = [
-                  { color: "#6366f1", bg: "#eef2ff", text: "#4338ca" },
-                  { color: "#0ea5e9", bg: "#f0f9ff", text: "#0369a1" },
-                  { color: "#10b981", bg: "#f0fdf4", text: "#065f46" },
-                  { color: "#f59e0b", bg: "#fffbeb", text: "#92400e" },
-                  { color: "#ec4899", bg: "#fdf2f8", text: "#9d174d" },
-                ];
-                const c = colors[i % colors.length];
+            <Heading title={data.title} />
+            <Description Description={data.description} />
 
-                return (
-                  <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-5 auto-rows-fr">
+              {items.map((item, i) => (
+                <div
+                  key={i}
+                  className="
+        h-full
+        bg-[#eef3f7]
+        rounded-[32px]
+        p-8
+        transition-all
+        duration-300
+        hover:-translate-y-1
+        hover:shadow-lg
+      "
+                >
+                  {item.image && (
                     <div
-                      key={i}
-                      className="group relative col-span-1 lg:col-span-1 flex flex-col items-center text-center
-                             bg-white rounded-[20px] border border-gray-100 p-5 overflow-hidden
-                             cursor-pointer transition-all duration-300
-                             hover:-translate-y-1.5 hover:scale-[1.04] hover:shadow-xl"
-                      style={{ "--card-color": c.color }}
+                      className="overflow-hidden border border-gray-100 mb-4"
+                      style={{
+                        width: "calc(var(--spacing) * 10)",
+                        height: "calc(var(--spacing) * 10)",
+                      }}
                     >
-                      <div
-                        className="absolute top-0 left-0 right-0 h-[3px] rounded-t-[20px]
-                               scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-400"
-                        style={{ background: c.color }}
+                      <img
+                        src={getImageUrl(item.image)}
+                        alt={item.name}
+                        className=" object-cover"
                       />
-
-                      <div
-                        className="w-9 h-9 rounded-full flex items-center justify-center
-                               text-[13px] font-semibold mb-3 transition-transform duration-300
-                               group-hover:scale-110 group-hover:-rotate-6"
-                        style={{ background: c.bg, color: c.text }}
-                      >
-                        {i + 1}
-                      </div>
-
-                      <div
-                        className="w-14 h-14 rounded-[14px] flex items-center justify-center mb-3
-                               transition-transform duration-300 group-hover:scale-110"
-                        style={{ background: c.bg }}
-                      >
-                        {item.image ? (
-                          <img
-                            src={
-                              item.image.startsWith("http")
-                                ? item.image
-                                : getImageUrl(item.image)
-                            }
-                            alt={item.name}
-                            className="w-8 h-8 object-contain"
-                          />
-                        ) : (
-                          <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                          >
-                            <circle
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke={c.color}
-                              strokeWidth="1.5"
-                            />
-                            <path
-                              d="M9 12l2 2 4-4"
-                              stroke={c.color}
-                              strokeWidth="1.5"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        )}
-                      </div>
-
-                      {item.name && (
-                        <p className="text-sm font-semibold text-gray-900 mb-1">
-                          {item.name}
-                        </p>
-                      )}
-                      {item.description && (
-                        <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-4">
-                          {item.description}
-                        </p>
-                      )}
                     </div>
-                  </>
-                );
-              })}
+                  )}
+
+                  <h3 className="text-[24px] font-bold text-[#1b2230] mb-4 leading-snug">
+                    {item.title}
+                  </h3>
+
+                  <p className="text-[#667085] leading-8 text-[16px]">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
             </div>
           </Row>
         </Section>
@@ -587,22 +631,32 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         <Section className="py-16 bg-white">
           <Row>
             <Heading title={data.title} />
-            {data.description && (
-              <p className="flex justify-center items-center text-gray-400 text-sm mb-10">
-                {data.description}
-              </p>
-            )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <Description Description={data.description} />
+
+            <Swiper
+              modules={[Pagination, Autoplay]}
+              pagination={{ clickable: true }}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+              }}
+              loop={items.length > 3}
+              spaceBetween={24}
+              breakpoints={{
+                0: {
+                  slidesPerView: 1,
+                },
+                640: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 3,
+                },
+              }}
+              className="ingredientsSwiper !pb-14 !pt-5 !mt-5"
+            >
               {items.map((item, i) => {
-                const bgColors = [
-                  "#fff0ee",
-                  "#eef2ff",
-                  "#f0fdf4",
-                  "#fefce8",
-                  "#fdf4ff",
-                  "#f0f9ff",
-                ];
                 const borderColors = [
                   "#f97316",
                   "#6366f1",
@@ -613,46 +667,63 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                 ];
 
                 return (
-                  <div
-                    key={i}
-                    className="ingredient-card group relative flex flex-col gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden cursor-pointer transition-all duration-300 ease-out hover:scale-105 hover:shadow-lg hover:-translate-y-1"
-                  >
-                    {item.image && (
-                      <div
-                        className="w-14 h-14 rounded-xl flex items-center justify-center mb-1 transition-colors duration-300"
-                        style={{ background: bgColors[i % 6] }}
-                      >
-                        <img
-                          src={
-                            item.image.startsWith("http")
-                              ? item.image
-                              : getImageUrl(item.image)
-                          }
-                          alt={item.name}
-                          className="w-9 h-9 object-contain"
-                        />
-                      </div>
-                    )}
-
-                    {item.name && (
-                      <p className="font-bold text-sm text-gray-800 leading-snug">
-                        {item.name}
-                      </p>
-                    )}
-                    {item.description && (
-                      <p className="text-xs text-gray-400 leading-relaxed line-clamp-4">
-                        {item.description}
-                      </p>
-                    )}
-
+                  <SwiperSlide key={i} className="flex h-auto ">
                     <div
-                      className="absolute bottom-0 left-0 h-[3px] w-0 group-hover:w-full transition-all duration-500 ease-out rounded-full"
-                      style={{ background: borderColors[i % 6] }}
-                    />
-                  </div>
+                      key={i}
+                      className="
+      group
+      relative
+      flex
+      flex-col
+      h-full
+      min-h-[320px]
+      w-full
+      p-5
+      bg-gray-50
+      rounded-3xl
+      border
+      border-gray-100
+      shadow-sm
+      overflow-hidden
+      hover:scale-105 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out
+    "
+                    >
+                      {item.image && (
+                        <div
+                          className="rounded-xl mb-1 transition-colors duration-300"
+                          style={{
+                            width: "calc(var(--spacing) * 8)",
+                            height: "calc(var(--spacing) * 8)",
+                          }}
+                        >
+                          <img
+                            src={getImageUrl(item.image)}
+                            alt={item.name}
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+
+                      {item.name && (
+                        <p className="text-[20px] font-bold text-gray-900 mb-2">
+                          {item.name}
+                        </p>
+                      )}
+                      {item.description && (
+                        <p className="text-[14px] text-gray-500 leading-relaxed">
+                          {item.description}
+                        </p>
+                      )}
+
+                      <div
+                        className="absolute bottom-0 left-0 h-[3px] w-0 group-hover:w-full transition-all duration-500 ease-out rounded-full"
+                        style={{ background: borderColors[i % 6] }}
+                      />
+                    </div>
+                  </SwiperSlide>
                 );
               })}
-            </div>
+            </Swiper>
           </Row>
         </Section>
       );
@@ -667,17 +738,12 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                   <div className="w-full mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#382454]/10 border border-gray-100">
                     {item.image && (
                       <img
-                        src={
-                          item.image.startsWith("http")
-                            ? item.image
-                            : getImageUrl(item.image)
-                        }
+                        src={getImageUrl(item.image)}
                         alt={item.title || "Banner"}
                         className="w-full h-auto object-cover"
                       />
                     )}
                   </div>
-                  {/* </div> */}
                 </div>
               ))}
             </div>
@@ -691,14 +757,9 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           <Section>
             <Row>
               <Heading title={data.title} />
+              <Description Description={data.description} />
 
-              {data.description && (
-                <p className="flex justify-center items-center text-gray-400 text-sm mb-10">
-                  {data.description}
-                </p>
-              )}
-
-              <div className="max-w-3xl mx-auto border border-gray-200 rounded-2xl overflow-hidden">
+              <div className="max-w-3xl mx-auto border mt-5 border-gray-200 rounded-2xl overflow-hidden">
                 <div className="grid grid-cols-2">
                   <div className="bg-teal-500 text-white text-center py-3 font-semibold text-sm">
                     Us
@@ -718,7 +779,7 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                       {item.name}
                     </div>
                     <div className="flex items-center gap-2 px-5 py-3 text-sm text-gray-700 border-l border-gray-100">
-                      <span className="text-red-400 font-bold">⊗</span>
+                      <span className="text-red-500 text-xs font-bold">✕</span>
                       {item.description}
                     </div>
                   </div>
@@ -734,21 +795,18 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         <Section className="py-14 bg-white">
           <Row>
             <div className="max-w-4xl mx-auto">
-              {data?.title && (
-                <h2 className="text-center text-[34px] font-extrabold uppercase text-[#0c1c4c] tracking-tight">
-                  {data.title}
-                </h2>
-              )}
-
-              {data?.description && (
-                <p className="text-center text-[#5f6c86] mt-5 text-[20px] leading-8 max-w-3xl mx-auto">
-                  {data.description}
-                </p>
-              )}
-
-              <div className="mt-12 border-t border-[#e7e7e7]">
+              <Heading title={data.title} />
+              <Description Description={data.description} />
+              <div className="mt-5 border-t border-[#e7e7e7]">
                 {(data?.questions || []).map((faq, i) => (
-                  <FaqItem key={i} faq={faq} />
+                  <FaqItem
+                    key={i}
+                    faq={faq}
+                    isOpen={faq1OpenIndex === i}
+                    onToggle={() =>
+                      setFaq1OpenIndex(faq1OpenIndex === i ? null : i)
+                    }
+                  />
                 ))}
               </div>
             </div>
@@ -761,23 +819,11 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         <Section className="py-14 bg-[#f8f9fa]">
           <Row>
             <div className="max-w-[1600px] mx-auto w-full">
-              {data?.title && (
-                <div className="text-center mb-8 md:mb-10">
-                  <h2 className="text-[28px] md:text-[42px] font-extrabold text-[#0b1c48]">
-                    {data.title}
-                  </h2>
+              <Heading title={data.title} />
 
-                  <div className="w-[80px] md:w-[95px] h-[5px] bg-[#005b9f] rounded-full mx-auto mt-3" />
-                </div>
-              )}
+              <Description Description={data.description} />
 
-              {data?.description && (
-                <p className="text-center text-[#5f6c86] text-[15px] md:text-[18px] mb-8 md:mb-10 max-w-3xl mx-auto">
-                  {data.description}
-                </p>
-              )}
-
-              <div className="space-y-5">
+              <div className="space-y-5 mt-5">
                 {(data?.questions || []).map((faq, i) => (
                   <Faq2Item
                     key={i}
@@ -798,83 +844,90 @@ function SectionRenderer({ section, setShowLoginPopup }) {
       return (
         <Section className="py-16 bg-[#f8f9fa]">
           <Row>
-            {/* heading */}
-            <div className="text-center mb-10">
-              <h2 className="text-[28px] md:text-[42px] font-extrabold text-[#0b1c48]">
-                {data?.title}
-              </h2>
+            <Heading title={data.title} />
+            <Description Description={data.description} />
 
-              <div className="w-[90px] h-[5px] bg-[#005b9f] rounded-full mx-auto mt-3" />
-
-              {data?.description && (
-                <p className="text-[#5f6c86] mt-4 text-[15px] md:text-[18px]">
-                  {data.description}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-10">
-              {(data?.items || []).map((item, i) => {
+            <div className="flex flex-wrap justify-center gap-10 mt-5">
+              {visibleItems.map((item, i) => {
                 const position = sliderPosition[i] ?? 50;
 
                 return (
-                  <div
-                    key={i}
-                    className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none touch-none"
-                    onMouseDown={(e) => handleSliderMove(e, i)}
-                    onMouseMove={(e) => {
-                      if (e.buttons === 1) {
-                        handleSliderMove(e, i);
-                      }
-                    }}
-                    onTouchStart={(e) => handleSliderMove(e, i)}
-                    onTouchMove={(e) => handleSliderMove(e, i)}
-                  >
-                    {/* AFTER IMAGE FIXED */}
-                    <img
-                      src={getImageUrl(item.afterImage)}
-                      alt="after"
-                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                      draggable={false}
-                    />
-
-                    {/* BEFORE IMAGE FIXED + HIDE */}
-                    <img
-                      src={getImageUrl(item.beforeImage)}
-                      alt="before"
-                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                      draggable={false}
-                      style={{
-                        clipPath: `inset(0 ${100 - position}% 0 0)`,
-                      }}
-                    />
-
+                  <>
                     <div
-                      className="absolute top-0 bottom-0 z-30"
-                      style={{
-                        left: `${position}%`,
-                        transform: "translateX(-50%)",
-                      }}
+                      id={`before-after-${i}`}
+                      key={i}
+                      className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none touch-none"
                     >
-                      <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
+                      <img
+                        src={getImageUrl(item.afterImage)}
+                        alt="after"
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        draggable={false}
+                      />
 
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-[30px] h-[30px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize">
-                          <div className="flex gap-[3px]"></div>
-                        </div>
+                      <img
+                        src={getImageUrl(item.beforeImage)}
+                        alt="before"
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        draggable={false}
+                        style={{
+                          clipPath: `inset(0 ${100 - position}% 0 0)`,
+                        }}
+                      />
+
+                      <div
+                        className="absolute top-0 bottom-0 z-30"
+                        style={{
+                          left: `${position}%`,
+                          transform: "translateX(-50%)",
+                        }}
+                      >
+                        <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
+                        <div
+                          className="w-[36px]  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[36px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize touch-none"
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            setActiveSlider(i);
+                          }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation();
+                            setActiveSlider(i);
+                          }}
+                        ></div>
+                      </div>
+
+                      <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                        BEFORE
+                      </div>
+
+                      <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                        AFTER
                       </div>
                     </div>
-
-                    <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
-                      BEFORE
-                    </div>
-
-                    <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
-                      AFTER
-                    </div>
-                  </div>
+                  </>
                 );
               })}
+              {(data?.items || []).length > 4 &&
+                visibleCount < (data?.items || []).length && (
+                  <div className="w-full flex justify-center mt-10">
+                    <button
+                      onClick={() => setVisibleCount((prev) => prev + 2)}
+                      className="
+          px-8
+          py-3
+          rounded-full
+          bg-[#005b9f]
+          text-white
+          font-semibold
+          hover:bg-[#004a80]
+          transition-all
+          duration-300
+        "
+                    >
+                      View More
+                    </button>
+                  </div>
+                )}
             </div>
           </Row>
         </Section>
@@ -884,31 +937,26 @@ function SectionRenderer({ section, setShowLoginPopup }) {
       return (
         <Section className="py-16 bg-[#eef5f8]">
           <Row>
-            <div className="text-center mb-10">
-              <h2 className="text-[28px] md:text-[42px] font-extrabold text-[#0f172a] capitalize">
-                {data?.title}
-              </h2>
+            <Heading title={data.title} />
 
-              {data?.description && (
-                <p className="text-[#64748b] text-sm md:text-base mt-2">
-                  {data.description}
-                </p>
-              )}
-            </div>
+            <Description Description={data.description} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-7">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-5 auto-rows-fr">
               {(data?.items || []).map((item, i) => (
                 <div
                   key={i}
                   className="
-              bg-white rounded-[34px]
-              p-7 md:p-8
-              min-h-[360px]
-              transition-all duration-300
-              hover:-translate-y-2
-              hover:shadow-xl
-              border border-[#edf2f7]
-            "
+    h-full
+    flex
+    flex-col
+    bg-white
+    rounded-[34px]
+    p-7 md:p-8
+    transition-all duration-300
+    hover:-translate-y-2
+    hover:shadow-xl
+    border border-[#edf2f7]
+  "
                 >
                   {item?.image && (
                     <div className="mb-5">
@@ -937,6 +985,192 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           </Row>
         </Section>
       );
+
+    case "Product Attribute Section": {
+      const displayedAttrs = showAllAttrs ? items : [];
+      return (
+        <Section className="py-14 bg-white">
+          <Row>
+            <div className="max-w-[560px] mx-auto mt-6 bg-white border border-gray-200 rounded-[20px] overflow-hidden shadow-sm">
+              <div className="px-6 pt-6 pb-4 text-center border-b border-gray-100">
+                <h2 className="text-[24px] font-bold text-gray-900 tracking-tight">
+                  Product Details
+                </h2>
+
+                <Description Description={data.title} />
+                <Description Description={data.description} />
+              </div>
+
+              <div className="divide-y divide-gray-100">
+                {displayedAttrs.map((attr, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start justify-between px-6 py-3 gap-4"
+                  >
+                    <span className="text-[14px] text-gray-500 capitalize min-w-[120px]">
+                      {attr.key}
+                    </span>
+                    <span className="text-[14px] font-semibold text-gray-900 text-right">
+                      {attr.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="px-6 py-4 border-t border-gray-100 flex justify-center">
+                <button
+                  onClick={() => setShowAllAttrs((prev) => !prev)}
+                  className="flex items-center gap-1 text-[14px] font-semibold text-[#005b9f]"
+                >
+                  {showAllAttrs ? (
+                    <>
+                      Show Less <ChevronUp size={16} />
+                    </>
+                  ) : (
+                    <>
+                      Show More <ChevronDown size={16} />
+                    </>
+                  )}
+                </button>
+              </div>
+              {/* )} */}
+            </div>
+          </Row>
+        </Section>
+      );
+    }
+
+    case "Product Recommendation Section": {
+      const recommendedProducts = items
+        .map((item) => (products || []).find((p) => p._id === item.product_id))
+        .filter(Boolean);
+
+      return (
+        <Section className="py-16 bg-[#f8f9fa]">
+          <Row>
+            <Heading title={data.title} />
+            <Description Description={data.description} />
+
+            {recommendedProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                {recommendedProducts.map((product, i) => (
+                  <ProductCard
+                    key={product._id || i}
+                    product={product}
+                    setShowLoginPopup={setShowLoginPopup}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-gray-400 text-sm mt-6">
+                No recommended products found.
+              </p>
+            )}
+          </Row>
+        </Section>
+      );
+    }
+
+    case "Solution By Stage Section": {
+      return (
+        <Solutionstagecard data={data} items={items} products={products} />
+      );
+    }
+
+    case "Additional Information Section": {
+      const info = data?.items?.[0] || {};
+      return (
+        <>
+          <Section className="bg-[#f5f5f5] py-12 md:py-16">
+            <div className="max-w-6xl mx-auto px-5">
+              <button
+                onClick={() => setOpen(!open)}
+                className="w-full flex items-center justify-between"
+              >
+                <h2 className="text-4xl md:text-6xl font-black text-black">
+                  {data?.title || "Additional Information"}
+                </h2>
+
+                {open ? (
+                  <ChevronUp className="w-8 h-8 text-black" />
+                ) : (
+                  <ChevronDown className="w-8 h-8 text-black" />
+                )}
+              </button>
+              {open && (
+                <div className="grid md:grid-cols-2 gap-x-24 gap-y-10 mt-12">
+                  {info.net_quantity && (
+                    <div>
+                      <h4 className="font-bold text-black text-xl">
+                        Net Quantity
+                      </h4>
+                      <p className="text-gray-600 text-lg">
+                        {info.net_quantity}
+                      </p>
+                    </div>
+                  )}
+
+                  {info.manufactured_by && (
+                    <div>
+                      <h4 className="font-bold text-black text-xl">
+                        Manufactured By
+                      </h4>
+                      <p className="text-gray-600 text-lg whitespace-pre-line">
+                        {info.manufactured_by}
+                      </p>
+                    </div>
+                  )}
+
+                  {info.marketed_by && (
+                    <div>
+                      <h4 className="font-bold text-black text-xl">
+                        Marketed By
+                      </h4>
+                      <p className="text-gray-600 text-lg whitespace-pre-line">
+                        {info.marketed_by}
+                      </p>
+                    </div>
+                  )}
+
+                  {info.country_origin && (
+                    <div>
+                      <h4 className="font-bold text-black text-xl">
+                        Country Origin
+                      </h4>
+                      <p className="text-gray-600 text-lg">
+                        {info.country_origin}
+                      </p>
+                    </div>
+                  )}
+
+                  {info.product_dimensions && (
+                    <div>
+                      <h4 className="font-bold text-black text-xl">
+                        Product Dimensions
+                      </h4>
+                      <p className="text-gray-600 text-lg">
+                        {info.product_dimensions}
+                      </p>
+                    </div>
+                  )}
+
+                  {info.best_before && (
+                    <div>
+                      <h4 className="font-bold text-black text-xl">
+                        Best Before
+                      </h4>
+                      <p className="text-gray-600 text-lg">
+                        {info.best_before}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </Section>
+        </>
+      );
+    }
 
     default:
       return null;

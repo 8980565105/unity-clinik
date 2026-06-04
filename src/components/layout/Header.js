@@ -113,11 +113,10 @@ const Header = () => {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileMegaMenuOpen, setIsMobileMegaMenuOpen] = useState(false);
   const hoverTimeoutRef = useRef(null);
-  const cart = useSelector((state) => state.cart.cart);
+  const { items = [] } = useSelector((state) => state.cart);
   const wishlist = useSelector((state) => state.wishlist.items);
   const { info: storeInfo } = useSelector((state) => state.store);
-  const cartCount =
-    cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlist?.length || 0;
   const [megaMenuPage, setMegaMenuPage] = useState(1);
   const [mobileMenuPage, setMobileMenuPage] = useState(1);
@@ -223,7 +222,7 @@ const Header = () => {
   })();
 
   return (
-    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary">
+    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border border-gray-100">
       <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]">
         <button
           className="custom-lg:hidden text-light transition-colors duration-300 border rounded-[3px] p-[5px] border-[#D2AF9F]"
@@ -522,9 +521,7 @@ ${
               <ul className=" pb-[10px]">
                 <li className="text-black p-[17px]">
                   <button
-                    onClick={() =>
-                      openProtectedLink("/my-account/account-details")
-                    }
+                    onClick={() => openProtectedLink("/account-details")}
                     className="flex items-center gap-[15px] w-full"
                   >
                     <SvgComponent />
@@ -752,7 +749,7 @@ ${
             <div className="text-light">
               <div className="py-4 px-4 cursor-pointer light-color">
                 <button
-                  onClick={() => openProtectedLink("/my-account")}
+                  onClick={() => openProtectedLink("/account-details")}
                   className="flex items-center gap-[15px]"
                 >
                   <FaUser /> My Profile

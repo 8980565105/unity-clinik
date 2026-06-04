@@ -25,7 +25,7 @@ const Button = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`rounded-[3px]  inline-flex  justify-center transition duration-300 ${variants[variant]} ${sizes[size]} ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
+      className={`rounded-[12px]  inline-flex  justify-center transition duration-300 ${variants[variant]} ${sizes[size]} ${disabled ? "opacity-50 cursor-not-allowed" : ""} ${className}`}
     >
       {children}
     </button>

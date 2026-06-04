@@ -81,11 +81,8 @@ export default function Product() {
   const next = () => setOffset((o) => Math.min(maxOffset, o + 1));
   const isCenter = allReviews.length <= visible;
 
-  // if (loading) return <p className="text-center py-10">Loading product...</p>;
-  if (loading) return <Loding />;
-
   if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
-  if (!product) return <p className="text-center py-10">No Product Found.</p>;
+  if (!product) return <Loding />;
 
   return (
     <>

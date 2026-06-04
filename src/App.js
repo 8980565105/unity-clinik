@@ -126,9 +126,9 @@ function App() {
           <Route path="/collections" element={<Collections />} />
           <Route path="/offer" element={<Offer />} />
           <Route path="/contact-us" element={<ContactUs />} />
-          <Route path="/my-account" element={<MyAccount />}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="account-details" element={<AccountDetails />} />
+          <Route path="/account-details" element={<MyAccount />}>
+            {/* <Route path="dashboard" element={<Dashboard />} /> */}
+            {/* <Route path="account-details" element={<AccountDetails />} /> */}
           </Route>
           <Route path="/cart" element={<Cart />}></Route>
           {/* <Route path="/updatecart" element={<Updatecart />}></Route> */}
