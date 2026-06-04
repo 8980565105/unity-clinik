@@ -17,14 +17,12 @@ const normalizeSections = (sections = []) => {
 
       image: section?.data?.image || "",
 
-      // FAQ
       questions: (section?.data?.questions || []).map((q) => ({
         question: q.question || "",
         answer: q.answer || "",
         image: q.image || "",
       })),
 
-      // Why Choose + Before After
       items: (section?.data?.items || []).map((item) => ({
         name: item.name || "",
 
@@ -43,13 +41,20 @@ const normalizeSections = (sections = []) => {
         otherPoint: item.otherPoint || "",
         key: item.key || "",
         value: item.value || "",
+
+        net_quantity: item.net_quantity || "",
+        manufactured_by: item.manufactured_by || "",
+        marketed_by: item.marketed_by || "",
+        country_origin: item.country_origin || "",
+        product_dimensions: item.product_dimensions || "",
+        best_before: item.best_before || "",
+
         product_id:
           item.product_id && mongoose.Types.ObjectId.isValid(item.product_id)
             ? item.product_id
             : null,
       })),
 
-      // Multi Step
       steps: (section?.data?.steps || []).map((step) => ({
         status: step?.status ?? true,
 
@@ -186,9 +191,6 @@ const buildPipeline = ({
   return pipeline;
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// PUBLIC — Frontend mate (domain thhi storeId resolve)
-// ═══════════════════════════════════════════════════════════════════
 const getPublicProducts = async (req, res) => {
   try {
     let {
@@ -383,9 +385,6 @@ const getProducts = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// GET /products/public/:id — No auth needed
-// ═══════════════════════════════════════════════════════════════════
 const getPublicProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -411,9 +410,6 @@ const getPublicProductById = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// GET /products/:id — Auth required
-// ═══════════════════════════════════════════════════════════════════
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -439,9 +435,6 @@ const getProductById = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// POST /products
-// ═══════════════════════════════════════════════════════════════════
 const createProduct = async (req, res) => {
   try {
     const {
@@ -596,9 +589,6 @@ const updateProduct = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// PUT /products/:id/status
-// ═══════════════════════════════════════════════════════════════════
 const updateProductStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -622,9 +612,6 @@ const updateProductStatus = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// DELETE /products/:id
-// ═══════════════════════════════════════════════════════════════════
 const deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -642,9 +629,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// POST /products/bulk-delete
-// ═══════════════════════════════════════════════════════════════════
 const bulkDeleteProducts = async (req, res) => {
   try {
     const { ids } = req.body;

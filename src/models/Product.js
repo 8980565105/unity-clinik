@@ -155,6 +155,30 @@ const productSchema = new mongoose.Schema(
                 type: String,
                 default: "",
               },
+              net_quantity: {
+                type: String,
+                default: "",
+              },
+              manufactured_by: {
+                type: String,
+                default: "",
+              },
+              country_origin: {
+                type: String,
+                default: "",
+              },
+              product_dimensions: {
+                type: String,
+                default: "",
+              },
+              best_before: {
+                type: String,
+                default: "",
+              },
+              marketed_by: {
+                type: String,
+                default: "",
+              },
             },
           ],
 
