@@ -1185,11 +1185,7 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                   {item?.image && (
                     <div className="w-[70px] h-[70px] rounded-full border border-[#12386f] flex items-center justify-center">
                       <img
-                        src={
-                          item.image.startsWith("http")
-                            ? item.image
-                            : getImageUrl(item.image)
-                        }
+                        src={getImageUrl(item.image)}
                         alt={item.title}
                         className="w-10 h-10 object-contain"
                       />
