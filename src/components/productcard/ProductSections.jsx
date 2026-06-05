@@ -215,47 +215,80 @@ function SectionRenderer({ section, setShowLoginPopup }) {
     typeof window !== "undefined" && window.innerWidth < 768 ? 2 : 4,
   );
 
+  // useEffect(() => {
+  //   const move = (e) => {
+  //     if (activeSlider === null) return;
+
+  //     const container = document.getElementById(`before-after-${activeSlider}`);
+
+  //     if (!container) return;
+
+  //     const rect = container.getBoundingClientRect();
+
+  //     const clientX = e.touches?.[0]?.clientX ?? e.clientX;
+
+  //     let position = ((clientX - rect.left) / rect.width) * 100;
+
+  //     position = Math.max(0, Math.min(100, position));
+
+  //     setSliderPosition((prev) => ({
+  //       ...prev,
+  //       [activeSlider]: position,
+  //     }));
+  //   };
+
+  //   const stop = () => {
+  //     setActiveSlider(null);
+  //   };
+
+  //   window.addEventListener("mousemove", move);
+  //   window.addEventListener("mouseup", stop);
+
+  //   window.addEventListener("touchmove", move, {
+  //     passive: false,
+  //   });
+
+  //   window.addEventListener("touchend", stop);
+
+  //   return () => {
+  //     window.removeEventListener("mousemove", move);
+  //     window.removeEventListener("mouseup", stop);
+
+  //     window.removeEventListener("touchmove", move);
+
+  //     window.removeEventListener("touchend", stop);
+  //   };
+  // }, [activeSlider]);
+
   useEffect(() => {
     const move = (e) => {
       if (activeSlider === null) return;
 
-      const container = document.getElementById(`before-after-${activeSlider}`);
+      // ✅ Prevent page scroll only while dragging the slider
+      if (e.cancelable) e.preventDefault();
 
+      const container = document.getElementById(`before-after-${activeSlider}`);
       if (!container) return;
 
       const rect = container.getBoundingClientRect();
-
       const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-
       let position = ((clientX - rect.left) / rect.width) * 100;
-
       position = Math.max(0, Math.min(100, position));
 
-      setSliderPosition((prev) => ({
-        ...prev,
-        [activeSlider]: position,
-      }));
+      setSliderPosition((prev) => ({ ...prev, [activeSlider]: position }));
     };
 
-    const stop = () => {
-      setActiveSlider(null);
-    };
+    const stop = () => setActiveSlider(null);
 
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", stop);
-
-    window.addEventListener("touchmove", move, {
-      passive: false,
-    });
-
+    window.addEventListener("touchmove", move, { passive: false }); 
     window.addEventListener("touchend", stop);
 
     return () => {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseup", stop);
-
       window.removeEventListener("touchmove", move);
-
       window.removeEventListener("touchend", stop);
     };
   }, [activeSlider]);
@@ -840,6 +873,97 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         </Section>
       );
 
+    // case "Before & After":
+    //   return (
+    //     <Section className="py-16 bg-[#f8f9fa]">
+    //       <Row>
+    //         <Heading title={data.title} />
+    //         <Description Description={data.description} />
+
+    //         <div className="flex flex-wrap justify-center gap-10 mt-5">
+    //           {visibleItems.map((item, i) => {
+    //             const position = sliderPosition[i] ?? 50;
+
+    //             return (
+    //               <div
+    //                 id={`before-after-${i}`}
+    //                 key={i}
+    //                 className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none"
+    //               >
+    //                 <img
+    //                   src={getImageUrl(item.afterImage)}
+    //                   alt="after"
+    //                   className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+    //                   draggable={false}
+    //                 />
+
+    //                 <img
+    //                   src={getImageUrl(item.beforeImage)}
+    //                   alt="before"
+    //                   className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+    //                   draggable={false}
+    //                   style={{
+    //                     clipPath: `inset(0 ${100 - position}% 0 0)`,
+    //                   }}
+    //                 />
+
+    //                 <div
+    //                   className="absolute top-0 bottom-0 z-30"
+    //                   style={{
+    //                     left: `${position}%`,
+    //                     transform: "translateX(-50%)",
+    //                   }}
+    //                 >
+    //                   <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
+    //                   <div
+    //                     className="w-[36px]  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[36px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize touch-none"
+    //                     onMouseDown={(e) => {
+    //                       e.stopPropagation();
+    //                       setActiveSlider(i);
+    //                     }}
+    //                     onTouchStart={(e) => {
+    //                       e.stopPropagation();
+    //                       setActiveSlider(i);
+    //                     }}
+    //                   ></div>
+    //                 </div>
+
+    //                 <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+    //                   BEFORE
+    //                 </div>
+
+    //                 <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+    //                   AFTER
+    //                 </div>
+    //               </div>
+    //             );
+    //           })}
+    //           {(data?.items || []).length > 4 &&
+    //             visibleCount < (data?.items || []).length && (
+    //               <div className="w-full flex justify-center mt-10">
+    //                 <button
+    //                   onClick={() => setVisibleCount((prev) => prev + 2)}
+    //                   className="
+    //       px-8
+    //       py-3
+    //       rounded-full
+    //       bg-[#005b9f]
+    //       text-white
+    //       font-semibold
+    //       hover:bg-[#004a80]
+    //       transition-all
+    //       duration-300
+    //     "
+    //                 >
+    //                   View More
+    //                 </button>
+    //               </div>
+    //             )}
+    //         </div>
+    //       </Row>
+    //     </Section>
+    //   );
+
     case "Before & After":
       return (
         <Section className="py-16 bg-[#f8f9fa]">
@@ -855,7 +979,8 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                   <div
                     id={`before-after-${i}`}
                     key={i}
-                    className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none touch-none"
+                    className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none"
+                    // ✅ REMOVED touch-none — page scroll now works on image area
                   >
                     <img
                       src={getImageUrl(item.afterImage)}
@@ -883,44 +1008,36 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                     >
                       <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
                       <div
-                        className="w-[36px]  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[36px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize touch-none"
+                        className="w-[36px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[36px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize touch-none"
                         onMouseDown={(e) => {
                           e.stopPropagation();
                           setActiveSlider(i);
                         }}
                         onTouchStart={(e) => {
+                          // ✅ Only prevent default on the handle itself
+                          e.preventDefault();
                           e.stopPropagation();
                           setActiveSlider(i);
                         }}
-                      ></div>
+                      />
                     </div>
 
                     <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
                       BEFORE
                     </div>
-
                     <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
                       AFTER
                     </div>
                   </div>
                 );
               })}
+
               {(data?.items || []).length > 4 &&
                 visibleCount < (data?.items || []).length && (
                   <div className="w-full flex justify-center mt-10">
                     <button
                       onClick={() => setVisibleCount((prev) => prev + 2)}
-                      className="
-          px-8
-          py-3
-          rounded-full
-          bg-[#005b9f]
-          text-white
-          font-semibold
-          hover:bg-[#004a80]
-          transition-all
-          duration-300
-        "
+                      className="px-8 py-3 rounded-full bg-[#005b9f] text-white font-semibold hover:bg-[#004a80] transition-all duration-300"
                     >
                       View More
                     </button>
@@ -1078,13 +1195,13 @@ function SectionRenderer({ section, setShowLoginPopup }) {
       const info = data?.items?.[0] || {};
       return (
         <>
-          <Section className="bg-[#f5f5f5] py-12 md:py-16">
+          <Section className="bg-[#f5f5f5] !py-12 !md:py-16">
             <div className="max-w-6xl mx-auto px-5">
               <button
                 onClick={() => setOpen(!open)}
                 className="w-full flex items-center justify-between"
               >
-                <h2 className="text-4xl md:text-6xl font-black text-black">
+                <h2 className="text-4xl md:text-[28px] font-black text-black">
                   {data?.title || "Additional Information"}
                 </h2>
 
@@ -1095,7 +1212,7 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                 )}
               </button>
               {open && (
-                <div className="grid md:grid-cols-2 gap-x-24 gap-y-10 mt-12">
+                <div className="grid md:grid-cols-2 gap-x-24 gap-y-2 md:gap-y-8 mt-12">
                   {info.net_quantity && (
                     <div>
                       <h4 className="font-bold text-black text-xl">
