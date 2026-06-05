@@ -51,15 +51,22 @@
 
 :root {
   /* Theme Colors */
-   --primary-color: #F43297; /* your pink color */
-  --theme-color: #F43297;         /* main theme color */
+   /* --primary-color: #F43297; your pink color */
+   --primary-color: #22548a; /* your pink color */
+  --theme-color: #22548a;         /* main theme color */
+  /* --theme-color: #F43297;         main theme color */
   --sec-theme-color-30: rgba(210, 175, 159, 0.3); /* 30% opacity */
-  --theme-hover-color: #F43297;   /* hover color */
+  /* --theme-hover-color: #F43297;   hover color */
+  --theme-hover-color: #22548a;   /* hover color */
   --theme-bg-light: #ffe6f0;      /* light background */
- --theme-bg-100: #f32f94;      /* light background */
+ /* --theme-bg-100: #f32f94;      light background */
+ --theme-bg-100: #22548a;      /* light background */
  --text-light: rgba(0,0,0,0.70);
  
-   --ef3a96-9: rgba(239, 58, 150, 0.09);
+   /* --ef3a96-9: rgba(239, 58, 150, 0.09); */
+   /* --ef3a96-9: rgba(34, 69, 138, 0.09); */
+   --ef3a96-9: rgba(34, 84, 138, 0.09);
+   /* --ef3a96-9: #463aef28; */
 
  --theme-bg-rgba: rgba(210, 175, 159, 0.3);
  --theme-light-border:#BCBCBC;
@@ -259,7 +266,8 @@
 /* // */
 
 .discount-star {
-  background-color: #ff007f; /* Base color of the star */
+  /* background-color: #ff007f; Base color of the star */
+  background-color: #22548a; /* Base color of the star */
   border-radius: 5px;
   transform: rotate(22.5deg); /* Rotate the main square */
 }
@@ -272,7 +280,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #ff007f;
+  /* background-color: #ff007f; */
+  background-color: #22548a;
   border-radius: 5px;
   z-index: -1;
 }
@@ -576,4 +585,35 @@
   position: relative !important;
   margin-top: 30px;
   bottom: auto !important;
+}
+
+
+/* server down */
+
+ .marquee-container {
+  display: flex;
+  width: max-content;
+  animation: marquee 60s linear infinite;
+}
+
+.marquee-container.reverse {
+  animation: marqueeReverse 60s linear infinite;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marqueeReverse {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }

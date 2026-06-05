@@ -38,6 +38,8 @@ import RefundPolicy from "./pages/Return-Refund-Policy";
 import TermService from "./pages/Terms-of-service";
 import ShippingPolicy from "./pages/shippingPolicy";
 import PhonePeCallback from "./components/payment/PhonePeCallback";
+import ServerDown from "./pages/Serverdownpage";
+import Loding from "./components/loding/loding";
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -87,7 +89,12 @@ function App() {
     const location = useLocation();
     const isShopPage = location.pathname === "/shop";
     const dispatch = useDispatch();
-    const storeData = useSelector((state) => state.store.info);
+    // const storeData = useSelector((state) => state.store.info);
+    const {
+      info: storeData,
+      loadingInfo,
+      errorInfo,
+    } = useSelector((state) => state.store);
 
     useEffect(() => {
       dispatch(fetchStoreInfo());
@@ -115,6 +122,17 @@ function App() {
       }
     }, [storeData]);
 
+    if (loadingInfo) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <Loding />
+        </div>
+      );
+    }
+
+    if (errorInfo) {
+      return <ServerDown />;
+    }
     return (
       <>
         <ScrollToTop />
@@ -144,7 +162,10 @@ function App() {
           <Route path="/refundpolicy" element={<RefundPolicy />} />
           <Route path="/termService" element={<TermService />} />
           <Route path="/shippingpolicy" element={<ShippingPolicy />} />
-          <Route path="/payment/phonepe/callback" element={<PhonePeCallback />} />
+          <Route
+            path="/payment/phonepe/callback"
+            element={<PhonePeCallback />}
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />

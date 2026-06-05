@@ -222,7 +222,7 @@ const Header = () => {
   })();
 
   return (
-    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border border-gray-100">
+    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border-b border-gray-100">
       <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]">
         <button
           className="custom-lg:hidden text-light transition-colors duration-300 border rounded-[3px] p-[5px] border-[#D2AF9F]"
@@ -773,6 +773,45 @@ ${
               </div>
             </div>
           </nav>
+        </div>
+        {/* <div className="flex justify-center gap-3 sticky bottom-5">
+          <Button variant="common">Sing up</Button>
+          <Button variant="common">login</Button>
+        </div> */}
+        <div className="flex justify-center gap-3 sticky bottom-5 px-4">
+          {!token ? (
+            <>
+              <Button
+                variant="common"
+                onClick={() => {
+                  setIsRegisterOpen(true);
+                  setIsMenuOpen(false);
+                }}
+              >
+                Sign Up
+              </Button>
+
+              <Button
+                variant="common"
+                onClick={() => {
+                  setIsLoginOpen(true);
+                  setIsMenuOpen(false);
+                }}
+              >
+                Login
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="common"
+              onClick={() => {
+                handleLogout();
+                setIsMenuOpen(false);
+              }}
+            >
+              Logout
+            </Button>
+          )}
         </div>
       </div>
       {isLoginOpen && (

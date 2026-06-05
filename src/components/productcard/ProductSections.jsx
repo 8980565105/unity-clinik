@@ -852,59 +852,57 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                 const position = sliderPosition[i] ?? 50;
 
                 return (
-                  <>
+                  <div
+                    id={`before-after-${i}`}
+                    key={i}
+                    className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none touch-none"
+                  >
+                    <img
+                      src={getImageUrl(item.afterImage)}
+                      alt="after"
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      draggable={false}
+                    />
+
+                    <img
+                      src={getImageUrl(item.beforeImage)}
+                      alt="before"
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      draggable={false}
+                      style={{
+                        clipPath: `inset(0 ${100 - position}% 0 0)`,
+                      }}
+                    />
+
                     <div
-                      id={`before-after-${i}`}
-                      key={i}
-                      className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none touch-none"
+                      className="absolute top-0 bottom-0 z-30"
+                      style={{
+                        left: `${position}%`,
+                        transform: "translateX(-50%)",
+                      }}
                     >
-                      <img
-                        src={getImageUrl(item.afterImage)}
-                        alt="after"
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        draggable={false}
-                      />
-
-                      <img
-                        src={getImageUrl(item.beforeImage)}
-                        alt="before"
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        draggable={false}
-                        style={{
-                          clipPath: `inset(0 ${100 - position}% 0 0)`,
-                        }}
-                      />
-
+                      <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
                       <div
-                        className="absolute top-0 bottom-0 z-30"
-                        style={{
-                          left: `${position}%`,
-                          transform: "translateX(-50%)",
+                        className="w-[36px]  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[36px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize touch-none"
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setActiveSlider(i);
                         }}
-                      >
-                        <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
-                        <div
-                          className="w-[36px]  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[36px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize touch-none"
-                          onMouseDown={(e) => {
-                            e.stopPropagation();
-                            setActiveSlider(i);
-                          }}
-                          onTouchStart={(e) => {
-                            e.stopPropagation();
-                            setActiveSlider(i);
-                          }}
-                        ></div>
-                      </div>
-
-                      <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
-                        BEFORE
-                      </div>
-
-                      <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
-                        AFTER
-                      </div>
+                        onTouchStart={(e) => {
+                          e.stopPropagation();
+                          setActiveSlider(i);
+                        }}
+                      ></div>
                     </div>
-                  </>
+
+                    <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                      BEFORE
+                    </div>
+
+                    <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                      AFTER
+                    </div>
+                  </div>
                 );
               })}
               {(data?.items || []).length > 4 &&
@@ -1041,9 +1039,16 @@ function SectionRenderer({ section, setShowLoginPopup }) {
     }
 
     case "Product Recommendation Section": {
-      const recommendedProducts = items
-        .map((item) => (products || []).find((p) => p._id === item.product_id))
-        .filter(Boolean);
+      const recommendedProducts = [
+        ...new Map(
+          items
+            .map((item) =>
+              (products || []).find((p) => p._id === item.product_id),
+            )
+            .filter(Boolean)
+            .map((product) => [product._id, product]),
+        ).values(),
+      ];
 
       return (
         <Section className="py-16 bg-[#f8f9fa]">
@@ -1051,21 +1056,13 @@ function SectionRenderer({ section, setShowLoginPopup }) {
             <Heading title={data.title} />
             <Description Description={data.description} />
 
-            {recommendedProducts.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
-                {recommendedProducts.map((product, i) => (
-                  <ProductCard
-                    key={product._id || i}
-                    product={product}
-                    setShowLoginPopup={setShowLoginPopup}
-                  />
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-400 text-sm mt-6">
-                No recommended products found.
-              </p>
-            )}
+            {recommendedProducts.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                setShowLoginPopup={setShowLoginPopup}
+              />
+            ))}
           </Row>
         </Section>
       );
@@ -1169,6 +1166,50 @@ function SectionRenderer({ section, setShowLoginPopup }) {
             </div>
           </Section>
         </>
+      );
+    }
+
+    case "Daily Usage Section": {
+      const item = data?.items?.[0] || {};
+
+      return (
+        <Section className="py-12 bg-gradient-to-r from-[#dce3eb] via-[#8fa4c2] to-[#12386f]">
+          <Row>
+            <div className="bg-[#f8f8f8] rounded-[30px] shadow-md p-6 md:p-12">
+              <h2 className="text-center text-[#12386f] font-bold text-[28px] md:text-[50px] leading-tight">
+                {data?.title}
+              </h2>
+
+              <div className="grid md:grid-cols-2 gap-10 items-center mt-10">
+                <div className="flex flex-col">
+                  {item?.image && (
+                    <div className="w-[70px] h-[70px] rounded-full border border-[#12386f] flex items-center justify-center">
+                      <img
+                        src={
+                          item.image.startsWith("http")
+                            ? item.image
+                            : getImageUrl(item.image)
+                        }
+                        alt={item.title}
+                        className="w-10 h-10 object-contain"
+                      />
+                    </div>
+                  )}
+
+                  <h3 className="mt-5 text-[18px] md:text-[24px] font-semibold text-[#555]">
+                    {item?.title}
+                  </h3>
+                </div>
+
+                <div>
+                  <p className="text-[#555] text-[16px] md:text-[22px] leading-[1.8]">
+                    {item?.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Row>
+        </Section>
       );
     }
 

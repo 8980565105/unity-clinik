@@ -51,7 +51,6 @@
 
   export default function ProductCard({ product, setShowLoginPopup }) {
     const dispatch = useDispatch();
-    // ✅ FIX: useNavigate component level par — handler ma nahi
     const { token } = useSelector((state) => state.auth);
     const cart = useSelector((state) => state.cart.cart);
     const { items = [] } = useSelector((state) => state.cart);

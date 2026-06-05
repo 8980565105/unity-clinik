@@ -128,10 +128,10 @@ export default function Result() {
             )}
 
             {results.length === 0 && (
-              <div className="text-center text-gray-400 py-20">
-                No results found.
+              // <div className="text-center text-gray-400 py-20">
+              //   No results found.
                 <Loding />
-              </div>
+              // </div>
             )}
 
             {selected && (

@@ -18,7 +18,7 @@ import paypalImg from "../../assets/paypal.png";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
 import { Link } from "react-router-dom";
-import mylogo from "../../assets/my_logo.png";
+import mylogo from "../../assets/logo.png";
 import { fetchFooter } from "../../features/footer/footerThunk";
 import { createEmails } from "../../features/emails/emailsThunk";
 import { toast } from "react-hot-toast";
@@ -53,10 +53,10 @@ export default function Footer() {
   const contactPhone = storeInfo?.phone || "+1 [155] 000-01000";
   const footertext =
     storeInfo?.theme?.footerText ||
-    "Become a MYcra member and get 10% off your next purchase!";
+    "Become a Unity member and get 10% off your next purchase!";
   const copyright =
     storeInfo?.theme?.copyrightText ||
-    "2026 MYcra Fashion Ltd. All Rights Reserved";
+    "2026 Unity Hair Clinic PVT LTD. All rights reserved.";
   const contactAddress =
     [
       storeInfo?.address?.street,
@@ -66,7 +66,10 @@ export default function Footer() {
       storeInfo?.address?.zip_code,
     ]
       .filter(Boolean)
-      .join(", ") || "215, Dhara Arcade near Lajamani Chowk, Surat";
+      .join(", ") || 
+      // "215, Dhara Arcade near Lajamani Chowk, Surat";
+    "unity clinic shop no 10 11 ground floor dhara arcade mahadev chowk mota varcha, surat , Gujarat, Surat, 394101";
+
 
   useEffect(() => {
     dispatch(fetchFooter({ isPublic: true }));

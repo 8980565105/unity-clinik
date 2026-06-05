@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Handbag, Star } from "lucide-react";
 import Button from "../ui/Button";
 import { Link, useNavigate, useLocation } from "react-router-dom";
@@ -89,6 +89,13 @@ export default function ProductInfo({
   selectedColor,
   setSelectedColor,
   setShowLoginPopup,
+  setShowStickyBar,
+  setPriceData,
+  setSelectedPack,
+  setActiveVariant,
+  setAddingToCart,
+  setHandleAddToCartFn,
+  setHandleAddToWishlistFn,
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -96,7 +103,7 @@ export default function ProductInfo({
   const currentProductId = product?._id;
 
   const [selectionTick, setSelectionTick] = useState(0);
-
+  const actionButtonsRef = useRef(null);
   useEffect(() => {
     if (product) {
       autoSaveCurrentProductSlug(product);
@@ -104,10 +111,10 @@ export default function ProductInfo({
     }
   }, [product?._id]);
 
-  const [selectedPack, setSelectedPack] = useState(null);
+  const [selectedPackState, setSelectedPackState] = useState(null);
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
-  const [addingToCart, setAddingToCart] = useState(false);
+  const [addingToCartstate, setAddingToCartstat] = useState(false);
   const { productReviews } = useSelector((state) => state.reviews);
 
   const reviewData = useMemo(() => {
@@ -121,7 +128,7 @@ export default function ProductInfo({
     return { average: (sum / total).toFixed(1), total };
   }, [productReviews, product?._id]);
 
-  const [activeVariant, setActiveVariant] = useState(null);
+  const [activeVariantState, setActiveVariantState] = useState(null);
 
   useEffect(() => {
     const packStep = product?.sections
@@ -132,7 +139,7 @@ export default function ProductInfo({
       const defaultPack =
         packStep.variants.find((v) => Number(v.badge) === 1) ||
         packStep.variants[0];
-      setSelectedPack(defaultPack);
+      setSelectedPackState(defaultPack);
     }
   }, [product]);
 
@@ -140,7 +147,7 @@ export default function ProductInfo({
     if (product?.variants?.length > 0) {
       const first = product.variants[0];
       setSelectedColor(first.color_id?._id || null);
-      setActiveVariant(first);
+      setActiveVariantState(first);
       setSelectedVariant(first);
     }
   }, [product, setSelectedColor, setSelectedVariant]);
@@ -154,15 +161,40 @@ export default function ProductInfo({
       const firstAvailable =
         variantsForColor.find((v) => v.stock_quantity > 0) ||
         variantsForColor[0];
-      setActiveVariant(firstAvailable);
+      setActiveVariantState(firstAvailable);
       setSelectedVariant(firstAvailable);
     }
   }, [selectedColor, product?.variants, setSelectedVariant]);
 
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setShowStickyBar(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShowStickyBar(!entry.isIntersecting);
+      },
+      {
+        threshold: 0.2,
+      },
+    );
+
+    if (actionButtonsRef.current) {
+      observer.observe(actionButtonsRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [setShowStickyBar]);
+
   const getPriceData = () => {
-    const originalPrice = selectedPack?.price || activeVariant?.price || 0;
+    const originalPrice =
+      selectedPackState?.price || activeVariantState?.price || 0;
     const offerPrice =
-      selectedPack?.offerprice || activeVariant?.offerprice || originalPrice;
+      selectedPackState?.offerprice ||
+      activeVariantState?.offerprice ||
+      originalPrice;
     let discountPercent = 0;
     if (originalPrice > offerPrice) {
       discountPercent = Math.round(
@@ -173,6 +205,24 @@ export default function ProductInfo({
   };
 
   const priceData = getPriceData();
+
+  useEffect(() => {
+    setPriceData?.({
+      originalPrice: selectedPackState?.price || activeVariantState?.price || 0,
+
+      offerPrice:
+        selectedPackState?.offerprice || activeVariantState?.offerprice || 0,
+
+      discountPercent:
+        selectedPackState?.price > 0
+          ? Math.round(
+              ((selectedPackState.price - selectedPackState.offerprice) /
+                selectedPackState.price) *
+                100,
+            )
+          : 0,
+    });
+  }, [selectedPackState, activeVariantState]);
 
   const handleVariantClick = (variant, nonPackStepIndex) => {
     const slug = variant.slug?.trim();
@@ -187,15 +237,12 @@ export default function ProductInfo({
       setShowLoginPopup(true);
       return;
     }
-    if (!activeVariant?._id) {
-      toast.error("Please select a variant first!");
-      return;
-    }
-    if (activeVariant?.stock_quantity === 0) {
+
+    if (activeVariantState?.stock_quantity === 0) {
       toast.error("This variant is out of stock!");
       return;
     }
-    setAddingToCart(true);
+    setAddingToCartstat(true);
     try {
       let cartId = cart?._id || localStorage.getItem("cart_id");
       if (!cartId) {
@@ -214,11 +261,11 @@ export default function ProductInfo({
       const payload = {
         cart_id: cartId,
         product_id: product._id,
-        variant_id: activeVariant._id,
+        variant_id: activeVariantState._id,
         quantity: 1,
-        pack_of: Number(selectedPack?.badge || 1),
-        price: Number(selectedPack?.offerprice || 0),
-        original_price: Number(selectedPack?.price || 0),
+        pack_of: Number(selectedPackState?.badge || 1),
+        price: Number(selectedPackState?.offerprice || 0),
+        original_price: Number(selectedPackState?.price || 0),
       };
 
       await dispatch(addToCart(payload)).unwrap();
@@ -231,11 +278,17 @@ export default function ProductInfo({
           : err?.message || "Failed to add item to cart. Please try again.";
       toast.error(msg);
     } finally {
-      setAddingToCart(false);
+      setAddingToCartstat(false);
     }
   };
 
   const { handleAddToWishlist } = useAddToWishlist(setShowLoginPopup);
+
+  useEffect(() => {
+    setHandleAddToCartFn?.(() => handleAddToCart);
+
+    setHandleAddToWishlistFn?.(() => handleAddToWishlist);
+  }, [activeVariantState, selectedPackState, cart, token, product]);
 
   const renderSteps = () => {
     const allSteps = (product?.sections || [])
@@ -412,7 +465,7 @@ export default function ProductInfo({
           {uiType === "Pack" && (
             <div className="mt-2">
               <h3 className="text-[34px] font-semibold mb-5">
-                Size : Pack of {selectedPack?.badge || 1}
+                Size : Pack of {selectedPackState?.badge || 1}
               </h3>
               <div className="overflow-x-auto scrollbar-hide">
                 <div className="flex gap-6 min-w-max pb-2">
@@ -426,12 +479,13 @@ export default function ProductInfo({
                           ).toFixed(1)
                         : 0;
                     const isPackSelected =
-                      String(selectedPack?.badge) === String(variant.badge);
+                      String(selectedPackState?.badge) ===
+                      String(variant.badge);
                     return (
                       <div
                         key={variantIdx}
                         onClick={() =>
-                          setSelectedPack({
+                          setSelectedPackState({
                             badge: variant.badge,
                             price: Number(variant.price),
                             offerprice: Number(variant.offerprice),
@@ -535,25 +589,25 @@ export default function ProductInfo({
           <div>
             <span className="font-bold">Weight:</span>
             <span className="font-semibold ms-1">
-              {activeVariant?.ProductWeight || "-"}
+              {activeVariantState?.ProductWeight || "-"}
             </span>
           </div>
           <div>
             <span className="font-bold">Height:</span>
             <span className="font-semibold ms-1">
-              {activeVariant?.ProductHeight || "-"}
+              {activeVariantState?.ProductHeight || "-"}
             </span>
           </div>
           <div>
             <span className="font-bold">Length:</span>
             <span className="font-semibold ms-1">
-              {activeVariant?.ProductLength || "-"}
+              {activeVariantState?.ProductLength || "-"}
             </span>
           </div>
           <div>
             <span className="font-bold">Width:</span>
             <span className="font-semibold ms-1">
-              {activeVariant?.ProductWidth || "-"}
+              {activeVariantState?.ProductWidth || "-"}
             </span>
           </div>
         </div>
@@ -562,11 +616,15 @@ export default function ProductInfo({
       <div className="mt-[15px] space-y-[28px]">
         <div key={selectionTick}>{renderSteps()}</div>
 
-        <div className="flex flex-col sm:flex-row gap-[17px] pt-[10px]">
+        <div
+          ref={actionButtonsRef}
+          className="flex flex-col sm:flex-row gap-[17px] pt-[10px] hidden lg:flex "
+        >
           <Button
             variant="outline"
             className="flex items-center gap-[10px] !text-[22px] !py-[10px]"
-            onClick={() => handleAddToWishlist(product, activeVariant)}
+            // onClick={() => handleAddToWishlist(product, activeVariant)}
+            onClick={() => handleAddToWishlist(product, activeVariantState)}
           >
             <HeartIcon className="h-[22px] w-[22px]" />
             Wishlist
@@ -576,11 +634,11 @@ export default function ProductInfo({
             variant="common"
             className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px]"
             onClick={handleAddToCart}
-            disabled={addingToCart}
+            disabled={addingToCartstate}
           >
             <span className="flex items-center gap-[10px]">
               <Handbag size={22} />
-              {addingToCart ? "Adding..." : "Add To Bag"}
+              {addingToCartstate ? "Adding..." : "Add To Cart"}
             </span>
           </Button>
         </div>
