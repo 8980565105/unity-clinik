@@ -28,7 +28,7 @@ export default function Register() {
     storeName: "",
     storeEmail: "",
     storePhone: "",
-    storeWebsite: "",
+    // storeWebsite: "",
     storeLogo: "",
     storeBanner: "",
     storeDescription: "",
@@ -116,10 +116,10 @@ export default function Register() {
     }
 
 
-    if (!form.storeWebsite.trim()) {
-      toast.error("Store Website is required");
-      return false;
-    }
+    // if (!form.storeWebsite.trim()) {
+    //   toast.error("Store Website is required");
+    //   return false;
+    // }
 
     return true;
   };
@@ -143,7 +143,7 @@ export default function Register() {
       storeName: form.storeName,
       storeEmail: form.storeEmail,
       storePhone: form.storePhone || undefined,
-      storeWebsite: form.storeWebsite,
+      // storeWebsite: form.storeWebsite,
       storeLogo: form.storeLogo || undefined,
       storeBanner: form.storeBanner || undefined,
       storeDescription: form.storeDescription || undefined,
@@ -241,13 +241,13 @@ export default function Register() {
               placeholder="Store GST No"
               className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" />
 
-            <div>
+            {/* <div>
               <input type="text" name="storeWebsite" value={form.storeWebsite}
                 onChange={handleChange}
                 placeholder="Store Website (e.g. https://store1.com)"
                 className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" />
               <p className="text-xs text-gray-400 mt-1">
-                {/* Aa website domain sathe match thata users aa store_owner ne dikhase. */}
+             
                 {form.storeWebsite && (
                   <span className="text-green-600 ml-1 font-medium">
                     Domain: {(() => {
@@ -263,7 +263,8 @@ export default function Register() {
                   </span>
                 )}
               </p>
-            </div>
+            </div> */}
+
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,7 +289,7 @@ export default function Register() {
             {[
               { name: "storeTheme.primaryColor", label: "Primary Color", val: form.storeTheme.primaryColor },
               { name: "storeTheme.secondaryColor", label: "Secondary Color", val: form.storeTheme.secondaryColor },
-              { name: "storeTheme.buttonColor", label: "Button Color", val: form.storeTheme.buttonColor },
+              // { name: "storeTheme.buttonColor", label: "Button Color", val: form.storeTheme.buttonColor },
             ].map((c) => (
               <div key={c.name}>
                 <label className="block text-sm text-gray-600 mb-1">{c.label}</label>

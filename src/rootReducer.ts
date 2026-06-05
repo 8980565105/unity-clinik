@@ -7,7 +7,7 @@ import typesReducer from "./features/types/typesSlice";
 import productLabelsReducer from "./features/productLabels/productLabelsSlice";
 // import sizesReducer from "./features/sizes/sizesSlice";
 // import colorsReducer from "./features/colors/colorsSlice";
-import discountsReducer from "./features/discounts/discountsSlice";
+// import discountsReducer from "./features/discounts/discountsSlice";
 import couponsReducer from "./features/coupons/couponsSlice";
 import ordersReducer from "./features/orders/ordersSlice";
 import paymentsReducer from "./features/payments/paymentsSlice";
@@ -26,6 +26,8 @@ import dashboardReducer from "./features/dashboard/dashboardSlice";
 import warehouseReducer from "./features/warehouse/warehouseSlice";
 import subcategoriReducer from "./features/subcategories/subcategoriesSlice";
 import faqsReducer from "./features/faqs/faqsSlice";
+import slidesReducer from "./features/slider/sliderSlice";
+import SystemSettingsReducer from "./features/systemsetting/systemsettingSlice";
 
 export const rootReducer = {
   auth: authReducer,
@@ -38,7 +40,7 @@ export const rootReducer = {
   productLabels: productLabelsReducer,
   // sizes: sizesReducer,
   // colors: colorsReducer,
-  discounts: discountsReducer,
+  // discounts: discountsReducer,
   coupons: couponsReducer,
   orders: ordersReducer,
   payments: paymentsReducer,
@@ -56,4 +58,6 @@ export const rootReducer = {
   dashboard: dashboardReducer,
   subcategori: subcategoriReducer,
   faqs: faqsReducer,
+  slider: slidesReducer,
+  systemseting: SystemSettingsReducer,
 };

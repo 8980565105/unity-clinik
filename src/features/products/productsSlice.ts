@@ -3,6 +3,7 @@ import {
   bulkDeleteProducts,
   createProduct,
   deleteProduct,
+  duplicateProduct,
   fetchProducts,
   updateProduct,
   updateProductStatus,
@@ -53,11 +54,13 @@ interface ProductsState {
   total: number;
   loading: boolean;
   error: string | null;
+  duplicating: boolean;
 }
 
 const initialState: ProductsState = {
   products: [],
   total: 0,
+  duplicating: false,
   loading: false,
   error: null,
 };
@@ -108,6 +111,23 @@ const productSlice = createSlice({
           (p) => !action.payload.includes(p._id),
         );
         state.total -= action.payload.length;
+      })
+      .addCase(duplicateProduct.pending, (state) => {
+        state.duplicating = true;
+        state.error = null;
+      })
+      .addCase(duplicateProduct.fulfilled, (state, action) => {
+        state.duplicating = false;
+        // createProduct jaisi j response structure aave — product extract karo
+        const newProduct = action.payload?.product || action.payload;
+        if (newProduct) {
+          state.products.unshift(newProduct);
+          state.total += 1;
+        }
+      })
+      .addCase(duplicateProduct.rejected, (state, action) => {
+        state.duplicating = false;
+        state.error = action.payload as string;
       });
   },
 });

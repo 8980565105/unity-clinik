@@ -1,8 +1,8 @@
 export const ROUTES = {
   auth: {
     login: "/auth/login",
-    // register: "/auth/register",
-    // registerStoreOwner: "/auth/register-store-owner",
+    register: "/auth/register",
+    registerStoreOwner: "/auth/register-store-owner",
     me: "/auth/me",
     logout: "/auth/logout",
     forgotPassword: "/auth/forgot-password",
@@ -92,15 +92,15 @@ export const ROUTES = {
   upload: {
     image: "/uploads/image",
   },
-  discounts: {
-    getAll: "/discounts",
-    getById: (id: string) => `/discounts/${id}`,
-    create: "/discounts",
-    update: (id: string) => `/discounts/${id}`,
-    updateStatus: (id: string) => `/discounts/${id}/status`,
-    delete: (id: string) => `/discounts/${id}`,
-    bulkDelete: "/discounts/bulk-delete",
-  },
+  // discounts: {
+  //   getAll: "/discounts",
+  //   getById: (id: string) => `/discounts/${id}`,
+  //   create: "/discounts",
+  //   update: (id: string) => `/discounts/${id}`,
+  //   updateStatus: (id: string) => `/discounts/${id}/status`,
+  //   delete: (id: string) => `/discounts/${id}`,
+  //   bulkDelete: "/discounts/bulk-delete",
+  // },
   coupons: {
     getAll: "/coupons",
     getById: (id: string) => `/coupons/${id}`,
@@ -281,5 +281,19 @@ export const ROUTES = {
     update: (id: string) => `/emails/${id}`,
     delete: (id: string) => `/emails/${id}`,
     bulkDelete: "/emails/bulk-delete",
+  },
+
+  slider: {
+    getAll: "/slider",
+    create: "/slider",
+    bulkDelete: "/slider/bulk-delete",
+    getById: (id: string) => `/slider/${id}`,
+    update: (id: string) => `/slider/${id}`,
+    delete: (id: string) => `/slider/${id}`,
+    updateStatus: (id: string) => `/slider/${id}/status`,
+  },
+  SystemSettings: {
+    get: "/system-setting",
+    update: "/system-setting",
   },
 };

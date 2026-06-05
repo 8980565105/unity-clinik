@@ -25,12 +25,10 @@ export default function FooterFormPage() {
   const basePath = useBasePath();
 
   const user = useSelector((state: RootState) => (state as any).auth?.user);
-  const isAdmin = user?.role === "admin";
 
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState(true);
-  const [storeId, setStoreId] = useState<string>("");
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -40,7 +38,6 @@ export default function FooterFormPage() {
           setLabel(item.label || "");
           setUrl(item.url || "");
           setStatus(item.status === "active");
-          setStoreId(item.storeId || "");
         }
       });
     }
@@ -57,9 +54,6 @@ export default function FooterFormPage() {
       status: status ? "active" : "inactive",
     };
 
-    if (isAdmin && storeId.trim()) {
-      payload.storeId = storeId.trim();
-    }
 
     try {
       let result;
@@ -138,21 +132,7 @@ export default function FooterFormPage() {
                 />
               </div>
 
-              {isAdmin && (
-                <div>
-                  <Label htmlFor="storeId">
-                    Store ID{" "}
-                    <span className="text-gray-400 text-xs">(admin only — leave blank for global)</span>
-                  </Label>
-                  <Input
-                    id="storeId"
-                    value={storeId}
-                    onChange={(e) => setStoreId(e.target.value)}
-                    className="mt-1"
-                    placeholder="Leave blank for global footer"
-                  />
-                </div>
-              )}
+
             </CardContent>
           </Card>
         </div>

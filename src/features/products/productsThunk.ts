@@ -114,3 +114,69 @@ export const bulkDeleteProducts = createAsyncThunk(
     }
   },
 );
+
+// duplicateProduct
+export const duplicateProduct = createAsyncThunk(
+  "products/duplicateProduct",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      // Step 1: Original product fetch karo
+      const res = await api.get(ROUTES.products.getById(id));
+      if (!res.data.success) {
+        return rejectWithValue(res.data.message || "Product not found");
+      }
+
+      const p = res.data.data;
+
+      // Step 2: Payload banavo — _id remove karo, name ma "Copy of" lagado
+      const payload = {
+        name: `Copy of ${p.name}`,
+        description: p.description || "",
+        steps: p.steps || "",
+        category_id: p.category_id?._id || p.category_id || "",
+        images: p.images || [],
+        status: "inactive", // duplicate hamesha inactive rakhiye initially
+        discount_id: p.discount_id?._id || p.discount_id || null,
+        sections: Array.isArray(p.sections) ? p.sections : [],
+        variants: Array.isArray(p.variants)
+          ? p.variants.map((v: any) => ({
+              // _id nahi moklo — new variant banshe
+              brand_id: v.brand_id?._id || v.brand_id || "",
+              type_id: v.type_id?._id || v.type_id || "",
+              price: v.price || "",
+              stock_quantity: v.stock_quantity || "0",
+              sku: `${v.sku}-copy-${Date.now()}`, // unique SKU
+              offerprice: v.offerprice || "",
+              ProductWeight: v.ProductWeight || "",
+              ProductHeight: v.ProductHeight || "",
+              ProductWidth: v.ProductWidth || "",
+              ProductLength: v.ProductLength || "",
+              Manufactured: v.Manufactured || "",
+              CountryOrigin: v.CountryOrigin || "",
+              Marketed: v.Marketed || "",
+              barcode: `${v.barcode}-copy`, // unique barcode
+              images: v.images || [],
+              labels: Array.isArray(v.labels)
+                ? v.labels.map((l: any) => l._id || l)
+                : [],
+              status: "inactive",
+              is_featured: !!v.is_featured,
+              is_best_seller: !!v.is_best_seller,
+              is_trending: !!v.is_trending,
+              description: v.description || "",
+              steps: v.steps || "",
+            }))
+          : [],
+      };
+
+      // Step 3: New product create karo
+      const createRes = await api.post(ROUTES.products.create, payload);
+      if (createRes.data.success) return createRes.data.data;
+      return rejectWithValue(
+        createRes.data.message || "Failed to duplicate product",
+      );
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);

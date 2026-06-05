@@ -19,16 +19,10 @@ import BrandFormPage from "./pages/Brands/BrandFormPage";
 import Brands from "./pages/Brands/Brands";
 import TypeFormPage from "./pages/Types/TypeForm";
 import Types from "./pages/Types/Types";
-// import FabricFormPage from "./pages/Fabrics/FabricForm";
-// import Fabrics from "./pages/Fabrics/Fabrics";
 import ProductLabels from "./pages/ProductLabels/ProductLabels";
 import ProductLabelFormPage from "./pages/ProductLabels/ProductLabelForm";
-// import Colors from "./pages/Colors/Colors";
-// import ColorFormPage from "./pages/Colors/ColorForm";
-// import Sizes from "./pages/Sizes/Sizes";
-// import SizeFormPage from "./pages/Sizes/SizeForm";
-import Discounts from "./pages/Discount/Discounts";
-import DiscountFormPage from "./pages/Discount/DiscountForm";
+// import Discounts from "./pages/Discount/Discounts";
+// import DiscountFormPage from "./pages/Discount/DiscountForm";
 import CouponFormPage from "./pages/coupons/CouponForm";
 import CouponsPage from "./pages/coupons/Coupons";
 import Orders from "./pages/Orders/Orders";
@@ -57,11 +51,14 @@ import FaqsFrom from "./pages/Faqs/FaqsFrom";
 import Faqspage from "./pages/Faqs/Faqs";
 import ResultFrom from "./pages/Result/ResultFrom";
 import Result from "./pages/Result/Result";
-// import { Router } from "lucide-react";
-import EmailsPage from "./pages/Email/email";
-import { Router } from "lucide-react";
 import EmailsFormPage from "./pages/Email/EmailFrom";
 import CustomerReviewsFrom from "./pages/CustomerReviews/CustomerReviewsFrom";
+import EmailsPage from "./pages/Email/Email";
+import Register from "./pages/Register";
+import SliderPage from "./pages/slider/slider";
+import SlideFormPage from "./pages/slider/sliderFrom";
+import SystemSettings from "./pages/systemseting/systemsetingFrom";
+
 
 const queryClient = new QueryClient();
 
@@ -73,7 +70,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="login" element={<Login />} />
-          {/* <Route path="/register" element={<Register />} /> */}
+          <Route path="/register" element={<Register />} />
           <Route path="/forgate-password" element={<Forgatepassword />}></Route>
           {/* ════════════════════════════════════════════════════════════════
               ADMIN ROUTES   —   prefix: /
@@ -101,23 +98,14 @@ const App = () => (
               <Route path="types" element={<Types />} />
               <Route path="types/add" element={<TypeFormPage />} />
               <Route path="types/:id/edit" element={<TypeFormPage />} />
-              {/* <Route path="fabrics" element={<Fabrics />} />
-              <Route path="fabrics/add" element={<FabricFormPage />} />
-              <Route path="fabrics/:id/edit" element={<FabricFormPage />} /> */}
+
               <Route path="product-labels" element={<ProductLabels />} />
               <Route path="product-labels/add" element={<ProductLabelFormPage />} />
               <Route path="product-labels/:id/edit" element={<ProductLabelFormPage />} />
-              {/* <Route path="colors" element={<Colors />} />
-              <Route path="colors/add" element={<ColorFormPage />} />
-              <Route path="colors/:id/edit" element={<ColorFormPage />} /> */}
-              {/* <Route path="sizes" element={<Sizes />} />
-              <Route path="sizes/add" element={<SizeFormPage />} />
-              <Route path="sizes/:id/edit" element={<SizeFormPage />} /> */}
 
-              {/* Promotions */}
-              <Route path="discounts" element={<Discounts />} />
+              {/* <Route path="discounts" element={<Discounts />} />
               <Route path="discounts/add" element={<DiscountFormPage />} />
-              <Route path="discounts/:id/edit" element={<DiscountFormPage />} />
+              <Route path="discounts/:id/edit" element={<DiscountFormPage />} /> */}
               <Route path="coupons" element={<CouponsPage />} />
               <Route path="coupons/add" element={<CouponFormPage />} />
               <Route path="coupons/:id/edit" element={<CouponFormPage />} />
@@ -137,9 +125,6 @@ const App = () => (
               <Route path="customer-reviews" element={<CustomerReviews />} />
               <Route path="customer-reviews/add" element={<CustomerReviewsFrom />} />
               <Route path="customer-reviews/:id/edit" element={<CustomerReviewsFrom />} />
-
-
-
 
               <Route path="wishlists" element={<Wishlist />} />
               <Route path="carts" element={<Cart />} />
@@ -161,6 +146,16 @@ const App = () => (
               <Route path="pages" element={<Pages />} />
               <Route path="pages/add" element={<PageFormPage />} />
               <Route path="pages/:id/edit" element={<PageFormPage />} />
+
+
+
+              <Route path="slider" element={<SliderPage />} />
+              <Route path="slider/add" element={<SlideFormPage />} />
+              <Route path="slider/:id/edit" element={<SlideFormPage />} />
+
+
+
+
               <Route path="navbar" element={<Navbar />} />
               <Route path="navbar/add" element={<NavbarFormPage />} />
               <Route path="navbar/:id/edit" element={<NavbarFormPage />} />
@@ -174,6 +169,8 @@ const App = () => (
               <Route path="stores/:id/edit" element={<StoreFormPage />} />
               <Route path="store-owners/add" element={<StoreOwnerFormPage />} />
               <Route path="store-owners/:id/edit" element={<StoreOwnerFormPage />} />
+              <Route path="system_settings" element={<SystemSettings />} />
+
             </Route>
 
             <Route path="*" element={<NotFound />} />
@@ -182,13 +179,11 @@ const App = () => (
           {/* ════════════════════════════════════════════════════════════════
               STORE-OWNER ROUTES   —   prefix: /store_owner
           ════════════════════════════════════════════════════════════════ */}
-          <Route element={<ProtectedRoute allowedRoles={["store_owner"]} />}>
+          {/* <Route element={<ProtectedRoute allowedRoles={["store_owner"]} />}>
             <Route path="/store_owner" element={<AdminLayout />}>
 
-              {/* Dashboard */}
               <Route index element={<VelzonDashboard />} />
 
-              {/* Catalog */}
               <Route path="products" element={<Products />} />
               <Route path="products/add" element={<AddProduct />} />
               <Route path="products/:id/edit" element={<AddProduct />} />
@@ -209,21 +204,21 @@ const App = () => (
               <Route path="types/:id/edit" element={<TypeFormPage />} />
               {/* <Route path="fabrics" element={<Fabrics />} />
               <Route path="fabrics/add" element={<FabricFormPage />} />
-              <Route path="fabrics/:id/edit" element={<FabricFormPage />} /> */}
+              <Route path="fabrics/:id/edit" element={<FabricFormPage />} />
               <Route path="product-labels" element={<ProductLabels />} />
               <Route path="product-labels/add" element={<ProductLabelFormPage />} />
               <Route path="product-labels/:id/edit" element={<ProductLabelFormPage />} />
               {/* <Route path="colors" element={<Colors />} />
               <Route path="colors/add" element={<ColorFormPage />} />
               <Route path="colors/:id/edit" element={<ColorFormPage />} /> */}
-              {/* <Route path="sizes" element={<Sizes />} />
+          {/* <Route path="sizes" element={<Sizes />} />
               <Route path="sizes/add" element={<SizeFormPage />} />
               <Route path="sizes/:id/edit" element={<SizeFormPage />} /> */}
 
-              {/* Promotions */}
-              <Route path="discounts" element={<Discounts />} />
+          {/* Promotions */}
+          {/* <Route path="discounts" element={<Discounts />} />
               <Route path="discounts/add" element={<DiscountFormPage />} />
-              <Route path="discounts/:id/edit" element={<DiscountFormPage />} />
+              <Route path="discounts/:id/edit" element={<DiscountFormPage />} /> 
               <Route path="coupons" element={<CouponsPage />} />
               <Route path="coupons/add" element={<CouponFormPage />} />
               <Route path="coupons/:id/edit" element={<CouponFormPage />} />
@@ -236,7 +231,6 @@ const App = () => (
               <Route path="warehouse/:id/edit" element={<WarehouseFormPage />} />
 
 
-              {/* Customers */}
               <Route path="stores" element={<Stores />} />
               <Route path="stores/add" element={<StoreFormPage />} />
               <Route path="stores/:id/edit" element={<StoreFormPage />} />
@@ -251,7 +245,6 @@ const App = () => (
               <Route path="wishlists" element={<Wishlist />} />
               <Route path="carts" element={<Cart />} />
 
-              {/* pages */}
               <Route path="faqs" element={<Faqspage />} />
               <Route path="faqs/add" element={<FaqsFrom />} />
               <Route path="faqs/:id/edit" element={<FaqsFrom />} />
@@ -259,7 +252,6 @@ const App = () => (
               <Route path="results/add" element={<ResultFrom />} />
               <Route path="results/:id/edit" element={<ResultFrom />} />
 
-              {/* emails */}
 
               <Route path="emails" element={<EmailsPage />} />
               <Route path="emails/add" element={<EmailsFormPage />} />
@@ -268,7 +260,6 @@ const App = () => (
 
 
 
-              {/* System */}
               <Route path="pages" element={<Pages />} />
               <Route path="pages/add" element={<PageFormPage />} />
               <Route path="pages/:id/edit" element={<PageFormPage />} />
@@ -284,7 +275,7 @@ const App = () => (
             </Route>
 
             <Route path="/store_owner/*" element={<NotFound />} />
-          </Route>
+          </Route> */}
 
         </Routes>
       </BrowserRouter>

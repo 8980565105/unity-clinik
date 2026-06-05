@@ -26,14 +26,14 @@ export default function PageFormPage() {
   const basePath = useBasePath();
 
   const { user } = useSelector((state: any) => state.auth);
-  const { stores = [] } = useSelector((state: any) => state.stores || {});
+  // const { stores = [] } = useSelector((state: any) => state.stores || {});
 
   // Page fields
   const [pageName, setPageName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("active");
   const [order, setOrder] = useState<number | "">("");
-  const [selectedStoreId, setSelectedStoreId] = useState("");
+  // const [selectedStoreId, setSelectedStoreId] = useState("");
 
   // SEO fields
   const [metaTitle, setMetaTitle] = useState("");
@@ -58,11 +58,11 @@ export default function PageFormPage() {
   ]);
 
   // Store owner auto storeId
-  useEffect(() => {
-    if (user?.role === "store_owner" && user?.storeId) {
-      setSelectedStoreId(user.storeId);
-    }
-  }, [user]);
+  // useEffect(() => {
+    // if (user?.role === "store_owner" && user?.storeId) {
+      // setSelectedStoreId(user.storeId);
+    // }
+  // }, [user]);
 
   // Fetch page if edit mode
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function PageFormPage() {
           setStatus(page.status || "active");
           setOrder(page.order || 1);
           setSections(page.sections?.length ? page.sections : []);
-          if (page.storeId) setSelectedStoreId(page.storeId);
+          // if (page.storeId) setSelectedStoreId(page.storeId);
         }
       });
     }
@@ -184,7 +184,7 @@ export default function PageFormPage() {
       }),
     };
 
-    if (selectedStoreId) payload.storeId = selectedStoreId;
+    // if (selectedStoreId) payload.storeId = selectedStoreId;
 
     try {
       let result;
@@ -260,7 +260,7 @@ export default function PageFormPage() {
               </div>
 
               {/* Admin — store selector */}
-              {user?.role === "admin" && (
+              {/* {user?.role === "admin" && (
                 <div>
                   <Label>Store</Label>
                   <select
@@ -279,17 +279,17 @@ export default function PageFormPage() {
                     Store select karo to page te store mate j show thase
                   </p>
                 </div>
-              )}
+              )} */}
 
               {/* Store owner — read only */}
-              {user?.role === "store_owner" && (
+              {/* {user?.role === "store_owner" && (
                 <div>
                   <Label>Store</Label>
                   <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
                     Auto-assigned to your store
                   </div>
                 </div>
-              )}
+              )} */}
             </CardContent>
           </Card>
 

@@ -1,3 +1,312 @@
+// import { useEffect, useState } from "react";
+// import { Link, useNavigate, useParams } from "react-router-dom";
+// import { useDispatch } from "react-redux";
+// import { AppDispatch } from "@/store";
+// import { Button } from "@/components/ui/button";
+// import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Switch } from "@/components/ui/switch";
+// import { ArrowLeft } from "lucide-react";
+// import { toast } from "sonner";
+// import { useBasePath } from "@/hooks/useBasePath";
+
+// import {
+//   createCoupon,
+//   getCouponById,
+//   updateCoupon,
+// } from "@/features/coupons/couponsThunk";
+// import { Textarea } from "@/components/ui/textarea";
+
+// export default function CouponFormPage() {
+//   const dispatch = useDispatch<AppDispatch>();
+//   const navigate = useNavigate();
+//   const { id } = useParams<{ id: string }>();
+//   const isEditMode = Boolean(id);
+//   const basePath = useBasePath();
+
+//   // 📝 Form States
+//   const [name, setName] = useState("");
+
+//   const [description, setDescription] = useState("");
+//   const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
+//     "percentage"
+//   );
+//   const [discountValue, setDiscountValue] = useState<string>("");
+//   const [minPurchaseAmount, setMinPurchaseAmount] = useState<string>("0");
+//   const [maxDiscountAmount, setMaxDiscountAmount] = useState<string>("");
+//   const [usageLimit, setUsageLimit] = useState<string>("1");
+//   const [startDate, setStartDate] = useState("");
+//   const [endDate, setEndDate] = useState("");
+//   const [status, setStatus] = useState(true);
+
+//   // ✨ Fetch existing coupon in edit mode
+//   useEffect(() => {
+//     if (isEditMode && id) {
+//       dispatch(getCouponById(id)).then((res: any) => {
+//         if (res.payload) {
+//           const coupon = res.payload;
+//           setName(coupon.name || "");
+//           setDescription(coupon.description || "");
+//           setDiscountType(coupon.discount_type || "percentage");
+//           setDiscountValue(String(coupon.discount_value || ""));
+//           setMinPurchaseAmount(String(coupon.min_purchase_amount ?? "0"));
+//           setMaxDiscountAmount(
+//             coupon.max_discount_amount !== null
+//               ? String(coupon.max_discount_amount)
+//               : ""
+//           );
+//           setUsageLimit(String(coupon.usage_limit || "1"));
+//           setStartDate(coupon.start_date?.slice(0, 10) || "");
+//           setEndDate(coupon.end_date?.slice(0, 10) || "");
+//           setStatus(coupon.status === "active");
+//         }
+//       });
+//     }
+//   }, [dispatch, id, isEditMode]);
+
+//   // 📝 Submit Handler
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+
+//     // Basic Validation
+//     if (!name.trim()) return toast.error("Please enter coupon name");
+//     if (!discountValue || Number(discountValue) <= 0)
+//       return toast.error(
+//         `Please enter a valid ${discountType === "percentage" ? "percentage" : "fixed"
+//         } value`
+//       );
+//     if (!usageLimit || Number(usageLimit) < 1)
+//       return toast.error("Please enter a valid usage limit");
+//     if (!startDate) return toast.error("Please select a start date");
+//     if (!endDate) return toast.error("Please select an end date");
+//     if (new Date(endDate) < new Date(startDate))
+//       return toast.error("End date cannot be before start date");
+
+//     const payload = {
+//       name,
+//       description,
+//       discount_type: discountType,
+//       discount_value: Number(discountValue),
+//       min_purchase_amount: Number(minPurchaseAmount),
+//       max_discount_amount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
+//       usage_limit: Number(usageLimit),
+//       start_date: startDate,
+//       end_date: endDate,
+//       status: status ? "active" : "inactive",
+//     };
+
+//     try {
+//       let result;
+//       if (isEditMode && id) {
+//         result = await dispatch(updateCoupon({ id, data: payload }));
+//       } else {
+//         result = await dispatch(createCoupon(payload));
+//       }
+
+//       if (
+//         createCoupon.fulfilled.match(result) ||
+//         updateCoupon.fulfilled.match(result)
+//       ) {
+//         toast.success(
+//           isEditMode
+//             ? "Coupon updated successfully!"
+//             : "Coupon created successfully!"
+//         );
+//         // navigate("/coupons");
+//         navigate(`${basePath}/coupons`);
+
+//       } else {
+//         toast.error((result.payload as string) || "Something went wrong");
+//       }
+//     } catch {
+//       toast.error("Server Error");
+//     }
+//   };
+
+//   return (
+//     <div className="p-6 mx-auto">
+//       {/* Header */}
+//       <div className="flex items-center gap-4 mb-6">
+//         <Link to={`${basePath}/coupons`}>
+//           <Button variant="ghost" size="icon">
+//             <ArrowLeft className="h-4 w-4" />
+//           </Button>
+//         </Link>
+//         <div>
+//           <h1 className="text-3xl font-bold text-gray-900">
+//             {isEditMode ? "Edit Coupon" : "Add New Coupon"}
+//           </h1>
+//           <p className="text-gray-500 mt-1">
+//             {isEditMode ? "Update coupon details." : "Create a new coupon."}
+//           </p>
+//         </div>
+//       </div>
+
+//       {/* Form */}
+//       <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
+//         <div className="lg:col-span-2 space-y-6">
+//           <Card className="shadow-md border border-gray-200">
+//             <CardHeader>
+//               <CardTitle className="text-lg font-semibold">
+//                 Coupon Details
+//               </CardTitle>
+//             </CardHeader>
+//             <CardContent className="space-y-5">
+//               <div>
+//                 <Label htmlFor="name">Coupon Name *</Label>
+//                 <Input
+//                   id="name"
+//                   value={name}
+//                   onChange={(e) => setName(e.target.value)}
+//                 />
+//               </div>
+
+//               <div>
+//                 <Label htmlFor="description">Description</Label>
+//                 <Textarea
+//                   id="description"
+//                   value={description}
+//                   onChange={(e) => setDescription(e.target.value)}
+//                   placeholder="Enter coupon description..."
+//                 />
+//               </div>
+
+//               <div>
+//                 <Label htmlFor="discountType">Discount Type</Label>
+//                 <select
+//                   id="discountType"
+//                   value={discountType}
+//                   onChange={(e) =>
+//                     setDiscountType(e.target.value as "percentage" | "fixed")
+//                   }
+//                   className="mt-1 w-full border rounded-md p-2"
+//                 >
+//                   <option value="percentage">Percentage</option>
+//                   <option value="fixed">Fixed</option>
+//                 </select>
+//               </div>
+
+//               {discountType === "percentage" ? (
+//                 <div>
+//                   <Label htmlFor="percentage">Percentage (%)</Label>
+//                   <Input
+//                     id="percentage"
+//                     type="number"
+//                     value={discountValue}
+//                     onChange={(e) => setDiscountValue(e.target.value)}
+//                     min={1}
+//                     max={100}
+//                   />
+//                 </div>
+//               ) : (
+//                 <div>
+//                   <Label htmlFor="fixedValue">Fixed Value</Label>
+//                   <Input
+//                     id="fixedValue"
+//                     type="number"
+//                     value={discountValue}
+//                     onChange={(e) => setDiscountValue(e.target.value)}
+//                     min={1}
+//                   />
+//                 </div>
+//               )}
+
+//               <div className="grid grid-cols-2 gap-4">
+//                 <div>
+//                   <Label htmlFor="minPurchase">Min Purchase Amount</Label>
+//                   <Input
+//                     id="minPurchase"
+//                     type="number"
+//                     value={minPurchaseAmount}
+//                     onChange={(e) => setMinPurchaseAmount(e.target.value)}
+//                     min={0}
+//                   />
+//                 </div>
+//                 <div>
+//                   <Label htmlFor="maxDiscount">Max Discount Amount</Label>
+//                   <Input
+//                     id="maxDiscount"
+//                     type="number"
+//                     value={maxDiscountAmount}
+//                     onChange={(e) => setMaxDiscountAmount(e.target.value)}
+//                     min={0}
+//                   />
+//                 </div>
+//               </div>
+
+//               <div>
+//                 <Label htmlFor="usageLimit">Usage Limit</Label>
+//                 <Input
+//                   id="usageLimit"
+//                   type="number"
+//                   value={usageLimit}
+//                   onChange={(e) => setUsageLimit(e.target.value)}
+//                   min={1}
+//                 />
+//               </div>
+
+//               <div className="grid grid-cols-2 gap-4">
+//                 <div>
+//                   <Label htmlFor="startDate">Start Date</Label>
+//                   <Input
+//                     id="startDate"
+//                     type="date"
+//                     value={startDate}
+//                     onChange={(e) => setStartDate(e.target.value)}
+//                   />
+//                 </div>
+//                 <div>
+//                   <Label htmlFor="endDate">End Date</Label>
+//                   <Input
+//                     id="endDate"
+//                     type="date"
+//                     value={endDate}
+//                     onChange={(e) => setEndDate(e.target.value)}
+//                   />
+//                 </div>
+//               </div>
+//             </CardContent>
+//           </Card>
+//         </div>
+
+//         {/* Right section */}
+//         <div className="space-y-6">
+//           <Card className="sticky top-6 shadow-md border border-gray-200">
+//             <CardHeader>
+//               <CardTitle className="text-lg font-semibold">Status</CardTitle>
+//             </CardHeader>
+//             <CardContent>
+//               <div className="flex items-center justify-between">
+//                 <Label htmlFor="status">Active</Label>
+//                 <Switch
+//                   id="status"
+//                   checked={status}
+//                   onCheckedChange={(val) => setStatus(val)}
+//                 />
+//               </div>
+//             </CardContent>
+//           </Card>
+
+//           <div className="flex gap-3">
+//             <Button
+//               type="submit"
+//               className="flex-1 bg-blue-600 hover:bg-blue-700"
+//             >
+//               {isEditMode ? "Update Coupon" : "Create Coupon"}
+//             </Button>
+//             <Link to={`${basePath}/coupons`} className="flex-1">
+//               <Button type="button" variant="outline" className="w-full">
+//                 Cancel
+//               </Button>
+//             </Link>
+//           </div>
+//         </div>
+//       </form>
+//     </div>
+//   );
+// }
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -17,7 +326,18 @@ import {
   updateCoupon,
 } from "@/features/coupons/couponsThunk";
 import { Textarea } from "@/components/ui/textarea";
+import { fetchProducts } from "@/features/products/productsThunk";
+import Select from "react-select";
+import { fetchsubCategories } from "@/features/subcategories/subcategoriesThunk";
 
+const generateCouponCode = (length = 8) => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < length; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+};
 export default function CouponFormPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
@@ -25,7 +345,7 @@ export default function CouponFormPage() {
   const isEditMode = Boolean(id);
   const basePath = useBasePath();
 
-  // 📝 Form States
+
   const [name, setName] = useState("");
 
   const [description, setDescription] = useState("");
@@ -39,14 +359,76 @@ export default function CouponFormPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState(true);
+  const [code, setCode] = useState("");
+  const [autoGenerate, setAutoGenerate] = useState(false);
 
-  // ✨ Fetch existing coupon in edit mode
+
+  const [products, setProducts] = useState<any[]>([]);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
+
+  const [apply, setApplyCoupon] =
+    useState("allproducts");
+
+  const [selectedProducts,
+    setSelectedProducts] =
+    useState<any[]>([]);
+
+  const [selectedSubCategories,
+    setSelectedSubCategories] =
+    useState<any[]>([]);
+
+
+
+
+  useEffect(() => {
+    loadProducts();
+    loadSubCategories();
+  }, []);
+
+
+  const loadProducts = async () => {
+    try {
+      const res = await dispatch(
+        fetchProducts({})
+      ).unwrap();
+      setProducts(res.products || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const loadSubCategories =
+    async () => {
+      try {
+        const res =
+          await dispatch(
+            fetchsubCategories({
+              page: 1,
+              limit: 1000,
+            })
+          ).unwrap();
+
+        console.log(
+          "subcategory api",
+          res
+        );
+
+        setSubCategories(
+          res?.categories ||
+          []
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
   useEffect(() => {
     if (isEditMode && id) {
       dispatch(getCouponById(id)).then((res: any) => {
         if (res.payload) {
           const coupon = res.payload;
           setName(coupon.name || "");
+          setCode(coupon.code || "");
           setDescription(coupon.description || "");
           setDiscountType(coupon.discount_type || "percentage");
           setDiscountValue(String(coupon.discount_value || ""));
@@ -57,43 +439,117 @@ export default function CouponFormPage() {
               : ""
           );
           setUsageLimit(String(coupon.usage_limit || "1"));
-          setStartDate(coupon.start_date?.slice(0, 10) || "");
-          setEndDate(coupon.end_date?.slice(0, 10) || "");
+          setStartDate(coupon.start_date
+            ? new Date(coupon.start_date).toISOString().slice(0, 16)
+            : ""
+          );
+          setEndDate(coupon.end_date
+            ? new Date(coupon.end_date).toISOString().slice(0, 16)
+            : ""
+          );
+
+          setApplyCoupon(
+            coupon.apply_type ||
+            "allproducts"
+          );
+
+          setSelectedProducts(
+            coupon.products?.map(
+              (p: any) => ({
+                value:
+                  p._id ||
+                  p,
+
+                label:
+                  p.name ||
+                  p.title ||
+                  "Product",
+              })
+            ) || []
+          );
+
+          setSelectedSubCategories(
+            coupon.subcategories?.map(
+              (s: any) => ({
+                value:
+                  s._id ||
+                  s,
+
+                label:
+                  s.name ||
+                  s.title ||
+                  "SubCategory",
+              })
+            ) || []
+          );
+
           setStatus(coupon.status === "active");
         }
       });
     }
   }, [dispatch, id, isEditMode]);
 
-  // 📝 Submit Handler
+  const handleAutoGenerateToggle = (checked: boolean) => {
+    setAutoGenerate(checked);
+    if (checked) {
+      setCode(generateCouponCode());
+    } else {
+      setCode("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic Validation
     if (!name.trim()) return toast.error("Please enter coupon name");
-    if (!discountValue || Number(discountValue) <= 0)
-      return toast.error(
-        `Please enter a valid ${discountType === "percentage" ? "percentage" : "fixed"
-        } value`
-      );
+    if (!code.trim()) return toast.error("Please enter or generate a coupon code");
+    // if (!discountValue || Number(discountValue) <= 0)
+    //   return toast.error(
+    //     `Please enter a valid ${discountType === "percentage" ? "percentage" : "fixed"
+    //     } value`
+    //   );
     if (!usageLimit || Number(usageLimit) < 1)
       return toast.error("Please enter a valid usage limit");
-    if (!startDate) return toast.error("Please select a start date");
-    if (!endDate) return toast.error("Please select an end date");
+    if (!startDate) return toast.error("Please select a start date & time");
+
+    if (!endDate) return toast.error("Please select an end date & time");
     if (new Date(endDate) < new Date(startDate))
       return toast.error("End date cannot be before start date");
 
+
     const payload = {
       name,
+      code: code.toUpperCase(),
       description,
       discount_type: discountType,
       discount_value: Number(discountValue),
       min_purchase_amount: Number(minPurchaseAmount),
       max_discount_amount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
       usage_limit: Number(usageLimit),
-      start_date: startDate,
-      end_date: endDate,
+      start_date: startDate ? new Date(startDate).toISOString() : null,
+      end_date: endDate ? new Date(endDate).toISOString() : null,
       status: status ? "active" : "inactive",
+      apply_type:
+        apply,
+
+      products:
+        apply ===
+          "specificproducts"
+          ? selectedProducts.map(
+            (p) =>
+              p.value
+          )
+          : [],
+
+      subcategories:
+        apply ===
+          "specificsubcategory"
+          ? selectedSubCategories.map(
+            (s) =>
+              s.value
+          )
+          : [],
+
     };
 
     try {
@@ -113,7 +569,6 @@ export default function CouponFormPage() {
             ? "Coupon updated successfully!"
             : "Coupon created successfully!"
         );
-        // navigate("/coupons");
         navigate(`${basePath}/coupons`);
 
       } else {
@@ -124,9 +579,20 @@ export default function CouponFormPage() {
     }
   };
 
+
+
+  const handleDiscountTypeChange = (value: string) => {
+    setDiscountType(value as "percentage" | "fixed");
+    if (value === "freeshiping") {
+      setDiscountValue("0");
+    } else {
+      setDiscountValue("0");
+    }
+  };
+
+
   return (
     <div className="p-6 mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link to={`${basePath}/coupons`}>
           <Button variant="ghost" size="icon">
@@ -143,7 +609,6 @@ export default function CouponFormPage() {
         </div>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Card className="shadow-md border border-gray-200">
@@ -161,6 +626,30 @@ export default function CouponFormPage() {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
+              <div className="flex justify-between items-center">
+                <div>
+                  <Label htmlFor="name">Coupon Code *</Label>
+                  <Input
+                    value={code}
+                    onChange={(e) => {
+                      if (!autoGenerate) {
+                        setCode(e.target.value.toUpperCase());
+                      }
+                    }}
+                    readOnly={autoGenerate}
+                    placeholder="e.g.save20"
+                    className={autoGenerate ? "bg-gray-100 cursor-not-allowed" : ""}
+                  />
+                </div>
+                <div className="flex gap-3 items-center">
+                  <Input
+                    className="w-5 h-5"
+                    type="checkbox"
+                    onChange={(e) => handleAutoGenerateToggle(e.target.checked)}
+                  />
+                  <Label htmlFor="name">Auto Generate</Label>
+                </div>
+              </div>
 
               <div>
                 <Label htmlFor="description">Description</Label>
@@ -177,19 +666,22 @@ export default function CouponFormPage() {
                 <select
                   id="discountType"
                   value={discountType}
-                  onChange={(e) =>
-                    setDiscountType(e.target.value as "percentage" | "fixed")
-                  }
+                  // onChange={(e) =>
+                  //   setDiscountType(e.target.value as "percentage" | "fixed")
+                  // }
+                  onChange={(e) => handleDiscountTypeChange(e.target.value)}
                   className="mt-1 w-full border rounded-md p-2"
                 >
                   <option value="percentage">Percentage</option>
                   <option value="fixed">Fixed</option>
+                  <option value="freeshiping">Free Shiping</option>
+
                 </select>
               </div>
 
               {discountType === "percentage" ? (
                 <div>
-                  <Label htmlFor="percentage">Percentage (%)</Label>
+                  <Label htmlFor="percentage">Percentage (%) Value</Label>
                   <Input
                     id="percentage"
                     type="number"
@@ -199,24 +691,34 @@ export default function CouponFormPage() {
                     max={100}
                   />
                 </div>
-              ) : (
-                <div>
-                  <Label htmlFor="fixedValue">Fixed Value</Label>
-                  <Input
-                    id="fixedValue"
-                    type="number"
-                    value={discountValue}
-                    onChange={(e) => setDiscountValue(e.target.value)}
-                    min={1}
-                  />
-                </div>
-              )}
+              )
+                :
+                discountType === "fixed" ?
+                  (
+                    <div>
+                      <Label htmlFor="fixedValue">Fixed Value</Label>
+                      <Input
+                        id="fixedValue"
+                        type="number"
+                        value={discountValue}
+                        onChange={(e) => setDiscountValue(e.target.value)}
+                        min={1}
+                      />
+                    </div>
+                  )
+
+                  :
+                  (
+                    ""
+                  )
+              }
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="minPurchase">Min Purchase Amount</Label>
                   <Input
                     id="minPurchase"
+
                     type="number"
                     value={minPurchaseAmount}
                     onChange={(e) => setMinPurchaseAmount(e.target.value)}
@@ -251,7 +753,7 @@ export default function CouponFormPage() {
                   <Label htmlFor="startDate">Start Date</Label>
                   <Input
                     id="startDate"
-                    type="date"
+                    type="datetime-local"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                   />
@@ -260,17 +762,147 @@ export default function CouponFormPage() {
                   <Label htmlFor="endDate">End Date</Label>
                   <Input
                     id="endDate"
-                    type="date"
+                    type="datetime-local"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                   />
                 </div>
               </div>
+
+
+
+
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="apply">Applies To*</Label>
+                  <select
+                    id="apply"
+                    value={apply}
+                    onChange={(e) =>
+                      setApplyCoupon(e.target.value)
+                    }
+                    className="mt-1 w-full border rounded-md p-2"
+                  >
+                    <option value="allproducts">
+                      All Products
+                    </option>
+
+                    <option value="specificproducts">
+                      Specific Products
+                    </option>
+
+                    <option value="specificsubcategory">
+                      Specific SubCategory
+                    </option>
+                  </select>
+                </div>
+
+
+
+                {apply ===
+                  "specificproducts" && (
+                    <div>
+                      <Label>
+                        Select Products
+                      </Label>
+
+                      <Select
+                        isMulti
+                        options={products.map(
+                          (product: any) => ({
+                            value:
+                              product._id,
+                            label:
+                              product.name,
+                          })
+                        )}
+                        value={
+                          selectedProducts
+                        }
+                        onChange={(
+                          selected: any
+                        ) =>
+                          setSelectedProducts(
+                            selected as any
+                          )
+                        }
+                        placeholder="Search Products..."
+                      />
+                    </div>
+                  )}
+
+
+                {apply ===
+                  "specificsubcategory" && (
+                    <div>
+                      <Label>
+                        Select SubCategory
+                      </Label>
+
+                      {/* <Select
+                        isMulti
+                        options={subCategories.map(
+                          (
+                            subcategory: any
+                          ) => ({
+                            value:
+                              subcategory._id,
+                            label:
+                              subcategory.name,
+                          })
+                        )}
+                        value={
+                          selectedSubCategories
+                        }
+                        onChange={(
+                          selected: any
+                        ) =>
+                          setSelectedSubCategories(
+                            selected as any
+                          )
+                        }
+                        placeholder="Search SubCategory..."
+                      /> */}
+
+
+                      <Select
+                        isMulti
+                        options={subCategories.map(
+                          (
+                            subcategory: any
+                          ) => ({
+                            value:
+                              subcategory._id,
+
+                            label:
+                              subcategory.name,
+                          })
+                        )}
+                        value={
+                          selectedSubCategories
+                        }
+                        onChange={(
+                          selected: any
+                        ) =>
+                          setSelectedSubCategories(
+                            selected || []
+                          )
+                        }
+                        placeholder="Search SubCategory..."
+                      />
+
+                    </div>
+
+                  )}
+              </div>
+
+
+
             </CardContent>
           </Card>
         </div>
 
-        {/* Right section */}
         <div className="space-y-6">
           <Card className="sticky top-6 shadow-md border border-gray-200">
             <CardHeader>
