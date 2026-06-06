@@ -4,90 +4,118 @@ const { sendResponse } = require("../utils/response");
 const ProductVariant = require("../models/ProductVariant");
 const mongoose = require("mongoose");
 
+const SECTION_ITEM_FIELDS = {
+  "Root Cause Section": ["image"],
+  "How Does It Do It Section": ["name", "description", "image"],
+  "Benefits Section": ["name", "description", "image"],
+  "Ingredients Section": ["name", "description", "image"],
+  "Treatment Kit Section": ["name", "description", "image"],
+  "Treatment Journey Section": ["title", "description", "image"],
+  "Daily Usage Section": ["title", "description", "image"],
+  "How to use": ["title", "description", "image"],
+  "Image Banner Section": ["title", "description", "image"],
+  "Why Choose Unity Hair": ["title", "description", "image"],
+  "Before & After": ["title", "description", "beforeImage", "afterImage"],
+  "FAQ 1": [],
+  "FAQ 2": [],
+  "Solution By Stage Section": ["title", "description", "image", "product_id"],
+  "Product Recommendation Section": ["title", "description", "product_id"],
+  "Other Recommended Solutions": ["title", "description", "product_id"],
+  "use and Others points": ["name", "description"],
+  "Product Attribute Section": ["key", "value"],
+  "Additional Information Section": [
+    "net_quantity",
+    "manufactured_by",
+    "marketed_by",
+    "country_origin",
+    "product_dimensions",
+    "best_before",
+  ],
+  "Result Section": [
+    "beforeImage",
+    "afterImage",
+    "reviewDescription",
+    "customerName",
+    "customerAge",
+    "verifiedReview",
+    "stageLabel",
+  ],
+};
+
+const pickFields = (obj, fields) => {
+  const result = {};
+  for (const f of fields) {
+    result[f] = obj[f] ?? "";
+    if (f === "product_id") {
+      result[f] =
+        obj.product_id && mongoose.Types.ObjectId.isValid(obj.product_id)
+          ? obj.product_id
+          : null;
+    }
+  }
+  return result;
+};
+
 const normalizeSections = (sections = []) => {
-  return (Array.isArray(sections) ? sections : []).map((section) => ({
-    type: section.type || "",
+  return (Array.isArray(sections) ? sections : []).map((section) => {
+    const type = section.type || "";
+    const data = section?.data || {};
+    const allowedFields = SECTION_ITEM_FIELDS[type];
 
-    data: {
-      status: section?.data?.status ?? true,
+    const isFaq = type === "FAQ 1" || type === "FAQ 2";
 
-      title: section?.data?.title || "",
+    const normalizedData = {
+      status: data.status ?? true,
+      title: data.title || "",
+      description: data.description || "",
+      image: data.image || "",
+      questions: [],
+      items: [],
+      steps: [],
+    };
 
-      description: section?.data?.description || "",
-
-      image: section?.data?.image || "",
-
-      questions: (section?.data?.questions || []).map((q) => ({
+    if (isFaq) {
+      normalizedData.questions = (data.questions || []).map((q) => ({
         question: q.question || "",
         answer: q.answer || "",
         image: q.image || "",
-      })),
-
-      items: (section?.data?.items || []).map((item) => ({
-        name: item.name || "",
-
-        title: item.title || "",
-
-        description: item.description || "",
-
-        image: item.image || "",
-
-        beforeImage: item.beforeImage || "",
-
-        afterImage: item.afterImage || "",
-
-        usPoint: item.usPoint || "",
-
-        otherPoint: item.otherPoint || "",
-        key: item.key || "",
-        value: item.value || "",
-
-        net_quantity: item.net_quantity || "",
-        manufactured_by: item.manufactured_by || "",
-        marketed_by: item.marketed_by || "",
-        country_origin: item.country_origin || "",
-        product_dimensions: item.product_dimensions || "",
-        best_before: item.best_before || "",
-
-        product_id:
-          item.product_id && mongoose.Types.ObjectId.isValid(item.product_id)
-            ? item.product_id
-            : null,
-      })),
-
-      steps: (section?.data?.steps || []).map((step) => ({
+      }));
+    } else if (type === "Multi Step Selection") {
+      normalizedData.steps = (data.steps || []).map((step) => ({
         status: step?.status ?? true,
-
         title: step?.title || "",
-
         display_type: step?.display_type || "Text",
-
         description: step?.description || "",
-
         variants: (step?.variants || []).map((variant) => ({
           title: variant.title || "",
-
           description: variant.description || "",
-
           image: variant.image || "",
-
           slug: variant.slug || "",
-
           badge: variant.badge || "",
-
           product_id:
             variant.product_id &&
             mongoose.Types.ObjectId.isValid(variant.product_id)
               ? variant.product_id
               : null,
-
           price: Number(variant.price || 0),
-
           offerprice: Number(variant.offerprice || 0),
         })),
-      })),
-    },
-  }));
+      }));
+    } else if (allowedFields !== undefined) {
+      normalizedData.items = (data.items || []).map((item) =>
+        pickFields(item, allowedFields),
+      );
+    } else {
+      normalizedData.items = (data.items || []).map((item) => ({
+        name: item.name || "",
+        title: item.title || "",
+        description: item.description || "",
+        image: item.image || "",
+      }));
+    }
+
+    return { type, data: normalizedData };
+  });
 };
 
 const buildPipeline = ({
@@ -651,6 +679,58 @@ const bulkDeleteProducts = async (req, res) => {
   }
 };
 
+const duplicateProduct = async (req, res) => {
+  try {
+    const original = await Product.findById(req.params.id).lean();
+    if (!original) return sendResponse(res, false, null, "Product not found");
+
+    const timestamp = Date.now();
+    const newSlug = `${original.slug}-copy-${timestamp}`;
+
+    const duplicatedProduct = new Product({
+      ...original,
+      _id: undefined,
+      __v: undefined,
+      slug: newSlug,
+      name: `${original.name} (Copy)`,
+      sections: normalizeSections(original.sections || []),
+      createdAt: undefined,
+      updatedAt: undefined,
+    });
+
+    const saved = await duplicatedProduct.save();
+
+    const originalVariants = await ProductVariant.find({
+      product_id: original._id,
+    }).lean();
+
+    let savedVariants = [];
+    if (originalVariants.length > 0) {
+      const variantDocs = originalVariants.map((v, idx) => ({
+        ...v,
+        _id: undefined,
+        __v: undefined,
+        product_id: saved._id,
+        sku: `${v.sku}-copy-${timestamp}`,
+        barcode: `${v.barcode}-copy`,
+        createdAt: undefined,
+        updatedAt: undefined,
+      }));
+      savedVariants = await ProductVariant.insertMany(variantDocs);
+    }
+
+    sendResponse(
+      res,
+      true,
+      { product: saved, variants: savedVariants },
+      "Product duplicated successfully",
+    );
+  } catch (err) {
+    console.error("❌ duplicateProduct error:", err);
+    sendResponse(res, false, null, err.message);
+  }
+};
+
 module.exports = {
   getPublicProducts,
   getPublicProductById,
@@ -661,4 +741,5 @@ module.exports = {
   deleteProduct,
   bulkDeleteProducts,
   updateProductStatus,
+  duplicateProduct,
 };

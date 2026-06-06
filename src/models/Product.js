@@ -179,6 +179,27 @@ const productSchema = new mongoose.Schema(
                 type: String,
                 default: "",
               },
+
+              reviewDescription: {
+                type: String,
+                default: "",
+              },
+              customerName: {
+                type: String,
+                default: "",
+              },
+              customerAge: {
+                type: String,
+                default: "",
+              },
+              verifiedReview: {
+                type: Boolean,
+                default: true,
+              },
+              stageLabel: {
+                type: String,
+                default: "",
+              },
             },
           ],
 
