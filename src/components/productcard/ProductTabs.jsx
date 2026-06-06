@@ -19,7 +19,7 @@ export default function ProductTabs({ product, selectedVariant }) {
   const activeSteps = isValidHtml(product?.steps) ? product.steps : null;
   return (
     <div>
-      <div className="hidden md:flex w-full">
+      <div className="flex w-full">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -35,7 +35,7 @@ export default function ProductTabs({ product, selectedVariant }) {
         ))}
       </div>
 
-      <div className="hidden md:block border border-[#BCBCBC] border-t-0 ps-[38px] py-[45px]">
+      <div className="border border-[#BCBCBC] border-t-0 ps-[38px] py-[45px]">
         {activeTab === "Details" && (
           <div className="prose max-w-full">
             {activeDescription ? (
@@ -57,7 +57,7 @@ export default function ProductTabs({ product, selectedVariant }) {
         )}
       </div>
 
-      <div className="md:hidden">
+      {/* <div className="md:hidden">
         {tabs.map((tab, index) => (
           <div key={index} className="border-b border-[#BCBCBC]">
             <button
@@ -99,7 +99,7 @@ export default function ProductTabs({ product, selectedVariant }) {
             )}
           </div>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }

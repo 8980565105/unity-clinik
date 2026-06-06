@@ -282,12 +282,8 @@ export default function ShopBannerSlider() {
   }
 
   return (
-    <Section>
-      <Row>
-        {/* <div className="flex items-center justify-end gap-3 mb-4">
-          <NavBtn direction="left" onClick={handlePrev} variant="primary" />
-          <NavBtn direction="right" onClick={handleNext} variant="primary" />
-        </div> */}
+    <Section className="!p-0">
+      {/* <Row> */}
         <div className="overflow-hidden w-full" ref={containerRef}>
           {cardW > 0 && (
             <div
@@ -307,7 +303,7 @@ export default function ShopBannerSlider() {
             </div>
           )}
         </div>
-      </Row>
+      {/* </Row> */}
     </Section>
   );
 }

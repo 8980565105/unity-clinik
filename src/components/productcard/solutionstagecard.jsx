@@ -90,10 +90,9 @@ function Solutionstagecard({ data, items = [], products = [] }) {
             loop={enableLoop}
             spaceBetween={20}
             breakpoints={{
-              0: { slidesPerView: 1.2 },
-              480: { slidesPerView: 1.5 },
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
+              0: { slidesPerView: 2 },
+              678: { slidesPerView: 3 },
+              1024: { slidesPerView: 4 },
             }}
             className="!pb-12"
           >
@@ -199,7 +198,7 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                           type="button"
                           onClick={(e) => handleAddToCart(e, linkedProduct)}
                           variant="outline"
-                          className="w-full border-2 font-bold"
+                          className="!w-full border-2 font-bold !min-w-[auto]"
                         >
                           Add to Cart
                         </Button>

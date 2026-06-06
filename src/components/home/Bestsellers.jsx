@@ -1,3 +1,164 @@
+// // import React, { useRef, useState, useCallback, useEffect } from "react";
+// // import Row from "../ui/Row.jsx";
+// // import { useSelector } from "react-redux";
+// // import Section from "../ui/Section.jsx";
+// // import ProductCard from "../productcard/ProductCard.jsx";
+// // import NavBtn from "../ui/Navbtn";
+// // import Heading from "../ui/Heading.jsx";
+
+// // const CARD_W = 320;
+// // const GAP = 40;
+// // const STEP = CARD_W + GAP;
+
+// // const Bestsellers = ({ setShowLoginPopup }) => {
+// //   const { products = [] } = useSelector((state) => state.products);
+
+// //   const sellersProducts = products.filter(
+// //     (product) =>
+// //       product.status === "active" &&
+// //       product.variants?.some((variant) => variant.is_best_seller),
+// //   );
+
+// //   const total = sellersProducts.length;
+// //   const containerRef = useRef(null);
+// //   const trackRef = useRef(null);
+// //   const isAnimating = useRef(false);
+// //   const [currentIndex, setCurrentIndex] = useState(total);
+
+// //   const [isCenter, setIsCenter] = useState(false);
+
+// //   const tripled =
+// //     total > 0
+// //       ? [...sellersProducts, ...sellersProducts, ...sellersProducts]
+// //       : [];
+
+// //   const getVisibleCount = useCallback(() => {
+// //     if (!containerRef.current) return 4;
+// //     return Math.floor(containerRef.current.offsetWidth / STEP);
+// //   }, []);
+
+// //   useEffect(() => {
+// //   const checkCenter = () => {
+// //     if (!containerRef.current) return;
+
+// //     const width = containerRef.current.offsetWidth;
+// //     const visible = Math.floor(width / STEP);
+
+// //     setIsCenter(total <= visible);
+// //   };
+
+// //   const timeout = setTimeout(checkCenter, 0);
+
+// //   window.addEventListener("resize", checkCenter);
+
+// //   return () => {
+// //     clearTimeout(timeout);
+// //     window.removeEventListener("resize", checkCenter);
+// //   };
+// // }, [total]);
+
+// // useEffect(() => {
+// //   if (total > 0) {
+// //     setCurrentIndex(total);
+// //   }
+// // }, [total]);
+
+// //   useEffect(() => {
+// //     if (trackRef.current && total > 0) {
+// //       trackRef.current.style.transition = "none";
+// //       trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+// //     }
+// //   }, [total]);
+
+// //   const slideTo = (newIndex, withAnimation = true) => {
+// //     if (!trackRef.current) return;
+// //     trackRef.current.style.transition = withAnimation
+// //       ? "transform 300ms cubic-bezier(0.4,0,0.2,1)"
+// //       : "none";
+// //     trackRef.current.style.transform = `translateX(-${newIndex * STEP}px)`;
+// //   };
+
+// //   const handleNext = () => {
+// //     if (isAnimating.current || total === 0 || isCenter) return;
+// //     isAnimating.current = true;
+
+// //     const next = currentIndex + 1;
+// //     setCurrentIndex(next);
+// //     slideTo(next, true);
+
+// //     setTimeout(() => {
+// //       if (next >= total * 2) {
+// //         const reset = next - total;
+// //         setCurrentIndex(reset);
+// //         slideTo(reset, false);
+// //       }
+// //       isAnimating.current = false;
+// //     }, 310);
+// //   };
+
+// //   const handlePrev = () => {
+// //     if (isAnimating.current || total === 0 || isCenter) return;
+// //     isAnimating.current = true;
+
+// //     const prev = currentIndex - 1;
+// //     setCurrentIndex(prev);
+// //     slideTo(prev, true);
+
+// //     setTimeout(() => {
+// //       if (prev < total) {
+// //         const reset = prev + total;
+// //         setCurrentIndex(reset);
+// //         slideTo(reset, false);
+// //       }
+// //       isAnimating.current = false;
+// //     }, 310);
+// //   };
+
+// //   if (total === 0) return null;
+
+// //   return (
+// //     <Section>
+// //       <Row>
+// //         <Heading title={"Our Best Seller's"} />
+
+// //         {!isCenter && (
+// //           <div className="flex items-center justify-end gap-3 mb-4">
+// //             <NavBtn direction="left" onClick={handlePrev} variant="primary" />
+// //             <NavBtn direction="right" onClick={handleNext} variant="primary" />
+// //           </div>
+// //         )}
+
+// //         <div className="overflow-hidden" ref={containerRef}>
+// //           <div
+// //             ref={trackRef}
+// //             className={`flex ${isCenter ? "justify-center" : "justify-start"}`}
+// //             style={{
+// //               gap: `${GAP}px`,
+// //               transform: isCenter ? "none" : `translateX(-${total * STEP}px)`,
+// //               willChange: "transform",
+// //             }}
+// //           >
+// //             {(isCenter ? sellersProducts : tripled).map((product, i) => (
+// //               <div
+// //                 key={`${product._id}-${i}`}
+// //                 className="flex-shrink-0 w-[320px]"
+// //               >
+// //                 <ProductCard
+// //                   product={product}
+// //                   setShowLoginPopup={setShowLoginPopup}
+// //                 />
+// //               </div>
+// //             ))}
+// //           </div>
+// //         </div>
+// //       </Row>
+// //     </Section>
+// //   );
+// // };
+
+// // export default Bestsellers;
+
+
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import Row from "../ui/Row.jsx";
 import { useSelector } from "react-redux";
@@ -6,9 +167,7 @@ import ProductCard from "../productcard/ProductCard.jsx";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading.jsx";
 
-const CARD_W = 320;
-const GAP = 40;
-const STEP = CARD_W + GAP;
+const GAP = 16;
 
 const Bestsellers = ({ setShowLoginPopup }) => {
   const { products = [] } = useSelector((state) => state.products);
@@ -23,73 +182,71 @@ const Bestsellers = ({ setShowLoginPopup }) => {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const isAnimating = useRef(false);
-  const [currentIndex, setCurrentIndex] = useState(total);
+  const currentIndexRef = useRef(total);
 
+  const [cardWidth, setCardWidth] = useState(0);
   const [isCenter, setIsCenter] = useState(false);
+  const [ready, setReady] = useState(false);
 
-  const tripled =
-    total > 0
-      ? [...sellersProducts, ...sellersProducts, ...sellersProducts]
-      : [];
+  const getStep = useCallback((cw) => cw + GAP, []);
 
-  const getVisibleCount = useCallback(() => {
-    if (!containerRef.current) return 4;
-    return Math.floor(containerRef.current.offsetWidth / STEP);
-  }, []);
+  const getVisible = () =>
+    typeof window !== "undefined" && window.innerWidth <= 768 ? 2 : 4;
 
-  useEffect(() => {
-  const checkCenter = () => {
+  const recalculate = useCallback(() => {
     if (!containerRef.current) return;
+    const visible = getVisible();
+    const containerWidth = containerRef.current.offsetWidth;
+    const cw = Math.floor((containerWidth - GAP * (visible - 1)) / visible);
+    const step = cw + GAP;
+    const canFit = total <= visible;
 
-    const width = containerRef.current.offsetWidth;
-    const visible = Math.floor(width / STEP);
+    setCardWidth(cw);
+    setIsCenter(canFit);
 
-    setIsCenter(total <= visible);
-  };
+    if (trackRef.current && !canFit && total > 0) {
+      trackRef.current.style.transition = "none";
+      trackRef.current.style.transform = `translateX(-${currentIndexRef.current * step}px)`;
+    }
 
-  const timeout = setTimeout(checkCenter, 0);
-
-  window.addEventListener("resize", checkCenter);
-
-  return () => {
-    clearTimeout(timeout);
-    window.removeEventListener("resize", checkCenter);
-  };
-}, [total]);
-
-useEffect(() => {
-  if (total > 0) {
-    setCurrentIndex(total);
-  }
-}, [total]);
+    setReady(true);
+  }, [total]);
 
   useEffect(() => {
-    if (trackRef.current && total > 0) {
-      trackRef.current.style.transition = "none";
-      trackRef.current.style.transform = `translateX(-${total * STEP}px)`;
+    const timeout = setTimeout(recalculate, 0);
+    window.addEventListener("resize", recalculate);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("resize", recalculate);
+    };
+  }, [recalculate]);
+
+  useEffect(() => {
+    if (total > 0) {
+      currentIndexRef.current = total;
     }
   }, [total]);
 
   const slideTo = (newIndex, withAnimation = true) => {
-    if (!trackRef.current) return;
+    if (!trackRef.current || cardWidth === 0) return;
+    const step = getStep(cardWidth);
     trackRef.current.style.transition = withAnimation
       ? "transform 300ms cubic-bezier(0.4,0,0.2,1)"
       : "none";
-    trackRef.current.style.transform = `translateX(-${newIndex * STEP}px)`;
+    trackRef.current.style.transform = `translateX(-${newIndex * step}px)`;
   };
 
   const handleNext = () => {
-    if (isAnimating.current || total === 0 || isCenter) return;
+    if (isAnimating.current || total === 0 || isCenter || cardWidth === 0)
+      return;
     isAnimating.current = true;
-
-    const next = currentIndex + 1;
-    setCurrentIndex(next);
+    const next = currentIndexRef.current + 1;
+    currentIndexRef.current = next;
     slideTo(next, true);
-
     setTimeout(() => {
       if (next >= total * 2) {
         const reset = next - total;
-        setCurrentIndex(reset);
+        currentIndexRef.current = reset;
         slideTo(reset, false);
       }
       isAnimating.current = false;
@@ -97,17 +254,16 @@ useEffect(() => {
   };
 
   const handlePrev = () => {
-    if (isAnimating.current || total === 0 || isCenter) return;
+    if (isAnimating.current || total === 0 || isCenter || cardWidth === 0)
+      return;
     isAnimating.current = true;
-
-    const prev = currentIndex - 1;
-    setCurrentIndex(prev);
+    const prev = currentIndexRef.current - 1;
+    currentIndexRef.current = prev;
     slideTo(prev, true);
-
     setTimeout(() => {
       if (prev < total) {
         const reset = prev + total;
-        setCurrentIndex(reset);
+        currentIndexRef.current = reset;
         slideTo(reset, false);
       }
       isAnimating.current = false;
@@ -116,40 +272,48 @@ useEffect(() => {
 
   if (total === 0) return null;
 
+  const tripled = [...sellersProducts, ...sellersProducts, ...sellersProducts];
+
   return (
     <Section>
       <Row>
         <Heading title={"Our Best Seller's"} />
 
-        {!isCenter && (
+        {!isCenter && ready && (
           <div className="flex items-center justify-end gap-3 mb-4">
             <NavBtn direction="left" onClick={handlePrev} variant="primary" />
             <NavBtn direction="right" onClick={handleNext} variant="primary" />
           </div>
         )}
 
-        <div className="overflow-hidden" ref={containerRef}>
-          <div
-            ref={trackRef}
-            className={`flex ${isCenter ? "justify-center" : "justify-start"}`}
-            style={{
-              gap: `${GAP}px`,
-              transform: isCenter ? "none" : `translateX(-${total * STEP}px)`,
-              willChange: "transform",
-            }}
-          >
-            {(isCenter ? sellersProducts : tripled).map((product, i) => (
-              <div
-                key={`${product._id}-${i}`}
-                className="flex-shrink-0 w-[320px]"
-              >
-                <ProductCard
-                  product={product}
-                  setShowLoginPopup={setShowLoginPopup}
-                />
-              </div>
-            ))}
-          </div>
+        <div className="overflow-hidden w-full" ref={containerRef}>
+          {ready && cardWidth > 0 && (
+            <div
+              ref={trackRef}
+              className="flex"
+              style={{
+                gap: `${GAP}px`,
+                transform: isCenter
+                  ? "none"
+                  : `translateX(-${currentIndexRef.current * getStep(cardWidth)}px)`,
+                willChange: "transform",
+                justifyContent: isCenter ? "center" : "flex-start",
+              }}
+            >
+              {(isCenter ? sellersProducts : tripled).map((product, i) => (
+                <div
+                  key={`${product._id}-${i}`}
+                  className="flex-shrink-0"
+                  style={{ width: `${cardWidth}px` }}
+                >
+                  <ProductCard
+                    product={product}
+                    setShowLoginPopup={setShowLoginPopup}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Row>
     </Section>

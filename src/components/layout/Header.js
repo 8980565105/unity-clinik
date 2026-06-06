@@ -11,6 +11,7 @@ import {
   Heart,
   Menu,
   Package,
+  Search,
   XCircleIcon,
 } from "lucide-react";
 import ShopIcon from "../icons/shop";
@@ -37,6 +38,7 @@ import jewelleryImg from "../../assets/jewellery.png";
 import cropImg from "../../assets/Crop Tops.png";
 import ForgetForm from "../../pages/ForgetForm";
 import toast from "react-hot-toast";
+import { fetchProducts } from "../../features/products/productsThunk";
 
 const STATIC_CATEGORIES = [
   { _id: "static-1", name: "Saree", image_url: shoppingImg, isStatic: true },
@@ -76,6 +78,217 @@ const FIXED_NAV_ITEMS = [
 const FALLBACK_EXTRA_ITEMS = [];
 
 const SKIP_LABELS = ["home", "shop"];
+
+function SearchBar({ products, onNavigate }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const inputRef = useRef(null);
+  const containerRef = useRef(null);
+
+  // Filter products based on query
+  const filtered =
+    query.trim().length > 0
+      ? (products || [])
+          .filter((p) => p.name?.toLowerCase().includes(query.toLowerCase()))
+          .slice(0, 8)
+      : [];
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isOpen]);
+
+  const handleOpen = () => setIsOpen(true);
+
+  const handleSelect = (product) => {
+    setIsOpen(false);
+    setQuery("");
+    // Get first variant slug or use product _id
+    const slug = product.slug || product._id;
+    onNavigate(`/product/${slug}`);
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    return `${process.env.REACT_APP_API_URL_IMAGE}${url}`;
+  };
+
+  const getPrice = (product) => {
+    const variant = product.variants?.[0];
+    return variant?.offerprice || variant?.price || null;
+  };
+
+  const getOriginalPrice = (product) => {
+    const variant = product.variants?.[0];
+    if (
+      variant?.offerprice &&
+      variant?.price &&
+      variant.offerprice < variant.price
+    ) {
+      return variant.price;
+    }
+    return null;
+  };
+
+  const getProductImage = (product) => {
+    // Try product main image first, then first variant image
+    if (product.images) return getImageUrl(product.images);
+    const variantImg = product.variants?.[0]?.images?.[0];
+    if (variantImg) return getImageUrl(variantImg);
+    return null;
+  };
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button onClick={handleOpen} className="flex items-center justify-center">
+        <Search size={22} />
+      </button>
+
+      {isOpen && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/30 z-40 md:hidden"
+            onClick={() => {
+              setIsOpen(false);
+              setQuery("");
+            }}
+          />
+
+          <div
+            className="
+              fixed md:absolute
+              top-0 md:top-auto
+              left-0 md:left-auto
+              right-0
+              md:right-0
+              md:top-12
+              w-full md:w-[420px]
+              bg-white
+              md:rounded-xl
+              z-50
+              shadow-2xl
+              border-0 md:border border-gray-200
+              overflow-hidden
+            "
+            style={{ top: window.innerWidth < 768 ? 0 : undefined }}
+          >
+            {/* Input Row */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+              <Search size={18} className="text-gray-400 flex-shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search products..."
+                className="flex-1 outline-none text-[15px] text-gray-800 placeholder-gray-400 bg-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setIsOpen(false);
+                    setQuery("");
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  setIsOpen(false);
+                  setQuery("");
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+              >
+                <XCircleIcon size={20} />
+              </button>
+            </div>
+
+            {/* Results */}
+            <div className="max-h-[60vh] md:max-h-[400px] overflow-y-auto">
+              {query.trim().length === 0 && (
+                <div className="px-4 py-8 text-center text-gray-400 text-sm">
+                  Start typing to search products...
+                </div>
+              )}
+
+              {query.trim().length > 0 && filtered.length === 0 && (
+                <div className="px-4 py-8 text-center text-gray-400 text-sm">
+                  No products found for "
+                  <span className="font-medium text-gray-600">{query}</span>"
+                </div>
+              )}
+
+              {filtered.map((product) => {
+                const img = getProductImage(product);
+                const price = getPrice(product);
+                const originalPrice = getOriginalPrice(product);
+
+                return (
+                  <button
+                    key={product._id}
+                    onClick={() => handleSelect(product)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0 text-left"
+                  >
+                    {/* Product Image */}
+                    <div className="w-[48px] h-[48px] rounded-lg overflow-hidden border border-gray-100 flex-shrink-0 bg-gray-50">
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300">
+                          <Search size={16} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-medium text-gray-800 line-clamp-1 leading-snug">
+                        {product.name}
+                      </p>
+                      {price && (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[13px] font-semibold text-primary">
+                            ₹{price}
+                          </span>
+                          {originalPrice && (
+                            <span className="text-[12px] text-gray-400 line-through">
+                              ₹{originalPrice}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <ChevronRight
+                      size={16}
+                      className="text-gray-300 flex-shrink-0"
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 const Header = () => {
   const location = useLocation();
@@ -122,6 +335,8 @@ const Header = () => {
   const [mobileMenuPage, setMobileMenuPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const isShopActive = location.pathname === "/shop";
+  const { products } = useSelector((state) => state.products);
+
   useEffect(() => {
     if (isMegaMenuOpen && parentCategories.length > 0 && !activeParent) {
       setActiveParent(parentCategories[0]._id);
@@ -138,6 +353,7 @@ const Header = () => {
     setMobileMenuPage(1);
   };
   useEffect(() => {
+    dispatch(fetchProducts());
     dispatch(fetchNavbar({ status: "active" }));
     dispatch(fetchCategories());
     dispatch(fetchsubCategories());
@@ -231,8 +447,9 @@ const Header = () => {
   };
 
   return (
-    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border-b border-gray-100">
-      <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]">
+    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border-b border-gray-100 p-2">
+      {/* <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]"> */}
+      <Row className="flex items-center justify-between gap-[10px]">
         <button
           className="custom-lg:hidden text-light transition-colors duration-300 border rounded-[3px] p-[5px] border-[#D2AF9F]"
           onClick={() => setIsMenuOpen(true)}
@@ -562,23 +779,24 @@ ${
             </div>
           </div>
 
-          <div className="flex justify-center items-center gap-4">
-            <button
-              className=""
-              onClick={openWhatsApp}
-              className="lg:hidden"
-            >
-              <FaWhatsapp size={30} className="text-black" />
+          <div className="flex justify-center items-center gap-2">
+            <button className="" onClick={openWhatsApp} className="lg:hidden">
+              <FaWhatsapp size={25} className="text-black" />
             </button>
+
+            {/* <button> */}
+            {/* <Search size={22} /> */}
+            <SearchBar products={products} onNavigate={navigate} />
+            {/* </button> */}
 
             <button
               onClick={() => openProtectedLink("/wishlist")}
               className="relative text-black "
             >
               {isWishlistActive ? (
-                <Heart className="w-7 h-7 text-primary fill-primary " />
+                <Heart size={22} className="text-primary fill-primary " />
               ) : (
-                <Heart className="w-7 h-7" />
+                <Heart size={22} />
               )}
               {wishlistCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[12px] rounded-full w-4 h-4 flex items-center justify-center">
@@ -593,7 +811,7 @@ ${
               }`}
               onClick={() => openProtectedLink("/cart")}
             >
-              <FontAwesomeIcon icon={faCartShopping} className="w-7 h-7" />
+              <FontAwesomeIcon icon={faCartShopping} className="" size={22} />
 
               {cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-primary text-secondary text-[10px] rounded-full w-4 h-4 flex items-center justify-center">

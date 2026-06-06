@@ -131,7 +131,6 @@ lg:w-[485px]
       "
       />
 
-      {/* Icon */}
       {item.image && (
         <img
           src={getImageUrl(item.image)}
@@ -393,17 +392,6 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
             <Description Description={data.description} />
 
             <div
-              //             ref={scrollRef}
-              //             className="
-              //             mt-5
-              //   flex
-              //   gap-6
-              //   overflow-x-auto
-              //   no-scrollbar
-              //   pb-4
-              //   snap-x
-              //   snap-mandatory
-              // "
               ref={scrollRef}
               onScroll={handleScroll}
               className="
@@ -548,6 +536,9 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
     rounded-3xl
     bg-gray-50
     shadow-sm
+    border
+    border-gray-100
+    
   "
                 >
                   {item.image && (
@@ -856,7 +847,6 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
                     id={`before-after-${i}`}
                     key={i}
                     className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none"
-                    // ✅ REMOVED touch-none — page scroll now works on image area
                   >
                     <img
                       src={getImageUrl(item.afterImage)}
@@ -890,7 +880,6 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
                           setActiveSlider(i);
                         }}
                         onTouchStart={(e) => {
-                          // ✅ Only prevent default on the handle itself
                           e.preventDefault();
                           e.stopPropagation();
                           setActiveSlider(i);
@@ -1024,7 +1013,6 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
                   )}
                 </button>
               </div>
-              {/* )} */}
             </div>
           </Row>
         </Section>
@@ -1055,9 +1043,9 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
               loop={recommendedProducts.length > 1}
               spaceBetween={24}
               breakpoints={{
-                0: { slidesPerView: 1 },
-                640: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 },
+                0: { slidesPerView: 2 },
+                678: { slidesPerView: 3 },
+                1024: { slidesPerView: 4 },
               }}
               className="!pb-12 !pt-5 !mt-5 !flex !justify-center"
             >
@@ -1307,6 +1295,100 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
                   </div>
                 ))}
               </div>
+            </div>
+          </Row>
+        </Section>
+      );
+    }
+
+    case "Result Section": {
+      return (
+        <Section className="py-16 bg-[#f8f9fa]">
+          <Row>
+            <Heading title={data.title} />
+            <Description Description={data.description} />
+
+            <div className="flex gap-5 overflow-x-auto no-scrollbar pb-4 mt-8 snap-x snap-mandatory">
+              {(data?.items || []).map((item, i) => (
+                <div
+                  key={i}
+                  className="snap-start flex-shrink-0 w-[85vw] sm:w-[340px] bg-[var(--ef3a96-9)] rounded-[24px] overflow-hidden shadow-sm border border-gray-100"
+                >
+                  {item.stageLabel && (
+                    <div className="flex justify-center pt-4">
+                      <span className="bg-primary text-white text-[12px] font-semibold px-4 py-1 rounded-full">
+                        {item.stageLabel}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-2 p-3 mt-2">
+                    <div className="flex flex-col items-center gap-1">
+                      {item.beforeImage && (
+                        <img
+                          src={
+                            item.beforeImage.startsWith("http")
+                              ? item.beforeImage
+                              : getImageUrl(item.beforeImage)
+                          }
+                          alt="Before"
+                          className="w-full h-[140px] object-cover rounded-[14px]"
+                        />
+                      )}
+                      <span className="text-[11px] text-gray-500 font-medium">
+                        Before
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      {item.afterImage && (
+                        <img
+                          src={
+                            item.afterImage.startsWith("http")
+                              ? item.afterImage
+                              : getImageUrl(item.afterImage)
+                          }
+                          alt="After"
+                          className="w-full h-[140px] object-cover rounded-[14px]"
+                        />
+                      )}
+                      <span className="text-[11px] text-gray-500 font-medium">
+                        After
+                      </span>
+                    </div>
+                  </div>
+
+                  {item.reviewDescription && (
+                    <p className="px-4 pb-3 text-[13px] text-gray-600 leading-relaxed">
+                      {item.reviewDescription}
+                    </p>
+                  )}
+
+                  <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                    <p className="text-[14px] font-bold text-gray-900">
+                      {item.customerName}
+                      {item.customerAge ? `, ${item.customerAge}` : ""}
+                    </p>
+                    {item.verifiedReview !== false && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <svg
+                          className="w-4 h-4 text-green-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span className="text-[12px] text-green-600 font-medium">
+                          Verified review
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </Row>
         </Section>

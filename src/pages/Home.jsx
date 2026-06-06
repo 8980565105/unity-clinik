@@ -36,7 +36,6 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchPageBySlug("Home"));
     dispatch(fetchProducts());
-    
   }, [dispatch]);
 
   return (

@@ -148,7 +148,6 @@ export default function Product() {
         </Row>
       </Section>
 
-     
       {otherRecommendedSection?.data?.status === true && (
         <SectionRenderer
           section={otherRecommendedSection}
@@ -212,6 +211,12 @@ export default function Product() {
         <div className="fixed  bottom-0 left-0 right-0 z-[10] bg-white border-t shadow-xl">
           <div className="hidden lg:flex w-[90%] md:w-[90%] lg:max-w-[1440px] mx-auto items-center justify-between px-6 py-3">
             <div className="flex items-center gap-4 min-w-0">
+              <img
+                src={getImageUrl(product?.images)}
+                alt={product?.name}
+                className="w-[60px] h-[60px] object-cover rounded"
+              />
+
               <div className="min-w-0">
                 <h4 className="font-semibold text-[16px] truncate max-w-[300px]">
                   {product?.name}

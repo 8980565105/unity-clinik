@@ -41,6 +41,7 @@ import PhonePeCallback from "./components/payment/PhonePeCallback";
 import ServerDown from "./pages/Serverdownpage";
 import Loding from "./components/loding/loding";
 import { FaWhatsapp } from "react-icons/fa";
+import Allproducts from "./pages/Allproducts";
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -136,8 +137,6 @@ function App() {
       return <ServerDown />;
     }
 
-    // wehatsapp
-
     const openWhatsApp = () => {
       const phone = "919327148908";
 
@@ -154,6 +153,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/Home" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
+          <Route path="/allproducts" element={<Allproducts />} />
+
           <Route path="/collections" element={<Collections />} />
           <Route path="/offer" element={<Offer />} />
           <Route path="/contact-us" element={<ContactUs />} />
