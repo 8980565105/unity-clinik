@@ -61,6 +61,8 @@ const SECTION_TYPES = [
   "Product Attribute Section",
   "Additional Information Section",
   "Daily Usage Section",
+  "Other Recommended Solutions",
+  "How to use",
 ];
 
 const buildSectionData = (type: string) => {
@@ -109,7 +111,7 @@ const buildSectionData = (type: string) => {
         ],
       };
 
-
+      
     case "Daily Usage Section":
       return {
         status: true,
@@ -122,6 +124,36 @@ const buildSectionData = (type: string) => {
           },
         ],
       };
+
+
+    case "How to use":
+      return {
+        status: true,
+        title: "",
+        description: "",
+        items: [
+          {
+            image: "",
+            title: "",
+            description: "",
+          },
+        ],
+      };
+
+    case "Other Recommended Solutions":
+      return {
+        status: true,
+        title: "",
+        description: "",
+        items: [
+          {
+            title: "",
+            description: "",
+            product_id: "",
+          },
+        ],
+      };
+
 
 
 
@@ -1244,6 +1276,158 @@ const SectionRenderer = React.memo(function SectionRenderer({
                     )
                   }
                 />
+              </div>
+            </div>
+          )}
+        />
+      </div>
+    );
+  }
+
+  if (sType === "How to use") {
+    return (
+      <div className="space-y-4">
+        <CommonHeader
+          sType={sType}
+          status={data.status}
+          title={data.title || ""}
+          description={data.description || ""}
+          onStatusChange={(val) => updateSectionField("status", val)}
+          onTitleChange={(val) => updateSectionField("title", val)}
+          onDescriptionChange={(val) => updateSectionField("description", val)}
+        />
+
+        <DraggableItemList
+          items={data.items || []}
+          onReorder={updateSectionItems}
+          itemLabel="Step"
+          addLabel="Add Step"
+          onAdd={() =>
+            addSectionItem({
+              image: "",
+              title: "",
+              description: "",
+            })
+          }
+          onRemove={removeSectionItem}
+          renderItem={(item, itemIdx) => (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Image</Label>
+                <ImageUpload
+                  value={item.image || ""}
+                  onChange={(val) => {
+                    const image =
+                      typeof val === "string"
+                        ? val
+                        : Array.isArray(val)
+                          ? val[0]
+                          : "";
+
+                    updateSectionItem(itemIdx, "image", image);
+                  }}
+                  multiple={false}
+                />
+              </div>
+
+              <div>
+                <Label>Title</Label>
+                <Input
+                  value={item.title || ""}
+                  onChange={(e) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "title",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Description</Label>
+                <textarea
+                  rows={4}
+                  className="w-full border rounded-md p-2"
+                  value={item.description || ""}
+                  onChange={(e) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "description",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+            </div>
+          )}
+        />
+      </div>
+    );
+  }
+  if (sType === "Other Recommended Solutions") {
+    return (
+      <div className="space-y-4">
+        <CommonHeader
+          sType={sType}
+          status={data.status}
+          title={data.title || ""}
+          description={data.description || ""}
+          onStatusChange={(val) => updateSectionField("status", val)}
+          onTitleChange={(val) => updateSectionField("title", val)}
+          onDescriptionChange={(val) => updateSectionField("description", val)}
+        />
+
+        <DraggableItemList
+          items={data.items || []}
+          onReorder={updateSectionItems}
+          itemLabel="Product"
+          addLabel="Add Product"
+          onAdd={() =>
+            addSectionItem({
+              product_id: "",
+            })
+          }
+          onRemove={removeSectionItem}
+          renderItem={(item, itemIdx) => (
+
+
+
+            <div className="grid grid-cols-3 gap-4">
+
+
+              <div><Label>Title</Label><Input value={item.title || ""} placeholder="Enter Title" onChange={(e) => updateSectionItem(itemIdx, "title", e.target.value)} /></div>
+              <div><Label>Description</Label><Input value={item.description || ""} placeholder="Enter Description" onChange={(e) => updateSectionItem(itemIdx, "description", e.target.value)} /></div>
+              <div>
+                <Label>Select Product</Label>
+
+                <Select
+                  value={item.product_id || ""}
+                  onValueChange={(val) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "product_id",
+                      val
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Product" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {(products || [])
+                      .filter((p) => p._id !== id)
+                      .map((p) => (
+                        <SelectItem
+                          key={p._id}
+                          value={p._id}
+                        >
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}

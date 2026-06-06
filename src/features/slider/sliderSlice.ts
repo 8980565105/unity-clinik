@@ -11,7 +11,6 @@ import {
   getSlideById,
 } from "./sliderThunk";
 
-// Updated interface to match new schema
 export interface Hero1SlideItem {
   _id: string;
   title: string;
@@ -89,7 +88,6 @@ const sliderSlice = createSlice({
       })
       .addCase(fetchSlides.fulfilled, (state, action) => {
         state.loading = false;
-        // action.payload = { slides, total, page, pages }
         state.slides = action.payload?.slides ?? [];
         state.total  = action.payload?.total  ?? 0;
       })
