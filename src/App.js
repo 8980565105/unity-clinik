@@ -40,6 +40,7 @@ import ShippingPolicy from "./pages/shippingPolicy";
 import PhonePeCallback from "./components/payment/PhonePeCallback";
 import ServerDown from "./pages/Serverdownpage";
 import Loding from "./components/loding/loding";
+import { FaWhatsapp } from "react-icons/fa";
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -96,9 +97,6 @@ function App() {
       errorInfo,
     } = useSelector((state) => state.store);
 
-    // useEffect(() => {
-    //   dispatch(fetchStoreInfo());
-    // }, [dispatch]);
     useEffect(() => {
       console.log("fetchStoreInfo called");
       dispatch(fetchStoreInfo());
@@ -137,6 +135,17 @@ function App() {
     if (errorInfo) {
       return <ServerDown />;
     }
+
+    // wehatsapp
+
+    const openWhatsApp = () => {
+      const phone = "919327148908";
+
+      const message = encodeURIComponent("Hi, I want consultation");
+
+      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    };
+
     return (
       <>
         <ScrollToTop />
@@ -172,6 +181,16 @@ function App() {
           />
           <Route path="*" element={<NotFound />} />
         </Routes>
+
+        <div className="fixed bottom-[70px] md:bottom-[100px] right-[15px] z-50">
+          <button
+            className="bg-green-500 rounded-full p-3 whatsapp-pulse shadow-lg"
+            onClick={openWhatsApp}
+          >
+            <FaWhatsapp size={30} className="text-white" />
+          </button>
+        </div>
+
         <Footer />
       </>
     );

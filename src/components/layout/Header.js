@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaWhatsapp } from "react-icons/fa";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as farHeart } from "@fortawesome/free-regular-svg-icons";
@@ -221,6 +221,15 @@ const Header = () => {
     return `${BASE}${logoPath}`;
   })();
 
+  // whatsapp
+  const openWhatsApp = () => {
+    const phone = "919327148908";
+
+    const message = encodeURIComponent("Hi, I want consultation");
+
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  };
+
   return (
     <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border-b border-gray-100">
       <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]">
@@ -236,7 +245,7 @@ const Header = () => {
             <img
               src={dynamicLogoUrl || HeaderLogo}
               alt="Logo"
-              className="h-auto w-[200px]"
+              className="h-auto w-[120px] md:w-[150px] lg:w-[200px]"
             />
           </Link>
         </div>
@@ -549,12 +558,19 @@ ${
                     <span>Wishlist</span>
                   </button>
                 </li>
-                {/* <div className="border border-[#989696]"> </div> */}
               </ul>
             </div>
           </div>
 
           <div className="flex justify-center items-center gap-4">
+            <button
+              className=""
+              onClick={openWhatsApp}
+              className="lg:hidden"
+            >
+              <FaWhatsapp size={30} className="text-black" />
+            </button>
+
             <button
               onClick={() => openProtectedLink("/wishlist")}
               className="relative text-black "

@@ -626,3 +626,23 @@
 .ingredientsSwiper .swiper-slide {
   height: auto !important;
 }
+
+/* whatsapp */
+
+@keyframes whatsappPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.15);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.whatsapp-pulse {
+  animation: whatsappPulse 1.8s infinite;
+}
