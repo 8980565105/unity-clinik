@@ -13,6 +13,7 @@ import Description from "../ui/Description";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import Solutionstagecard from "./solutionstagecard";
+import OtherRecommendedCard from "./OtherRecommendedCard";
 
 function FaqItem({ faq, isOpen, onToggle }) {
   return (
@@ -102,7 +103,9 @@ function HowCard({ item, onLearnMore }) {
       how-card
       relative
       flex-shrink-0
-      w-[485px]
+      w-[85vw]
+sm:w-[420px]
+lg:w-[485px]
       min-h-[160px]
       rounded-[32px]
       bg-[#005B99]
@@ -196,10 +199,9 @@ export default function ProductSections({ sections, setShowLoginPopup }) {
   );
 }
 
-function SectionRenderer({ section, setShowLoginPopup }) {
+export function SectionRenderer({ section, setShowLoginPopup }) {
   const { type, data } = section;
   const items = data?.items || [];
-
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [faq2OpenIndex, setFaq2OpenIndex] = useState(0);
@@ -215,56 +217,10 @@ function SectionRenderer({ section, setShowLoginPopup }) {
     typeof window !== "undefined" && window.innerWidth < 768 ? 2 : 4,
   );
 
-  // useEffect(() => {
-  //   const move = (e) => {
-  //     if (activeSlider === null) return;
-
-  //     const container = document.getElementById(`before-after-${activeSlider}`);
-
-  //     if (!container) return;
-
-  //     const rect = container.getBoundingClientRect();
-
-  //     const clientX = e.touches?.[0]?.clientX ?? e.clientX;
-
-  //     let position = ((clientX - rect.left) / rect.width) * 100;
-
-  //     position = Math.max(0, Math.min(100, position));
-
-  //     setSliderPosition((prev) => ({
-  //       ...prev,
-  //       [activeSlider]: position,
-  //     }));
-  //   };
-
-  //   const stop = () => {
-  //     setActiveSlider(null);
-  //   };
-
-  //   window.addEventListener("mousemove", move);
-  //   window.addEventListener("mouseup", stop);
-
-  //   window.addEventListener("touchmove", move, {
-  //     passive: false,
-  //   });
-
-  //   window.addEventListener("touchend", stop);
-
-  //   return () => {
-  //     window.removeEventListener("mousemove", move);
-  //     window.removeEventListener("mouseup", stop);
-
-  //     window.removeEventListener("touchmove", move);
-
-  //     window.removeEventListener("touchend", stop);
-  //   };
-  // }, [activeSlider]);
-
   useEffect(() => {
     const move = (e) => {
       if (activeSlider === null) return;
 
-      // ✅ Prevent page scroll only while dragging the slider
       if (e.cancelable) e.preventDefault();
 
       const container = document.getElementById(`before-after-${activeSlider}`);
@@ -282,7 +238,7 @@ function SectionRenderer({ section, setShowLoginPopup }) {
 
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseup", stop);
-    window.addEventListener("touchmove", move, { passive: false }); 
+    window.addEventListener("touchmove", move, { passive: false });
     window.addEventListener("touchend", stop);
 
     return () => {
@@ -355,54 +311,75 @@ function SectionRenderer({ section, setShowLoginPopup }) {
     case "Root Cause Section":
       return (
         <Section className="py-16 bg-[#f8f9fa] overflow-hidden">
-          <Row>
+          <Row className="overflow-hidden">
             <Heading title={data.title} />
-
             <Description Description={data.description} />
-
-            <Row className="mt-5 overflow-hidden">
-              <Swiper
-                modules={[Pagination, Autoplay]}
-                pagination={{ clickable: true }}
-                autoplay={{
-                  delay: 3000,
-                  disableOnInteraction: false,
-                }}
-                loop
-                spaceBetween={30}
-                slidesPerView={3}
-                className="rootCauseSwiper !pb-16 "
-              >
-                {items.map((item, i) => (
-                  <SwiperSlide key={i}>
-                    <div
+            <Swiper
+              modules={[Pagination, Autoplay]}
+              pagination={{ clickable: true }}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+              }}
+              loop
+              spaceBetween={30}
+              breakpoints={{
+                0: {
+                  slidesPerView: 1,
+                  spaceBetween: 12,
+                },
+                480: {
+                  slidesPerView: 1,
+                  spaceBetween: 12,
+                },
+                640: {
+                  slidesPerView: 2,
+                  spaceBetween: 16,
+                },
+                768: {
+                  slidesPerView: 3,
+                  spaceBetween: 20,
+                },
+                1024: {
+                  slidesPerView: 3,
+                  spaceBetween: 30,
+                },
+              }}
+              className="rootCauseSwiper !pb-16 mt-5"
+            >
+              {items.map((item, i) => (
+                <SwiperSlide key={i}>
+                  <div
+                    className="
+  group
+  rounded-[20px]
+  bg-white
+  p-2
+  shadow-md
+  h-full
+  flex
+     border-2
+                      border-transparent
+                      hover:border-[#163d73]
+  items-center
+  justify-center
+"
+                  >
+                    <img
+                      src={getImageUrl(item.image)}
+                      alt={`root-cause-${i}`}
                       className="
-          group
-          rounded-[28px]
-          bg-[#f5f5f5]
-        p-2
-          transition-all
-          duration-300
-          border-2
-          border-transparent
-          hover:border-[#163d73]
-          hover:shadow-xl
-        "
-                    >
-                      <img
-                        src={getImageUrl(item.image)}
-                        alt={`root-cause-${i}`}
-                        className="
-            w-full
-            rounded-[20px]
-            object-contain
-          "
-                      />
-                    </div>
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            </Row>
+    w-full
+    h-auto
+    rounded-[16px]
+    object-contain
+    block
+  "
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </Row>
         </Section>
       );
@@ -416,14 +393,27 @@ function SectionRenderer({ section, setShowLoginPopup }) {
             <Description Description={data.description} />
 
             <div
+              //             ref={scrollRef}
+              //             className="
+              //             mt-5
+              //   flex
+              //   gap-6
+              //   overflow-x-auto
+              //   no-scrollbar
+              //   pb-4
+              //   snap-x
+              //   snap-mandatory
+              // "
               ref={scrollRef}
+              onScroll={handleScroll}
               className="
-              mt-5
+    mt-5
     flex
-    gap-6
+    gap-4
     overflow-x-auto
     no-scrollbar
     pb-4
+    px-4
     snap-x
     snap-mandatory
   "
@@ -664,30 +654,21 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         <Section className="py-16 bg-white">
           <Row>
             <Heading title={data.title} />
-
             <Description Description={data.description} />
 
             <Swiper
               modules={[Pagination, Autoplay]}
               pagination={{ clickable: true }}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: false,
-              }}
+              autoplay={{ delay: 3000, disableOnInteraction: false }}
               loop={items.length > 3}
               spaceBetween={24}
               breakpoints={{
-                0: {
-                  slidesPerView: 1,
-                },
-                640: {
-                  slidesPerView: 2,
-                },
-                1024: {
-                  slidesPerView: 3,
-                },
+                0: { slidesPerView: 1 },
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
               }}
               className="ingredientsSwiper !pb-14 !pt-5 !mt-5"
+              style={{ "--swiper-slide-height": "auto" }}
             >
               {items.map((item, i) => {
                 const borderColors = [
@@ -700,39 +681,23 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                 ];
 
                 return (
-                  <SwiperSlide key={i} className="flex h-auto ">
+                  <SwiperSlide key={i} className="!h-auto flex">
                     <div
-                      key={i}
                       className="
-      group
-      relative
-      flex
-      flex-col
-      h-full
-      min-h-[320px]
-      w-full
-      p-5
-      bg-gray-50
-      rounded-3xl
-      border
-      border-gray-100
-      shadow-sm
-      overflow-hidden
-      hover:scale-105 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ease-out
-    "
+                  group relative flex flex-col
+                  w-full min-h-[320px] p-5
+                  bg-gray-50 rounded-3xl border border-gray-100
+                  shadow-sm overflow-hidden
+                  hover:scale-105 hover:shadow-lg hover:-translate-y-1
+                  transition-all duration-300 ease-out
+                "
                     >
                       {item.image && (
-                        <div
-                          className="rounded-xl mb-1 transition-colors duration-300"
-                          style={{
-                            width: "calc(var(--spacing) * 8)",
-                            height: "calc(var(--spacing) * 8)",
-                          }}
-                        >
+                        <div className="w-8 h-8 md:w-12 md:h-12 rounded-xl mb-3 transition-colors duration-300 flex-shrink-0">
                           <img
                             src={getImageUrl(item.image)}
                             alt={item.name}
-                            className="object-cover"
+                            className="w-full h-full object-contain"
                           />
                         </div>
                       )}
@@ -742,6 +707,7 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                           {item.name}
                         </p>
                       )}
+
                       {item.description && (
                         <p className="text-[14px] text-gray-500 leading-relaxed">
                           {item.description}
@@ -767,16 +733,17 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           <Row>
             <div className="space-y-6">
               {(data?.items || []).map((item, i) => (
-                <div key={i} className="">
-                  <div className="w-full mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#382454]/10 border border-gray-100">
-                    {item.image && (
-                      <img
-                        src={getImageUrl(item.image)}
-                        alt={item.title || "Banner"}
-                        className="w-full h-auto object-cover"
-                      />
-                    )}
-                  </div>
+                <div
+                  key={i}
+                  className="w-full mx-auto rounded-[2.5rem] overflow-hidden shadow-2xl shadow-[#382454]/10 border border-gray-100"
+                >
+                  {item.image && (
+                    <img
+                      src={getImageUrl(item.image)}
+                      alt={item.title || "Banner"}
+                      className="w-full h-auto object-cover"
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -872,97 +839,6 @@ function SectionRenderer({ section, setShowLoginPopup }) {
           </Row>
         </Section>
       );
-
-    // case "Before & After":
-    //   return (
-    //     <Section className="py-16 bg-[#f8f9fa]">
-    //       <Row>
-    //         <Heading title={data.title} />
-    //         <Description Description={data.description} />
-
-    //         <div className="flex flex-wrap justify-center gap-10 mt-5">
-    //           {visibleItems.map((item, i) => {
-    //             const position = sliderPosition[i] ?? 50;
-
-    //             return (
-    //               <div
-    //                 id={`before-after-${i}`}
-    //                 key={i}
-    //                 className="relative w-full max-w-[650px] aspect-[4/4.1] rounded-[28px] overflow-hidden bg-gray-100 shadow-md select-none"
-    //               >
-    //                 <img
-    //                   src={getImageUrl(item.afterImage)}
-    //                   alt="after"
-    //                   className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-    //                   draggable={false}
-    //                 />
-
-    //                 <img
-    //                   src={getImageUrl(item.beforeImage)}
-    //                   alt="before"
-    //                   className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-    //                   draggable={false}
-    //                   style={{
-    //                     clipPath: `inset(0 ${100 - position}% 0 0)`,
-    //                   }}
-    //                 />
-
-    //                 <div
-    //                   className="absolute top-0 bottom-0 z-30"
-    //                   style={{
-    //                     left: `${position}%`,
-    //                     transform: "translateX(-50%)",
-    //                   }}
-    //                 >
-    //                   <div className="absolute top-0 left-1/2 h-full w-[3px] bg-white -translate-x-1/2 shadow-lg" />
-    //                   <div
-    //                     className="w-[36px]  absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[36px] rounded-full bg-white border border-gray-200 shadow-xl flex items-center justify-center cursor-ew-resize touch-none"
-    //                     onMouseDown={(e) => {
-    //                       e.stopPropagation();
-    //                       setActiveSlider(i);
-    //                     }}
-    //                     onTouchStart={(e) => {
-    //                       e.stopPropagation();
-    //                       setActiveSlider(i);
-    //                     }}
-    //                   ></div>
-    //                 </div>
-
-    //                 <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
-    //                   BEFORE
-    //                 </div>
-
-    //                 <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
-    //                   AFTER
-    //                 </div>
-    //               </div>
-    //             );
-    //           })}
-    //           {(data?.items || []).length > 4 &&
-    //             visibleCount < (data?.items || []).length && (
-    //               <div className="w-full flex justify-center mt-10">
-    //                 <button
-    //                   onClick={() => setVisibleCount((prev) => prev + 2)}
-    //                   className="
-    //       px-8
-    //       py-3
-    //       rounded-full
-    //       bg-[#005b9f]
-    //       text-white
-    //       font-semibold
-    //       hover:bg-[#004a80]
-    //       transition-all
-    //       duration-300
-    //     "
-    //                 >
-    //                   View More
-    //                 </button>
-    //               </div>
-    //             )}
-    //         </div>
-    //       </Row>
-    //     </Section>
-    //   );
 
     case "Before & After":
       return (
@@ -1154,7 +1030,6 @@ function SectionRenderer({ section, setShowLoginPopup }) {
         </Section>
       );
     }
-
     case "Product Recommendation Section": {
       const recommendedProducts = [
         ...new Map(
@@ -1173,13 +1048,28 @@ function SectionRenderer({ section, setShowLoginPopup }) {
             <Heading title={data.title} />
             <Description Description={data.description} />
 
-            {recommendedProducts.map((product) => (
-              <ProductCard
-                key={product._id}
-                product={product}
-                setShowLoginPopup={setShowLoginPopup}
-              />
-            ))}
+            <Swiper
+              modules={[Pagination, Autoplay]}
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              loop={recommendedProducts.length > 1}
+              spaceBetween={24}
+              breakpoints={{
+                0: { slidesPerView: 1 },
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+              className="!pb-12 !pt-5 !mt-5 !flex !justify-center"
+            >
+              {recommendedProducts.map((product) => (
+                <SwiperSlide key={product._id} className="">
+                  <ProductCard
+                    product={product}
+                    setShowLoginPopup={setShowLoginPopup}
+                  />
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </Row>
         </Section>
       );
@@ -1319,6 +1209,103 @@ function SectionRenderer({ section, setShowLoginPopup }) {
                     {item?.description}
                   </p>
                 </div>
+              </div>
+            </div>
+          </Row>
+        </Section>
+      );
+    }
+
+    case "Other Recommended Solutions": {
+      const recommendedProducts = items
+        .map((item) => {
+          const product = (products || []).find(
+            (p) => p._id === item.product_id,
+          );
+
+          if (!product) return null;
+
+          return {
+            ...product,
+            badge: item.title,
+            subtitle: item.description,
+          };
+        })
+        .filter(Boolean);
+
+      return (
+        <Section className="py-12">
+          <Row>
+            <Heading title={data.title} />
+            <Description Description={data.description} />
+            <div className="hidden md:grid grid-cols-2 gap-6 mt-8">
+              {recommendedProducts.map((product) => (
+                <OtherRecommendedCard
+                  key={product._id}
+                  product={product}
+                  badge={product.badge}
+                  subtitle={product.subtitle}
+                  setShowLoginPopup={setShowLoginPopup}
+                />
+              ))}
+            </div>
+            <div className="md:hidden overflow-x-auto no-scrollbar mt-5">
+              <div className="flex gap-4 pb-4 mt-5">
+                {recommendedProducts.map((product) => (
+                  <div
+                    key={product._id}
+                    className="min-w-[220px] max-w-[220px]"
+                  >
+                    <OtherRecommendedCard
+                      product={product}
+                      badge={product.badge}
+                      subtitle={product.subtitle}
+                      setShowLoginPopup={setShowLoginPopup}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Row>
+        </Section>
+      );
+    }
+
+    case "How to use": {
+      return (
+        <Section className="py-12 bg-gradient-to-r from-[#dce3eb] via-[#8fa4c2] to-[#12386f]">
+          <Row>
+            <div className="bg-[#f8f8f8] rounded-[30px] shadow-md p-6 md:p-12">
+              <h2 className="text-center text-[#12386f] font-bold text-[28px] md:text-[50px] mb-10">
+                {data?.title}
+              </h2>
+
+              <div className="flex flex-wrap justify-center gap-x-10 gap-y-5">
+                {(items || []).map((item, index) => (
+                  <div key={index} className="w-full md:w-[30%] max-w-[350px]">
+                    {item?.image && (
+                      <div className="mb-5">
+                        <img
+                          src={getImageUrl(item.image)}
+                          alt={item.title}
+                          className="w-[60px] h-[60px] object-contain"
+                        />
+                      </div>
+                    )}
+
+                    {item?.title && (
+                      <h3 className="font-bold text-[#12386f] text-[20px] mb-3">
+                        {item.title}
+                      </h3>
+                    )}
+
+                    {item?.description && (
+                      <p className="text-[#444] leading-[1.8] text-[15px]">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
           </Row>

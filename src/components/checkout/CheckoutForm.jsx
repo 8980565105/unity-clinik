@@ -122,11 +122,12 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
+    email: "",
     house: "",
     street: "",
     city: "",
     state: "",
-    country: "India",
+    country: "",
     zip_code: "",
   });
 
@@ -138,6 +139,7 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
     const required = [
       "fullName",
       "phone",
+      "email",
       "house",
       "street",
       "city",
@@ -186,15 +188,24 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { name: "fullName", placeholder: "Full Name *" },
-              { name: "phone", placeholder: "Phone *" },
-              { name: "house", placeholder: "House No / Flat *" },
-              { name: "street", placeholder: "Street / Area *" },
-              { name: "city", placeholder: "City *" },
-              { name: "state", placeholder: "State *" },
-              { name: "zip_code", placeholder: "Zip Code *" },
+              {
+                name: "fullName",
+                placeholder: "Full Name *",
+                required: "required",
+              },
+              { name: "phone", placeholder: "Phone *", required: "required" },
+              { name: "email", placeholder: "email" },
+              { name: "house", placeholder: "House No & Flat " },
+              { name: "street", placeholder: "Street & Area " },
+              { name: "city", placeholder: "City" },
+              { name: "state", placeholder: "State", required: "required" },
+              {
+                name: "zip_code",
+                placeholder: "Zip Code",
+                required: "required",
+              },
               { name: "country", placeholder: "Country" },
-            ].map(({ name, placeholder }) => (
+            ].map(({ name, placeholder, required }) => (
               <input
                 key={name}
                 name={name}
@@ -202,6 +213,7 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
                 value={form[name]}
                 onChange={handleChange}
                 className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                required={required}
               />
             ))}
           </div>
@@ -457,7 +469,7 @@ export default function CheckoutForm({ formData, setFormData }) {
               </div>
             </div>
             <Button
-            variant="outline"
+              variant="outline"
               onClick={() => setShowPopup(true)}
               className="flex items-center gap-1.5  font-semibold text-[13px] hover:underline"
             >

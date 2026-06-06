@@ -195,11 +195,7 @@ export default function CartItem() {
                 >
                   <div className="w-[100px] h-[100px] bg-gray-50 overflow-hidden hover:scale-110 transition-transform duration-500">
                     <img
-                      src={
-                        item.variant_id?.images?.length > 0
-                          ? getImageUrl(item.variant_id.images[0])
-                          : getImageUrl(item.product_id?.images?.[0])
-                      }
+                      src={getImageUrl(item.product_id?.images)}
                       alt={item.product_id?.name}
                       className="w-full h-full object-contain"
                     />

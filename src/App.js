@@ -96,7 +96,11 @@ function App() {
       errorInfo,
     } = useSelector((state) => state.store);
 
+    // useEffect(() => {
+    //   dispatch(fetchStoreInfo());
+    // }, [dispatch]);
     useEffect(() => {
+      console.log("fetchStoreInfo called");
       dispatch(fetchStoreInfo());
     }, [dispatch]);
 

@@ -47,6 +47,7 @@ function Countsection() {
   const sectionRef = useRef(null);
 
   useEffect(() => {
+    console.log("Countsection Mounted");
     dispatch(fetchDashboard());
   }, [dispatch]);
 

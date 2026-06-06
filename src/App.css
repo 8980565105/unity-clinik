@@ -617,3 +617,12 @@
     transform: translateX(0);
   }
 }
+
+/* productsection ingrideant section  */
+.ingredientsSwiper .swiper-wrapper {
+  align-items: stretch;
+}
+
+.ingredientsSwiper .swiper-slide {
+  height: auto !important;
+}

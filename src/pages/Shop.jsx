@@ -7,9 +7,11 @@ import { getImageUrl } from "../components/utils/helper";
 import shopBg from "../assets/shopBannerImage.jpg";
 import { Toaster } from "react-hot-toast";
 import SEO from "../components/seo/seo.js";
-import { ShoppingCart } from "lucide-react";
+import { ChevronRight, ShoppingCart } from "lucide-react";
 import Button from "../components/ui/Button.jsx";
 import { useNavigate } from "react-router-dom";
+import ShopBannerSlider from "../components/shop/ShopBannerSlider.jsx";
+import { fetchSlides } from "../features/slides/slideThunk.js";
 
 const staticShopPage = {
   sections: [
@@ -43,6 +45,7 @@ export default function Shop() {
 
   useEffect(() => {
     dispatch(fetchPageBySlug("shop"));
+    dispatch(fetchSlides());
   }, [dispatch]);
 
   const shopPageFromApi = pages?.find((page) => page.slug === "shop");
@@ -59,9 +62,10 @@ export default function Shop() {
       <SEO
         title={shopPage?.meta_title || "Shop"}
         description={shopPage?.meta_description || "Shop page description"}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${shopPage?.seo_image}`}
       />
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="hidden lg:flex relative">
+      {/* <div className="hidden lg:flex relative">
         {shopPage?.sections?.map((section) => (
           <SecondarySection
             key={section._id}
@@ -70,7 +74,10 @@ export default function Shop() {
             backgroundImage={getBgImage(section)}
           />
         ))}
-      </div>
+      </div> */}
+
+      <ShopBannerSlider />
+
       <WomenCollections />
 
       {totalItems > 0 && (
@@ -88,27 +95,25 @@ export default function Shop() {
               </span>
             </div>
 
-            <span className="text-sm font-medium">View cart</span>
+            {/* <span className="text-sm font-medium">View cart</span>
 
             <span className="text-gray-500">|</span>
 
             <span className="text-sm font-semibold">
               ₹{totalPrice ? totalPrice.toLocaleString("en-IN") : "0"}
-            </span>
+            </span> */}
 
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <div className="flex flex-col items-center leading-tight">
+              <span className="text-[18px] font-semibold">View cart</span>
+
+              <span className="text-xs md:text-sm">
+                {totalItems} {totalItems === 1 ? "item" : "items"} | ₹
+                {totalPrice ? totalPrice.toLocaleString("en-IN") : "0"}
+              </span>
+            </div>
+            <div className="bg-[#0C387E] rounded-full">
+              <ChevronRight size={24} />
+            </div>
           </Button>
         </div>
       )}

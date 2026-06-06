@@ -6,7 +6,8 @@ export const fetchDashboard = createAsyncThunk(
   "dashboard/fetchDashboard",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get(ROUTES.dashboard.get); 
+      console.log("Dashboard API HIT");
+      const res = await api.get(ROUTES.dashboard.get);
 
       if (res.data.success) {
         return res.data.data;
@@ -15,5 +16,5 @@ export const fetchDashboard = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );

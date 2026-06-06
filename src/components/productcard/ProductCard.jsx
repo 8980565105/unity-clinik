@@ -224,7 +224,7 @@
 
     return (
       <Link to={`/products/${product._id}`}>
-        <div className="border border-2 p-3 w-full max-w-[500px] hover:shadow-lg transition-all group bg-white h-full">
+        <div className="border border-2 p-3 w-full max-w-[320px] hover:shadow-lg transition-all group bg-white h-full">
           <div className="relative">
             <img
               src={displayedImage}

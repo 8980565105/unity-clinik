@@ -51,7 +51,7 @@ const Home = () => {
         <Toaster position="top center" />
         <Hero1 />
         <Bestsellers setShowLoginPopup={setShowLoginPopup} />
-        <BannerSlider />{" "}
+        <BannerSlider />
         <Section className="w-full">
           <img
             src={desktopImg}

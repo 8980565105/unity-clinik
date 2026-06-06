@@ -127,12 +127,14 @@ function BannerCard({ banner, cardH, cardW }) {
   );
 }
 
-export default function BannerSlider() {
+export default function ShopBannerSlider() {
   const { slides } = useSelector((state) => state.slides);
+
   const bannerData = (slides || [])
-    .filter((s) => s.section === "banner1")
-    .flatMap((s) => s.banner1Slides || [])
+    .filter((s) => s.section === "shoppage")
+    .flatMap((s) => s.shoppageSlides || [])
     .filter((slide) => slide.status === "active");
+
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const isAnimating = useRef(false);
@@ -144,7 +146,6 @@ export default function BannerSlider() {
   const [currentIndex, setCurrentIndex] = useState(total);
 
   const isStatic = total <= visibleCount;
-
   const tripled = isStatic
     ? bannerData
     : [...bannerData, ...bannerData, ...bannerData];
@@ -156,7 +157,6 @@ export default function BannerSlider() {
     const newW = Math.floor((w - GAP * (count - 1)) / count);
     const ratio = w < 768 ? 0.55 : 0.4;
     const newH = Math.max(140, Math.round(newW * ratio));
-
     setVisibleCount(count);
     setCardW(newW);
     setCardH(newH);
@@ -284,11 +284,10 @@ export default function BannerSlider() {
   return (
     <Section>
       <Row>
-        <div className="flex items-center justify-end gap-3 mb-4">
+        {/* <div className="flex items-center justify-end gap-3 mb-4">
           <NavBtn direction="left" onClick={handlePrev} variant="primary" />
           <NavBtn direction="right" onClick={handleNext} variant="primary" />
-        </div>
-
+        </div> */}
         <div className="overflow-hidden w-full" ref={containerRef}>
           {cardW > 0 && (
             <div

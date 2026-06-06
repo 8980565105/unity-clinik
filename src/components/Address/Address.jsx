@@ -13,11 +13,12 @@ function Address() {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
+    email: "",
     house: "",
     street: "",
     city: "",
     state: "",
-    country: "India",
+    country: "",
     zip_code: "",
   });
 
@@ -53,12 +54,13 @@ function Address() {
   const resetForm = () => {
     setFormData({
       fullName: "",
+      email: "",
       phone: "",
       house: "",
       street: "",
       city: "",
       state: "",
-      country: "India",
+      country: "",
       zip_code: "",
     });
 
@@ -203,61 +205,118 @@ function Address() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="grid md:grid-cols-2 gap-4">
-                <input
-                  name="fullName"
-                  placeholder="Full Name"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className="border p-3 rounded-lg"
-                />
+                <div className="flex flex-col">
+                  <label htmlFor="name">Full Name *</label>
+                  <input
+                    name="fullName"
+                    placeholder="Full Name"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="phone">Phone *</label>
+                  <input
+                    name="phone"
+                    type="tel"
+                    placeholder="Phone"
+                    value={formData.phone}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 10) {
+                        setFormData({
+                          ...formData,
+                          phone: value,
+                        });
+                      }
+                    }}
+                    className="border p-3 rounded-lg"
+                    maxLength={10}
+                    minLength={10}
+                    required
+                  />
+                </div>
 
-                <input
-                  name="phone"
-                  placeholder="Phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="border p-3 rounded-lg"
-                />
+                <div className="flex flex-col">
+                  <label>Email </label>
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  />
+                </div>
 
-                <input
-                  name="house"
-                  placeholder="House No"
-                  value={formData.house}
-                  onChange={handleChange}
-                  className="border p-3 rounded-lg"
-                />
+                <div className="flex flex-col">
+                  <label>House No </label>
+                  <input
+                    name="house"
+                    placeholder="House No"
+                    value={formData.house}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  />
+                </div>
 
-                <input
-                  name="street"
-                  placeholder="Street"
-                  value={formData.street}
-                  onChange={handleChange}
-                  className="border p-3 rounded-lg"
-                />
+                <div className="flex flex-col">
+                  <label>Street</label>
+                  <input
+                    name="street"
+                    placeholder="Street"
+                    value={formData.street}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  />
+                </div>
 
-                <input
-                  name="city"
-                  placeholder="City"
-                  value={formData.city}
-                  onChange={handleChange}
-                  className="border p-3 rounded-lg"
-                />
+                <div className="flex flex-col">
+                  <label>City </label>
+                  <input
+                    name="city"
+                    placeholder="City"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  />
+                </div>
 
-                <input
-                  name="state"
-                  placeholder="State"
-                  value={formData.state}
-                  onChange={handleChange}
-                  className="border p-3 rounded-lg"
-                />
+                <div className="flex flex-col">
+                  <label>State *</label>
+                  <input
+                    name="state"
+                    placeholder="State"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                    required
+                  />
+                </div>
+                <div className="flex flex-col">
+                  <label>cuntry</label>
+                  <input
+                    name="country"
+                    placeholder="cuntry"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  />
+                </div>
 
-                <input
-                  name="zip_code"
-                  placeholder="Zip Code"
-                  value={formData.zip_code}
-                  onChange={handleChange}
-                  className="border p-3 rounded-lg"
-                />
+                <div className="flex flex-col">
+                  <label>Pin Code *</label>
+                  <input
+                    name="zip_code"
+                    placeholder="Zip Code"
+                    value={formData.zip_code}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-3">
@@ -265,7 +324,7 @@ function Address() {
                   Cancel
                 </Button>
 
-                <Button type="submit" disabled={loading}>
+                <Button type="submit" variant="common" disabled={loading}>
                   {loading
                     ? "Saving..."
                     : editIndex !== null

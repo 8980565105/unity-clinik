@@ -21,9 +21,9 @@ const DesktopFilters = ({
   selectedTypes = [],
   handleTypeChange,
   handleResetTypes,
-  selectedDiscounts = [],
-  handleDiscountChange,
-  handleResetDiscounts,
+  // selectedDiscounts = [],
+  // handleDiscountChange,
+  // handleResetDiscounts,
   selectedLabels = [],
   handleLabelChange,
   handleResetLabels,
@@ -61,7 +61,7 @@ const DesktopFilters = ({
   useEffect(() => {
     dispatch(fetchBrands({ status: "active" }));
     dispatch(fetchtypes({ status: "active" }));
-    dispatch(fetchDiscounts({ status: "active" }));
+    // dispatch(fetchDiscounts({ status: "active" }));
     dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
 
@@ -99,13 +99,13 @@ const DesktopFilters = ({
       }, {})
     : {};
 
-  const discountCounts = Array.isArray(products)
-    ? products.reduce((acc, product) => {
-        const discountId = product.discount_id;
-        if (discountId) acc[discountId] = (acc[discountId] || 0) + 1;
-        return acc;
-      }, {})
-    : {};
+  // const discountCounts = Array.isArray(products)
+  //   ? products.reduce((acc, product) => {
+  //       const discountId = product.discount_id;
+  //       if (discountId) acc[discountId] = (acc[discountId] || 0) + 1;
+  //       return acc;
+  //     }, {})
+  //   : {};
 
   const labelCounts = Array.isArray(products)
     ? products.reduce((acc, product) => {
@@ -219,7 +219,7 @@ const DesktopFilters = ({
         </div>
       </CollapsibleFilter>
 
-      <CollapsibleFilter
+      {/* <CollapsibleFilter
         title="Discounts"
         isOpen={openFilter === "Discounts"}
         onToggle={() => toggleFilter("Discounts")}
@@ -246,7 +246,8 @@ const DesktopFilters = ({
             <p className="text-sm text-gray-500">No discounts found.</p>
           )}
         </div>
-      </CollapsibleFilter>
+      </CollapsibleFilter> */}
+    
       <CollapsibleFilter
         title="Product Label"
         isOpen={openFilter === "Product Label"}

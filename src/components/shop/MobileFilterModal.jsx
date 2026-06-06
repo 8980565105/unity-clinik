@@ -25,9 +25,9 @@ const MobileFilterModal = ({
   selectedTypes,
   handleTypeChange,
   handleResetTypes,
-  selectedDiscounts,
-  handleDiscountChange,
-  handleResetDiscounts,
+  // selectedDiscounts,
+  // handleDiscountChange,
+  // handleResetDiscounts,
   selectedLabels,
   handleLabelChange,
   handleResetLabels,
@@ -83,13 +83,13 @@ const MobileFilterModal = ({
     return acc;
   }, {});
 
-  const discountCounts = products.reduce((acc, product) => {
-    const discountId = product.discount_id;
-    if (discountId) {
-      acc[discountId] = (acc[discountId] || 0) + 1;
-    }
-    return acc;
-  }, {});
+  // const discountCounts = products.reduce((acc, product) => {
+  //   const discountId = product.discount_id;
+  //   if (discountId) {
+  //     acc[discountId] = (acc[discountId] || 0) + 1;
+  //   }
+  //   return acc;
+  // }, {});
 
   const labelCounts = products.reduce((acc, product) => {
     const labelId = product.variants?.[0]?.labels?.[0];
@@ -227,7 +227,7 @@ const MobileFilterModal = ({
               </div>
             </CollapsibleFilter>
 
-            <CollapsibleFilter
+            {/* <CollapsibleFilter
               title="Discounts"
               isOpen={openFilter === "Discounts"}
               onToggle={() => toggleFilter("Discounts")}
@@ -253,7 +253,7 @@ const MobileFilterModal = ({
                   <p className="text-sm text-gray-500">No discounts found.</p>
                 )}
               </div>
-            </CollapsibleFilter>
+            </CollapsibleFilter> */}
 
             <CollapsibleFilter
               title="Product Label"

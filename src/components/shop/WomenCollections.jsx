@@ -737,7 +737,7 @@ export default function WomenCollections() {
   return (
     <>
       <Section>
-        <Row className="pt-[25px] custom-lg:pt-[50px]">
+        <Row>
           <MobileFilterModal
             isOpen={isMobileFilterOpen}
             onClose={() => setIsMobileFilterOpen(false)}
@@ -750,9 +750,9 @@ export default function WomenCollections() {
             selectedTypes={selectedTypes}
             handleTypeChange={handleTypeChange}
             handleResetTypes={() => setSelectedTypes([])}
-            selectedDiscounts={selectedDiscounts}
-            handleDiscountChange={handleDiscountChange}
-            handleResetDiscounts={() => setSelectedDiscounts([])}
+            // selectedDiscounts={selectedDiscounts}
+            // handleDiscountChange={handleDiscountChange}
+            // handleResetDiscounts={() => setSelectedDiscounts([])}
             selectedLabels={selectedLabels}
             handleLabelChange={handleLabelChange}
             handleResetLabels={() => setSelectedLabels([])}
@@ -779,13 +779,13 @@ export default function WomenCollections() {
               </div>
             </div>
           </div>
-          <p className="text-sm text-gray-600 mb-8">
+          {/* <p className="text-sm text-gray-600 mb-8">
             <span className="text-black border-b border-black lg:border-none">
               <Link to="/home">Home</Link>
             </span>
             <span className="text-black"> / </span>
             <span className="font-regular text-[#989696]">Shop</span>
-          </p>
+          </p> */}
           <div className="mb-3 lg:hidden">
             <MobileFilterBar
               sortBy={currentSortLabel}
@@ -816,9 +816,9 @@ export default function WomenCollections() {
               selectedTypes={selectedTypes}
               handleTypeChange={handleTypeChange}
               handleResetTypes={() => setSelectedTypes([])}
-              selectedDiscounts={selectedDiscounts}
-              handleDiscountChange={handleDiscountChange}
-              handleResetDiscounts={() => setSelectedDiscounts([])}
+              // selectedDiscounts={selectedDiscounts}
+              // handleDiscountChange={handleDiscountChange}
+              // handleResetDiscounts={() => setSelectedDiscounts([])}
               selectedLabels={selectedLabels}
               handleLabelChange={handleLabelChange}
               handleResetLabels={() => setSelectedLabels([])}
@@ -912,10 +912,10 @@ export default function WomenCollections() {
                             setSelectedTypes((p) =>
                               p.filter((x) => x !== value),
                             );
-                          if (type === "discount")
-                            setSelectedDiscounts((p) =>
-                              p.filter((d) => d.id !== value),
-                            );
+                          // if (type === "discount")
+                          //   setSelectedDiscounts((p) =>
+                          //     p.filter((d) => d.id !== value),
+                          //   );
                           if (type === "label")
                             setSelectedLabels((p) =>
                               p.filter((l) => l.id !== value),
