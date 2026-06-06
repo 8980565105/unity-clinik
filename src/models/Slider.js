@@ -19,6 +19,53 @@ const hero1SlideSchema = new mongoose.Schema(
   { _id: true },
 );
 
+// const shoppageSlideSchema = new mongoose.Schema(
+//   {
+//     title: { type: String, default: "" },
+//     description: { type: String, default: "" },
+//     button_name: { type: String, default: "SHOP NOW" },
+//     button_link: { type: String, default: "/shop" },
+//     badge: { type: String, default: "" },
+
+//     bgImageUrl: {
+//       type: String,
+//       default: null,
+//     },
+
+//     productimgUrl: {
+//       type: String,
+//       default: null,
+//     },
+
+//     order: {
+//       type: Number,
+//       default: 0,
+//     },
+
+//     status: {
+//       type: String,
+//       enum: ["active", "inactive"],
+//       default: "active",
+//     },
+//   },
+//   { _id: true },
+// );
+
+const shoppageSlideSchema = new mongoose.Schema(
+  {
+    title: { type: String, default: "" },
+    description: { type: String, default: "" },
+    button_name: { type: String, default: "SHOP NOW" },
+    button_link: { type: String, default: "/shop" },
+    badge: { type: String, default: "" },
+    bgImage: { type: String, default: null }, // ✅ renamed from bgImageUrl
+    productimg: { type: String, default: null }, // ✅ renamed from productimgUrl
+    order: { type: Number, default: 0 },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+  },
+  { _id: true },
+);
+
 const banner1SlideSchema = new mongoose.Schema(
   {
     title: { type: String, default: "" },
@@ -71,7 +118,15 @@ const sliderSectionSchema = new mongoose.Schema(
   {
     section: {
       type: String,
-      enum: ["hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4"],
+      enum: [
+        "hero1",
+        "banner1",
+        "topDoctor",
+        "banner2",
+        "banner3",
+        "banner4",
+        "shoppage",
+      ],
       required: true,
     },
     status: {
@@ -85,6 +140,10 @@ const sliderSectionSchema = new mongoose.Schema(
     banner2: { type: banner2Schema, default: undefined },
     banner3: { type: banner3Schema, default: undefined },
     banner4: { type: banner4Schema, default: undefined },
+    shoppageSlides: {
+      type: [shoppageSlideSchema],
+      default: undefined,
+    },
   },
   { timestamps: true },
 );

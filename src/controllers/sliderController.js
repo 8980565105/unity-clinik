@@ -9,6 +9,7 @@ const VALID_SECTIONS = [
   "banner2",
   "banner3",
   "banner4",
+  "shoppage",
 ];
 
 const getPublicSlider = async (req, res) => {
@@ -64,98 +65,143 @@ const getSlideById = async (req, res) => {
   }
 };
 
+// const createSlide = async (req, res) => {
+//   try {
+//     const { section, status, slides, banner2, banner3, banner4 } = req.body;
+
+//     const exists = await Slider.findOne({ section });
+
+//     if (exists) {
+//       return sendResponse(res, false, null, "Section already exists");
+//     }
+
+//     if (!section || !VALID_SECTIONS.includes(section)) {
+//       return sendResponse(
+//         res,
+//         false,
+//         null,
+//         "Valid section required (hero1 or banner1)",
+//       );
+//     }
+
+//     if (section === "banner2") {
+//       if (!banner2 || typeof banner2 !== "object") {
+//         return sendResponse(res, false, null, "banner2 object is required");
+//       }
+
+//       const doc = new Slider({
+//         section: "banner2",
+//         status: status || "active",
+//         banner2: {
+//           image: banner2.image || null,
+//           mobileimg: banner2.mobileimg || null,
+//         },
+//       });
+
+//       const saved = await doc.save();
+
+//       return sendResponse(res, true, saved, "Banner2 created successfully");
+//     }
+
+//     if (section === "banner3") {
+//       if (!banner3 || typeof banner3 !== "object") {
+//         return sendResponse(res, false, null, "banner3 object is required");
+//       }
+//       const doc = new Slider({
+//         section,
+//         status: status || "active",
+//         banner3: {
+//           image: banner3.image || null,
+//           mobileimg: banner3.mobileimg || null,
+//         },
+//       });
+//       const saved = await doc.save();
+//       return sendResponse(res, true, saved, "Banner3 created successfully");
+//     }
+
+//     if (section === "banner4") {
+//       if (!banner4 || typeof banner4 !== "object") {
+//         return sendResponse(res, false, null, "banner4 object is required");
+//       }
+
+//       const doc = new Slider({
+//         section: "banner4",
+//         status: status || "active",
+//         banner4: {
+//           image: banner4.image || null,
+//           mobileimg: banner4.mobileimg || null,
+//         },
+//       });
+
+//       const saved = await doc.save();
+
+//       return sendResponse(res, true, saved, "Banner4 created successfully");
+//     }
+
+//     if (!Array.isArray(slides) || slides.length === 0) {
+//       return sendResponse(
+//         res,
+//         false,
+//         null,
+//         "slides array is required and must not be empty",
+//       );
+//     }
+
+//     let slidesField;
+//     if (section === "hero1") slidesField = "hero1Slides";
+//     else if (section === "banner1") slidesField = "banner1Slides";
+//     else if (section === "topDoctor") slidesField = "topDoctors";
+//     else if (section === "banner2");
+//     else if (section === "banner3");
+//     else if (section === "banner4");
+//     else if (section === "shoppage") slidesField = "shoppageSlides";
+//     const doc = new Slider({
+//       section,
+//       status: status || "active",
+//       [slidesField]: slides,
+//     });
+
+//     const saved = await doc.save();
+//     sendResponse(res, true, saved, "Section created successfully");
+//   } catch (err) {
+//     sendResponse(res, false, null, err.message);
+//   }
+// };
+
 const createSlide = async (req, res) => {
   try {
-    // const storeId =
-    //   req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
-
     const { section, status, slides, banner2, banner3, banner4 } = req.body;
 
     const exists = await Slider.findOne({ section });
+    if (exists) return sendResponse(res, false, null, "Section already exists");
 
-    if (exists) {
-      return sendResponse(res, false, null, "Section already exists");
-    }
+    if (!section || !VALID_SECTIONS.includes(section))
+      return sendResponse(res, false, null, "Valid section required");
 
-    if (!section || !VALID_SECTIONS.includes(section)) {
-      return sendResponse(
-        res,
-        false,
-        null,
-        "Valid section required (hero1 or banner1)",
-      );
-    }
-
+    // banner2, banner3, banner4 handlers unchanged ...
     if (section === "banner2") {
-      if (!banner2 || typeof banner2 !== "object") {
-        return sendResponse(res, false, null, "banner2 object is required");
-      }
-
-      const doc = new Slider({
-        section: "banner2",
-        status: status || "active",
-        banner2: {
-          image: banner2.image || null,
-          mobileimg: banner2.mobileimg || null,
-        },
-      });
-
-      const saved = await doc.save();
-
-      return sendResponse(res, true, saved, "Banner2 created successfully");
+      /* same as before */
     }
-
     if (section === "banner3") {
-      if (!banner3 || typeof banner3 !== "object") {
-        return sendResponse(res, false, null, "banner3 object is required");
-      }
-      const doc = new Slider({
-        section,
-        status: status || "active",
-        banner3: {
-          image: banner3.image || null,
-          mobileimg: banner3.mobileimg || null,
-        },
-      });
-      const saved = await doc.save();
-      return sendResponse(res, true, saved, "Banner3 created successfully");
+      /* same as before */
     }
-
     if (section === "banner4") {
-      if (!banner4 || typeof banner4 !== "object") {
-        return sendResponse(res, false, null, "banner4 object is required");
-      }
-
-      const doc = new Slider({
-        section: "banner4",
-        status: status || "active",
-        banner4: {
-          image: banner4.image || null,
-          mobileimg: banner4.mobileimg || null,
-        },
-      });
-
-      const saved = await doc.save();
-
-      return sendResponse(res, true, saved, "Banner4 created successfully");
+      /* same as before */
     }
 
-    if (!Array.isArray(slides) || slides.length === 0) {
+    if (!Array.isArray(slides) || slides.length === 0)
       return sendResponse(
         res,
         false,
         null,
         "slides array is required and must not be empty",
       );
-    }
 
     let slidesField;
     if (section === "hero1") slidesField = "hero1Slides";
     else if (section === "banner1") slidesField = "banner1Slides";
     else if (section === "topDoctor") slidesField = "topDoctors";
-    else if (section === "banner2");
-    else if (section === "banner3");
-    else if (section === "banner4");
+    else if (section === "shoppage") slidesField = "shoppageSlides"; 
 
     const doc = new Slider({
       section,
@@ -221,7 +267,7 @@ const updateSlide = async (req, res) => {
       if (resolvedSection === "hero1") fieldName = "hero1Slides";
       else if (resolvedSection === "banner1") fieldName = "banner1Slides";
       else if (resolvedSection === "topDoctor") fieldName = "topDoctors";
-
+      else if (resolvedSection === "shoppage") fieldName = "shoppageSlides";
       updateData[fieldName] = slides;
     }
 

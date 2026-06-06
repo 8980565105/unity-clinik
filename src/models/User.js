@@ -84,6 +84,10 @@ const addressSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    email: {
+      type: String,
+      default: "",
+    },
 
     fullName: {
       type: String,
@@ -137,7 +141,6 @@ const userSchema = new mongoose.Schema(
       type: String,
     },
 
-    // MULTIPLE ADDRESS
     addresses: {
       type: [addressSchema],
       default: [],
