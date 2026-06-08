@@ -63,6 +63,7 @@ const SECTION_TYPES = [
   "Daily Usage Section",
   "Other Recommended Solutions",
   "How to use",
+  "Result Section"
 ];
 
 const buildSectionData = (type: string) => {
@@ -111,7 +112,7 @@ const buildSectionData = (type: string) => {
         ],
       };
 
-      
+
     case "Daily Usage Section":
       return {
         status: true,
@@ -155,7 +156,23 @@ const buildSectionData = (type: string) => {
       };
 
 
-
+    case "Result Section":
+      return {
+        status: true,
+        title: "",
+        description: "",
+        items: [
+          {
+            beforeImage: "",
+            afterImage: "",
+            reviewDescription: "",
+            customerName: "",
+            customerAge: "",
+            verifiedReview: true,
+            stageLabel: "",
+          },
+        ],
+      };
 
     default:
       return { status: true, title: "", description: "", items: [] };
@@ -1436,6 +1453,186 @@ const SectionRenderer = React.memo(function SectionRenderer({
     );
   }
 
+
+  if (sType === "Result Section") {
+    return (
+      <div className="space-y-4">
+        <CommonHeader
+          sType={sType}
+          status={data.status}
+          title={data.title || ""}
+          description={data.description || ""}
+          onStatusChange={(val) =>
+            updateSectionField("status", val)
+          }
+          onTitleChange={(val) =>
+            updateSectionField("title", val)
+          }
+          onDescriptionChange={(val) =>
+            updateSectionField("description", val)
+          }
+        />
+
+        <DraggableItemList
+          items={data.items || []}
+          onReorder={updateSectionItems}
+          itemLabel="Review"
+          addLabel="Add Review"
+          onAdd={() =>
+            addSectionItem({
+              beforeImage: "",
+              afterImage: "",
+              reviewDescription: "",
+              customerName: "",
+              customerAge: "",
+              verifiedReview: true,
+              stageLabel: "",
+            })
+          }
+          onRemove={removeSectionItem}
+          renderItem={(item, itemIdx) => (
+            <div className="grid grid-cols-2 gap-4">
+
+              <div>
+                <Label>Stage Label</Label>
+                <Input
+                  value={item.stageLabel || ""}
+                  placeholder="Stage 3"
+                  onChange={(e) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "stageLabel",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Customer Name</Label>
+                <Input
+                  value={item.customerName || ""}
+                  placeholder="Arjun Malhotra"
+                  onChange={(e) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "customerName",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Age</Label>
+                <Input
+                  type="number"
+                  value={item.customerAge || ""}
+                  onChange={(e) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "customerAge",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Label>Verified Review</Label>
+                <Switch
+                  checked={item.verifiedReview !== false}
+                  onCheckedChange={(checked) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "verifiedReview",
+                      checked
+                    )
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>Before Image</Label>
+                <ImageUpload
+                  value={item.beforeImage || ""}
+                  onChange={(val) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "beforeImage",
+                      typeof val === "string"
+                        ? val
+                        : val?.[0] || ""
+                    )
+                  }
+                  multiple={false}
+                />
+              </div>
+
+              <div>
+                <Label>After Image</Label>
+                <ImageUpload
+                  value={item.afterImage || ""}
+                  onChange={(val) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "afterImage",
+                      typeof val === "string"
+                        ? val
+                        : val?.[0] || ""
+                    )
+                  }
+                  multiple={false}
+                />
+              </div>
+
+              <div className="col-span-2">
+                <Label>Review Description</Label>
+                <textarea
+                  rows={5}
+                  className="w-full border rounded-md p-2"
+                  value={item.reviewDescription || ""}
+                  onChange={(e) =>
+                    updateSectionItem(
+                      itemIdx,
+                      "reviewDescription",
+                      e.target.value
+                    )
+                  }
+                />
+              </div>
+
+            </div>
+          )}
+        />
+      </div>
+    );
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   return (
     <div className="space-y-4">
       <CommonHeader
@@ -1533,8 +1730,140 @@ export default function ProductFormPage() {
               description: v.description || "",
             })));
           }
+
           if (Array.isArray(p.sections) && p.sections.length > 0) {
-            setSections(p.sections);
+            const cleanedSections = p.sections.map((section: any) => {
+              const type = section.type;
+              const data = section.data || {};
+
+              if (type === "Multi Step Selection") return section;
+
+              if (type === "FAQ 1" || type === "FAQ 2") {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: [],
+                    questions: (data.questions || []).map((q: any) => ({
+                      question: q.question || "",
+                      answer: q.answer || "",
+                      image: q.image || "",
+                    })),
+                  },
+                };
+              }
+
+              if (type === "Additional Information Section") {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: (data.items || []).map((item: any) => ({
+                      net_quantity: item.net_quantity || "",
+                      manufactured_by: item.manufactured_by || "",
+                      marketed_by: item.marketed_by || "",
+                      country_origin: item.country_origin || "",
+                      product_dimensions: item.product_dimensions || "",
+                      best_before: item.best_before || "",
+                    })),
+                  },
+                };
+              }
+
+              if (type === "Before & After") {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: (data.items || []).map((item: any) => ({
+                      title: item.title || "",
+                      description: item.description || "",
+                      beforeImage: item.beforeImage || "",
+                      afterImage: item.afterImage || "",
+                    })),
+                  },
+                };
+              }
+
+              if (type === "Product Attribute Section") {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: (data.items || []).map((item: any) => ({
+                      key: item.key || "",
+                      value: item.value || "",
+                    })),
+                  },
+                };
+              }
+
+              if (type === "use and Others points") {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: (data.items || []).map((item: any) => ({
+                      name: item.name || "",
+                      description: item.description || "",
+                    })),
+                  },
+                };
+              }
+
+              if (
+                type === "Solution By Stage Section" ||
+                type === "Product Recommendation Section" ||
+                type === "Other Recommended Solutions"
+              ) {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: (data.items || []).map((item: any) => ({
+                      title: item.title || "",
+                      description: item.description || "",
+                      image: item.image || "",
+                      product_id: item.product_id || null,
+                    })),
+                  },
+                };
+              }
+
+              if (
+                type === "Root Cause Section" ||
+                type === "How Does It Do It Section" ||
+                type === "Benefits Section" ||
+                type === "Ingredients Section" ||
+                type === "Treatment Kit Section"
+              ) {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: (data.items || []).map((item: any) => ({
+                      name: item.name || "",
+                      description: item.description || "",
+                      image: item.image || "",
+                    })),
+                  },
+                };
+              }
+
+              return {
+                ...section,
+                data: {
+                  ...data,
+                  items: (data.items || []).map((item: any) => ({
+                    title: item.title || "",
+                    description: item.description || "",
+                    image: item.image || "",
+                  })),
+                },
+              };
+            });
+
+            setSections(cleanedSections);
           }
         }
       });
