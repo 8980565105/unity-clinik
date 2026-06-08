@@ -2,32 +2,6 @@ const CustomerReview = require("../models/CustomerReview");
 const Product = require("../models/Product");
 const { sendResponse } = require("../utils/response");
 
-// const extractDomain = (req) => {
-//   try {
-//     const origin = req.headers.origin || "";
-//     if (origin) {
-//       const url = new URL(origin);
-//       return url.host;
-//     }
-//     return req.headers.host?.toLowerCase() || "";
-//   } catch {
-//     return req.headers.host?.toLowerCase() || "";
-//   }
-// };
-
-// const resolveStoreId = async (req) => {
-//   try {
-//     // if (req.user?.storeId) return req.user.storeId;
-
-//     const domain = extractDomain(req);
-
-//     return null;
-//   } catch (e) {
-//     console.error("resolveStoreId error:", e.message);
-//     return null;
-//   }
-// };
-
 const getReviews = async (req, res) => {
   try {
     let {
@@ -40,7 +14,6 @@ const getReviews = async (req, res) => {
 
     const download = isDownload.toLowerCase() === "true";
     const userRole = req.user?.role;
-    const userId = req.user?._id;
 
     const query = {};
 
@@ -53,16 +26,6 @@ const getReviews = async (req, res) => {
 
     if (userRole === "admin") {
     } else if (userRole === "store_owner") {
-      // const storeId = req.user?.storeId;
-      // if (!storeId) {
-      //   return sendResponse(
-      //     res,
-      //     false,
-      //     null,
-      //     "No storeId found for this owner",
-      //   );
-      // }
-      // query.storeId = storeId;
     } else {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
     }
@@ -110,14 +73,6 @@ const getReviewById = async (req, res) => {
       .populate("product_id", "name images");
 
     if (!review) return sendResponse(res, false, null, "Review not found");
-
-    // if (
-    //   req.user?.role === "store_owner" &&
-    // review.storeId?.toString() !== req.user.storeId?.toString()
-    // ) {
-    //   return sendResponse(res, false, null, "Forbidden: Not your review");
-    // }
-
     sendResponse(res, true, review, "Review retrieved successfully");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -126,29 +81,54 @@ const getReviewById = async (req, res) => {
 
 const createReview = async (req, res) => {
   try {
-    const { product_id, rating, title, comment, is_approved } = req.body;
+    const {
+      product_id,
+      user_id,
+      rating,
+      title,
+      comment,
+      is_approved,
+      beforeImage,
+      afterImage,
+      createdAt,
+    } = req.body;
 
     if (!product_id) {
       return sendResponse(res, false, null, "product_id is required");
     }
 
-    // let storeId = null;
     const product = await Product.findById(product_id);
-
     if (!product) {
       return sendResponse(res, false, null, "Product not found");
     }
 
-    const review = new CustomerReview({
-      user_id: req.user._id,
+    const isAdminOrOwner =
+      req.user?.role === "admin" || req.user?.role === "store_owner";
+
+    const resolvedUserId = isAdminOrOwner
+      ? user_id || req.user._id
+      : req.user._id;
+
+    if (!resolvedUserId) {
+      return sendResponse(res, false, null, "user_id is required");
+    }
+
+    const reviewData = {
+      user_id: resolvedUserId,
       product_id,
       rating,
       title,
       comment,
       is_approved: is_approved ?? false,
-    });
+      beforeImage,
+      afterImage,
+      createdAt: isAdminOrOwner && createdAt ? new Date(createdAt) : new Date(),
+      updatedAt: new Date(),
+    };
 
+    const review = new CustomerReview(reviewData);
     const savedReview = await review.save();
+
     sendResponse(res, true, savedReview, "Review submitted successfully.");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -157,13 +137,20 @@ const createReview = async (req, res) => {
 
 const updateReview = async (req, res) => {
   try {
+    const updateData = { ...req.body, updatedAt: new Date() };
+
+    if (updateData.createdAt) {
+      updateData.createdAt = new Date(updateData.createdAt);
+    }
+
     const updatedReview = await CustomerReview.findByIdAndUpdate(
       req.params.id,
-      req.body,
-      {
-        returnDocument: "after",
-      },
-    );
+      updateData,
+      { new: true },
+    )
+      .populate("user_id", "name email")
+      .populate("product_id", "name images");
+
     if (!updatedReview)
       return sendResponse(res, false, null, "Review not found");
     sendResponse(res, true, updatedReview, "Review updated successfully");
@@ -184,19 +171,10 @@ const updateReviewStatus = async (req, res) => {
     const review = await CustomerReview.findById(id);
     if (!review) return sendResponse(res, false, null, "Review not found");
 
-    // if (
-    //   req.user?.role === "store_owner" &&
-    // review.storeId?.toString() !== req.user.storeId?.toString()
-    // ) {
-    //   return sendResponse(res, false, null, "Forbidden: Not your review");
-    // }
-
     const updated = await CustomerReview.findByIdAndUpdate(
       id,
-      { is_approved },
-      {
-        returnDocument: "after",
-      },
+      { is_approved, updatedAt: new Date() },
+      { new: true },
     );
 
     sendResponse(res, true, updated, "Review status updated successfully");
@@ -244,10 +222,7 @@ const getPublicReviewsByProduct = async (req, res) => {
       return sendResponse(res, false, null, "product_id is required");
     }
 
-    const query = {
-      product_id,
-      is_approved: true,
-    };
+    const query = { product_id, is_approved: true };
 
     const total = await CustomerReview.countDocuments(query);
     const reviews = await CustomerReview.find(query)
@@ -271,12 +246,9 @@ const getPublicReviews = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    const query = {
-      is_approved: true,
-    };
+    const query = { is_approved: true };
 
     const total = await CustomerReview.countDocuments(query);
-
     const customerReviews = await CustomerReview.find(query)
       .populate("user_id", "name")
       .skip((parseInt(page) - 1) * parseInt(limit))
