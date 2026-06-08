@@ -222,6 +222,7 @@ export default function ProductCard({ product, setShowLoginPopup }) {
     }
   };
 
+  
   return (
     <Link to={`/products/${product._id}`}>
       <div className="border border-1 p-3 w-full transition-all group bg-white h-full">
@@ -246,22 +247,22 @@ export default function ProductCard({ product, setShowLoginPopup }) {
             )}
           </div>
 
-          <div className="flex flex-wrap items-end gap-2 mt-1">
-            <p className="text-[18px] font-semibold text-black">
-              ₹{priceData.offerPrice}
-            </p>
-            <div className="flex gap-1">
+          <div className="mt-1">
+            <div className="flex gap-2">
+              <p className="text-[18px] font-semibold text-black">
+                ₹{priceData.offerPrice}
+              </p>
               {priceData.discountPercent > 0 && (
                 <p className="line-through text-gray-400 text-[16px]">
                   ₹{priceData.originalPrice}
                 </p>
               )}
-              {priceData.discountPercent > 0 && (
-                <span className="text-primary text-[14px]">
-                  {priceData.discountPercent}% OFF
-                </span>
-              )}
             </div>
+            {priceData.discountPercent > 0 && (
+              <div className="text-primary text-left text-[14px]">
+                {priceData.discountPercent}% OFF
+              </div>
+            )}
           </div>
 
           {cartQuantity === 0 ? (

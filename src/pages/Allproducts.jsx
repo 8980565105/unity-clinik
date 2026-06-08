@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import ShopBannerSlider from "../components/shop/ShopBannerSlider";
 import { fetchProducts } from "../features/products/productsThunk";
 import { useDispatch, useSelector } from "react-redux";
-import ProductCard from "../components/productcard/ProductCard";
+import ProductCard from "../components/product/ProductCard";
 import { fetchSlides } from "../features/slides/slideThunk";
 import Loding from "../components/loding/loding";
 import { fetchCategories } from "../features/categories/categoriesThunk";

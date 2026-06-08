@@ -149,11 +149,17 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Section from "../ui/Section.jsx";
 import Row from "../ui/Row.jsx";
-import ProductCard from "../productcard/ProductCard.jsx";
+import ProductCard from "../product/ProductCard";
+
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading.jsx";
 
-const GAP = 16;
+const getGap = () => {
+  if (window.innerWidth <= 768) return 0;
+  
+  return 16;
+};
+const GAP = getGap();
 
 const RecommendedSection = ({ setShowLoginPopup }) => {
   const { products = [], loading } = useSelector((state) => state.products);
@@ -274,7 +280,7 @@ const RecommendedSection = ({ setShowLoginPopup }) => {
               ref={trackRef}
               className="flex"
               style={{
-                gap: `${GAP}px`,
+                gap: `${getGap()}px`,
                 transform: isCenter
                   ? "none"
                   : `translateX(-${currentIndexRef.current * getStep(cardWidth)}px)`,

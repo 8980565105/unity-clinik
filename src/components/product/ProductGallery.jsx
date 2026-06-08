@@ -298,7 +298,7 @@ export default function ProductGallery({
                   <img
                     src={img}
                     alt={`Slide ${index}`}
-                    className="w-full h-[300px] sm:h-[500px] object-cover rounded-2xl"
+                    className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
                   />
                 </div>
               ))}
@@ -311,46 +311,10 @@ export default function ProductGallery({
         </div>
       </div>
 
-      {/* {isFullscreen && (
-        <div className="fixed inset-0 bg-black z-[99999] flex items-center justify-center">
-          <button
-            onClick={() => setIsFullscreen(false)}
-            className="absolute top-5 right-5 text-white text-4xl"
-          >
-            ×
-          </button>
-
-          <button
-            onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 5))}
-            className="absolute top-5 left-5 bg-white px-4 py-2 rounded"
-          >
-            +
-          </button>
-
-          <button
-            onClick={() => setZoomLevel((z) => Math.max(z - 0.5, 1))}
-            className="absolute top-5 left-20 bg-white px-4 py-2 rounded"
-          >
-            -
-          </button>
-
-          <img
-            src={currentImage}
-            alt=""
-            style={{
-              transform: `scale(${zoomLevel})`,
-              transition: "0.3s",
-            }}
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-          />
-        </div>
-      )} */}
-
       {isFullscreen &&
         typeof document !== "undefined" &&
         createPortal(
           <div className="fixed inset-0 bg-black z-[9999999] flex items-center justify-center">
-            {/* TOP RIGHT BUTTONS */}
             <div className="absolute top-5 right-5 flex gap-3 z-20">
               <button
                 onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 5))}

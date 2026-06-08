@@ -9,11 +9,11 @@ import { fetchProductReviews } from "../features/reivews/reviewsThunk";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
 import Breadcrumb from "../components/ui/Breadcrumb";
-import ProductGallery from "../components/productcard/ProductGallery";
-import ProductInfo from "../components/productcard/ProductInfo";
-import ProductTabs from "../components/productcard/ProductTabs";
-import SimilarProducts from "../components/productcard/SimilarProducts";
-import CustomerAlsoViewed from "../components/productcard/CustomerAlsoViewed";
+import ProductGallery from "../components/product/ProductGallery";
+import ProductInfo from "../components/product/ProductInfo";
+import ProductTabs from "../components/product/ProductTabs";
+import SimilarProducts from "../components/product/SimilarProducts";
+import CustomerAlsoViewed from "../components/product/CustomerAlsoViewed";
 import { fetchPages } from "../features/pages/pagesThunk";
 import { addRecentlyViewed } from "../components/utils/recentlyViewed";
 import LoginForm from "./Login";
@@ -26,7 +26,8 @@ import { getImageUrl } from "../components/utils/helper";
 import { Handbag, HeartIcon } from "lucide-react";
 import ProductSections, {
   SectionRenderer,
-} from "../components/productcard/ProductSections";
+} from "../components/product/ProductSections";
+import Productreviews from "../components/product/productreviews";
 
 export default function Product() {
   const { id } = useParams();
@@ -204,6 +205,11 @@ export default function Product() {
           </Row>
         </Section>
       )}
+
+      <Productreviews
+        productId={product?._id}
+        setShowLoginPopup={setShowLoginPopup}
+      />
 
       <CustomerAlsoViewed products={products} currentProductId={product?._id} />
 

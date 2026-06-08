@@ -42,6 +42,7 @@ import ServerDown from "./pages/Serverdownpage";
 import Loding from "./components/loding/loding";
 import { FaWhatsapp } from "react-icons/fa";
 import Allproducts from "./pages/Allproducts";
+import Allreviews from "./pages/allreviews";
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -91,7 +92,6 @@ function App() {
     const location = useLocation();
     const isShopPage = location.pathname === "/shop";
     const dispatch = useDispatch();
-    // const storeData = useSelector((state) => state.store.info);
     const {
       info: storeData,
       loadingInfo,
@@ -102,6 +102,14 @@ function App() {
       console.log("fetchStoreInfo called");
       dispatch(fetchStoreInfo());
     }, [dispatch]);
+
+    useEffect(() => {
+      console.log("RouterWrapper Mounted");
+
+      return () => {
+        console.log("RouterWrapper Unmounted");
+      };
+    }, []);
 
     useEffect(() => {
       const faviconUrl = storeData?.theme?.faviconUrl;
@@ -154,7 +162,7 @@ function App() {
           <Route path="/Home" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/allproducts" element={<Allproducts />} />
-
+          <Route path="/allreviews/:productId" element={<Allreviews />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/offer" element={<Offer />} />
           <Route path="/contact-us" element={<ContactUs />} />

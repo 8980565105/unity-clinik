@@ -7,6 +7,9 @@ export const ROUTES = {
     forgotPassword: "/auth/forgot-password",
     resetPassword: "/auth/reset-password",
   },
+  upload: {
+    image: "/uploads/image",
+  },
   navbar: {
     getAll: "/navbar",
     getPublic: "/navbar/public",

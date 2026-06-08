@@ -1312,7 +1312,21 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
               {(data?.items || []).map((item, i) => (
                 <div
                   key={i}
-                  className="snap-start flex-shrink-0 w-[85vw] sm:w-[340px] bg-[var(--ef3a96-9)] rounded-[24px] overflow-hidden shadow-sm border border-gray-100"
+                  className="
+    snap-start
+    flex-shrink-0
+    w-[85vw]
+    sm:w-[340px]
+    bg-[var(--ef3a96-9)]
+    rounded-[24px]
+    overflow-hidden
+    shadow-sm
+    border
+    border-gray-100
+    flex
+    flex-col
+    min-h-[500px]
+  "
                 >
                   {item.stageLabel && (
                     <div className="flex justify-center pt-4">
@@ -1357,19 +1371,22 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
                     </div>
                   </div>
 
-                  {item.reviewDescription && (
-                    <p className="px-4 pb-3 text-[13px] text-gray-600 leading-relaxed">
-                      {item.reviewDescription}
-                    </p>
-                  )}
+                  <div className="flex-1">
+                    {item.reviewDescription && (
+                      <p className="px-4 pb-3 text-[13px] text-gray-600 leading-relaxed">
+                        {item.reviewDescription}
+                      </p>
+                    )}
+                  </div>
 
-                  <div className="px-4 pb-4 border-t border-gray-100 pt-3">
+                  <div className="mt-auto px-4 pb-4 text-center border-gray-100 pt-3">
                     <p className="text-[14px] font-bold text-gray-900">
                       {item.customerName}
                       {item.customerAge ? `, ${item.customerAge}` : ""}
                     </p>
+
                     {item.verifiedReview !== false && (
-                      <div className="flex items-center gap-1 mt-1">
+                      <div className="flex items-center justify-center gap-1 mt-1">
                         <svg
                           className="w-4 h-4 text-green-500"
                           fill="currentColor"

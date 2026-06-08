@@ -322,8 +322,8 @@ export default function ProductInfo({
           )}
 
           {uiType === "Text" && (
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4 min-w-max pb-2">
+            <div className="">
+              <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
                 {(step?.variants || []).map((variant, variantIdx) => {
                   const link = getVariantLink(variant);
                   const isSelected = isVariantSelectedForStep(
@@ -340,12 +340,12 @@ export default function ProductInfo({
                       }
                     >
                       <button
-                        className={`min-w-[130px] h-[52px] px-5 rounded-[14px]
+                        className={`px-3 py-2 rounded-[8px]
                         border font-semibold text-[16px] transition-all duration-300
                         ${
                           isSelected
-                            ? "bg-[#005BAA] text-white border-[#005BAA]"
-                            : "bg-white text-[#005BAA] border-[#005BAA]"
+                            ? "bg-primary text-white border-primary"
+                            : "bg-white text-primary border-primary hover:bg-primary hover:text-white"
                         }`}
                       >
                         {variant.title}
@@ -358,8 +358,8 @@ export default function ProductInfo({
           )}
 
           {uiType === "Text with img" && (
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4 min-w-max pb-2">
+            <div className="">
+              <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
                 {(step?.variants || []).map((variant, variantIdx) => {
                   const link = getVariantLink(variant);
                   const isSelected = isVariantSelectedForStep(
@@ -380,9 +380,9 @@ export default function ProductInfo({
                         <div
                           className={`rounded-[14px] border p-[6px]
                           transition-all duration-300 overflow-hidden
-                          ${isSelected ? "border-[#005BAA]" : "border-[#DADADA]"}`}
+                          ${isSelected ? "border-primary" : "border-gray-300"}`}
                         >
-                          <div className="bg-[#EAF4FC] rounded-[10px] overflow-hidden">
+                          <div className="rounded-[10px] overflow-hidden">
                             <img
                               src={getImageUrl(variant.image)}
                               alt={variant.title}
@@ -393,7 +393,7 @@ export default function ProductInfo({
                         <div className="mt-2">
                           <p
                             className={`text-[15px] font-semibold leading-[20px]
-                            ${isSelected ? "text-[#005BAA]" : "text-black"}`}
+                            ${isSelected ? "text-primary" : "text-black"}`}
                           >
                             {variant.title}
                           </p>
@@ -407,8 +407,8 @@ export default function ProductInfo({
           )}
 
           {uiType === "Upgrade Product" && (
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-4 min-w-max pb-2">
+            <div className="">
+              <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
                 {(step?.variants || []).map((variant, variantIdx) => {
                   const link = getVariantLink(variant);
                   const isSelected = isVariantSelectedForStep(
@@ -426,31 +426,29 @@ export default function ProductInfo({
                       }
                     >
                       <div
-                        className={`w-[150px] rounded-[18px] overflow-hidden border
+                        className={`w-[105px] rounded-[18px] overflow-hidden border
                         transition-all duration-300 cursor-pointer
                         ${
                           isSelected
-                            ? "border-[#005BAA] border-2 shadow-md"
-                            : "border-[#005BAA]"
+                            ? "border-primary border-2 shadow-md"
+                            : "border-primary"
                         }`}
                       >
-                        <div className="bg-[#EAF4FC] h-[115px] overflow-hidden">
-                          <img
-                            src={getImageUrl(variant.image)}
-                            alt={variant.title}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                        <img
+                          src={getImageUrl(variant.image)}
+                          alt={variant.title}
+                          className="w-full h-full object-cover"
+                        />
                         <div
                           className={`px-3 py-3 min-h-[72px]
                           flex items-center justify-center text-center transition-all
                           ${
                             isSelected
-                              ? "bg-[#005BAA] text-white"
+                              ? "bg-primary text-white"
                               : "bg-white text-black"
                           }`}
                         >
-                          <p className="text-[15px] font-semibold leading-[22px]">
+                          <p className="text-[12px] font-semibold leading-[22px]">
                             {variant.title}
                           </p>
                         </div>
@@ -467,8 +465,8 @@ export default function ProductInfo({
               <h3 className="text-[34px] font-semibold mb-5">
                 Size : Pack of {selectedPackState?.badge || 1}
               </h3>
-              <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex gap-6 min-w-max pb-2">
+              <div className="">
+                <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
                   {(step?.variants || []).map((variant, variantIdx) => {
                     const savePercentage =
                       variant.price > 0
@@ -492,7 +490,7 @@ export default function ProductInfo({
                             image: variant.image,
                           })
                         }
-                        className={`w-[180px] rounded-[10px] bg-[#F8F8F8] border overflow-hidden
+                        className={`w-[150px] md:w-[180px] rounded-[10px] bg-[#F8F8F8] border overflow-hidden
                         transition-all duration-300 cursor-pointer hover:shadow-lg
                         ${
                           isPackSelected
@@ -501,12 +499,12 @@ export default function ProductInfo({
                         }`}
                       >
                         <div
-                          className={`h-[30px] flex items-center justify-center text-white font-bold text-[14px]
+                          className={`h-[30px]  flex items-center justify-center text-white font-bold text-[14px]
                           ${isPackSelected ? "bg-[#18A84B]" : "bg-[#4A5568]"}`}
                         >
                           SAVE {savePercentage}%
                         </div>
-                        <div className="h-[125px] flex items-center justify-center px-4 py-3">
+                        <div className="h-[125px] flex items-center justify-center">
                           <img
                             src={getImageUrl(variant.image)}
                             alt="pack"
@@ -522,7 +520,7 @@ export default function ProductInfo({
                           <p className="text-[#7B7B7B] text-[15px] line-through">
                             MRP: ₹{variant.price}
                           </p>
-                          <h2 className="text-[38px] font-bold leading-none text-black mt-1">
+                          <h2 className="text-[30px] font-bold leading-none text-black mt-1">
                             ₹{variant.offerprice}
                           </h2>
                         </div>

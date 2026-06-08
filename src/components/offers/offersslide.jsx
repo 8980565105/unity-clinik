@@ -4,7 +4,8 @@ import Section from "../ui/Section";
 import Row from "../ui/Row";
 import { fetchDiscounts } from "../../features/discounts/discountsThunk";
 import { fetchProducts } from "../../features/products/productsThunk";
-import ProductCard from "../productcard/ProductCard";
+import ProductCard from "../product/ProductCard";
+
 import NavBtn from "../ui/Navbtn";
 
 export default function OfferSlider({ setShowLoginPopup }) {

@@ -164,10 +164,16 @@ import { useSelector } from "react-redux";
 import NavBtn from "../ui/Navbtn";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
-import ProductCard from "../productcard/ProductCard";
+// import ProductCard from "../productcard/ProductCard";
 import Heading from "../ui/Heading";
+import ProductCard from "../product/ProductCard";
 
-const GAP = 16;
+const getGap = () => {
+  if (window.innerWidth <= 768) return 0;
+  
+  return 16;
+};
+const GAP = getGap();
 
 export default function TrendingClothes({ setShowLoginPopup }) {
   const { products = [], loading } = useSelector((state) => state.products);
@@ -302,7 +308,7 @@ export default function TrendingClothes({ setShowLoginPopup }) {
               ref={trackRef}
               className="flex"
               style={{
-                gap: `${GAP}px`,
+                gap: `${getGap()}px`,
                 transform: isCenter
                   ? "none"
                   : `translateX(-${currentIndexRef.current * getStep(cardWidth)}px)`,

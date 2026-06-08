@@ -212,29 +212,31 @@ export default function OtherRecommendedCard({
         "
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col">
             <h3
               className="
           text-[18px]
           font-medium
           leading-tight
           line-clamp-2
+          h-[50px] md:h-auto
         "
             >
               {product.name}
             </h3>
 
-            <div className="flex items-center flex-wrap gap-2 mt-2">
-              <span className="font-bold text-[20px] md:text-[30px]">
-                ₹{offerPrice}
-              </span>
-
-              {originalPrice > offerPrice && (
-                <span className="line-through text-[#bdbdbd]">
-                  ₹{originalPrice}
+            <div className="flex-cols md:flex-row items-center gap-2 mt-2">
+              <div className="flex items-center ">
+                <span className="font-bold text-[20px] md:text-[30px]">
+                  ₹{offerPrice}
                 </span>
-              )}
 
+                {originalPrice > offerPrice && (
+                  <span className="line-through text-[#bdbdbd]">
+                    ₹{originalPrice}
+                  </span>
+                )}
+              </div>
               {discount > 0 && (
                 <span
                   className="
@@ -254,7 +256,7 @@ export default function OtherRecommendedCard({
             {subtitle && (
               <p
                 className="
-            text-[#17396a]
+            text-primary
             font-semibold
             mt-2
             text-[16px]
@@ -264,7 +266,7 @@ export default function OtherRecommendedCard({
               </p>
             )}
 
-            <div className="mt-4">
+            <div className="mt-auto">
               {quantity === 0 ? (
                 <Button
                   onClick={(e) => {
@@ -274,7 +276,7 @@ export default function OtherRecommendedCard({
                   }}
                   variant="common"
                   className="
-             mt-3 rounded-[12px] w-[200px] border text-primary hover:text-white flex items-center justify-center gap-2 transition"
+             mt-3 rounded-[12px] w-full lg:w-[200px] border text-primary hover:text-white flex items-center justify-center gap-2 transition"
                 >
                   ADD
                 </Button>

@@ -484,43 +484,43 @@
 
 
 
-.no-scrollbar::-webkit-scrollbar {
+/* .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
+} */
 
 
 /* header overflow-auto-y */
 
 /* 🔥 Hide scrollbar (PharmEasy style) */
-.hide-scrollbar::-webkit-scrollbar {
+/* .hide-scrollbar::-webkit-scrollbar {
   width: 6px;
-}
+} */
 
-.hide-scrollbar::-webkit-scrollbar-track {
+/* .hide-scrollbar::-webkit-scrollbar-track {
   background: transparent;
-}
+} */
 
-.hide-scrollbar::-webkit-scrollbar-thumb {
+/* .hide-scrollbar::-webkit-scrollbar-thumb {
   background: #d1d5db; /* light gray */
-  border-radius: 10px;
-}
+  /* border-radius: 10px;
+} */
 
-.hide-scrollbar::-webkit-scrollbar-thumb:hover {
+/* .hide-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
-}
+} */ 
 
 /* Firefox */
-.hide-scrollbar {
+/* .hide-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #d1d5db transparent;
 }
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
-}
+} */
 
 
 @keyframes fadeInUp {
@@ -562,15 +562,24 @@
 }
 
 
-.scrollbar-hide::-webkit-scrollbar {
+/* .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
 
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
+} */
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
 }
 
+.hide-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
 /* produc detail page section */
 .rootCauseSwiper {
   /* width: 100%; */

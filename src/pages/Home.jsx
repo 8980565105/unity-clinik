@@ -36,6 +36,7 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchPageBySlug("Home"));
     dispatch(fetchProducts());
+    console.log("Home Mounted");
   }, [dispatch]);
 
   return (

@@ -73,6 +73,29 @@ const FIXED_NAV_ITEMS = [
     isMegaMenu: true,
     dropdownIcon: <ChevronDown className="w-4 h-4 ml-1 inline-block" />,
   },
+  {
+    name: "All Products",
+    path: "/allproducts",
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+        />
+      </svg>
+    ),
+    hasDropdown: true,
+    isAllproducts: true,
+    dropdownIcon: <ChevronDown className="w-4 h-4 ml-1 inline-block" />,
+  },
 ];
 
 const FALLBACK_EXTRA_ITEMS = [];
@@ -105,7 +128,6 @@ function SearchBar({ products, onNavigate }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
@@ -117,7 +139,7 @@ function SearchBar({ products, onNavigate }) {
   const handleSelect = (product) => {
     setIsOpen(false);
     setQuery("");
-    // Get first variant slug or use product _id
+
     const slug = product.slug || product._id;
     onNavigate(`/product/${slug}`);
   };
@@ -146,7 +168,6 @@ function SearchBar({ products, onNavigate }) {
   };
 
   const getProductImage = (product) => {
-    // Try product main image first, then first variant image
     if (product.images) return getImageUrl(product.images);
     const variantImg = product.variants?.[0]?.images?.[0];
     if (variantImg) return getImageUrl(variantImg);
@@ -324,6 +345,7 @@ const Header = () => {
   const isWishlistActive = location.pathname === "/wishlist";
   const isCartActive = location.pathname === "/cart";
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
+  const [isAllProductsOpen, setIsAllProductsOpen] = useState(false);
   const [isMobileMegaMenuOpen, setIsMobileMegaMenuOpen] = useState(false);
   const hoverTimeoutRef = useRef(null);
   const { items = [] } = useSelector((state) => state.cart);
@@ -377,6 +399,17 @@ const Header = () => {
   const handleMegaMenuMouseLeave = () => {
     hoverTimeoutRef.current = setTimeout(() => {
       setIsMegaMenuOpen(false);
+    }, 200);
+  };
+
+  const handleAllProductsEnter = () => {
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    setIsAllProductsOpen(true);
+  };
+
+  const handleAllProductsLeave = () => {
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsAllProductsOpen(false);
     }, 200);
   };
 
@@ -474,11 +507,25 @@ const Header = () => {
                 <li
                   key={i}
                   className="relative"
+                  // onMouseEnter={
+                  //   item.isMegaMenu ? handleShopMouseEnter : undefined
+                  // }
+                  // onMouseLeave={
+                  //   item.isMegaMenu ? handleShopMouseLeave : undefined
+                  // }
                   onMouseEnter={
-                    item.isMegaMenu ? handleShopMouseEnter : undefined
+                    item.isMegaMenu
+                      ? handleShopMouseEnter
+                      : item.isAllproducts
+                        ? handleAllProductsEnter
+                        : undefined
                   }
                   onMouseLeave={
-                    item.isMegaMenu ? handleShopMouseLeave : undefined
+                    item.isMegaMenu
+                      ? handleShopMouseLeave
+                      : item.isAllproducts
+                        ? handleAllProductsLeave
+                        : undefined
                   }
                 >
                   {item.isMegaMenu ? (
@@ -508,7 +555,7 @@ const Header = () => {
 
                       {isMegaMenuOpen && (
                         <div
-                          className="fixed left-0 right-0 top-[100px] bg-white z-50 form-shadow border-t border-primary flex min-h-[300px] max-w-[1400px] mx-auto w-full"
+                          className="fixed left-0 right-0 top-[74px] bg-white z-50 form-shadow flex min-h-[300px] max-w-[1400px] mx-auto w-full"
                           onMouseEnter={handleMegaMenuMouseEnter}
                           onMouseLeave={handleMegaMenuMouseLeave}
                         >
@@ -682,6 +729,39 @@ ${
                         item.dropdownIcon}
                     </NavLink>
                   )}
+
+                  {item.isAllproducts && isAllProductsOpen && (
+                    <div
+                      className="fixed left-0 right-0 top-[74px] bg-white z-50 form-shadow flex min-h-[300px] max-w-[1400px] mx-auto w-full"
+                      onMouseEnter={handleAllProductsEnter}
+                      onMouseLeave={handleAllProductsLeave}
+                    >
+                      <Row className="h-[400px] overflow-y-auto hide-scrollbar">
+                        <div className="flex flex-wrap gap-5 mt-5 overflow-y-auto pb-4">
+                          {products.map((product) => (
+                            <Link
+                              key={product._id}
+                              to={`/products/${product._id}`}
+                              onClick={() => setIsAllProductsOpen(false)}
+                              className="flex-shrink-0 w-[180px] group"
+                            >
+                              <div className="border rounded-xl p-3 hover:shadow-lg transition">
+                                <img
+                                  src={getImageUrl(product.images)}
+                                  alt={product.name}
+                                  className="w-full h-[140px] object-cover rounded-lg"
+                                />
+
+                                <h4 className="mt-3 text-sm font-medium line-clamp-2 text-center h-[50px]">
+                                  {product.name}
+                                </h4>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </Row>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
@@ -693,7 +773,6 @@ ${
             <Button
               variant="common"
               className="!min-w-[113px] !py-[10px] !px-[20px] flex items-center rounded-full"
-              // className="mt-3 w-full border text-white hover:text-white rounded-full py-2 flex items-center justify-center gap-2 transition"
               onClick={() => {
                 if (!token) setIsLoginOpen(true);
               }}
@@ -784,10 +863,7 @@ ${
               <FaWhatsapp size={25} className="text-black" />
             </button>
 
-            {/* <button> */}
-            {/* <Search size={22} /> */}
             <SearchBar products={products} onNavigate={navigate} />
-            {/* </button> */}
 
             <button
               onClick={() => openProtectedLink("/wishlist")}
@@ -836,7 +912,7 @@ ${
         }`}
       >
         <button
-          className="absolute top-4 right-2 transition-colors text-light border rounded-[3px] p-[5px] border-[#D2AF9F]"
+          className="absolute top-4 bg-white right-2 transition-colors text-light border rounded-[3px] p-[5px] border-[#D2AF9F]"
           onClick={() => setIsMenuOpen(false)}
         >
           <XCircleIcon size={22} />
@@ -871,6 +947,18 @@ ${
                           }`}
                         />
                       </button>
+                      {item.isAllproducts && (
+                        <button
+                          onClick={() => setIsAllProductsOpen((prev) => !prev)}
+                          className="py-4 px-4 border-l border-gray-100"
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform duration-300 ${
+                              isAllProductsOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      )}
                     </div>
 
                     {isMobileMegaMenuOpen && (
@@ -961,6 +1049,73 @@ ${
                   </div>
                 );
               }
+
+              if (item.isAllproducts) {
+                return (
+                  <div key={i}>
+                    <div
+                      className={`flex items-center text-light w-full ${
+                        isOdd ? "light-color" : "bg-white"
+                      }`}
+                    >
+                      <Link
+                        to={item.path}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="flex items-center gap-3 py-4 px-4 flex-1"
+                      >
+                        {item.icon}
+                        <span>{item.name}</span>
+                      </Link>
+
+                      {item.isAllproducts && (
+                        <button
+                          onClick={() => setIsAllProductsOpen((prev) => !prev)}
+                          className="py-4 px-4 border-l border-gray-100"
+                        >
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform duration-300 ${
+                              isAllProductsOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
+
+                    {item.isAllproducts && isAllProductsOpen && (
+                      <div className="bg-white p-3">
+                        <div className="flex flex-col overflow-y-auto pb-2">
+                          {products.map((product) => (
+                            <Link
+                              key={product._id}
+                              to={`/products/${product._id}`}
+                              onClick={() => {
+                                setIsAllProductsOpen(false);
+                                setIsMenuOpen(false);
+                              }}
+                              className="flex-shrink-0 w-full border-b border-black py-2"
+                            >
+                              <div className="flex gap-2 items-center">
+                                <div className="w-[50px] h-[50px]  overflow-hidden border border-gray-200">
+                                  <img
+                                    src={getImageUrl(product.images)}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+
+                                <p className="mt-2 w-full text-[12px] text-start line-clamp-2 font-medium">
+                                  {product.name}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <NavLink
                   key={i}
@@ -976,9 +1131,9 @@ ${
                 </NavLink>
               );
             })}
-            <div className="flex items-center justify-center h-[30px]">
-              <hr className="w-full border-t border-dashed border-gray-400" />
-            </div>
+            {/* <div className="flex items-center justify-center h-[30px]"> */}
+            {/* <hr className="w-full border-t border-dashed border-gray-400" /> */}
+            {/* </div> */}
 
             <div className="text-light">
               <div className="py-4 px-4 cursor-pointer light-color">
@@ -1007,45 +1162,42 @@ ${
               </div>
             </div>
           </nav>
-        </div>
-        {/* <div className="flex justify-center gap-3 sticky bottom-5">
-          <Button variant="common">Sing up</Button>
-          <Button variant="common">login</Button>
-        </div> */}
-        <div className="flex justify-center gap-3 sticky bottom-5 px-4">
-          {!token ? (
-            <>
-              <Button
-                variant="common"
-                onClick={() => {
-                  setIsRegisterOpen(true);
-                  setIsMenuOpen(false);
-                }}
-              >
-                Sign Up
-              </Button>
 
+          <div className="flex justify-center gap-3 px-4 pb-5">
+            {!token ? (
+              <>
+                <Button
+                  variant="common"
+                  onClick={() => {
+                    setIsRegisterOpen(true);
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Sign Up
+                </Button>
+
+                <Button
+                  variant="common"
+                  onClick={() => {
+                    setIsLoginOpen(true);
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Login
+                </Button>
+              </>
+            ) : (
               <Button
                 variant="common"
                 onClick={() => {
-                  setIsLoginOpen(true);
+                  handleLogout();
                   setIsMenuOpen(false);
                 }}
               >
-                Login
+                Logout
               </Button>
-            </>
-          ) : (
-            <Button
-              variant="common"
-              onClick={() => {
-                handleLogout();
-                setIsMenuOpen(false);
-              }}
-            >
-              Logout
-            </Button>
-          )}
+            )}
+          </div>
         </div>
       </div>
       {isLoginOpen && (
