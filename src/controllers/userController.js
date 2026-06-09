@@ -241,7 +241,6 @@ const updateUser = async (req, res) => {
       name,
       email,
       mobile_number,
-      // address,
       addresses,
       gender,
       date_of_birth,
