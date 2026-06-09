@@ -1,69 +1,92 @@
-  import { createSlice } from "@reduxjs/toolkit";
-  import {
-    addReview,
-    fetchAllReviews,
-    fetchProductReviews,
-  } from "./reviewsThunk";
+import { createSlice } from "@reduxjs/toolkit";
+import {
+  addReview,
+  fetchAllReviews,
+  fetchProductReviews,
+} from "./reviewsThunk";
 
-  const reviewsSlice = createSlice({
-    name: "reviews",
-    initialState: {
-      loading: false,
-      error: null,
-      success: false,
-      productReviews: {},
-      allReviews: [],
+const reviewsSlice = createSlice({
+  name: "reviews",
+  initialState: {
+    loading: false,
+    error: null,
+    success: false,
+    productReviews: {},
+    allReviews: [],
+  },
+  reducers: {
+    resetReviewStatus: (state) => {
+      state.success = false;
+      state.error = null;
     },
-    reducers: {
-      resetReviewStatus: (state) => {
-        state.success = false;
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(addReview.pending, (state) => {
+        state.loading = true;
         state.error = null;
-      },
-    },
-    extraReducers: (builder) => {
-      builder
-        .addCase(addReview.pending, (state) => {
-          state.loading = true;
-          state.error = null;
-        })
-        .addCase(addReview.fulfilled, (state) => {
-          state.loading = false;
-          state.success = true;
-        })
-        .addCase(addReview.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        })
+      })
+      .addCase(addReview.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+      })
+      .addCase(addReview.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
-        .addCase(fetchProductReviews.pending, (state) => {
-          state.loading = true;
-          state.error = null;
-        })
-        .addCase(fetchProductReviews.fulfilled, (state, action) => {
-          state.loading = false;
-          const productId = action.meta.arg?.productId;
-          if (productId) {
-            state.productReviews[productId] = action.payload?.data || {};
+      .addCase(fetchProductReviews.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchProductReviews.fulfilled, (state, action) => {
+        state.loading = false;
+        const productId = action.meta.arg?.productId;
+        if (productId) {
+          state.productReviews[productId] = action.payload?.data || {};
+        }
+      })
+      .addCase(fetchProductReviews.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(fetchAllReviews.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      // .addCase(fetchAllReviews.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.allReviews = action.payload?.data?.customerReviews || [];
+      // })
+      .addCase(fetchAllReviews.fulfilled, (state, action) => {
+        state.loading = false;
+        const allReviews = action.payload?.data?.customerReviews || [];
+
+        // flat array ne product_id by group karo
+        allReviews.forEach((review) => {
+          const pid = review.product_id?.toString();
+          if (!pid) return;
+
+          if (!state.productReviews[pid]) {
+            state.productReviews[pid] = { reviews: [] };
           }
-        })
-        .addCase(fetchProductReviews.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        })
-        .addCase(fetchAllReviews.pending, (state) => {
-          state.loading = true;
-          state.error = null;
-        })
-        .addCase(fetchAllReviews.fulfilled, (state, action) => {
-          state.loading = false;
-          state.allReviews = action.payload?.data?.customerReviews || []; 
-        })
-        .addCase(fetchAllReviews.rejected, (state, action) => {
-          state.loading = false;
-          state.error = action.payload;
-        });
-    },
-  });
 
-  export const { resetReviewStatus } = reviewsSlice.actions;
-  export default reviewsSlice.reducer;
+          // duplicate avoid karo
+          const exists = state.productReviews[pid].reviews.some(
+            (r) => r._id === review._id,
+          );
+
+          if (!exists) {
+            state.productReviews[pid].reviews.push(review);
+          }
+        });
+      })
+      .addCase(fetchAllReviews.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  },
+});
+
+export const { resetReviewStatus } = reviewsSlice.actions;
+export default reviewsSlice.reducer;

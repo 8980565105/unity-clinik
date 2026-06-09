@@ -407,8 +407,8 @@ export default function ProductInfo({
           )}
 
           {uiType === "Upgrade Product" && (
-            <div className="">
-              <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
+            <div>
+              <div className="flex gap-x-3 gap-y-2 flex-wrap items-stretch pb-2 justify-start">
                 {(step?.variants || []).map((variant, variantIdx) => {
                   const link = getVariantLink(variant);
                   const isSelected = isVariantSelectedForStep(
@@ -416,6 +416,7 @@ export default function ProductInfo({
                     currentNonPackIndex,
                     currentProductId,
                   );
+
                   return (
                     <Link
                       key={variantIdx}
@@ -426,29 +427,44 @@ export default function ProductInfo({
                       }
                     >
                       <div
-                        className={`w-[105px] rounded-[18px] overflow-hidden border
-                        transition-all duration-300 cursor-pointer
-                        ${
-                          isSelected
-                            ? "border-primary border-2 shadow-md"
-                            : "border-primary"
-                        }`}
+                        className={`
+            flex flex-col
+            items-stretch
+            w-[105px]
+            h-full          
+            border
+            rounded-xl
+            overflow-hidden
+            transition-all duration-300
+            ${
+              isSelected
+                ? "bg-primary border-primary text-white"
+                : "bg-white border-primary text-black"
+            }
+          `}
                       >
-                        <img
-                          src={getImageUrl(variant.image)}
-                          alt={variant.title}
-                          className="w-full h-full object-cover"
-                        />
+                        <div className="w-full h-[110px] flex-shrink-0 flex items-center justify-center">
+                          <img
+                            src={getImageUrl(variant.image)}
+                            alt={variant.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
                         <div
-                          className={`px-3 py-3 min-h-[72px]
-                          flex items-center justify-center text-center transition-all
-                          ${
-                            isSelected
-                              ? "bg-primary text-white"
-                              : "bg-white text-black"
-                          }`}
+                          className={`
+              flex-grow
+              flex
+              w-full
+              p-1
+              flex-col
+              justify-center
+              items-center
+              text-center
+              ${isSelected ? "bg-primary text-white" : "bg-white text-black"}
+            `}
                         >
-                          <p className="text-[12px] font-semibold leading-[22px]">
+                          <p className="text-xs font-semibold break-words">
                             {variant.title}
                           </p>
                         </div>
@@ -490,7 +506,7 @@ export default function ProductInfo({
                             image: variant.image,
                           })
                         }
-                        className={`w-[150px] md:w-[180px] rounded-[10px] bg-[#F8F8F8] border overflow-hidden
+                        className={`w-[120px] md:w-[180px] rounded-[10px] bg-[#F8F8F8] border overflow-hidden
                         transition-all duration-300 cursor-pointer hover:shadow-lg
                         ${
                           isPackSelected
@@ -504,28 +520,28 @@ export default function ProductInfo({
                         >
                           SAVE {savePercentage}%
                         </div>
-                        <div className="h-[125px] flex items-center justify-center">
+                        <div className="py-2 flex items-center justify-center">
                           <img
                             src={getImageUrl(variant.image)}
                             alt="pack"
-                            className="max-h-[95px] object-contain"
+                            className="max-h-[80px] object-contain"
                           />
                         </div>
                         <div className="px-3">
-                          <div className="bg-[#17243D] text-white rounded-[5px] text-center py-[8px] font-semibold text-[16px]">
+                          <div className="bg-[#17243D] text-white rounded-[5px] text-center py-[8px] font-semibold text-[14px] md:text-[18px]">
                             Pack of {variant.badge}
                           </div>
                         </div>
                         <div className="text-center py-3">
-                          <p className="text-[#7B7B7B] text-[15px] line-through">
+                          <p className="text-[#7B7B7B] text-[14px] md:text-[16px] line-through">
                             MRP: ₹{variant.price}
                           </p>
-                          <h2 className="text-[30px] font-bold leading-none text-black mt-1">
+                          <h2 className="text-[20px] md:text-[30px] font-bold leading-none text-black mt-1">
                             ₹{variant.offerprice}
                           </h2>
                         </div>
                         {variantIdx === 1 && (
-                          <div className="bg-[#18A84B] text-white text-center text-[15px] font-semibold py-[7px]">
+                          <div className="bg-[#18A84B] text-white text-center text-[12px] md:text-[15px] font-semibold py-[7px]">
                             Most Popular
                           </div>
                         )}

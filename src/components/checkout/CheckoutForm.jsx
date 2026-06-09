@@ -5,16 +5,16 @@ import {
   X,
   Phone,
   ShoppingBag,
-  Tag,
   Star,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getImageUrl } from "../utils/helper";
-import axios from "axios";
+// import axios from "axios";
 import toast from "react-hot-toast";
 import Button from "../ui/Button";
+import api from "../../services/api";
 
 function ProductPopup({ item, onClose }) {
   const navigate = useNavigate();
@@ -119,6 +119,7 @@ function ProductPopup({ item, onClose }) {
 
 function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
   const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -134,37 +135,76 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const required = [
+  //     "fullName",
+  //     "phone",
+  //     "email",
+  //     "house",
+  //     "street",
+  //     "city",
+  //     "state",
+  //     "zip_code",
+  //   ];
+  //   for (const key of required) {
+  //     if (!form[key]?.trim()) {
+  //       toast.error(`Please fill: ${key}`);
+  //       return;
+  //     }
+  //   }
+  //   try {
+  //     setLoading(true);
+  //     // const token = localStorage.getItem("token");
+  //     // const updated = [...existingAddresses, form];
+  //     const updated = [
+  //       ...(Array.isArray(existingAddresses) ? existingAddresses : []),
+  //       form,
+  //     ];
+  //     // await axios.put(
+  //     //   Basic_url + "/users/me",
+  //     //   { addresses: updated },
+  //     //   { headers: { Authorization: `Bearer ${token}` } },
+  //     // );
+  //     await api.put("/users/me", {
+  //       addresses: updated,
+  //     });
+  //     toast.success("Address saved!");
+  //     onSaved(updated, updated.length - 1);
+  //     onClose();
+  //   } catch {
+  //     toast.error("Failed to save address");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const required = [
-      "fullName",
-      "phone",
-      "email",
-      "house",
-      "street",
-      "city",
-      "state",
-      "zip_code",
-    ];
-    for (const key of required) {
-      if (!form[key]?.trim()) {
-        toast.error(`Please fill: ${key}`);
-        return;
-      }
-    }
+
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      const updated = [...existingAddresses, form];
-      await axios.put(
-        "http://localhost:5000/api/users/me",
-        { addresses: updated },
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
+
+      const updated = [
+        ...(Array.isArray(existingAddresses) ? existingAddresses : []),
+        form,
+      ];
+
+      if (form.phone.length !== 10) {
+        toast.error("Phone number must be 10 digits");
+        return;
+      }
+
+      await api.put("/users/me", {
+        addresses: updated,
+      });
+
       toast.success("Address saved!");
+
       onSaved(updated, updated.length - 1);
       onClose();
-    } catch {
+    } catch (err) {
+      console.log(err);
       toast.error("Failed to save address");
     } finally {
       setLoading(false);
@@ -190,31 +230,68 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
             {[
               {
                 name: "fullName",
-                placeholder: "Full Name *",
+                label: "Full name *",
+                placeholder: "Full Name ",
                 required: "required",
               },
-              { name: "phone", placeholder: "Phone *", required: "required" },
-              { name: "email", placeholder: "email" },
-              { name: "house", placeholder: "House No & Flat " },
-              { name: "street", placeholder: "Street & Area " },
-              { name: "city", placeholder: "City" },
-              { name: "state", placeholder: "State", required: "required" },
+              {
+                name: "phone",
+                label: "phone *",
+                placeholder: "Phone *",
+                required: "required",
+              },
+              { name: "email", label: "email", placeholder: "email" },
+              {
+                name: "house",
+                label: "house",
+                placeholder: "House No & Flat ",
+              },
+              {
+                name: "street",
+                label: "street *",
+                placeholder: "Street & Area ",
+              },
+              { name: "city", label: "city", placeholder: "City" },
+              {
+                name: "state",
+                label: "state",
+                placeholder: "State",
+                required: "required",
+              },
               {
                 name: "zip_code",
+                label: "zip code",
                 placeholder: "Zip Code",
                 required: "required",
               },
-              { name: "country", placeholder: "Country" },
-            ].map(({ name, placeholder, required }) => (
-              <input
-                key={name}
-                name={name}
-                placeholder={placeholder}
-                value={form[name]}
-                onChange={handleChange}
-                className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                required={required}
-              />
+              { name: "country", label: "country", placeholder: "Country" },
+            ].map(({ name, placeholder, required, label }) => (
+              <>
+                <label>{label}</label>
+                <input
+                  key={name}
+                  name={name}
+                  placeholder={placeholder}
+                  value={form[name]}
+                  // onChange={handleChange}
+                  onChange={(e) => {
+                    if (name === "phone") {
+                      const value = e.target.value.replace(/\D/g, "");
+
+                      if (value.length <= 10) {
+                        setForm((prev) => ({
+                          ...prev,
+                          phone: value,
+                        }));
+                      }
+                    } else {
+                      handleChange(e);
+                    }
+                  }}
+                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                  required={required}
+                />
+              </>
             ))}
           </div>
           <div className="flex justify-end gap-3 pt-2">
@@ -247,9 +324,6 @@ function SelectedAddressCard({ address }) {
         <div className="flex items-center gap-2">
           <span className="bg-primary text-white text-[11px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide">
             {address.city || address.fullName}
-          </span>
-          <span className="font-semibold text-sm text-gray-800 line-clamp-1">
-            {address.street}
           </span>
         </div>
         <span className="text-[11px] font-bold text-primary bg-blue-50 border border-primary px-2.5 py-1 rounded-lg tracking-wide flex-shrink-0">
@@ -400,10 +474,7 @@ export default function CheckoutForm({ formData, setFormData }) {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5000/api/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await api.get("/users/me");
         const savedAddresses = res.data?.data?.user?.addresses || [];
         setAddresses(savedAddresses);
         if (savedAddresses.length > 0) {
@@ -471,7 +542,7 @@ export default function CheckoutForm({ formData, setFormData }) {
             <Button
               variant="outline"
               onClick={() => setShowPopup(true)}
-              className="flex items-center gap-1.5  font-semibold text-[13px] hover:underline"
+              className="flex items-center gap-1.5 !min-w-[140px]  font-semibold text-[13px] hover:underline"
             >
               <Plus size={15} />
               Add New
@@ -494,13 +565,14 @@ export default function CheckoutForm({ formData, setFormData }) {
               <p className="text-gray-400 text-xs mb-4">
                 Add your delivery address to continue
               </p>
-              <button
+              <Button
+                variant="common"
                 onClick={() => setShowPopup(true)}
-                className="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2  text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors"
               >
                 <Plus size={15} />
                 Add New Address
-              </button>
+              </Button>
             </div>
           ) : (
             <>

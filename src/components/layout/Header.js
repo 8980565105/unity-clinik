@@ -136,14 +136,12 @@ function SearchBar({ products, onNavigate }) {
 
   const handleOpen = () => setIsOpen(true);
 
-  const handleSelect = (product) => {
+  const handleSelect = ({ _id }) => {
     setIsOpen(false);
     setQuery("");
 
-    const slug = product.slug || product._id;
-    onNavigate(`/product/${slug}`);
+    onNavigate(`/products/${_id}`);
   };
-
   const getImageUrl = (url) => {
     if (!url) return null;
     if (url.startsWith("http")) return url;

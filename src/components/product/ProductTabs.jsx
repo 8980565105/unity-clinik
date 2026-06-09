@@ -37,9 +37,13 @@ export default function ProductTabs({ product, selectedVariant }) {
 
       <div className="border border-[#BCBCBC] border-t-0 px-[10px] py-[45px]">
         {activeTab === "Details" && (
-          <div className="prose max-w-full">
+          // <div className="prose max-w-full">
+          <div className="prose max-w-full product-description">
             {activeDescription ? (
-              <div dangerouslySetInnerHTML={{ __html: activeDescription }} />
+              <div
+                className="overflow-x-auto"
+                dangerouslySetInnerHTML={{ __html: activeDescription }}
+              />
             ) : (
               <p>Product details coming soon.</p>
             )}
@@ -47,17 +51,18 @@ export default function ProductTabs({ product, selectedVariant }) {
         )}
 
         {activeTab === "How to Use" && (
-          <div className="prose max-w-full">
+          <div className="prose max-w-full product-description">
             {activeSteps ? (
-              <div dangerouslySetInnerHTML={{ __html: activeSteps }} />
+              <div
+                className="overflow-x-auto"
+                dangerouslySetInnerHTML={{ __html: activeSteps }}
+              />
             ) : (
               <p>How to use information coming soon.</p>
             )}
           </div>
         )}
       </div>
-
-  
     </div>
   );
 }

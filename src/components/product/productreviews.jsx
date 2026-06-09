@@ -25,7 +25,7 @@ function Productreviews({ productId, setShowLoginPopup }) {
     loading: reviewLoading,
   } = useSelector((state) => state.reviews);
 
-  const [visibleReviews, setVisibleReviews] = useState(2);
+  const [visibleReviews, setVisibleReviews] = useState(5);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [beforePreview, setBeforePreview] = useState("");
   const [afterPreview, setAfterPreview] = useState("");
@@ -250,7 +250,7 @@ function Productreviews({ productId, setShowLoginPopup }) {
                 <Button
                   variant="outline"
                   onClick={() => navigate(`/allreviews/${productId}`)}
-                  className="border w-full items-center font-bold"
+                  className="border w-full !min-w-[150PX] items-center font-bold"
                 >
                   View More Reviews
                 </Button>

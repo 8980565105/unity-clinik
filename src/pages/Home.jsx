@@ -22,6 +22,8 @@ import Section from "../components/ui/Section.jsx";
 import Loding from "../components/loding/loding.jsx";
 import { getImageUrl } from "../components/utils/helper.js";
 import Banner4 from "../components/home/banner4.jsx";
+import { fetchAllReviews } from "../features/reivews/reviewsThunk.js";
+import SuccessStorySection from "../components/home/SuccessStory.jsx";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -32,6 +34,7 @@ const Home = () => {
   const banner2 = slides.find((s) => s.section === "banner2");
   const desktopImg = getImageUrl(banner2?.banner2?.image);
   const mobileImg = getImageUrl(banner2?.banner2?.mobileimg);
+  const { products = [] } = useSelector((state) => state.products);
 
   useEffect(() => {
     dispatch(fetchPageBySlug("Home"));
@@ -39,9 +42,18 @@ const Home = () => {
     console.log("Home Mounted");
   }, [dispatch]);
 
+  useEffect(() => {
+    if (products.length > 0) {
+      dispatch(fetchAllReviews({ page: 1, limit: 500 }));
+    }
+  }, [products.length, dispatch]);
   return (
     <>
-      {slugLoading && <Loding />}
+      {slugLoading && (
+        <div className="fixed inset-0 bg-white z-[9999] flex items-center justify-center">
+          <Loding />
+        </div>
+      )}
       <SEO
         title={homePage?.meta_title}
         description={homePage?.meta_description}
@@ -50,6 +62,9 @@ const Home = () => {
       <div className="text-center">
         <Toaster position="top center" />
         <Hero1 />
+
+        <SuccessStorySection />
+
         <Bestsellers setShowLoginPopup={setShowLoginPopup} />
         <BannerSlider />
         <Section className="w-full">

@@ -1041,11 +1041,19 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
               pagination={{ clickable: true }}
               autoplay={{ delay: 3000, disableOnInteraction: false }}
               loop={recommendedProducts.length > 1}
-              spaceBetween={24}
               breakpoints={{
-                0: { slidesPerView: 2 },
-                678: { slidesPerView: 3 },
-                1024: { slidesPerView: 4 },
+                0: {
+                  slidesPerView: 1.5,
+                  spaceBetween: 0,
+                },
+                678: {
+                  slidesPerView: 3,
+                  spaceBetween: 20,
+                },
+                1024: {
+                  slidesPerView: 4,
+                  spaceBetween: 24,
+                },
               }}
               className="!pb-12 !pt-5 !mt-5 !flex !justify-center"
             >

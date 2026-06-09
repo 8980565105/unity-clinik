@@ -6,11 +6,9 @@ import Row from "../components/ui/Row";
 import AboutBanner from "../components/aboutbanner/aboutbanner";
 import AboutContent from "../components/aboutbanner/aboutcontent";
 import { getImageUrl } from "../components/utils/helper";
-// import feature1 from "../assets/feature1.png";
-// import feature2 from "../assets/feature2.png";
-// import feature3 from "../assets/feature3.png";
 import SEO from "../components/seo/seo.js";
 import Loding from "../components/loding/loding.jsx";
+import SuccessStorySection from "../components/home/SuccessStory.jsx";
 export default function AboutPage() {
   const dispatch = useDispatch();
   const { pages, slugLoading } = useSelector((state) => state.pages);
@@ -66,6 +64,8 @@ export default function AboutPage() {
           </Row>
         </Section>
       )}
+
+      <SuccessStorySection />
     </>
   );
 }

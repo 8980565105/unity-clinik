@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Button from "../ui/Button";
 import { Plus } from "lucide-react";
-import axios from "axios";
+// import axios from "axios";
 import toast from "react-hot-toast";
+import api from "../../services/api";
 
 function Address() {
   const [showForm, setShowForm] = useState(false);
@@ -22,19 +23,33 @@ function Address() {
     zip_code: "",
   });
 
+
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get("http://localhost:5000/api/users/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await api.get("/users/me");
 
       setAddresses(res.data.data.user.addresses || []);
     } catch (err) {
       console.log(err);
+    }
+  };
+
+  const saveAddressesToDB = async (updatedAddresses) => {
+    try {
+      setLoading(true);
+
+      await api.put("/users/me", {
+        addresses: updatedAddresses,
+      });
+
+      toast.success("Address saved successfully");
+
+      fetchProfile();
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to save address");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -67,34 +82,7 @@ function Address() {
     setEditIndex(null);
   };
 
-  const saveAddressesToDB = async (updatedAddresses) => {
-    try {
-      setLoading(true);
 
-      const token = localStorage.getItem("token");
-
-      await axios.put(
-        "http://localhost:5000/api/users/me",
-        {
-          addresses: updatedAddresses,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      toast.success("Address saved successfully");
-
-      fetchProfile();
-    } catch (err) {
-      console.log(err);
-      toast.error("Failed to save address");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,7 +120,8 @@ function Address() {
   };
 
   return (
-    <div className="space-y-5">
+    // <div className="space-y- md:space-y-5">
+    <>
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold">Saved Addresses</h2>
 
@@ -336,7 +325,8 @@ function Address() {
           </div>
         </div>
       )}
-    </div>
+    </>
+    // </div>
   );
 }
 

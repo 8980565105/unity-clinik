@@ -655,3 +655,55 @@
 .whatsapp-pulse {
   animation: whatsappPulse 1.8s infinite;
 }
+
+
+/* product description */
+
+.product-description table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.product-description table td,
+.product-description table th {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+@media (max-width: 768px) {
+  .product-description {
+    overflow-x: auto;
+  }
+
+  .product-description table {
+    min-width: 500px;
+  }
+}
+.product-description table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.product-description img {
+  max-width: 100%;
+  height: auto;
+}
+
+.product-description iframe {
+  max-width: 100%;
+}
+
+@media (max-width: 640px) {
+  .product-description table {
+    min-width: 600px;
+  }
+}
+
+
+video {
+  object-fit: fill;
+}
+
+video:fullscreen {
+  object-fit: contain;
+}

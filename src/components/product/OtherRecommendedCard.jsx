@@ -192,7 +192,7 @@ export default function OtherRecommendedCard({
       px-3
       py-1
       rounded-lg
-      z-20"
+      z-10"
           >
             {badge}
           </div>

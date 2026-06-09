@@ -87,123 +87,120 @@ const injectThemeColors = (theme) => {
   }
 };
 
-function App() {
-  const RouterWrapper = () => {
-    const location = useLocation();
-    const isShopPage = location.pathname === "/shop";
-    const dispatch = useDispatch();
-    const {
-      info: storeData,
-      loadingInfo,
-      errorInfo,
-    } = useSelector((state) => state.store);
+const RouterWrapper = () => {
+  const location = useLocation();
+  const isShopPage = location.pathname === "/shop";
+  const dispatch = useDispatch();
+  const {
+    info: storeData,
+    loadingInfo,
+    errorInfo,
+  } = useSelector((state) => state.store);
 
-    useEffect(() => {
-      console.log("fetchStoreInfo called");
-      dispatch(fetchStoreInfo());
-    }, [dispatch]);
+  useEffect(() => {
+    console.log("fetchStoreInfo called");
+    dispatch(fetchStoreInfo());
+  }, [dispatch]);
 
-    useEffect(() => {
-      console.log("RouterWrapper Mounted");
+  useEffect(() => {
+    console.log("RouterWrapper Mounted");
 
-      return () => {
-        console.log("RouterWrapper Unmounted");
-      };
-    }, []);
-
-    useEffect(() => {
-      const faviconUrl = storeData?.theme?.faviconUrl;
-      if (!faviconUrl) return;
-      const baseURL = process.env.REACT_APP_API_URL_IMAGE;
-      const fullUrl = faviconUrl.startsWith("http")
-        ? faviconUrl
-        : `${baseURL}${faviconUrl}`;
-      let link = document.querySelector("link[rel='icon']");
-      if (!link) {
-        link = document.createElement("link");
-        link.rel = "icon";
-        document.head.appendChild(link);
-      }
-      link.href = fullUrl;
-    }, [storeData]);
-
-    useEffect(() => {
-      if (storeData?.theme) {
-        injectThemeColors(storeData.theme);
-      }
-    }, [storeData]);
-
-    if (loadingInfo) {
-      return (
-        <div className="min-h-screen flex items-center justify-center">
-          <Loding />
-        </div>
-      );
-    }
-
-    if (errorInfo) {
-      return <ServerDown />;
-    }
-
-    const openWhatsApp = () => {
-      const phone = "919327148908";
-
-      const message = encodeURIComponent("Hi, I want consultation");
-
-      window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+    return () => {
+      console.log("RouterWrapper Unmounted");
     };
+  }, []);
 
+  useEffect(() => {
+    const faviconUrl = storeData?.theme?.faviconUrl;
+    if (!faviconUrl) return;
+    const baseURL = process.env.REACT_APP_API_URL_IMAGE;
+    const fullUrl = faviconUrl.startsWith("http")
+      ? faviconUrl
+      : `${baseURL}${faviconUrl}`;
+    let link = document.querySelector("link[rel='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.href = fullUrl;
+  }, [storeData]);
+
+  useEffect(() => {
+    if (storeData?.theme) {
+      injectThemeColors(storeData.theme);
+    }
+  }, [storeData]);
+
+  if (loadingInfo) {
     return (
-      <>
-        <ScrollToTop />
-        <Header hideOnMobileShopPage={isShopPage} />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/Home" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/allproducts" element={<Allproducts />} />
-          <Route path="/allreviews/:productId" element={<Allreviews />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/offer" element={<Offer />} />
-          <Route path="/contact-us" element={<ContactUs />} />
-          <Route path="/account-details" element={<MyAccount />}>
-            {/* <Route path="dashboard" element={<Dashboard />} /> */}
-            {/* <Route path="account-details" element={<AccountDetails />} /> */}
-          </Route>
-          <Route path="/cart" element={<Cart />}></Route>
-          {/* <Route path="/updatecart" element={<Updatecart />}></Route> */}
-          <Route path="/checkout" element={<Checkout />}></Route>
-          <Route path="/products/:id" element={<Product />}></Route>
-          <Route path="/wishlist" element={<Wishlist />}></Route>
-          <Route path="/faqs" element={<Faqs />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/results" element={<Result />} />
-          <Route path="/ordercompleted" element={<OrderComplete />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/refundpolicy" element={<RefundPolicy />} />
-          <Route path="/termService" element={<TermService />} />
-          <Route path="/shippingpolicy" element={<ShippingPolicy />} />
-          <Route
-            path="/payment/phonepe/callback"
-            element={<PhonePeCallback />}
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-
-        <div className="fixed bottom-[70px] md:bottom-[100px] right-[15px] z-50">
-          <button
-            className="bg-green-500 rounded-full p-3 whatsapp-pulse shadow-lg"
-            onClick={openWhatsApp}
-          >
-            <FaWhatsapp size={30} className="text-white" />
-          </button>
-        </div>
-
-        <Footer />
-      </>
+      <div className="min-h-screen flex items-center justify-center">
+        <Loding />
+      </div>
     );
+  }
+
+  if (errorInfo) {
+    return <ServerDown />;
+  }
+
+  const openWhatsApp = () => {
+    const phone = "919327148908";
+
+    const message = encodeURIComponent("Hi, I want consultation");
+
+    window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
+
+  return (
+    <>
+      <ScrollToTop />
+      <Header hideOnMobileShopPage={isShopPage} />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/Home" element={<Home />} />
+        <Route path="/shop" element={<Shop />} />
+        <Route path="/allproducts" element={<Allproducts />} />
+        <Route path="/allreviews/:productId" element={<Allreviews />} />
+        <Route path="/collections" element={<Collections />} />
+        <Route path="/offer" element={<Offer />} />
+        <Route path="/contact-us" element={<ContactUs />} />
+        <Route path="/account-details" element={<MyAccount />}>
+          {/* <Route path="dashboard" element={<Dashboard />} /> */}
+          {/* <Route path="account-details" element={<AccountDetails />} /> */}
+        </Route>
+        <Route path="/cart" element={<Cart />}></Route>
+        {/* <Route path="/updatecart" element={<Updatecart />}></Route> */}
+        <Route path="/checkout" element={<Checkout />}></Route>
+        <Route path="/products/:id" element={<Product />}></Route>
+        <Route path="/wishlist" element={<Wishlist />}></Route>
+        <Route path="/faqs" element={<Faqs />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/results" element={<Result />} />
+        <Route path="/ordercompleted" element={<OrderComplete />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/refundpolicy" element={<RefundPolicy />} />
+        <Route path="/termService" element={<TermService />} />
+        <Route path="/shippingpolicy" element={<ShippingPolicy />} />
+        <Route path="/payment/phonepe/callback" element={<PhonePeCallback />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+
+      <div className="fixed bottom-[70px] md:bottom-[100px] right-[15px] z-50">
+        <button
+          className="bg-green-500 rounded-full p-3 whatsapp-pulse shadow-lg"
+          onClick={openWhatsApp}
+        >
+          <FaWhatsapp size={30} className="text-white" />
+        </button>
+      </div>
+
+      <Footer />
+    </>
+  );
+};
+function App() {
   return (
     <>
       <HelmetProvider>

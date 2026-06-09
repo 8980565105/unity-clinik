@@ -7,6 +7,7 @@ import { fetchResults } from "../features/results/resultsThunk";
 import SEO from "../components/seo/seo";
 import { fetchPageBySlug, fetchPages } from "../features/pages/pagesThunk";
 import Loding from "../components/loding/loding";
+import SuccessStorySection from "../components/home/SuccessStory";
 
 const BASE_URL = process.env.REACT_APP_API_URL_IMAGE;
 function Modal({ data, onClose }) {
@@ -127,12 +128,7 @@ export default function Result() {
               </div>
             )}
 
-            {results.length === 0 && (
-              // <div className="text-center text-gray-400 py-20">
-              //   No results found.
-                <Loding />
-              // </div>
-            )}
+            {results.length === 0 && <Loding />}
 
             {selected && (
               <Modal data={selected} onClose={() => setSelected(null)} />
@@ -140,6 +136,8 @@ export default function Result() {
           </div>
         </Row>
       </Section>
+
+      <SuccessStorySection />
     </>
   );
 }
