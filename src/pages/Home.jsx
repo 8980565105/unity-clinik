@@ -89,7 +89,7 @@ const Home = () => {
         <Countsection />
         <RecommendedSection setShowLoginPopup={setShowLoginPopup} />
         <ContactHome />
-        <Customerreviews />
+        {/* <Customerreviews /> */}
         <FeatureSection />
       </div>
 

@@ -165,12 +165,8 @@ const RouterWrapper = () => {
         <Route path="/collections" element={<Collections />} />
         <Route path="/offer" element={<Offer />} />
         <Route path="/contact-us" element={<ContactUs />} />
-        <Route path="/account-details" element={<MyAccount />}>
-          {/* <Route path="dashboard" element={<Dashboard />} /> */}
-          {/* <Route path="account-details" element={<AccountDetails />} /> */}
-        </Route>
+        <Route path="/account-details" element={<MyAccount />}></Route>
         <Route path="/cart" element={<Cart />}></Route>
-        {/* <Route path="/updatecart" element={<Updatecart />}></Route> */}
         <Route path="/checkout" element={<Checkout />}></Route>
         <Route path="/products/:id" element={<Product />}></Route>
         <Route path="/wishlist" element={<Wishlist />}></Route>

@@ -52,9 +52,9 @@ const DesktopFilters = ({
   const { types = [], loading: typesLoading } = useSelector(
     (state) => state.types,
   );
-  const { discounts = [], loading: discountsLoading } = useSelector(
-    (state) => state.discounts,
-  );
+  // const { discounts = [], loading: discountsLoading } = useSelector(
+  //   (state) => state.discounts,
+  // );
   const { productLabels = [], loading: labelsLoading } = useSelector(
     (state) => state.productLabels,
   );

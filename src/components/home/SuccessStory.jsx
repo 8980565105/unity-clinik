@@ -17,7 +17,7 @@ const imgSrc = (path) => {
 function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
   return (
     <div
-      className="relative min-w-[220px] w-[220px] h-[370px] rounded-2xl overflow-hidden cursor-pointer bg-black flex-shrink-0"
+      className="relative min-w-[220px] w-[220px] h-[370px] rounded-2xl overflow-hidden cursor-pointer py-2 bg-black flex-shrink-0"
       onClick={onToggle}
     >
       <div className="absolute inset-0">
@@ -89,12 +89,12 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
       )}
 
       {!isPlaying && (
-        <div className="absolute bottom-0 left-0 right-0 z-20">
-          <div className="bg-white p-3">
-            <p className="text-sm font-semibold text-gray-900 line-clamp-2">
+        <div className="absolute bottom-2 left-2 right-2 z-20 ">
+          <div className="bg-gray-100 p-2 overflow-hidden rounded-b-[10px]">
+            <p className="text-sm font-semibold text-gray-900 text-left line-clamp-2">
               {slide.title}
             </p>
-            <div className="flex gap-2">
+            <div className="flex justify-start gap-2">
               <span className="text-xs text-gray-600 mt-1">- {slide.name}</span>
               <span className="text-xs text-gray-600 mt-1">{slide.age}</span>
             </div>

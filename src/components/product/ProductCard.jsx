@@ -49,13 +49,21 @@ function CountdownTimer({ endDate }) {
   );
 }
 
-export default function ProductCard({ product, setShowLoginPopup }) {
+export default function ProductCard({
+  product,
+  setShowLoginPopup,
+  productLabels,
+}) {
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
   const { items = [] } = useSelector((state) => state.cart);
   const [addingToCart, setAddingToCart] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
+
+  const labelId = product?.variants?.[0]?.labels?.[0];
+
+  const labelData = productLabels?.find((label) => label._id === labelId);
 
   const cartItem = useMemo(() => {
     if (!product?._id) return null;
@@ -222,11 +230,22 @@ export default function ProductCard({ product, setShowLoginPopup }) {
     }
   };
 
-  
   return (
     <Link to={`/products/${product._id}`}>
       <div className="border border-1 p-3 w-full transition-all group bg-white h-full">
         <div className="relative">
+        
+          {labelData && (
+            <div
+              className="absolute z-20 text-white px-2 py-1 text-xs rounded"
+              style={{
+                backgroundColor: labelData.color,
+              }}
+            >
+              {labelData.name}
+            </div>
+          )}
+          
           <img
             src={displayedImage}
             alt={product.name}
@@ -290,21 +309,21 @@ export default function ProductCard({ product, setShowLoginPopup }) {
               }}
               className="mt-3 w-full border border-primary rounded-full flex items-center justify-between overflow-hidden"
             >
-              <Button
+              <button
                 onClick={handleDecrease}
-                className="flex-1 text-primary transition text-xl font-bold border-r border-primary"
+                className="flex-1 text-primary py-2 px-2 transition text-xl font-bold border-r border-primary"
               >
                 −
-              </Button>
-              <span className="flex-1 text-center text-[15px] font-semibold text-black px-5">
+              </button>
+              <span className="flex-1 text-center text-[15px] font-semibold text-black px-3">
                 {cartQuantity}
               </span>
-              <Button
+              <button
                 onClick={handleIncrease}
-                className="flex-1  text-primary border-l border-primary transition text-xl font-bold"
+                className="flex-1 text-primary py-2 px-2 border-l border-primary transition text-xl font-bold"
               >
                 +
-              </Button>
+              </button>
             </div>
           )}
         </div>

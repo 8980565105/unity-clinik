@@ -11,6 +11,9 @@ import { getImageUrl } from "../components/utils/helper";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
 import { ChevronRight, ShoppingCart } from "lucide-react";
+import { fetchBrands } from "../features/brands/brandsThunk";
+import { fetchtypes } from "../features/types/typeThunk";
+import { fetchProductLabels } from "../features/productLabels/productlabelsThunk";
 
 const NAVBAR_HEIGHT = 100;
 
@@ -25,9 +28,24 @@ function Allproducts() {
     (state) => state.subcategories,
   );
 
+  const { brands = [], loading: brandLoading } = useSelector(
+    (state) => state.brands,
+  );
+  const { types = [], loading: typesLoading } = useSelector(
+    (state) => state.types,
+  );
+
+  const { productLabels = [], loading: labelsLoading } = useSelector(
+    (state) => state.productLabels,
+  );
+
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSubCategory, setActiveSubCategory] = useState("all");
-
+  const [selectedPrice, setSelectedPrice] = useState("all");
+  const [selectedBrand, setSelectedBrand] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
+  const [selectedLabel, setSelectedLabel] = useState("all");
+  const [activeFilter, setActiveFilter] = useState(null);
   useEffect(() => {
     if (subcategories.length > 0) {
     }
@@ -56,28 +74,132 @@ function Allproducts() {
   const categorySubIds = filteredSubCategories.map((sub) => String(sub._id));
 
   const filteredProducts = products.filter((product) => {
-    if (activeCategory === "all") return true;
+    // Category Filter
+    if (activeCategory !== "all") {
+      const productSubIds =
+        product.category_id?.map((id) => normalizeId(id)) || [];
 
-    const productSubIds =
-      product.category_id?.map((id) => normalizeId(id)) || [];
-
-    if (activeSubCategory !== "all") {
-      return productSubIds.includes(String(activeSubCategory));
+      if (activeSubCategory !== "all") {
+        if (!productSubIds.includes(String(activeSubCategory))) {
+          return false;
+        }
+      } else {
+        if (!productSubIds.some((id) => categorySubIds.includes(id))) {
+          return false;
+        }
+      }
     }
 
-    return productSubIds.some((id) => categorySubIds.includes(id));
+    // Brand Filter
+    if (selectedBrand !== "all") {
+      const brandId = product?.variants?.[0]?.brand?.[0]?._id;
+
+      if (brandId !== selectedBrand) {
+        return false;
+      }
+    }
+
+    // Type Filter
+    if (selectedType !== "all") {
+      const typeId = product?.variants?.[0]?.type?.[0]?._id;
+
+      if (typeId !== selectedType) {
+        return false;
+      }
+    }
+
+    // Label Filter
+    if (selectedLabel !== "all") {
+      const labels = product?.variants?.[0]?.labels || [];
+
+      if (!labels.includes(selectedLabel)) {
+        return false;
+      }
+    }
+
+    // Price Filter
+    const price =
+      Number(product?.variants?.[0]?.offerprice) ||
+      Number(product?.variants?.[0]?.price) ||
+      0;
+
+    if (selectedPrice !== "all") {
+      switch (selectedPrice) {
+        case "0-500":
+          if (price < 0 || price > 500) return false;
+          break;
+
+        case "500-1000":
+          if (price < 500 || price > 1000) return false;
+          break;
+
+        case "1000-2000":
+          if (price < 1000 || price > 2000) return false;
+          break;
+
+        case "2000+":
+          if (price < 2000) return false;
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    return true;
   });
+
+  const filterOptions = {
+    brand: [
+      { _id: "all", name: "All" },
+      ...brands.map((b) => ({
+        _id: b._id,
+        name: b.name,
+      })),
+    ],
+
+    type: [
+      { _id: "all", name: "All" },
+      ...types.map((t) => ({
+        _id: t._id,
+        name: t.name,
+      })),
+    ],
+
+    label: [
+      { _id: "all", name: "All" },
+      ...productLabels.map((l) => ({
+        _id: l._id,
+        name: l.name,
+      })),
+    ],
+  };
 
   useEffect(() => {
     dispatch(fetchProducts());
     dispatch(fetchSlides());
     dispatch(fetchCategories());
     dispatch(fetchsubCategories());
+    dispatch(fetchBrands({ status: "active" }));
+    dispatch(fetchtypes({ status: "active" }));
+    dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
 
   const handleCategoryClick = (categoryId) => {
     setActiveCategory(categoryId);
     setActiveSubCategory("all");
+    setActiveFilter(null);
+    setSelectedBrand("all");
+    setSelectedType("all");
+    setSelectedLabel("all");
+  };
+  const handleFilterClick = (filterName) => {
+    setActiveCategory("all");
+    setActiveSubCategory("all");
+    setSelectedBrand("all");
+    setSelectedType("all");
+    setSelectedLabel("all");
+    setActiveFilter(filterName);
   };
 
   const { items = [] } = useSelector((state) => state.cart);
@@ -97,6 +219,17 @@ function Allproducts() {
 
   const hasSubcategories =
     activeCategory !== "all" && filteredSubCategories.length > 0;
+  const showFilterBar = hasSubcategories || activeFilter;
+
+  const currentFilterOptions = activeFilter
+    ? filterOptions[activeFilter]
+    : filteredSubCategories;
+
+  const resetFilterValues = () => {
+    setSelectedBrand("all");
+    setSelectedType("all");
+    setSelectedLabel("all");
+  };
 
   return (
     <>
@@ -198,47 +331,76 @@ function Allproducts() {
               </button>
             ))}
           </div>
+          <div className="border-t mt-3 pt-3">
+            <button
+              onClick={() => handleFilterClick("brand")}
+              className={`w-full py-3 text-sm font-medium ${
+                activeFilter === "brand" ? "bg-blue-50 text-blue-600" : ""
+              }`}
+            >
+              Brand
+            </button>
+
+            <button
+              onClick={() => handleFilterClick("type")}
+              className={`w-full py-3 text-sm font-medium ${
+                activeFilter === "type" ? "bg-blue-50 text-blue-600" : ""
+              }`}
+            >
+              Type
+            </button>
+
+            <button
+              onClick={() => handleFilterClick("label")}
+              className={`w-full py-3 text-sm font-medium ${
+                activeFilter === "label" ? "bg-blue-50 text-blue-600" : ""
+              }`}
+            >
+              Product Label
+            </button>
+          </div>
         </aside>
 
         <div className="flex-1 min-w-0 flex flex-col">
           <div
-            className="sticky z-10 top-[50px] md:top-[74px] bg-white border-b border-gray-200 transition-all duration-300 overflow-hidden"
-            style={{
-              maxHeight: hasSubcategories ? "56px" : "0px",
-              opacity: hasSubcategories ? 1 : 0,
-              pointerEvents: hasSubcategories ? "auto" : "none",
-            }}
+            className="sticky top-[50px] md:top-[74px]
+  bg-white border-b border-gray-200 z-10"
           >
-            <div className="flex items-center gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
-              {filteredSubCategories.map((sub) => (
-                <button
-                  key={sub._id}
-                  onClick={() => setActiveSubCategory(sub._id)}
-                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium border whitespace-nowrap transition-all duration-200
-                  ${
-                    activeSubCategory === sub._id
-                      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                      : "bg-white text-gray-600 border-gray-300 hover:border-blue-400 hover:text-blue-600"
-                  }`}
-                >
-                  {sub.image_url && (
-                    <img
-                      src={getImageUrl(sub.image_url)}
-                      alt={sub.name}
-                      className="w-5 h-5 rounded-full object-cover"
-                    />
-                  )}
-                  {sub.name}
-                </button>
-              ))}
+            <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
+              {activeFilter
+                ? currentFilterOptions.map((item) => (
+                    <button
+                      key={item._id}
+                      onClick={() => {
+                        if (activeFilter === "brand")
+                          setSelectedBrand(item._id);
+
+                        if (activeFilter === "type") setSelectedType(item._id);
+
+                        if (activeFilter === "label")
+                          setSelectedLabel(item._id);
+                      }}
+                      className="px-4 py-2 rounded-full border"
+                    >
+                      {item.name}
+                    </button>
+                  ))
+                : filteredSubCategories.map((sub) => (
+                    <button
+                      key={sub._id}
+                      onClick={() => setActiveSubCategory(sub._id)}
+                      className="px-4 py-2 rounded-full border"
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
             </div>
           </div>
-
           <div className="p-4">
             <ShopBannerSlider />
           </div>
 
-          <div className="lg:px-4 pb-8">
+          <div className="lg:px-4 pb-8 container mx-auto">
             {filteredProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-gray-400">
                 <svg
@@ -267,6 +429,7 @@ function Allproducts() {
                     key={product._id}
                     product={product}
                     setShowLoginPopup={() => {}}
+                    productLabels={productLabels}
                   />
                 ))}
               </div>
