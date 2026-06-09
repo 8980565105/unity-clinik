@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Download } from "lucide-react";
 import { useBasePath } from "@/hooks/useBasePath";
 
-import { AppDispatch, RootState   } from "@/store";
+import { AppDispatch, RootState } from "@/store";
 import {
   fetchUsers,
   deleteUser,
@@ -56,7 +56,6 @@ export default function Users() {
       rowKey="_id"
       searchEnabled
       statusToggleEnabled
-      // editEnabled={false}
       editEnabled={isAdmin}
       filters={[
         { label: "Active", value: "true" },

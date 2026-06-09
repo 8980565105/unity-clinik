@@ -18,20 +18,18 @@ import { createUser, getUserById, updateUser } from "@/features/users/usersThunk
 
 export default function UserFormPage() {
   const dispatch = useDispatch<AppDispatch>();
-    const basePath = useBasePath();
+  const basePath = useBasePath();
 
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
 
-  // Basic info
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "user">("user");
   const [status, setStatus] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // Additional info
   const [mobileNumber, setMobileNumber] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other">("male");
   const [dob, setDob] = useState<string>("");
@@ -52,17 +50,20 @@ export default function UserFormPage() {
           setName(u.name ?? "");
           setEmail(u.email ?? "");
           setRole(u.role ?? "user");
-          setStatus(!!u.is_active); // ensure boolean
+          setStatus(!!u.is_active);
           setAvatarUrl(u.profile_picture ?? null);
           setMobileNumber(u.mobile_number ?? "");
           setGender(u.gender ?? "male");
           setDob(u.date_of_birth ? new Date(u.date_of_birth).toISOString().split("T")[0] : "");
+          const lastAddress =
+            u.addresses?.[u.addresses.length - 1] || {};
+
           setAddress({
-            street: u.address?.street ?? "",
-            city: u.address?.city ?? "",
-            state: u.address?.state ?? "",
-            country: u.address?.country ?? "",
-            zip_code: u.address?.zip_code ?? "",
+            street: lastAddress.street ?? "",
+            city: lastAddress.city ?? "",
+            state: lastAddress.state ?? "",
+            country: lastAddress.country ?? "",
+            zip_code: lastAddress.zip_code ?? "",
           });
         }
       });
@@ -106,7 +107,6 @@ export default function UserFormPage() {
 
   return (
     <div className="p-6 mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link to={`${basePath}/users`}>
           <Button variant="ghost" size="icon">
@@ -124,9 +124,7 @@ export default function UserFormPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Basic Info */}
           <Card className="shadow-md border border-gray-200">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Basic Information</CardTitle>
@@ -188,7 +186,6 @@ export default function UserFormPage() {
             </CardContent>
           </Card>
 
-          {/* Address */}
           <Card className="shadow-md border border-gray-200">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Address</CardTitle>
@@ -203,7 +200,6 @@ export default function UserFormPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
           <Card className=" top-6 shadow-md border border-gray-200">
             <CardHeader>
@@ -217,7 +213,6 @@ export default function UserFormPage() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
           <div className="flex gap-3">
             <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
               {isEditMode ? "Update User" : "Create User"}
