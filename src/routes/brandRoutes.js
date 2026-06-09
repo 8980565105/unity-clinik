@@ -18,18 +18,13 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 
-const {
-  injectPublicStoreFilter, 
-  injectOwnershipFilter,
-} = require("../middlewares/ownershipFilter");
-
 const upload = require("../middlewares/upload");
 
-router.get("/public", injectPublicStoreFilter, getPublicBrands);
+router.get("/public", getPublicBrands);
 
 router.use(authMiddleware);
 
-router.get("/", injectOwnershipFilter, getBrands);
+router.get("/", getBrands);
 
 router.get("/:id",authorizeMinRole("admin"), getBrandById);
 router.post(

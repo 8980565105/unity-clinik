@@ -217,8 +217,8 @@ const updateUserSettings = async (req, res) => {
     };
 
     const updatedDoc = await SystemSettingModel.findOneAndUpdate(
-      {}, // filter
-      { $set: updateData }, // update data
+      {},
+      { $set: updateData },
       {
         new: true,
         upsert: true,
@@ -237,43 +237,6 @@ const updateUserSettings = async (req, res) => {
     );
   }
 };
-
-// const getPublicSettings = async (req, res) => {
-//   try {
-//     return sendResponse(res, false, null, "Store not found for this domain");
-
-//     const settings = await SystemSettingModel.findOne({}).select(
-//       "general prepaid cod partialCod",
-//     );
-
-//     if (!settings) {
-//       return sendResponse(
-//         res,
-//         true,
-//         {
-//           general: {
-//             termService: "",
-//             privacyPolicy: "",
-//             refundPolicy: "",
-//             aboutUs: "",
-//             shippingPolicy: "",
-//           },
-//         },
-//         "Default public settings",
-//       );
-//     }
-
-//     return sendResponse(
-//       res,
-//       true,
-//       settings,
-//       "Public settings fetched successfully",
-//     );
-//   } catch (error) {
-//     console.error("getPublicSettings error:", error);
-//     return sendResponse(res, false, null, "Internal server error");
-//   }
-// };
 
 const getPublicSettings = async (req, res) => {
   try {

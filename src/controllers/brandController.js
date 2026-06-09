@@ -1,19 +1,10 @@
 const { default: slugify } = require("slugify");
 const Brand = require("../models/Brand");
 const { sendResponse } = require("../utils/response");
-// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
 const getPublicBrands = async (req, res) => {
   try {
-    if (!req.storeFilter || !req.storeFilter.storeId) {
-      return res.json({ success: true, data: [] });
-    }
-
-    const brands = await Brand.find({
-      status: "active",
-      storeId: req.storeFilter.storeId,
-    }).sort({ name: 1 });
-
+    const brands = await Brand.find({ status: "active" }).sort({ name: 1 });
     res.json({ success: true, data: brands });
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -36,8 +27,6 @@ const getBrands = async (req, res) => {
     if (status && ["active", "inactive"].includes(status)) {
       query.status = status;
     }
-
-    // applyOwnershipFilter(req, query);
 
     if (download) {
       const brands = await Brand.find(query).sort({ name: 1 });
@@ -99,7 +88,7 @@ const createBrand = async (req, res) => {
     description: description || "",
     status: status || "active",
     createdBy: req.user._id,
-    storeId, // ✅ KEY
+    storeId, 
   };
 
   try {

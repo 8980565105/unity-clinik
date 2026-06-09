@@ -35,11 +35,6 @@ const sectionSchema = new mongoose.Schema(
 
 const pageSchema = new mongoose.Schema(
   {
-    // storeId: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Store",
-    //   default: null,
-    // },
     page_name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, lowercase: true },
     description: { type: String },
@@ -74,7 +69,6 @@ pageSchema.pre("validate", function (next) {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
   }
-  // next();
 });
 
 module.exports = mongoose.model("Page", pageSchema);

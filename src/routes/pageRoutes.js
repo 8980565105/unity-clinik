@@ -6,10 +6,6 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 
-// const {
-//   injectPublicStoreFilter,
-//   injectOwnershipFilter,
-// } = require("../middlewares/ownershipFilter");
 
 const {
   getPages,

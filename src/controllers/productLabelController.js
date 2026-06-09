@@ -1,20 +1,11 @@
 const ProductLabel = require("../models/ProductLabel");
 const { default: slugify } = require("slugify");
 const { sendResponse } = require("../utils/response");
-// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
-// ═══════════════════════════════════════════════════════════════════
-// PUBLIC — Frontend mate (domain thhi storeId resolve)
-// ═══════════════════════════════════════════════════════════════════
 const getPublicProductLabels = async (req, res) => {
   try {
-    // if (!req.storeFilter || !req.storeFilter.storeId) {
-    //   return res.json({ success: true, data: [] });
-    // }
-
     const labels = await ProductLabel.find({
       status: "active",
-      storeId: req.storeFilter.storeId,
     }).sort({ name: 1 });
 
     res.json({ success: true, data: labels });
@@ -23,7 +14,6 @@ const getPublicProductLabels = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
 const getProductLabels = async (req, res) => {
   try {
     let {
@@ -40,8 +30,6 @@ const getProductLabels = async (req, res) => {
     if (status && ["active", "inactive"].includes(status)) {
       query.status = status;
     }
-
-    // applyOwnershipFilter(req, query);
 
     if (download) {
       const labels = await ProductLabel.find(query).sort({ name: 1 });
@@ -84,7 +72,6 @@ const getProductLabelById = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
 const createProductLabel = async (req, res) => {
   try {
     const { name, slug, color, status } = req.body;

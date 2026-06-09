@@ -19,38 +19,6 @@ const hero1SlideSchema = new mongoose.Schema(
   { _id: true },
 );
 
-// const shoppageSlideSchema = new mongoose.Schema(
-//   {
-//     title: { type: String, default: "" },
-//     description: { type: String, default: "" },
-//     button_name: { type: String, default: "SHOP NOW" },
-//     button_link: { type: String, default: "/shop" },
-//     badge: { type: String, default: "" },
-
-//     bgImageUrl: {
-//       type: String,
-//       default: null,
-//     },
-
-//     productimgUrl: {
-//       type: String,
-//       default: null,
-//     },
-
-//     order: {
-//       type: Number,
-//       default: 0,
-//     },
-
-//     status: {
-//       type: String,
-//       enum: ["active", "inactive"],
-//       default: "active",
-//     },
-//   },
-//   { _id: true },
-// );
-
 const shoppageSlideSchema = new mongoose.Schema(
   {
     title: { type: String, default: "" },
@@ -58,8 +26,8 @@ const shoppageSlideSchema = new mongoose.Schema(
     button_name: { type: String, default: "SHOP NOW" },
     button_link: { type: String, default: "/shop" },
     badge: { type: String, default: "" },
-    bgImage: { type: String, default: null }, // ✅ renamed from bgImageUrl
-    productimg: { type: String, default: null }, // ✅ renamed from productimgUrl
+    bgImage: { type: String, default: null },
+    productimg: { type: String, default: null },
     order: { type: Number, default: 0 },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
@@ -114,6 +82,20 @@ const banner4Schema = new mongoose.Schema(
   { _id: false },
 );
 
+const successStorySlideSchema = new mongoose.Schema(
+  {
+    name: { type: String, default: "" },
+    age: { type: String, default: "" },
+    title: { type: String, default: "" },
+    review: { type: String, default: "" },
+    mainImage: { type: String, default: null },
+    beforeImage: { type: String, default: null },
+    afterImage: { type: String, default: null },
+    videoUrl: { type: String, default: null },
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+  },
+  { _id: true },
+);
 const sliderSectionSchema = new mongoose.Schema(
   {
     section: {
@@ -126,6 +108,7 @@ const sliderSectionSchema = new mongoose.Schema(
         "banner3",
         "banner4",
         "shoppage",
+        "successStory",
       ],
       required: true,
     },
@@ -144,6 +127,8 @@ const sliderSectionSchema = new mongoose.Schema(
       type: [shoppageSlideSchema],
       default: undefined,
     },
+    successStorySlides: { type: [successStorySlideSchema], default: undefined },
+    showOnPages: { type: [String], default: [] },
   },
   { timestamps: true },
 );

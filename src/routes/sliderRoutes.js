@@ -19,12 +19,12 @@ const {
 
 router.get("/public", getPublicSlider);
 router.use(authMiddleware);
-router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteSlides);
-router.get("/", authorizeMinRole("store_owner"), getSlides);
-router.get("/:id", authorizeMinRole("store_owner"), getSlideById);
-router.post("/", authorizeMinRole("store_owner"), createSlide);
-router.put("/:id", authorizeMinRole("store_owner"), updateSlide);
-router.put("/:id/status", authorizeMinRole("store_owner"), updateSlideStatus);
-router.delete("/:id", authorizeMinRole("store_owner"), deleteSlide);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteSlides);
+router.get("/", authorizeMinRole("admin"), getSlides);
+router.get("/:id", authorizeMinRole("admin"), getSlideById);
+router.post("/", authorizeMinRole("admin"), createSlide);
+router.put("/:id", authorizeMinRole("admin"), updateSlide);
+router.put("/:id/status", authorizeMinRole("admin"), updateSlideStatus);
+router.delete("/:id", authorizeMinRole("admin"), deleteSlide);
 
 module.exports = router;

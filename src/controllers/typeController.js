@@ -1,21 +1,22 @@
 const { default: slugify } = require("slugify");
 const Type = require("../models/Type");
 const { sendResponse } = require("../utils/response");
-// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
-// ═══════════════════════════════════════════════════════════════════
-// PUBLIC — Frontend mate (domain thhi storeId resolve)
-// ═══════════════════════════════════════════════════════════════════
+// const getPublicTypes = async (req, res) => {
+//   try {
+//     const types = await Type.find({
+//       status: "active",
+//       storeId: req.storeFilter.storeId,
+//     }).sort({ createdAt: -1 });
+
+//     res.json({ success: true, data: types });
+//   } catch (err) {
+//     sendResponse(res, false, null, err.message);
+//   }
+// };
 const getPublicTypes = async (req, res) => {
   try {
-    // if (!req.storeFilter || !req.storeFilter.storeId) {
-    //   return res.json({ success: true, data: [] });
-    // }
-
-    const types = await Type.find({
-      status: "active",
-      storeId: req.storeFilter.storeId,
-    }).sort({ createdAt: -1 });
+    const types = await Type.find();
 
     res.json({ success: true, data: types });
   } catch (err) {
@@ -23,7 +24,6 @@ const getPublicTypes = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
 const getTypes = async (req, res) => {
   try {
     let {
@@ -39,8 +39,6 @@ const getTypes = async (req, res) => {
     if (search) query.name = { $regex: search, $options: "i" };
     if (status && ["active", "inactive"].includes(status))
       query.status = status;
-
-    // applyOwnershipFilter(req, query);
 
     if (download) {
       const types = await Type.find(query).sort({ createdAt: -1 });
@@ -82,9 +80,6 @@ const getTypeById = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// CREATE — storeId auto set thay
-// ═══════════════════════════════════════════════════════════════════
 const createType = async (req, res) => {
   try {
     const { name, description, status } = req.body;
@@ -98,7 +93,7 @@ const createType = async (req, res) => {
       description: description || "",
       status: status || "active",
       createdBy: req.user._id,
-      storeId, 
+      storeId,
     });
 
     const savedType = await type.save();

@@ -11,18 +11,7 @@ const productLabelSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
-    // storeId: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Store",
-    //   default: null,
-    //   index: true,
-    // },
 
-    // createdBy: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "User",
-    //   required: true,
-    // },
   },
   { timestamps: true },
 );
@@ -31,7 +20,6 @@ productLabelSchema.pre("save", function (next) {
   if (this.isModified("name") || !this.slug) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-  // next();
 });
 
 productLabelSchema.index({ name: 1 }, { unique: true });
