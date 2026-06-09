@@ -36,7 +36,7 @@ export default function OrderComplete() {
 
           <Button
             variant="common"
-            onClick={() => navigate("/shop")}
+            onClick={() => navigate("/allproducts")}
             className="px-6 py-2"
           >
             Continue Shopping

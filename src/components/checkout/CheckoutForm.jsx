@@ -267,30 +267,32 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
               { name: "country", label: "country", placeholder: "Country" },
             ].map(({ name, placeholder, required, label }) => (
               <>
-                <label>{label}</label>
-                <input
-                  key={name}
-                  name={name}
-                  placeholder={placeholder}
-                  value={form[name]}
-                  // onChange={handleChange}
-                  onChange={(e) => {
-                    if (name === "phone") {
-                      const value = e.target.value.replace(/\D/g, "");
+                <div className="flex flex-col">
+                  <label>{label}</label>
+                  <input
+                    key={name}
+                    name={name}
+                    placeholder={placeholder}
+                    value={form[name]}
+                    // onChange={handleChange}
+                    onChange={(e) => {
+                      if (name === "phone") {
+                        const value = e.target.value.replace(/\D/g, "");
 
-                      if (value.length <= 10) {
-                        setForm((prev) => ({
-                          ...prev,
-                          phone: value,
-                        }));
+                        if (value.length <= 10) {
+                          setForm((prev) => ({
+                            ...prev,
+                            phone: value,
+                          }));
+                        }
+                      } else {
+                        handleChange(e);
                       }
-                    } else {
-                      handleChange(e);
-                    }
-                  }}
-                  className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                  required={required}
-                />
+                    }}
+                    className="border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                    required={required}
+                  />
+                </div>
               </>
             ))}
           </div>
