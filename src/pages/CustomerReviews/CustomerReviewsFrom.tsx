@@ -15,7 +15,14 @@ import {
     getCustomerReviewById,
 } from "@/features/customerReviews/customerReviewsThunk";
 import { fetchProducts } from "@/features/products/productsThunk";
+import { fetchUsers } from "@/features/users/usersThunk";
 import { Switch } from "@/components/ui/switch";
+import { ImageUpload } from "@/components/ui/ImageUpload";
+
+const toLocalDatetimeValue = (date: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
 
 export default function CustomerReviewsForm() {
     const dispatch = useDispatch<AppDispatch>();
@@ -25,15 +32,21 @@ export default function CustomerReviewsForm() {
     const isEditMode = Boolean(id);
 
     const { products } = useSelector((state: RootState) => state.products);
-    const [isApproved, setIsApproved] = useState(true);
+    const { users } = useSelector((state: RootState) => state.users);
 
+    const [isApproved, setIsApproved] = useState(true);
     const [productId, setProductId] = useState("");
+    const [userId, setUserId] = useState("");
     const [rating, setRating] = useState<number>(5);
     const [title, setTitle] = useState("");
     const [comment, setComment] = useState("");
+    const [beforeImage, setBeforeImage] = useState("");
+    const [afterImage, setAfterImage] = useState("");
+    const [reviewDate, setReviewDate] = useState(toLocalDatetimeValue(new Date()));
 
     useEffect(() => {
         dispatch(fetchProducts({ limit: 1000 }));
+        dispatch(fetchUsers({ limit: 1000 }));
     }, [dispatch]);
 
     useEffect(() => {
@@ -42,9 +55,16 @@ export default function CustomerReviewsForm() {
                 .unwrap()
                 .then((data) => {
                     setProductId(data.product_id?._id || data.product_id || "");
+                    setUserId(data.user_id?._id || data.user_id || "");
                     setRating(data.rating || 5);
                     setTitle(data.title || "");
                     setComment(data.comment || "");
+                    setIsApproved(data.is_approved ?? true);
+                    setBeforeImage(data.beforeImage || "");
+                    setAfterImage(data.afterImage || "");
+                    if (data.createdAt) {
+                        setReviewDate(toLocalDatetimeValue(new Date(data.createdAt)));
+                    }
                 })
                 .catch(() => toast.error("Failed to load review"));
         }
@@ -53,7 +73,24 @@ export default function CustomerReviewsForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const payload = { product_id: productId, rating, title, comment, is_approved: isApproved };
+        if (!productId) { toast.error("Please select a product"); return; }
+        if (!userId) { toast.error("Please select a user"); return; }
+        if (!title.trim()) { toast.error("Title is required"); return; }
+
+        const isoDate = new Date(reviewDate).toISOString();
+
+        const payload = {
+            product_id: productId,
+            user_id: userId,
+            rating,
+            title: title.trim(),
+            comment: comment.trim(),
+            is_approved: isApproved,
+            beforeImage,
+            afterImage,
+            createdAt: isoDate,
+        };
+
         try {
             let result;
             if (isEditMode && id) {
@@ -66,15 +103,20 @@ export default function CustomerReviewsForm() {
                 createCustomerReview.fulfilled.match(result) ||
                 updateReviews.fulfilled.match(result)
             ) {
-                toast.success(isEditMode ? "Review updated successfully!" : "Review created successfully!");
+                toast.success(
+                    isEditMode ? "Review updated successfully!" : "Review created successfully!"
+                );
                 navigate(`${basePath}/customer-reviews`);
             } else {
                 toast.error((result.payload as string) || "Something went wrong");
             }
-        } catch (err) {
+        } catch {
             toast.error("Server Error");
         }
     };
+
+    const selectedProduct = products?.find((p: any) => p._id === productId);
+    const selectedUser = users?.find((u: any) => u._id === userId);
 
     return (
         <div className="p-6 mx-auto">
@@ -110,10 +152,9 @@ export default function CustomerReviewsForm() {
                                     id="productId"
                                     value={productId}
                                     onChange={(e) => setProductId(e.target.value)}
-                                    disabled={isEditMode} // ✅ disabled in edit mode
                                     required
-                                    className={`mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                                        ${isEditMode ? "bg-gray-100 cursor-not-allowed text-gray-500" : "bg-white"}`}
+                                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
+                                       "
                                 >
                                     <option value="">Select a product</option>
                                     {products?.map((product: any) => (
@@ -122,28 +163,61 @@ export default function CustomerReviewsForm() {
                                         </option>
                                     ))}
                                 </select>
-                                {isEditMode && (
-                                    <p className="text-xs text-gray-400 mt-1">
-                                        Product cannot be changed in edit mode.
-                                    </p>
-                                )}
+                            </div>
+
+                            <div>
+                                <Label htmlFor="userId">
+                                    User <span className="text-red-500">*</span>
+                                </Label>
+                                <select
+                                    id="userId"
+                                    value={userId}
+                                    onChange={(e) => setUserId(e.target.value)}
+                                    required
+                                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+                                >
+                                    <option value="">Select a user</option>
+                                    {users?.map((user: any) => (
+                                        <option key={user._id} value={user._id}>
+                                            {user.name}{user.email ? ` (${user.email})` : ""}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div>
                                 <Label htmlFor="rating">
                                     Rating <span className="text-red-500">*</span>
                                 </Label>
-                                <Input
+                                <select
                                     id="rating"
-                                    type="number"
-                                    min={1}
-                                    max={5}
-                                    placeholder="1 - 5"
                                     value={rating}
                                     onChange={(e) => setRating(Number(e.target.value))}
                                     required
-                                    className="mt-1"
-                                />
+                                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                                >
+                                    <option value={5}>5 — Excellent</option>
+                                    <option value={4}>4 — Good</option>
+                                    <option value={3}>3 — Average</option>
+                                    <option value={2}>2 — Poor</option>
+                                    <option value={1}>1 — Terrible</option>
+                                </select>
+                                <div className="flex gap-1 mt-2">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setRating(star)}
+                                            className="text-2xl transition-transform hover:scale-110"
+                                        >
+                                            <span className={star <= rating ? "text-yellow-400" : "text-gray-300"}>
+                                                ★
+                                            </span>
+                                        </button>
+                                    ))}
+                                    <span className="ml-2 text-sm text-gray-500 self-center">{rating} / 5</span>
+                                </div>
                             </div>
 
                             <div>
@@ -161,10 +235,10 @@ export default function CustomerReviewsForm() {
                             </div>
 
                             <div>
-                                <Label htmlFor="comment">Comment</Label>
+                                <Label htmlFor="comment">Description</Label>
                                 <textarea
                                     id="comment"
-                                    placeholder="Write review comment..."
+                                    placeholder="Write review description..."
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
                                     rows={4}
@@ -172,30 +246,77 @@ export default function CustomerReviewsForm() {
                                 />
                             </div>
 
+                            <div>
+                                <Label htmlFor="date">Date & Time</Label>
+                                <input
+                                    id="date"
+                                    type="datetime-local"
+                                    value={reviewDate}
+                                    onChange={(e) => setReviewDate(e.target.value)}
+                                    className="mt-1 w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+
+                            </div>
+                            <div className="flex gap-3">
+                                <div>
+                                    <Label>befor Image</Label>
+                                    <ImageUpload
+                                        value={beforeImage}
+                                        onChange={(val: any) => {
+                                            const image = typeof val === "string" ? val : Array.isArray(val) ? val[0] : "";
+                                            setBeforeImage(image);
+                                        }}
+                                        multiple={false} />
+                                </div>
+                                <div>
+                                    <Label>after Image</Label>
+                                    <ImageUpload
+                                        value={afterImage}
+                                        onChange={(val: any) => {
+                                            const image = typeof val === "string" ? val : Array.isArray(val) ? val[0] : "";
+                                            setAfterImage(image);
+                                        }}
+                                        multiple={false} />
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 <div className="space-y-6">
-                    <Card className="sticky top-6 shadow-md border border-gray-200">
+
+                    <Card className="shadow-md border border-gray-200">
                         <CardHeader>
                             <CardTitle className="text-lg font-semibold">Summary</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm text-gray-600">
-                            <p><span className="font-medium">Product:</span> {products?.find((p: any) => p._id === productId)?.name || "-"}</p>
+                            <p><span className="font-medium">Product:</span> {selectedProduct?.name || "-"}</p>
+                            <p><span className="font-medium">User:</span> {selectedUser?.name || "-"}</p>
                             <p><span className="font-medium">Rating:</span> {rating} / 5</p>
                             <p><span className="font-medium">Title:</span> {title || "-"}</p>
+                            <p>
+                                <span className="font-medium">Date:</span>{" "}
+                                {reviewDate ? new Date(reviewDate).toLocaleString("en-GB") : "-"}
+                            </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="sticky top-6 shadow-md border border-gray-200">
+                    <Card className="shadow-md border border-gray-200">
                         <CardHeader>
                             <CardTitle className="text-lg font-semibold">Status</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="status">Active</Label>
-                               
+                                <div>
+                                    <Label htmlFor="status">
+                                        {isApproved ? "Approved" : "Pending"}
+                                    </Label>
+                                    <p className="text-xs text-gray-400 mt-0.5">
+                                        {isApproved
+                                            ? "Review is visible on the product page."
+                                            : "Review is hidden until approved."}
+                                    </p>
+                                </div>
                                 <Switch
                                     id="status"
                                     checked={isApproved}

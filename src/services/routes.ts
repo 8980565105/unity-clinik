@@ -53,15 +53,7 @@ export const ROUTES = {
     delete: (id: string) => `/types/${id}`,
     bulkDelete: "/types/bulk-delete",
   },
-  // fabrics: {
-  //   getAll: "/fabrics",
-  //   getById: (id: string) => `/fabrics/${id}`,
-  //   create: "/fabrics",
-  //   update: (id: string) => `/fabrics/${id}`,
-  //   updateStatus: (id: string) => `/fabrics/${id}/status`,
-  //   delete: (id: string) => `/fabrics/${id}`,
-  //   bulkDelete: "/fabrics/bulk-delete",
-  // },
+
   productLabels: {
     getAll: "/product-labels",
     getById: (id: string) => `/product-labels/${id}`,
@@ -71,36 +63,11 @@ export const ROUTES = {
     delete: (id: string) => `/product-labels/${id}`,
     bulkDelete: "/product-labels/bulk-delete",
   },
-  // colors: {
-  //   getAll: "/colors",
-  //   getById: (id: string) => `/colors/${id}`,
-  //   create: "/colors",
-  //   update: (id: string) => `/colors/${id}`,
-  //   updateStatus: (id: string) => `/colors/${id}/status`,
-  //   delete: (id: string) => `/colors/${id}`,
-  //   bulkDelete: "/colors/bulk-delete",
-  // },
-  // sizes: {
-  //   getAll: "/sizes",
-  //   getById: (id: string) => `/sizes/${id}`,
-  //   create: "/sizes",
-  //   update: (id: string) => `/sizes/${id}`,
-  //   updateStatus: (id: string) => `/sizes/${id}/status`,
-  //   delete: (id: string) => `/sizes/${id}`,
-  //   bulkDelete: "/sizes/bulk-delete",
-  // },
+ 
   upload: {
     image: "/uploads/image",
   },
-  // discounts: {
-  //   getAll: "/discounts",
-  //   getById: (id: string) => `/discounts/${id}`,
-  //   create: "/discounts",
-  //   update: (id: string) => `/discounts/${id}`,
-  //   updateStatus: (id: string) => `/discounts/${id}/status`,
-  //   delete: (id: string) => `/discounts/${id}`,
-  //   bulkDelete: "/discounts/bulk-delete",
-  // },
+ 
   coupons: {
     getAll: "/coupons",
     getById: (id: string) => `/coupons/${id}`,

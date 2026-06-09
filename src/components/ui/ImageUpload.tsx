@@ -38,10 +38,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       let uploadedUrls: string[] = [];
 
       if (Array.isArray(res.data.data)) {
-        // multiple upload
         uploadedUrls = res.data.data.map((img: any) => img.image_url);
       } else if (res.data.data.image_url) {
-        // single upload
         uploadedUrls = [res.data.data.image_url];
       }
 
@@ -70,7 +68,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
-  // Render multiple images
   if (multiple) {
     return (
       <div className="flex flex-wrap gap-2">
@@ -105,7 +102,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     );
   }
 
-  // Render single image
   return value ? (
     <div className="relative" style={{ width: size, height: size }}>
       <img

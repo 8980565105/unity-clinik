@@ -1609,30 +1609,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
     );
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   return (
     <div className="space-y-4">
       <CommonHeader
@@ -1845,6 +1821,28 @@ export default function ProductFormPage() {
                       name: item.name || "",
                       description: item.description || "",
                       image: item.image || "",
+                    })),
+                  },
+                };
+              }
+
+
+              if (type === "Result Section") {
+                return {
+                  ...section,
+                  data: {
+                    ...data,
+                    items: (data.items || []).map((item) => ({
+                      beforeImage: item.beforeImage || "",
+                      afterImage: item.afterImage || "",
+                      reviewDescription: item.reviewDescription || "",
+                      customerName: item.customerName || "",
+                      customerAge: item.customerAge || "",
+                      verifiedReview:
+                        item.verifiedReview !== undefined
+                          ? item.verifiedReview
+                          : true,
+                      stageLabel: item.stageLabel || "",
                     })),
                   },
                 };
@@ -2078,6 +2076,7 @@ export default function ProductFormPage() {
           <CardHeader><CardTitle className="text-lg font-semibold">Product Info</CardTitle></CardHeader>
           <CardContent className="space-y-5">
             <div>
+              
               <Label>Product Name *</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
@@ -2265,7 +2264,9 @@ export default function ProductFormPage() {
             <Button type="button" variant="outline" className="w-full">Cancel</Button>
           </Link>
         </div>
+      
       </form>
     </div>
   );
 }
+

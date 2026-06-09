@@ -840,32 +840,7 @@ export default function CouponFormPage() {
                         Select SubCategory
                       </Label>
 
-                      {/* <Select
-                        isMulti
-                        options={subCategories.map(
-                          (
-                            subcategory: any
-                          ) => ({
-                            value:
-                              subcategory._id,
-                            label:
-                              subcategory.name,
-                          })
-                        )}
-                        value={
-                          selectedSubCategories
-                        }
-                        onChange={(
-                          selected: any
-                        ) =>
-                          setSelectedSubCategories(
-                            selected as any
-                          )
-                        }
-                        placeholder="Search SubCategory..."
-                      /> */}
-
-
+                     
                       <Select
                         isMulti
                         options={subCategories.map(
