@@ -598,7 +598,7 @@ export default function ProductInfo({
         </span>
       </div>
 
-      <div className="pb-[30px] border-dashed border-b-[2px] light-border">
+      {/* <div className="pb-[30px] border-dashed border-b-[2px] light-border">
         <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-700">
           <div>
             <span className="font-bold">Weight:</span>
@@ -625,7 +625,7 @@ export default function ProductInfo({
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="mt-[15px] space-y-[28px]">
         <div key={selectionTick}>{renderSteps()}</div>
@@ -637,7 +637,6 @@ export default function ProductInfo({
           <Button
             variant="outline"
             className="flex items-center gap-[10px] !text-[22px] !py-[10px]"
-            // onClick={() => handleAddToWishlist(product, activeVariant)}
             onClick={() => handleAddToWishlist(product, activeVariantState)}
           >
             <HeartIcon className="h-[22px] w-[22px]" />

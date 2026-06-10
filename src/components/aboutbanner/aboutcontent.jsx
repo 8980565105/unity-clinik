@@ -105,7 +105,7 @@ export default function AboutContent() {
                   <img
                     src={imgSrc || faqBg}
                     alt={item.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover md:object-contain rounded-lg"
                     onError={(e) => {
                       e.target.src = faqBg;
                     }}

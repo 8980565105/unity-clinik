@@ -240,10 +240,10 @@ function Allproducts() {
             position: "sticky",
           }}
         >
-          <div className="py-2">
+          <div className="pb-2 overflow-y-auto hide-scrollbar hide-scrollbar::-webkit-scrollbar h-[400px] lg:h-[600px]">
             <button
               onClick={() => handleCategoryClick("all")}
-              className={`w-full flex flex-col items-center py-3 gap-1 transition-all duration-200
+              className={`w-full flex flex-col items-center py-3 gap-1 transition-all duration-200 sticky top-0
               ${
                 activeCategory === "all"
                   ? "bg-blue-50 border-l-[3px] border-blue-600"
@@ -331,6 +331,7 @@ function Allproducts() {
               </button>
             ))}
           </div>
+
           <div className="border-t mt-3 pt-3">
             <button
               onClick={() => handleFilterClick("brand")}
@@ -363,7 +364,7 @@ function Allproducts() {
 
         <div className="flex-1 min-w-0 flex flex-col">
           <div
-            className="sticky top-[50px] md:top-[74px]
+            className="sticky top-[50px] lg:top-[74px]
   bg-white border-b border-gray-200 z-10"
           >
             <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">

@@ -72,6 +72,8 @@ export default function ProductGallery({
     if (fullImageUrls.length > 0) {
       setCurrentImage(fullImageUrls[0]);
       setThumbIndex(0);
+      setThumbIndex(0);
+      setCurrentIndex(0);
     } else {
       setCurrentImage(null);
       setThumbIndex(0);
@@ -146,12 +148,17 @@ export default function ProductGallery({
   }, [isFullscreen]);
 
   const sliderSettings = {
-    dots: true,
+    dots: false,
     infinite: true,
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
     arrows: false,
+
+    beforeChange: (_, next) => {
+      setCurrentIndex(next);
+    },
+
     appendDots: (dots) => (
       <div className="w-full relative">
         <ul className="absolute left-1/2 transform -translate-x-1/2 flex justify-center rounded-full">
@@ -292,17 +299,63 @@ export default function ProductGallery({
 
         <div className="block md:hidden w-full rounded-[10px]">
           {fullImageUrls.length > 0 ? (
-            <Slider {...sliderSettings}>
-              {fullImageUrls.map((img, index) => (
-                <div key={index}>
-                  <img
-                    src={img}
-                    alt={`Slide ${index}`}
-                    className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
-                  />
-                </div>
-              ))}
-            </Slider>
+            <div className="relative">
+              <Slider {...sliderSettings}>
+                {fullImageUrls.map((img, index) => (
+                  <div key={index}>
+                    <img
+                      src={img}
+                      alt={`Slide ${index}`}
+                      className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
+                    />
+                  </div>
+                ))}
+              </Slider>
+
+              <div
+                className="
+
+  flex justify-center
+  items-center
+  gap-1
+  z-10
+  "
+              >
+                {fullImageUrls.map((_, index) => {
+                  const isActive = index === currentIndex;
+
+                  return isActive ? (
+                    <div
+                      key={index}
+                      className="
+        bg-[#0C387E]
+        text-white
+        px-3
+        h-6
+        rounded-full
+        text-[11px]
+        font-semibold
+        flex
+        items-center
+        justify-center
+        "
+                    >
+                      {currentIndex + 1}/{fullImageUrls.length}
+                    </div>
+                  ) : (
+                    <div
+                      key={index}
+                      className="
+        w-2
+        h-2
+        rounded-full
+        bg-[#D9E2F0]
+        "
+                    />
+                  );
+                })}
+              </div>
+            </div>
           ) : (
             <div className="w-full h-[300px] bg-gray-100 flex items-center justify-center text-gray-400">
               No Image Available

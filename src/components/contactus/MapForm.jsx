@@ -59,25 +59,16 @@ export default function ContactSection() {
               onChange={handleChange}
               required
             />
-            <div className="flex sm:grid flex-col sm:grid-cols-2 gap-[15px] md:gap-[28px]">
-              <input
-                type="text"
-                name="subject"
-                placeholder="Your Subject "
-                className="input-common"
-                value={formData.subject}
-                onChange={handleChange}
-              />
+            {/* <div className="flex sm:grid flex-col sm:grid-cols-2 gap-[15px] md:gap-[28px]"> */}
+            <input
+              type="text"
+              name="subject"
+              placeholder="Your Subject "
+              className="input-common"
+              value={formData.subject}
+              onChange={handleChange}
+            />
 
-              <input
-                type="date"
-                name="orderDate"
-                placeholder="DD/MM/YY"
-                className="input-common"
-                value={formData.orderDate}
-                onChange={handleChange}
-              />
-            </div>
             <textarea
               rows="4"
               name="message"

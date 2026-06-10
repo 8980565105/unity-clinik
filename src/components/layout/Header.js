@@ -40,24 +40,7 @@ import ForgetForm from "../../pages/ForgetForm";
 import toast from "react-hot-toast";
 import { fetchProducts } from "../../features/products/productsThunk";
 
-const STATIC_CATEGORIES = [
-  { _id: "static-1", name: "Saree", image_url: shoppingImg, isStatic: true },
-  { _id: "static-2", name: "Kurti", image_url: kurtiImg, isStatic: true },
-  { _id: "static-3", name: "Jeans", image_url: JeansImg, isStatic: true },
-  {
-    _id: "static-4",
-    name: "Jewellery",
-    image_url: jewelleryImg,
-    isStatic: true,
-  },
-  { _id: "static-5", name: "Crop Tops", image_url: cropImg, isStatic: true },
-  {
-    _id: "static-6",
-    name: "Jewellery",
-    image_url: jewelleryImg,
-    isStatic: true,
-  },
-];
+const STATIC_CATEGORIES = [];
 
 const FIXED_NAV_ITEMS = [
   {
@@ -65,14 +48,14 @@ const FIXED_NAV_ITEMS = [
     path: "/home",
     icon: <ShopIcon className="w-5 h-6 hidden custom-lg:block" />,
   },
-  {
-    name: "Shop",
-    path: "/shop",
-    icon: <ShopIcon className="w-5 h-6" />,
-    hasDropdown: true,
-    isMegaMenu: true,
-    dropdownIcon: <ChevronDown className="w-4 h-4 ml-1 inline-block" />,
-  },
+  // {
+  //   name: "Shop",
+  //   path: "/shop",
+  //   icon: <ShopIcon className="w-5 h-6" />,
+  //   hasDropdown: true,
+  //   isMegaMenu: true,
+  //   dropdownIcon: <ChevronDown className="w-4 h-4 ml-1 inline-block" />,
+  // },
   {
     name: "All Products",
     path: "/allproducts",
@@ -93,7 +76,7 @@ const FIXED_NAV_ITEMS = [
       </svg>
     ),
     hasDropdown: true,
-    isAllproducts: true,
+    isMegaMenu: true,
     dropdownIcon: <ChevronDown className="w-4 h-4 ml-1 inline-block" />,
   },
 ];
@@ -108,7 +91,6 @@ function SearchBar({ products, onNavigate }) {
   const inputRef = useRef(null);
   const containerRef = useRef(null);
 
-  // Filter products based on query
   const filtered =
     query.trim().length > 0
       ? (products || [])
@@ -116,7 +98,6 @@ function SearchBar({ products, onNavigate }) {
           .slice(0, 8)
       : [];
 
-  // Close on outside click
   useEffect(() => {
     const handler = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -206,7 +187,6 @@ function SearchBar({ products, onNavigate }) {
             "
             style={{ top: window.innerWidth < 768 ? 0 : undefined }}
           >
-            {/* Input Row */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
               <Search size={18} className="text-gray-400 flex-shrink-0" />
               <input
@@ -234,7 +214,6 @@ function SearchBar({ products, onNavigate }) {
               </button>
             </div>
 
-            {/* Results */}
             <div className="max-h-[60vh] md:max-h-[400px] overflow-y-auto">
               {query.trim().length === 0 && (
                 <div className="px-4 py-8 text-center text-gray-400 text-sm">
@@ -275,7 +254,6 @@ function SearchBar({ products, onNavigate }) {
                       )}
                     </div>
 
-                    {/* Product Info */}
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-medium text-gray-800 line-clamp-1 leading-snug">
                         {product.name}
@@ -320,6 +298,7 @@ const Header = () => {
   const { items: subCategoriesItems } = useSelector(
     (state) => state.subcategories,
   );
+  const { products } = useSelector((state) => state.products);
 
   const displayCategories =
     !loading && categories?.length > 0 ? categories : STATIC_CATEGORIES;
@@ -335,7 +314,6 @@ const Header = () => {
   const [activeParent, setActiveParent] = useState(null);
   const { navbars = [] } = useSelector((state) => state.navbar);
   const { token, user } = useSelector((state) => state.auth);
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isForgetOpen, setIsForgetOpen] = useState(false);
@@ -355,7 +333,8 @@ const Header = () => {
   const [mobileMenuPage, setMobileMenuPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
   const isShopActive = location.pathname === "/shop";
-  const { products } = useSelector((state) => state.products);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeSubCategory, setActiveSubCategory] = useState(null);
 
   useEffect(() => {
     if (isMegaMenuOpen && parentCategories.length > 0 && !activeParent) {
@@ -453,12 +432,13 @@ const Header = () => {
 
   const openProtectedLink = useProtectedLink(setIsLoginOpen, token);
 
-  const handleCategoryClick = (categoryName) => {
-    setIsMegaMenuOpen(false);
-    setIsMenuOpen(false);
-    setIsMobileMegaMenuOpen(false);
-    navigate(`/shop?category=${encodeURIComponent(categoryName)}`);
-  };
+  // const handleCategoryClick = (categoryName) => {
+  //   setIsMegaMenuOpen(false);
+  //   setIsMenuOpen(false);
+  //   setIsMobileMegaMenuOpen(false);
+  //   navigate(`/shop?category=${encodeURIComponent(categoryName)}`);
+  // };
+
   const BASE = process.env.REACT_APP_API_URL_IMAGE;
 
   const dynamicLogoUrl = (() => {
@@ -468,7 +448,6 @@ const Header = () => {
     return `${BASE}${logoPath}`;
   })();
 
-  // whatsapp
   const openWhatsApp = () => {
     const phone = "919327148908";
 
@@ -477,9 +456,61 @@ const Header = () => {
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
   };
 
+  const filteredSubCategories = activeCategory
+    ? subCategoriesItems.filter(
+        (sub) =>
+          sub.parent_id?._id === activeCategory ||
+          sub.parent_id === activeCategory,
+      )
+    : subCategoriesItems;
+
+  // const filteredProducts = activeSubCategory
+  //   ? products.filter((product) =>
+  //       (product.category_id || []).some(
+  //         (cat) =>
+  //           String(typeof cat === "object" ? cat._id : cat) ===
+  //           String(activeSubCategory),
+  //       ),
+  //     )
+  //   : products;
+
+  const filteredProducts = (() => {
+    // SubCategory select hoy to
+    if (activeSubCategory) {
+      return products.filter((product) =>
+        (product.category_id || []).some(
+          (cat) =>
+            String(typeof cat === "object" ? cat._id : cat) ===
+            String(activeSubCategory),
+        ),
+      );
+    }
+
+    // Category select hoy to
+    if (activeCategory) {
+      const subCategoryIds = subCategoriesItems
+        .filter(
+          (sub) =>
+            sub.parent_id?._id === activeCategory ||
+            sub.parent_id === activeCategory,
+        )
+        .map((sub) => String(sub._id));
+
+      return products.filter((product) =>
+        (product.category_id || []).some((cat) =>
+          subCategoryIds.includes(
+            String(typeof cat === "object" ? cat._id : cat),
+          ),
+        ),
+      );
+    }
+
+    // Initial
+    return products;
+  })();
+
   return (
     <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border-b border-gray-100 p-2">
-      {/* <Row className="h-[70px] custom-lg:h-[100px] flex items-center justify-between gap-[10px]"> */}
       <Row className="flex items-center justify-between gap-[10px]">
         <button
           className="custom-lg:hidden text-light transition-colors duration-300 border rounded-[3px] p-[5px] border-[#D2AF9F]"
@@ -505,12 +536,12 @@ const Header = () => {
                 <li
                   key={i}
                   className="relative"
-                  // onMouseEnter={
-                  //   item.isMegaMenu ? handleShopMouseEnter : undefined
-                  // }
-                  // onMouseLeave={
-                  //   item.isMegaMenu ? handleShopMouseLeave : undefined
-                  // }
+                  onMouseEnter={
+                    item.isMegaMenu ? handleShopMouseEnter : undefined
+                  }
+                  onMouseLeave={
+                    item.isMegaMenu ? handleShopMouseLeave : undefined
+                  }
                   onMouseEnter={
                     item.isMegaMenu
                       ? handleShopMouseEnter
@@ -553,152 +584,215 @@ const Header = () => {
 
                       {isMegaMenuOpen && (
                         <div
-                          className="fixed left-0 right-0 top-[74px] bg-white z-50 form-shadow flex min-h-[300px] max-w-[1400px] mx-auto w-full"
+                          className="fixed left-0 right-0 top-[74px] bg-white z-50 form-shadow min-h-[300px] max-w-[1400px] mx-auto w-full"
                           onMouseEnter={handleMegaMenuMouseEnter}
                           onMouseLeave={handleMegaMenuMouseLeave}
                         >
-                          <div className="max-w-[1400px] mx-auto w-full flex">
-                            <div className="w-1/4 bg-[#f3f4f6] py-3 max-h-[400px] overflow-y-auto hide-scrollbar">
-                              {parentCategories.map((parent) => (
+                          <div className="max-w-[1400px] mx-auto w-full flex h-[500px] pb-2 p-x-4">
+                            <div className="w-[25%] border-r border-gray-200 overflow-y-auto hide-scrollbar">
+                              <div className="p-2 sticky top-0 bg-white z-20">
+                                <div className="flex justify-between border-b">
+                                  <span>Categories</span>
+
+                                  <button
+                                    onClick={() => {
+                                      navigate("/collections");
+                                      setIsMegaMenuOpen(false);
+                                    }}
+                                    className="underline text-primary hover:text-gray-900"
+                                  >
+                                    View All
+                                  </button>
+                                </div>
+                                <div className="flex w-full justify-end">
+                                  <button
+                                    onClick={() => {
+                                      setActiveCategory(null);
+                                      setActiveSubCategory(null);
+                                    }}
+                                    className="cursor-pointer text-red-500 hover:text-red-600 "
+                                  >
+                                    Reset
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="flex flex-col p-3">
+                                {categories.map((cat) => (
+                                  <div
+                                    onClick={() => {
+                                      setActiveCategory(cat._id);
+                                      setActiveSubCategory(null);
+                                    }}
+                                    className={`
+    relative
+    flex
+    items-center
+    gap-3
+    px-4
+    py-3
+    cursor-pointer
+    transition-all
+    duration-200
+    mb-1
+
+    ${
+      activeCategory === cat._id
+        ? "bg-gray-200 text-primary font-semibold rounded-l-md w-[260px]"
+        : "text-gray-900 hover:bg-gray-200 hover:text-primary w-[260px] rounded-l-md"
+    }
+  `}
+                                  >
+                                    <img
+                                      src={getImageUrl(cat.image_url)}
+                                      alt={cat.name}
+                                      className="w-10 h-10 rounded-md object-cover"
+                                    />
+
+                                    <span className="text-sm">{cat.name}</span>
+
+                                    {activeCategory === cat._id && (
+                                      <div
+                                        className="
+    absolute
+    top-0
+    right-[-20px]
+    w-[20px]
+    h-full
+    bg-gray-200
+  "
+                                        style={{
+                                          clipPath:
+                                            "polygon(0 0,100% 50%,0 100%)",
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            <div className="w-[25%] border-r border-gray-200 overflow-y-auto hide-scrollbar">
+                              <div className="p-2 sticky top-0 bg-white">
+                                <div className="flex justify-between border-b">
+                                  <span>Sub Categories</span>
+
+                                  <button
+                                    onClick={() => {
+                                      navigate("/collections");
+                                      setIsMegaMenuOpen(false);
+                                    }}
+                                    className="underline text-primary hover:text-gray-900"
+                                  >
+                                    View All
+                                  </button>
+                                </div>
+                                <div className="flex w-full justify-end">
+                                  <button
+                                    onClick={() => {
+                                      setActiveSubCategory(null);
+                                    }}
+                                    className="cursor-pointer text-red-500 hover:text-red-600 "
+                                  >
+                                    Reset
+                                  </button>
+                                </div>
+                              </div>
+
+                              {filteredSubCategories.map((sub) => (
                                 <div
-                                  key={parent._id}
-                                  onMouseEnter={() =>
-                                    handleParentChange(parent._id)
-                                  }
-                                  className={`relative px-5 py-3 cursor-pointer flex justify-between items-center text-sm transition-all
-${
-  activeParent === parent._id
-    ? "bg-white text-primary font-medium"
-    : "text-black font-medium hover:bg-white"
-}`}
+                                  key={sub._id}
+                                  onClick={() => setActiveSubCategory(sub._id)}
+                                  className={`
+      relative
+      flex
+      items-center
+      gap-3
+      px-4
+      py-3
+      cursor-pointer
+      transition-all
+      duration-200
+      mb-1
+      mx-2
+      ${
+        activeSubCategory === sub._id
+          ? "bg-gray-200 text-primary font-semibold rounded-l-md w-[300px] "
+          : "text-gray-900 hover:bg-gray-200 hover:text-primary rounded-l-md w-[300px]"
+      }
+    `}
                                 >
-                                  <span>{parent.name}</span>
-                                  <ChevronRight size={20} />
+                                  <img
+                                    src={getImageUrl(sub.image_url)}
+                                    alt={sub.name}
+                                    className="w-10 h-10 rounded-md object-cover"
+                                  />
+
+                                  <span className="text-sm">{sub.name}</span>
+
+                                  {activeSubCategory === sub._id && (
+                                    <div
+                                      className="
+          absolute
+          top-0
+          right-[-20px]
+          w-[20px]
+          h-full
+          bg-gray-200
+        "
+                                      style={{
+                                        clipPath:
+                                          "polygon(0 0,100% 50%,0 100%)",
+                                      }}
+                                    />
+                                  )}
                                 </div>
                               ))}
                             </div>
 
-                            <div className="w-3/4 bg-white flex flex-col h-[400px]">
-                              {activeParent ? (
-                                <>
-                                  <div className="flex justify-between items-center px-8 pt-8 ">
-                                    <p className="text-black font-medium text-sm mb-4">
-                                      Sub Categories
-                                    </p>
-                                    <Button
-                                      onClick={() => {
-                                        navigate("/collections");
-                                        setIsMegaMenuOpen(false);
-                                      }}
-                                      className="text-black font-medium hover:text-primary hover:underline"
-                                    >
-                                      All SubCategories
-                                    </Button>
-                                  </div>
+                            <div className="w-[50%] overflow-y-auto hide-scrollbar">
+                              <div className="p-2 sticky top-0 bg-white">
+                                <div className="flex justify-between border-b">
+                                  <span>Products</span>
 
-                                  {(() => {
-                                    const allSubs =
-                                      getSubCategories(activeParent);
-                                    const totalPages = Math.ceil(
-                                      allSubs.length / ITEMS_PER_PAGE,
-                                    );
-                                    const paginated = allSubs.slice(
-                                      (megaMenuPage - 1) * ITEMS_PER_PAGE,
-                                      megaMenuPage * ITEMS_PER_PAGE,
-                                    );
-
-                                    return (
-                                      <>
-                                        <div className="grid grid-cols-5 gap-6 overflow-y-auto hide-scrollbar flex-1">
-                                          {paginated.length > 0 ? (
-                                            paginated.map((sub) => (
-                                              <div
-                                                key={sub._id}
-                                                className="flex flex-col items-center cursor-pointer group"
-                                                onClick={() =>
-                                                  handleCategoryClick(sub.name)
-                                                }
-                                              >
-                                                <div className="w-[80px] h-[80px] rounded-full overflow-hidden border-2 border-primary mt-0.5 group-hover:scale-105 transition-transform">
-                                                  <img
-                                                    src={
-                                                      sub.isStatic
-                                                        ? sub.image_url
-                                                        : getImageUrl(
-                                                            sub.image_url,
-                                                          )
-                                                    }
-                                                    alt={sub.name}
-                                                    className="w-full h-full object-cover"
-                                                  />
-                                                </div>
-                                                <p className="mt-2 text-sm font-medium text-black group-hover:text-primary">
-                                                  {sub.name}
-                                                </p>
-                                              </div>
-                                            ))
-                                          ) : (
-                                            <p className="col-span-5 text-center text-gray-500 py-10">
-                                              No sub-categories found.
-                                            </p>
-                                          )}
-                                        </div>
-
-                                        {totalPages > 1 && (
-                                          <div className="sticky bottom-0 bg-white py-3 flex justify-center items-center gap-2 border-t">
-                                            <button
-                                              onClick={() =>
-                                                setMegaMenuPage((p) =>
-                                                  Math.max(1, p - 1),
-                                                )
-                                              }
-                                              disabled={megaMenuPage === 1}
-                                              className="px-3 py-1 rounded border border-primary text-sm disabled:opacity-40 hover:bg-[var(--theme-color)] hover:text-white transition-colors"
-                                            >
-                                              <ChevronLeft size={18} />
-                                            </button>
-                                            {Array.from(
-                                              { length: totalPages },
-                                              (_, idx) => idx + 1,
-                                            ).map((page) => (
-                                              <button
-                                                key={page}
-                                                onClick={() =>
-                                                  setMegaMenuPage(page)
-                                                }
-                                                className={`w-8 h-8 rounded-full text-[14px] border transition-colors ${
-                                                  megaMenuPage === page
-                                                    ? "bg-[var(--theme-color)] text-white border-[var(--theme-color)]"
-                                                    : "border-primary hover:bg-[var(--theme-color)] hover:text-white"
-                                                }`}
-                                              >
-                                                {page}
-                                              </button>
-                                            ))}
-                                            <button
-                                              onClick={() =>
-                                                setMegaMenuPage((p) =>
-                                                  Math.min(totalPages, p + 1),
-                                                )
-                                              }
-                                              disabled={
-                                                megaMenuPage === totalPages
-                                              }
-                                              className="px-3 py-1 rounded border border-primary text-sm disabled:opacity-40 hover:bg-[var(--theme-color)] hover:text-white transition-colors"
-                                            >
-                                              <ChevronRight size={18} />
-                                            </button>
-                                          </div>
-                                        )}
-                                      </>
-                                    );
-                                  })()}
-                                </>
-                              ) : (
-                                <div className="flex items-center justify-center h-full text-gray-400">
-                                  Please select a category to view products
+                                  <button
+                                    onClick={() => {
+                                      navigate("/allproducts");
+                                    }}
+                                    className="underline text-primary hover:text-gray-900"
+                                  >
+                                    View All
+                                  </button>
                                 </div>
-                              )}
+                              </div>
+
+                              <div className="flex flex-col">
+                                {filteredProducts.map((product) => (
+                                  <Link
+                                    key={product._id}
+                                    to={`/products/${product._id}`}
+                                    className="flex items-center gap-3 px-4 py-2 group border-b"
+                                  >
+                                    <img
+                                      src={getImageUrl(product.images)}
+                                      alt={product.name}
+                                      className="w-12 h-12 rounded object-cover flex-shrink-0"
+                                    />
+
+                                    <span
+                                      className="
+      text-sm
+      text-gray-900
+      transition-colors
+      duration-200
+      group-hover:text-primary
+      line-clamp-2
+    "
+                                    >
+                                      {product.name}
+                                    </span>
+                                  </Link>
+                                ))}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -970,9 +1064,12 @@ ${
                               {parentCategories.map((parent) => (
                                 <button
                                   key={parent._id}
-                                  onClick={() => handleParentChange(parent._id)}
+                                  onClick={() => {
+                                    setActiveCategory(parent._id);
+                                    setActiveSubCategory(null);
+                                  }}
                                   className={`px-4 py-2 whitespace-nowrap rounded-full text-sm transition-all border ${
-                                    activeParent === parent._id
+                                    activeCategory === parent._id
                                       ? "bg-[var(--theme-color)] text-white border-[var(--theme-color)] shadow-sm"
                                       : "bg-white text-gray-700 border-gray-200"
                                   }`}
@@ -983,8 +1080,8 @@ ${
                             </div>
                           </div>
 
-                          <div className="p-4 bg-white">
-                            {activeParent ? (
+                          <div className="p-2 bg-white">
+                            {activeCategory ? (
                               <div>
                                 <div className="flex justify-between items-center mb-4">
                                   <h3 className="text-sm text-gray-400">
@@ -1000,34 +1097,33 @@ ${
                                     View All
                                   </button>
                                 </div>
+
                                 <div className="flex overflow-x-auto gap-4 pb-4 hide-scrollbar snap-x">
-                                  {getSubCategories(activeParent).length > 0 ? (
-                                    getSubCategories(activeParent).map(
-                                      (sub) => (
-                                        <div
-                                          key={sub._id}
-                                          className="flex-shrink-0 w-[100px] flex flex-col items-center cursor-pointer group snap-start"
-                                          onClick={() =>
-                                            handleCategoryClick(sub.name)
-                                          }
-                                        >
-                                          <div className="w-[70px] h-[70px] rounded-full overflow-hidden border border-gray-100 group-hover:border-[var(--theme-color)] transition-all p-1">
-                                            <img
-                                              src={
-                                                sub.isStatic
-                                                  ? sub.image_url
-                                                  : getImageUrl(sub.image_url)
-                                              }
-                                              alt={sub.name}
-                                              className="w-full h-full object-cover rounded-full"
-                                            />
-                                          </div>
-                                          <p className="mt-2 text-[12px] font-medium text-gray-700 text-center line-clamp-1">
-                                            {sub.name}
-                                          </p>
+                                  {filteredSubCategories.length > 0 ? (
+                                    filteredSubCategories.map((sub) => (
+                                      <div
+                                        key={sub._id}
+                                        className="flex-shrink-0 w-[100px] flex flex-col items-center cursor-pointer group snap-start"
+                                        onClick={() => {
+                                          setActiveSubCategory(sub._id);
+                                        }}
+                                      >
+                                        <div className="w-[70px] h-[70px] rounded-full overflow-hidden border border-gray-100 group-hover:border-[var(--theme-color)] transition-all p-1">
+                                          <img
+                                            src={
+                                              sub.isStatic
+                                                ? sub.image_url
+                                                : getImageUrl(sub.image_url)
+                                            }
+                                            alt={sub.name}
+                                            className="w-full h-full object-cover rounded-full"
+                                          />
                                         </div>
-                                      ),
-                                    )
+                                        <p className="mt-2 text-[12px] font-medium text-gray-700 text-center line-clamp-1">
+                                          {sub.name}
+                                        </p>
+                                      </div>
+                                    ))
                                   ) : (
                                     <p className="text-xs text-gray-400 py-4">
                                       No sub-categories found.
@@ -1040,6 +1136,68 @@ ${
                                 Select a category above to see items
                               </div>
                             )}
+                          </div>
+
+                          <div className="overflow-y-auto hide-scrollbar p-2 h-[300px]">
+                            <div className="flex justify-between items-center mb-3">
+                              <h3 className="text-sm text-gray-400">
+                                Products
+                              </h3>
+
+                              <button
+                                onClick={() => {
+                                  setIsMenuOpen(false);
+                                  navigate("/allproducts");
+                                }}
+                                className="text-[var(--theme-color)] text-xs font-medium"
+                              >
+                                View All
+                              </button>
+                            </div>
+
+                            <div className="flex flex-col">
+                              {filteredProducts.map((product) => (
+                                <Link
+                                  key={product._id}
+                                  to={`/products/${product._id}`}
+                                  onClick={() => {
+                                    setIsMenuOpen(false);
+                                    setIsMobileMegaMenuOpen(false);
+                                  }}
+                                  className="
+          flex
+          items-center
+          gap-3
+          py-3
+          border-b
+          border-gray-200
+        "
+                                >
+                                  <img
+                                    src={getImageUrl(product.images)}
+                                    alt={product.name}
+                                    className="
+            w-[45px]
+            h-[45px]
+            object-cover
+            border
+            border-gray-200
+            flex-shrink-0
+          "
+                                  />
+
+                                  <span
+                                    className="
+            text-sm
+            text-gray-900
+            line-clamp-2
+          "
+                                  >
+                                    {product.name}
+                                  </span>
+                                </Link>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1129,10 +1287,6 @@ ${
                 </NavLink>
               );
             })}
-            {/* <div className="flex items-center justify-center h-[30px]"> */}
-            {/* <hr className="w-full border-t border-dashed border-gray-400" /> */}
-            {/* </div> */}
-
             <div className="text-light">
               <div className="py-4 px-4 cursor-pointer light-color">
                 <button
