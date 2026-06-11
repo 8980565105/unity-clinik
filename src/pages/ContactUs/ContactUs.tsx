@@ -15,7 +15,7 @@ export default function ContactUsPage() {
   const columns = [
     { key: "name", label: "Name", width: "w-40" },
     { key: "email", label: "Email", width: "w-48" },
-    { key: "subject", label: "Order Id", width: "w-32" },
+    { key: "subject", label: "subject", width: "w-32" },
     { key: "message", label: "Message", width: "w-[400px]" },
     {
       key: "createdAt",

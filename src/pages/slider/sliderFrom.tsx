@@ -155,7 +155,6 @@ function VideoUpload({ value, uploading, onChange, onUploadingChange }: VideoUpl
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            // Backend: { success: true, data: { url: "/uploads/xxx.mp4" } }
             const url = res.data?.data?.url ?? null;
 
             if (url) {
@@ -170,83 +169,6 @@ function VideoUpload({ value, uploading, onChange, onUploadingChange }: VideoUpl
             onUploadingChange(false);
         }
     };
-    // const handleFile = async (file: File) => {
-    //     // if (!file.type.startsWith("video/")) {
-    //     //     toast.error("Only video files are allowed");
-    //     //     return;
-    //     // }
-    //     const sizeMB = file.size / (1024 * 1024);
-    //     if (sizeMB > MAX_MB) {
-    //         toast.error(`Video must be under ${MAX_MB}MB. Your file is ${sizeMB.toFixed(1)}MB`);
-    //         return;
-    //     }
-
-    //     onUploadingChange(true);
-    //     try {
-    //         const formData = new FormData();
-    //         formData.append("image", file);
-
-    //         const res = await api.post("/uploads/image", formData, {
-    //             headers: { "Content-Type": "multipart/form-data" },
-    //         });
-
-    //         if (res.data?.url || res.data?.data?.url) {
-    //             const url = res.data?.url || res.data?.data?.url;
-    //             onChange(url);
-    //             toast.success("Video uploaded!");
-    //         } else {
-    //             toast.error("Upload failed");
-    //         }
-    //     } catch {
-    //         toast.error("Video upload error");
-    //     } finally {
-    //         onUploadingChange(false);
-    //     }
-    // };
-
-    // const handleFile = async (file: File) => {
-    //     if (!file.type.startsWith("video/")) {
-    //         toast.error("Only video files are allowed");
-    //         return;
-    //     }
-    //     const sizeMB = file.size / (1024 * 1024);
-    //     if (sizeMB > MAX_MB) {
-    //         toast.error(`Video must be under ${MAX_MB}MB. Your file is ${sizeMB.toFixed(1)}MB`);
-    //         return;
-    //     }
-
-    //     onUploadingChange(true);
-    //     try {
-    //         const formData = new FormData();
-    //         formData.append("image", file); 
-
-    //         const res = await api.post("/uploads/image", formData, {
-    //             headers: { "Content-Type": "multipart/form-data" },
-    //         });
-
-    //         const url =
-    //             res.data?.data?.url ||    
-    //             res.data?.url ||            
-    //             res.data?.data?.imageUrl || 
-    //             res.data?.imageUrl ||      
-    //             res.data?.data?.path ||     
-    //             res.data?.path ||           
-    //             null;
-
-    //         if (url) {
-    //             onChange(url);
-    //             toast.success("Video uploaded!");
-    //         } else {
-    //             console.log("Upload response full:", JSON.stringify(res.data));
-    //             toast.error("Upload failed — URL not found in response");
-    //         }
-    //     } catch (err: any) {
-    //         console.error("Upload error:", err?.response?.data || err);
-    //         toast.error(err?.response?.data?.message || "Video upload error");
-    //     } finally {
-    //         onUploadingChange(false);
-    //     }
-    // };
 
     return (
         <div className="mt-1">
@@ -417,7 +339,6 @@ export default function SlideFormPage() {
 
     useEffect(() => { dispatch(fetchSlides({})); }, [dispatch]);
 
-    // ── Load existing data in edit mode ───────────────────────────────────────
     useEffect(() => {
         if (!isEditMode || !id) return;
         setPageLoading(true);
@@ -471,7 +392,6 @@ export default function SlideFormPage() {
                         productimgUrl: s.productimg ?? null,
                     })));
                 }
-                // ── successStory load ──
                 if (doc.section === "successStory" && Array.isArray(doc.successStorySlides)) {
                     setSuccessStorySlides(doc.successStorySlides.map((s: any) => ({
                         name: s.name ?? "", age: s.age ?? "",
@@ -488,7 +408,6 @@ export default function SlideFormPage() {
             .finally(() => setPageLoading(false));
     }, [dispatch, id, isEditMode, basePath, navigate]);
 
-    // ── Section change ────────────────────────────────────────────────────────
     const handleSectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const value = e.target.value as SectionType;
         if (isEditMode) return;
@@ -499,7 +418,6 @@ export default function SlideFormPage() {
         setSelectedSection(value);
     };
 
-    // ── Submit ────────────────────────────────────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedSection) { toast.error("Please select a section"); return; }
@@ -508,7 +426,6 @@ export default function SlideFormPage() {
             return;
         }
 
-        // Block submit if any video is still uploading
         if (selectedSection === "successStory" && successStorySlides.some(s => s.videoUploading)) {
             toast.error("Please wait for video upload to finish");
             return;
@@ -636,7 +553,7 @@ export default function SlideFormPage() {
                         </CardContent>
                     </Card>
 
-                    {selectedSection && (
+                    {selectedSection === "successStory" && (
                         <Card className="shadow-md border border-blue-100 bg-blue-50/30">
                             <CardHeader>
                                 <CardTitle className="text-lg font-semibold text-blue-800">

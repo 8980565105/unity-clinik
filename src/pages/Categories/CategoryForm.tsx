@@ -31,16 +31,12 @@ export default function CategoryFormPage() {
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  // const [parentId, setParentId] = useState<string | null>(null);
   const [status, setStatus] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-
-  // Fetch categories for dropdown
   useEffect(() => {
     dispatch(fetchCategories({ page: 1, limit: 100 }));
   }, [dispatch]);
 
-  // If edit mode → fetch category details
   useEffect(() => {
     if (isEditMode && id) {
       dispatch(getCategoryById(id)).then((res: any) => {
@@ -48,7 +44,6 @@ export default function CategoryFormPage() {
           const cat = res.payload;
           setName(cat.name || "");
           setDescription(cat.description || "");
-          // setParentId(cat.parent_id || null);
           setStatus(cat.status === "active");
           setImageUrl(cat.image_url || null);
         }
@@ -62,7 +57,6 @@ export default function CategoryFormPage() {
     const payload = {
       name,
       description,
-      // parent_id: parentId,
       status: status ? "active" : "inactive",
       image: imageUrl,
     };
@@ -96,7 +90,6 @@ export default function CategoryFormPage() {
 
   return (
     <div className="p-6 mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link to={`${basePath}/categories`}>
           <Button variant="ghost" size="icon">
@@ -116,7 +109,6 @@ export default function CategoryFormPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
-        {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="shadow-md border border-gray-200">
             <CardHeader>
@@ -147,32 +139,6 @@ export default function CategoryFormPage() {
                   className="mt-1 min-h-[120px]"
                 />
               </div>
-
-              {/* <div>
-                <Label htmlFor="parent">Parent Category</Label>
-                <Select
-                  value={parentId ?? "none"}
-                  onValueChange={(val) =>
-                    setParentId(val === "none" ? null : val)
-                  }
-                // className="mt-1 w-full"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="None" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {categories
-                      .filter((cat) => cat._id !== id)
-                      .map((cat) => (
-                        <SelectItem key={cat._id} value={cat._id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div> */}
-
               <div>
                 <Label>Category Image</Label>
                 <div className="mt-1">
@@ -187,7 +153,6 @@ export default function CategoryFormPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
           <Card className="sticky top-6 shadow-md border border-gray-200">
             <CardHeader>
@@ -205,7 +170,6 @@ export default function CategoryFormPage() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
           <div className="flex gap-3">
             <Button
               type="submit"

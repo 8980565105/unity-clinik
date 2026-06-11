@@ -28,7 +28,6 @@ export default function Register() {
     storeName: "",
     storeEmail: "",
     storePhone: "",
-    // storeWebsite: "",
     storeLogo: "",
     storeBanner: "",
     storeDescription: "",
@@ -114,21 +113,12 @@ export default function Register() {
       toast.error("Store GST No is required");
       return false;
     }
-
-
-    // if (!form.storeWebsite.trim()) {
-    //   toast.error("Store Website is required");
-    //   return false;
-    // }
-
     return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) return;
-
-
 
     const payload = {
       name: form.name,
@@ -143,7 +133,6 @@ export default function Register() {
       storeName: form.storeName,
       storeEmail: form.storeEmail,
       storePhone: form.storePhone || undefined,
-      // storeWebsite: form.storeWebsite,
       storeLogo: form.storeLogo || undefined,
       storeBanner: form.storeBanner || undefined,
       storeDescription: form.storeDescription || undefined,
@@ -165,7 +154,6 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
 
-      {/* <toast /> */}
 
       <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-4xl">
         <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
@@ -240,31 +228,6 @@ export default function Register() {
             <input type="text" name="storegstno" value={form.storegstno} onChange={handleChange}
               placeholder="Store GST No"
               className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" />
-
-            {/* <div>
-              <input type="text" name="storeWebsite" value={form.storeWebsite}
-                onChange={handleChange}
-                placeholder="Store Website (e.g. https://store1.com)"
-                className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500" />
-              <p className="text-xs text-gray-400 mt-1">
-             
-                {form.storeWebsite && (
-                  <span className="text-green-600 ml-1 font-medium">
-                    Domain: {(() => {
-                      try {
-                        const h = new URL(
-                          form.storeWebsite.startsWith("http")
-                            ? form.storeWebsite
-                            : `http://${form.storeWebsite}`
-                        ).host;
-                        return h.replace(/^www\./, "");
-                      } catch { return form.storeWebsite; }
-                    })()}
-                  </span>
-                )}
-              </p>
-            </div> */}
-
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -289,7 +252,6 @@ export default function Register() {
             {[
               { name: "storeTheme.primaryColor", label: "Primary Color", val: form.storeTheme.primaryColor },
               { name: "storeTheme.secondaryColor", label: "Secondary Color", val: form.storeTheme.secondaryColor },
-              // { name: "storeTheme.buttonColor", label: "Button Color", val: form.storeTheme.buttonColor },
             ].map((c) => (
               <div key={c.name}>
                 <label className="block text-sm text-gray-600 mb-1">{c.label}</label>

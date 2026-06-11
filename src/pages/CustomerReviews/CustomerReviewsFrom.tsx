@@ -30,10 +30,8 @@ export default function CustomerReviewsForm() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const isEditMode = Boolean(id);
-
     const { products } = useSelector((state: RootState) => state.products);
     const { users } = useSelector((state: RootState) => state.users);
-
     const [isApproved, setIsApproved] = useState(true);
     const [productId, setProductId] = useState("");
     const [userId, setUserId] = useState("");

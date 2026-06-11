@@ -1,4 +1,139 @@
-import React, { useState } from "react";
+// import React, { useState } from "react";
+// import { Upload, X } from "lucide-react";
+// import { Button } from "@/components/ui/button";
+// import api from "@/services/api";
+// import { ROUTES } from "@/services/routes";
+
+// interface ImageUploadProps {
+//   value?: string | string[] | null;
+//   onChange: (url: string | string[] | null) => void;
+//   multiple?: boolean;
+//   className?: string;
+//   size?: number; // square size in px
+// }
+
+// export const ImageUpload: React.FC<ImageUploadProps> = ({
+//   value,
+//   onChange,
+//   multiple = false,
+//   className,
+//   size = 128,
+// }) => {
+//   const [uploading, setUploading] = useState(false);
+
+//  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+//   const files = e.target.files;
+//   if (!files || files.length === 0) return;
+
+//   const formData = new FormData();
+//   Array.from(files).forEach((file) => formData.append("image", file));
+
+//   try {
+//     setUploading(true);
+//     const res = await api.post(ROUTES.upload.image, formData, {
+//       headers: { "Content-Type": "multipart/form-data" },
+//     });
+
+//     if (res.data.success) {
+//       let uploadedUrls: string[] = [];
+
+//       if (Array.isArray(res.data.data)) {
+//         uploadedUrls = res.data.data.map((img: any) => img.image_url);
+//       } else if (res.data.data.image_url) {
+//         uploadedUrls = [res.data.data.image_url];
+//       }
+
+//       if (multiple) {
+//         const newValues = Array.isArray(value) ? [...value, ...uploadedUrls] : uploadedUrls;
+//         onChange(newValues);
+//       } else {
+//         onChange(uploadedUrls[0] || null);
+//       }
+//     }
+//   } catch (err) {
+//     console.error("Image upload failed:", err);
+//   } finally {
+//     setUploading(false);
+//   }
+// };
+
+
+//   const removeImage = (index?: number) => {
+//     if (multiple && Array.isArray(value) && index !== undefined) {
+//       const newValues = [...value];
+//       newValues.splice(index, 1);
+//       onChange(newValues.length > 0 ? newValues : null);
+//     } else {
+//       onChange(null);
+//     }
+//   };
+
+//   if (multiple) {
+//     return (
+//       <div className="flex flex-wrap gap-2">
+//         {Array.isArray(value) &&
+//           value.map((url, idx) => (
+//             <div key={idx} className="relative" style={{ width: size, height: size }}>
+//               <img
+//                 src={typeof url === "string" ? (url.startsWith("http") ? url : `${import.meta.env.VITE_API_URL_IMAGE}${url}`) : ""}
+//                 alt="Uploaded"
+//                 className="w-full h-full object-contain rounded"
+//               />
+//               <Button
+//                 type="button"
+//                 variant="destructive"
+//                 size="icon"
+//                 className="absolute -top-2 -right-2 h-6 w-6"
+//                 onClick={() => removeImage(idx)}
+//               >
+//                 <X className="h-3 w-3" />
+//               </Button>
+//             </div>
+//           ))}
+//         <label
+//           className={`flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:border-muted-foreground/50 ${className}`}
+//           style={{ width: size, height: size }}
+//         >
+//           <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+//           <span className="text-sm text-muted-foreground">{uploading ? "Uploading..." : "Upload Images"}</span>
+//           <input type="file" accept="image/*" className="hidden" multiple onChange={handleFileChange} />
+//         </label>
+//       </div>
+//     );
+//   }
+
+//   return value ? (
+//     <div className="relative" style={{ width: size, height: size }}>
+//       <img
+//         src={typeof value === "string" ? (value.startsWith("http") ? value : `${import.meta.env.VITE_API_URL_IMAGE}${value}`) : ""}
+//         alt="Uploaded"
+//         className="w-full h-full object-contain rounded"
+//       />
+//       <Button
+//         type="button"
+//         variant="destructive"
+//         size="icon"
+//         className="absolute -top-2 -right-2 h-6 w-6"
+//         onClick={() => removeImage()}
+//       >
+//         <X className="h-3 w-3" />
+//       </Button>
+//     </div>
+//   ) : (
+//     <label
+//       className={`flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:border-muted-foreground/50 ${className}`}
+//       style={{ width: size, height: size }}
+//     >
+//       <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+//       <span className="text-sm text-muted-foreground">{uploading ? "Uploading..." : "Upload Image"}</span>
+//       <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+//     </label>
+//   );
+// };
+
+
+
+import React, { useState, useRef, useCallback } from "react";
 import { Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import api from "@/services/api";
@@ -9,7 +144,7 @@ interface ImageUploadProps {
   onChange: (url: string | string[] | null) => void;
   multiple?: boolean;
   className?: string;
-  size?: number; // square size in px
+  size?: number;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -20,43 +155,90 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   size = 128,
 }) => {
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
- const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const files = e.target.files;
-  if (!files || files.length === 0) return;
+  const uploadFiles = useCallback(async (files: File[]) => {
+    if (!files.length) return;
 
-  const formData = new FormData();
-  Array.from(files).forEach((file) => formData.append("image", file));
+    const formData = new FormData();
+    files.forEach((file) => formData.append("image", file));
 
-  try {
-    setUploading(true);
-    const res = await api.post(ROUTES.upload.image, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+    try {
+      setUploading(true);
+      const res = await api.post(ROUTES.upload.image, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
 
-    if (res.data.success) {
-      let uploadedUrls: string[] = [];
+      if (res.data.success) {
+        let uploadedUrls: string[] = [];
 
-      if (Array.isArray(res.data.data)) {
-        uploadedUrls = res.data.data.map((img: any) => img.image_url);
-      } else if (res.data.data.image_url) {
-        uploadedUrls = [res.data.data.image_url];
+        if (Array.isArray(res.data.data)) {
+          uploadedUrls = res.data.data.map((img: any) => img.image_url);
+        } else if (res.data.data.image_url) {
+          uploadedUrls = [res.data.data.image_url];
+        }
+
+        if (multiple) {
+          const newValues = Array.isArray(value)
+            ? [...value, ...uploadedUrls]
+            : uploadedUrls;
+          onChange(newValues);
+        } else {
+          onChange(uploadedUrls[0] || null);
+        }
       }
-
-      if (multiple) {
-        const newValues = Array.isArray(value) ? [...value, ...uploadedUrls] : uploadedUrls;
-        onChange(newValues);
-      } else {
-        onChange(uploadedUrls[0] || null);
-      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+    } finally {
+      setUploading(false);
     }
-  } catch (err) {
-    console.error("Image upload failed:", err);
-  } finally {
-    setUploading(false);
-  }
-};
+  }, [value, multiple, onChange]);
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    await uploadFiles(Array.from(files));
+    // Reset input so same file can be re-selected
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  // ─── Drag & Drop Handlers ───────────────────────────────────────────────────
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = "copy";
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files).filter((f) =>
+      f.type.startsWith("image/")
+    );
+    if (!files.length) return;
+
+    // Single mode: only first file
+    await uploadFiles(multiple ? files : [files[0]]);
+  };
+
+  // ─── Remove ─────────────────────────────────────────────────────────────────
 
   const removeImage = (index?: number) => {
     if (multiple && Array.isArray(value) && index !== undefined) {
@@ -68,14 +250,35 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }
   };
 
+  const resolveUrl = (url: string) =>
+    url.startsWith("http") ? url : `${import.meta.env.VITE_API_URL_IMAGE}${url}`;
+
+  // ─── Shared drop zone classes ────────────────────────────────────────────────
+
+  const dropZoneClass = `
+    flex flex-col items-center justify-center border-2 border-dashed rounded 
+    cursor-pointer transition-colors
+    ${isDragging
+      ? "border-blue-500 bg-blue-50 scale-[1.02]"
+      : "border-gray-300 hover:border-muted-foreground/50"
+    }
+    ${className ?? ""}
+  `.trim();
+
+  // ─── Multiple mode ───────────────────────────────────────────────────────────
+
   if (multiple) {
     return (
       <div className="flex flex-wrap gap-2">
         {Array.isArray(value) &&
           value.map((url, idx) => (
-            <div key={idx} className="relative" style={{ width: size, height: size }}>
+            <div
+              key={idx}
+              className="relative"
+              style={{ width: size, height: size }}
+            >
               <img
-                src={typeof url === "string" ? (url.startsWith("http") ? url : `${import.meta.env.VITE_API_URL_IMAGE}${url}`) : ""}
+                src={typeof url === "string" ? resolveUrl(url) : ""}
                 alt="Uploaded"
                 className="w-full h-full object-contain rounded"
               />
@@ -90,43 +293,86 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               </Button>
             </div>
           ))}
+
+        {/* Drop zone tile */}
         <label
-          className={`flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:border-muted-foreground/50 ${className}`}
+          className={dropZoneClass}
           style={{ width: size, height: size }}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-          <span className="text-sm text-muted-foreground">{uploading ? "Uploading..." : "Upload Images"}</span>
-          <input type="file" accept="image/*" className="hidden" multiple onChange={handleFileChange} />
+          <span className="text-xs text-center text-muted-foreground px-1 leading-tight">
+            {uploading
+              ? "Uploading..."
+              : isDragging
+                ? "Drop here"
+                : "Upload / Drop"}
+          </span>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            multiple
+            onChange={handleFileChange}
+          />
         </label>
       </div>
     );
   }
 
-  return value ? (
-    <div className="relative" style={{ width: size, height: size }}>
-      <img
-        src={typeof value === "string" ? (value.startsWith("http") ? value : `${import.meta.env.VITE_API_URL_IMAGE}${value}`) : ""}
-        alt="Uploaded"
-        className="w-full h-full object-contain rounded"
-      />
-      <Button
-        type="button"
-        variant="destructive"
-        size="icon"
-        className="absolute -top-2 -right-2 h-6 w-6"
-        onClick={() => removeImage()}
-      >
-        <X className="h-3 w-3" />
-      </Button>
-    </div>
-  ) : (
+  // ─── Single mode ─────────────────────────────────────────────────────────────
+
+  if (value) {
+    return (
+      <div className="relative" style={{ width: size, height: size }}>
+        <img
+          src={
+            typeof value === "string" ? resolveUrl(value) : ""
+          }
+          alt="Uploaded"
+          className="w-full h-full object-contain rounded"
+        />
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          className="absolute -top-2 -right-2 h-6 w-6"
+          onClick={() => removeImage()}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
     <label
-      className={`flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:border-muted-foreground/50 ${className}`}
+      className={dropZoneClass}
       style={{ width: size, height: size }}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-      <span className="text-sm text-muted-foreground">{uploading ? "Uploading..." : "Upload Image"}</span>
-      <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      <span className="text-xs text-center text-muted-foreground px-1 leading-tight">
+        {uploading
+          ? "Uploading..."
+          : isDragging
+            ? "Drop here!"
+            : "Upload / Drop Image"}
+      </span>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
     </label>
   );
 };

@@ -26,22 +26,15 @@ export default function PageFormPage() {
   const basePath = useBasePath();
 
   const { user } = useSelector((state: any) => state.auth);
-  // const { stores = [] } = useSelector((state: any) => state.stores || {});
-
-  // Page fields
   const [pageName, setPageName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("active");
   const [order, setOrder] = useState<number | "">("");
-  // const [selectedStoreId, setSelectedStoreId] = useState("");
-
-  // SEO fields
   const [metaTitle, setMetaTitle] = useState("");
   const [metaDescription, setMetaDescription] = useState("");
   const [metaKeyphrase, setMetaKeyphrase] = useState("");
   const [seoImage, setSeoImage] = useState("");
 
-  // Sections
   const [sections, setSections] = useState<SectionType[]>([
     {
       type: "content",
@@ -57,14 +50,6 @@ export default function PageFormPage() {
     },
   ]);
 
-  // Store owner auto storeId
-  // useEffect(() => {
-    // if (user?.role === "store_owner" && user?.storeId) {
-      // setSelectedStoreId(user.storeId);
-    // }
-  // }, [user]);
-
-  // Fetch page if edit mode
   useEffect(() => {
     if (isEditMode && id) {
       dispatch(getPageById(id)).then((res: any) => {
@@ -79,13 +64,11 @@ export default function PageFormPage() {
           setStatus(page.status || "active");
           setOrder(page.order || 1);
           setSections(page.sections?.length ? page.sections : []);
-          // if (page.storeId) setSelectedStoreId(page.storeId);
         }
       });
     }
   }, [dispatch, id, isEditMode]);
 
-  // Add / remove sections
   const addSection = (type: SectionType["type"] = "content") => {
     const newSection: SectionType = {
       type,
@@ -119,7 +102,6 @@ export default function PageFormPage() {
     });
   };
 
-  // Slide handlers
   const addSlide = (sectionIndex: number) => {
     const updated = [...sections];
     if (!updated[sectionIndex].slides) updated[sectionIndex].slides = [];
@@ -158,7 +140,6 @@ export default function PageFormPage() {
     setSections(updated);
   };
 
-  // Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pageName.trim()) return toast.error("Please enter page name");
@@ -183,8 +164,6 @@ export default function PageFormPage() {
         };
       }),
     };
-
-    // if (selectedStoreId) payload.storeId = selectedStoreId;
 
     try {
       let result;
@@ -212,7 +191,6 @@ export default function PageFormPage() {
 
   return (
     <div className="p-6 mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <Link to={`${basePath}/pages`}>
           <Button variant="ghost" size="icon">
@@ -231,13 +209,8 @@ export default function PageFormPage() {
         </div>
       </div>
 
-      {/* Form */}
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-6">
-
-        {/* ─── Left Column ─── */}
         <div className="lg:col-span-2 space-y-6">
-
-          {/* Page Details */}
           <Card className="shadow-md border border-gray-200">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Page Details</CardTitle>
@@ -258,42 +231,8 @@ export default function PageFormPage() {
                   placeholder="Short page description..."
                 />
               </div>
-
-              {/* Admin — store selector */}
-              {/* {user?.role === "admin" && (
-                <div>
-                  <Label>Store</Label>
-                  <select
-                    value={selectedStoreId}
-                    onChange={(e) => setSelectedStoreId(e.target.value)}
-                    className="border border-gray-300 rounded-md p-2 w-full mt-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">-- Global (No Store) --</option>
-                    {stores.map((store: any) => (
-                      <option key={store._id} value={store._id}>
-                        {store.store_name || store.name}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Store select karo to page te store mate j show thase
-                  </p>
-                </div>
-              )} */}
-
-              {/* Store owner — read only */}
-              {/* {user?.role === "store_owner" && (
-                <div>
-                  <Label>Store</Label>
-                  <div className="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600">
-                    Auto-assigned to your store
-                  </div>
-                </div>
-              )} */}
             </CardContent>
           </Card>
-
-          {/* SEO Details */}
           <Card className="shadow-md border border-gray-200">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">SEO Details</CardTitle>
@@ -329,8 +268,6 @@ export default function PageFormPage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Page Sections */}
           <Card className="shadow-sm border border-gray-100">
             <CardHeader className="flex justify-between items-center pb-2">
               <CardTitle className="text-lg font-semibold">Page Sections</CardTitle>
@@ -362,7 +299,6 @@ export default function PageFormPage() {
                     key={sectionIndex}
                     className="relative rounded-xl border border-gray-200 bg-white shadow-sm p-5 hover:shadow-md transition-shadow"
                   >
-                    {/* Remove Section */}
                     <button
                       type="button"
                       onClick={() => removeSection(sectionIndex)}
@@ -375,7 +311,6 @@ export default function PageFormPage() {
                       Section {sectionIndex + 1}
                     </h4>
 
-                    {/* Section Type */}
                     <div className="mb-4">
                       <Label>Section Type</Label>
                       <select
@@ -391,7 +326,6 @@ export default function PageFormPage() {
                       </select>
                     </div>
 
-                    {/* Section Fields */}
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>Title</Label>
@@ -442,7 +376,6 @@ export default function PageFormPage() {
                       )}
                     </div>
 
-                    {/* Include Button */}
                     <div className="flex items-center justify-between mt-5 border-t pt-3">
                       <div className="flex items-center gap-2">
                         <Switch
@@ -480,7 +413,6 @@ export default function PageFormPage() {
                       </div>
                     )}
 
-                    {/* Hero Slider Slides */}
                     {section.type === "hero_slider" && (
                       <div className="mt-4">
                         <div className="flex items-center justify-between mb-2">
@@ -589,7 +521,6 @@ export default function PageFormPage() {
           </Card>
         </div>
 
-        {/* ─── Right Column ─── */}
         <div className="space-y-6 relative">
           <Card className="sticky top-6 shadow-md border border-gray-200">
             <CardHeader>
