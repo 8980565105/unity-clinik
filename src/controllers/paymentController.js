@@ -8,29 +8,9 @@ const axios = require("axios");
 const { sendResponse } = require("../utils/response");
 const mongoose = require("mongoose");
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// RAZORPAY - CREATE ORDER
-// ═══════════════════════════════════════════════════════════════════════════════
-// const createRazorpayOrder = async (req, res) => {
-//   try {
-//     const { amount, order_id } = req.body;
 
-//     const options = {
-//       amount: amount * 100,
-//       currency: "INR",
-//       receipt: "receipt_" + order_id,
-//     };
-
-//     const order = await razorpay.orders.create(options);
-//     sendResponse(res, true, order, "Razorpay order created");
-//   } catch (err) {
-//     console.log("RAZORPAY ERROR:", err.message);
-//     sendResponse(res, false, null, err.message);
-//   }
-// };
 const createRazorpayOrder = async (req, res) => {
   try {
-    console.log("BODY =", req.body);
 
     const { amount, order_id } = req.body;
 
@@ -42,11 +22,9 @@ const createRazorpayOrder = async (req, res) => {
 
     const order = await razorpay.orders.create(options);
 
-    console.log("RAZORPAY ORDER =", order);
 
     sendResponse(res, true, order, "Razorpay order created");
   } catch (err) {
-    console.log("RAZORPAY FULL ERROR =", err);
     sendResponse(res, false, null, err.message);
   }
 };
@@ -122,109 +100,11 @@ const razorpayWebhook = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PHONEPE - CREATE PAYMENT
-// POST /api/payments/phonepe/initiate
-// Body: { amount, order_id, user_id, redirect_url }
-// ═══════════════════════════════════════════════════════════════════════════════
-// const createPhonePePayment = async (req, res) => {
-//   try {
-//     const { amount, order_id, user_id, redirect_url } = req.body;
-
-//     const merchantId = process.env.PHONEPE_MERCHANT_ID;
-//     const saltKey = process.env.PHONEPE_SALT_KEY;
-//     const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
-//     const isProduction = process.env.PHONEPE_ENV === "production";
-
-//     // PhonePe amount paisa ma hoy che (1 rupee = 100 paisa)
-//     const amountInPaisa = Math.round(amount * 100);
-
-//     // Unique merchant transaction ID
-//     const merchantTransactionId = `MT_${order_id}_${Date.now()}`;
-
-//     // PhonePe request payload
-//     const payload = {
-//       merchantId,
-//       merchantTransactionId,
-//       merchantUserId: `MU_${user_id}`,
-//       amount: amountInPaisa,
-//       redirectUrl: redirect_url,
-//       redirectMode: "REDIRECT", // POST redirect
-//       callbackUrl: `${process.env.BACKEND_URL}/api/payments/phonepe/callback`,
-//       mobileNumber: "", // optional
-//       paymentInstrument: {
-//         type: "PAY_PAGE", // PhonePe hosted page
-//       },
-//     };
-
-//     // Base64 encode payload
-//     const base64Payload = Buffer.from(JSON.stringify(payload)).toString(
-//       "base64",
-//     );
-
-//     // Checksum: SHA256(base64payload + "/pg/v1/pay" + saltKey) + "###" + saltKeyIndex
-//     const checksumString = base64Payload + "/pg/v1/pay" + saltKey;
-//     const sha256Hash = crypto
-//       .createHash("sha256")
-//       .update(checksumString)
-//       .digest("hex");
-//     const checksum = sha256Hash + "###" + saltKeyIndex;
-
-//     // PhonePe API URL
-//     const phonePeUrl = isProduction
-//       ? "https://api.phonepe.com/apis/hermes/pg/v1/pay"
-//       : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
-
-//     const response = await axios.post(
-//       phonePeUrl,
-//       { request: base64Payload },
-//       {
-//         headers: {
-//           "Content-Type": "application/json",
-//           "X-VERIFY": checksum,
-//         },
-//       },
-//     );
-
-//     if (!response.data.success) {
-//       return sendResponse(
-//         res,
-//         false,
-//         null,
-//         response.data.message || "PhonePe initiation failed",
-//       );
-//     }
-
-//     // PhonePe thi payment page URL aavse
-//     const paymentUrl =
-//       response.data?.data?.instrumentResponse?.redirectInfo?.url;
-
-//     if (!paymentUrl) {
-//       return sendResponse(res, false, null, "PhonePe payment URL missing");
-//     }
-
-//     // merchantTransactionId save karo — verify vakhte kaam avse
-//     await Order.findByIdAndUpdate(order_id, {
-//       merchant_transaction_id: merchantTransactionId,
-//     });
-
-//     sendResponse(
-//       res,
-//       true,
-//       { paymentUrl, merchantTransactionId },
-//       "PhonePe order created",
-//     );
-//   } catch (err) {
-//     console.error("PHONEPE CREATE ERROR:", err?.response?.data || err.message);
-//     sendResponse(res, false, null, err?.response?.data?.message || err.message);
-//   }
-// };
 
 const createPhonePePayment = async (req, res) => {
   try {
     const { amount, order_id, user_id, redirect_url } = req.body;
 
-    // ✅ Validation — missing fields early catch
     if (!amount || !order_id || !user_id || !redirect_url) {
       return sendResponse(
         res,
@@ -239,19 +119,10 @@ const createPhonePePayment = async (req, res) => {
     const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
     const isProduction = process.env.PHONEPE_ENV === "production";
 
-    // ✅ Log for debug
-    console.log("PhonePe ENV:", {
-      merchantId,
-      saltKeyIndex,
-      isProduction,
-      amount,
-      order_id,
-    });
 
     const amountInPaisa = Math.round(amount * 100);
     const merchantTransactionId = `MT${order_id.toString().slice(-8)}${Date.now().toString().slice(-6)}`;
 
-    // ✅ Fix: mobileNumber દૂર કર્યો, merchantUserId safe format
     const payload = {
       merchantId,
       merchantTransactionId,
@@ -265,7 +136,6 @@ const createPhonePePayment = async (req, res) => {
       },
     };
 
-    console.log("PhonePe Payload:", JSON.stringify(payload));
 
     const base64Payload = Buffer.from(JSON.stringify(payload)).toString(
       "base64",
@@ -281,7 +151,6 @@ const createPhonePePayment = async (req, res) => {
       ? "https://api.phonepe.com/apis/hermes/pg/v1/pay"
       : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
 
-    console.log("Calling PhonePe URL:", phonePeUrl);
 
     const response = await axios.post(
       phonePeUrl,
@@ -295,7 +164,6 @@ const createPhonePePayment = async (req, res) => {
       },
     );
 
-    console.log("PhonePe Response:", JSON.stringify(response.data));
 
     if (!response.data.success) {
       return sendResponse(
@@ -324,79 +192,10 @@ const createPhonePePayment = async (req, res) => {
       "PhonePe order created",
     );
   } catch (err) {
-    console.error(
-      "PHONEPE CREATE ERROR FULL:",
-      err?.response?.data || err.message,
-    );
+   
     sendResponse(res, false, null, err?.response?.data?.message || err.message);
   }
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PHONEPE - VERIFY PAYMENT (frontend thi call thase after redirect)
-// POST /api/payments/phonepe/verify
-// Body: { merchantTransactionId, order_id }
-// ═══════════════════════════════════════════════════════════════════════════════
-// const verifyPhonePePayment = async (req, res) => {
-//   try {
-//     const { merchantTransactionId, order_id } = req.body;
-
-//     const merchantId   = process.env.PHONEPE_MERCHANT_ID;
-//     const saltKey      = process.env.PHONEPE_SALT_KEY;
-//     const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
-//     const isProduction = process.env.PHONEPE_ENV === "production";
-
-//     // Checksum for status check
-//     const checksumString =
-//       `/pg/v1/status/${merchantId}/${merchantTransactionId}` + saltKey;
-//     const sha256Hash = crypto.createHash("sha256").update(checksumString).digest("hex");
-//     const checksum = sha256Hash + "###" + saltKeyIndex;
-
-//     const statusUrl = isProduction
-//       ? `https://api.phonepe.com/apis/hermes/pg/v1/status/${merchantId}/${merchantTransactionId}`
-//       : `https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/${merchantId}/${merchantTransactionId}`;
-
-//     const response = await axios.get(statusUrl, {
-//       headers: {
-//         "Content-Type": "application/json",
-//         "X-VERIFY": checksum,
-//         "X-MERCHANT-ID": merchantId,
-//       },
-//     });
-
-//     const paymentData = response.data?.data;
-//     const paymentSuccess =
-//       response.data?.success &&
-//       paymentData?.responseCode === "SUCCESS";
-
-//     if (!paymentSuccess) {
-//       return sendResponse(res, false, null, "PhonePe payment not successful");
-//     }
-
-//     const transactionId = paymentData?.transactionId || merchantTransactionId;
-
-//     // Order update karo
-//     await Order.findByIdAndUpdate(order_id, {
-//       payment_status: "paid",
-//       transaction_id: transactionId,
-//     });
-
-//     // Payment record update karo
-//     await Payment.findOneAndUpdate(
-//       { order_id },
-//       {
-//         status: "completed",
-//         transaction_id: transactionId,
-//         amount_paid: paymentData.amount / 100,
-//       }
-//     );
-
-//     sendResponse(res, true, { transactionId }, "PhonePe payment verified");
-//   } catch (err) {
-//     console.error("PHONEPE VERIFY ERROR:", err?.response?.data || err.message);
-//     sendResponse(res, false, null, err?.response?.data?.message || err.message);
-//   }
-// };
 
 const verifyPhonePePayment = async (req, res) => {
   try {
@@ -447,7 +246,6 @@ const verifyPhonePePayment = async (req, res) => {
       },
     });
 
-    console.log("PhonePe Verify Response:", JSON.stringify(response.data));
 
     const paymentData = response.data?.data;
     const paymentSuccess =
@@ -480,15 +278,10 @@ const verifyPhonePePayment = async (req, res) => {
 
     sendResponse(res, true, { transactionId }, "PhonePe payment verified");
   } catch (err) {
-    console.error("PHONEPE VERIFY ERROR:", err?.response?.data || err.message);
     sendResponse(res, false, null, err?.response?.data?.message || err.message);
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// PHONEPE - SERVER CALLBACK (PhonePe server thi aavse — webhook jevo)
-// POST /api/payments/phonepe/callback
-// ═══════════════════════════════════════════════════════════════════════════════
 const phonePeCallback = async (req, res) => {
   try {
     const { response: encodedResponse } = req.body;
@@ -497,7 +290,6 @@ const phonePeCallback = async (req, res) => {
       return res.status(400).send("No response from PhonePe");
     }
 
-    // Decode base64 response
     const decoded = JSON.parse(
       Buffer.from(encodedResponse, "base64").toString("utf-8"),
     );
@@ -505,7 +297,6 @@ const phonePeCallback = async (req, res) => {
     const saltKey = process.env.PHONEPE_SALT_KEY;
     const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
 
-    // Verify checksum from PhonePe
     const receivedChecksum = req.headers["x-verify"];
     const computedHash = crypto
       .createHash("sha256")
@@ -514,7 +305,6 @@ const phonePeCallback = async (req, res) => {
     const computedChecksum = computedHash + "###" + saltKeyIndex;
 
     if (receivedChecksum !== computedChecksum) {
-      console.error("PhonePe callback checksum mismatch");
       return res.status(400).send("Invalid checksum");
     }
 
@@ -522,8 +312,7 @@ const phonePeCallback = async (req, res) => {
       const txnId = decoded?.data?.transactionId;
       const merchantTxnId = decoded?.data?.merchantTransactionId;
 
-      // order_id merkle merchant transaction ID thi nikado
-      // Format: MT_{order_id}_{timestamp}
+    
       const order_id = merchantTxnId?.split("_")[1];
 
       if (order_id) {
@@ -540,7 +329,6 @@ const phonePeCallback = async (req, res) => {
 
     res.status(200).send("OK");
   } catch (err) {
-    console.error("PHONEPE CALLBACK ERROR:", err.message);
     res.status(500).send("Callback error");
   }
 };
@@ -569,9 +357,8 @@ const getPayments = async (req, res) => {
       query.status = status;
     }
     if (userRole === "admin") {
-    } else //   if (userRole === "store_owner") {
-    //   query.store_owner_id = userId;
-    // } else
+    } else 
+    
     {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
     }
@@ -580,7 +367,6 @@ const getPayments = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate("order_id", "order_number total_price status payment_method")
         .populate("user_id", "name email")
-        // .populate("store_owner_id", "name email")
         .populate("coupon_id", "code discount_value");
       return sendResponse(res, true, { payments }, "All payments for download");
     }
@@ -593,7 +379,6 @@ const getPayments = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate("order_id", "order_number total_price status payment_method")
       .populate("user_id", "name email")
-      // .populate("store_owner_id", "name email")
       .populate("coupon_id", "code discount_value");
     sendResponse(res, true, {
       payments,
@@ -606,38 +391,24 @@ const getPayments = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// GET PAYMENT BY ID
-// ═══════════════════════════════════════════════════════════════════════════════
 const getPaymentById = async (req, res) => {
   try {
     const payment = await Payment.findById(req.params.id)
       .populate("order_id", "order_number total_price status payment_method")
       .populate("user_id", "name email")
-      // .populate("store_owner_id", "name email")
       .populate("coupon_id", "code discount_value");
     if (!payment) return sendResponse(res, false, null, "Payment not found");
-    // if (
-    //   req.user?.role === "store_owner" &&
-    //   payment.store_owner_id?._id?.toString() !== req.user._id.toString()
-    // ) {
-    //   return sendResponse(res, false, null, "Forbidden: Not your payment");
-    // }
     sendResponse(res, true, payment, "Payment retrieved successfully");
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CREATE PAYMENT
-// ═══════════════════════════════════════════════════════════════════════════════
 const createPayment = async (req, res) => {
   try {
     const {
       user_id,
       order_id,
-      // store_owner_id,
       items,
       payment_method,
       amount_paid,
@@ -650,39 +421,10 @@ const createPayment = async (req, res) => {
       total,
     } = req.body;
 
-    // let resolvedStoreOwnerId = store_owner_id || null;
-    // if (!resolvedStoreOwnerId && order_id) {
-    //   try {
-    //     const orderItems = await OrderItem.find({ order_id }).populate({
-    //       path: "product_id",
-    //       select: "createdBy",
-    //     });
-    //     if (orderItems.length > 0) {
-    //       const createdBy = orderItems[0]?.product_id?.createdBy;
-    //       if (createdBy) resolvedStoreOwnerId = createdBy;
-    //     }
-    //   } catch (e) {
-    //     console.error("store_owner_id auto-resolve failed:", e.message);
-    //   }
-    // }
-    // if (
-    //   // !resolvedStoreOwnerId &&
-    //   items &&
-    //   Array.isArray(items) &&
-    //   items.length > 0
-    // ) {
-    //   const firstItem = items[0];
-    //   const createdBy =
-    //     firstItem?.product_id?.createdBy?._id ||
-    //     firstItem?.product_id?.createdBy ||
-    //     null;
-    //   if (createdBy) resolvedStoreOwnerId = createdBy;
-    // }
-
+    
     const payment = new Payment({
       user_id,
       order_id,
-      // store_owner_id: resolvedStoreOwnerId,
       payment_method,
       amount_paid,
       discount_amount,
@@ -697,9 +439,6 @@ const createPayment = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// UPDATE PAYMENT
-// ═══════════════════════════════════════════════════════════════════════════════
 const updatePayment = async (req, res) => {
   try {
     const updatedPayment = await Payment.findByIdAndUpdate(
@@ -715,9 +454,6 @@ const updatePayment = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// DELETE PAYMENT
-// ═══════════════════════════════════════════════════════════════════════════════
 const deletePayment = async (req, res) => {
   try {
     const deletedPayment = await Payment.findByIdAndDelete(req.params.id);
@@ -729,9 +465,6 @@ const deletePayment = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// BULK DELETE PAYMENTS
-// ═══════════════════════════════════════════════════════════════════════════════
 const bulkDeletePayments = async (req, res) => {
   try {
     const { ids } = req.body;

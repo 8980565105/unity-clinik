@@ -1,20 +1,9 @@
 const { default: slugify } = require("slugify");
 const SubCategory = require("../models/Subcategory");
 const { sendResponse } = require("../utils/response");
-// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
 const getAllsubCategories = async (req, res) => {
   try {
-    // ✅ storeFilter null = unknown domain = no data
-    // if (!req.storeFilter || !req.storeFilter.storeId) {
-    //   return res.json({ success: true, data: [] });
-    // }
-
-    // const filter = {
-    //   status: "active",
-    //   storeId: req.storeFilter.storeId,
-    // };
-
    const subcategories = await SubCategory.find({
   status: "active",
 })
@@ -46,8 +35,6 @@ const getsubCategories = async (req, res) => {
     if (search) query.name = { $regex: search, $options: "i" };
     if (status && ["active", "inactive"].includes(status))
       query.status = status;
-
-    // applyOwnershipFilter(req, query);
 
     if (download) {
       const subcategories = await SubCategory.find(query)
@@ -96,9 +83,6 @@ const createsubCategory = async (req, res) => {
 
   const image_url = req.file ? `/uploads/${req.file.filename}` : image || null;
 
-  // const storeId =
-  //   req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
-
   const subcategoryData = {
     name,
     slug: slug || slugify(name, { lower: true, strict: true }),
@@ -107,7 +91,6 @@ const createsubCategory = async (req, res) => {
     description: description || "",
     status: status || "active",
     createdBy: req.user._id,
-    // storeId,
   };
 
   try {

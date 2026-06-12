@@ -112,14 +112,10 @@ const getOrders = async (req, res) => {
 
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
-
-    // Guard against NaN from bad query params
     if (isNaN(page) || page < 1) page = 1;
     if (isNaN(limit) || limit < 1) limit = 10;
 
-    // FIX CWE-1287: safeString before .toLowerCase()
     const download = safeString(isDownload).toLowerCase() === "true";
-
     const role = req.user?.role;
 
     if (role === "store_user") {
@@ -131,16 +127,9 @@ const getOrders = async (req, res) => {
       );
     }
 
-    const orderMatch = {};
-
-    // FIX CWE-1287: safeString before using search in regex
     const safeSearch = safeString(search);
-    if (safeSearch) {
-      orderMatch.$or = [
-        { status: { $regex: safeSearch, $options: "i" } },
-        { order_number: { $regex: safeSearch, $options: "i" } },
-      ];
-    }
+
+    const orderMatch = {};
 
     const validStatuses = [
       "pending",
@@ -161,7 +150,6 @@ const getOrders = async (req, res) => {
     }
 
     if (user && role === "admin") {
-      // FIX CWE-1287 Ln 153: safeObjectIdArray handles type check + split safely
       const userArray = safeObjectIdArray(user);
       if (userArray.length > 0) {
         orderMatch.user_id = { $in: userArray };
@@ -189,29 +177,19 @@ const getOrders = async (req, res) => {
     }
 
     const itemMatch = {};
-
     if (product) {
-      // FIX CWE-1287 Ln 153: safeObjectIdArray replaces manual .split(",")
       const productArray = safeObjectIdArray(product);
-      if (productArray.length > 0) {
-        itemMatch.product_id = { $in: productArray };
-      }
+      if (productArray.length > 0) itemMatch.product_id = { $in: productArray };
     }
-
     if (color) {
-      // FIX CWE-1287 Ln 159: safeObjectIdArray replaces manual .split(",")
       const colorArray = safeObjectIdArray(color);
-      if (colorArray.length > 0) {
+      if (colorArray.length > 0)
         itemMatch["variant_id.color_id"] = { $in: colorArray };
-      }
     }
-
     if (size) {
-      // FIX CWE-1287 Ln 165: safeObjectIdArray replaces manual .split(",")
       const sizeArray = safeObjectIdArray(size);
-      if (sizeArray.length > 0) {
+      if (sizeArray.length > 0)
         itemMatch["variant_id.size_id"] = { $in: sizeArray };
-      }
     }
 
     if (role === "store_owner") {
@@ -220,7 +198,6 @@ const getOrders = async (req, res) => {
         { _id: 1 },
       );
       const ownerProductIds = ownerProducts.map((p) => p._id);
-
       if (ownerProductIds.length === 0) {
         return sendResponse(res, true, {
           orders: [],
@@ -229,7 +206,6 @@ const getOrders = async (req, res) => {
           pages: 0,
         });
       }
-
       const ownerOrderItems = await OrderItem.find(
         { product_id: { $in: ownerProductIds } },
         { order_id: 1 },
@@ -237,7 +213,6 @@ const getOrders = async (req, res) => {
       const ownerOrderIds = [
         ...new Set(ownerOrderItems.map((oi) => oi.order_id.toString())),
       ].map((id) => new mongoose.Types.ObjectId(id));
-
       if (ownerOrderIds.length === 0) {
         return sendResponse(res, true, {
           orders: [],
@@ -246,12 +221,44 @@ const getOrders = async (req, res) => {
           pages: 0,
         });
       }
-
       orderMatch._id = { $in: ownerOrderIds };
     }
 
+    const searchStage = safeSearch
+      ? [
+          {
+            $match: {
+              $or: [
+                { order_number: { $regex: safeSearch, $options: "i" } },
+                { "user.name": { $regex: safeSearch, $options: "i" } },
+                { "user.email": { $regex: safeSearch, $options: "i" } },
+                {
+                  "shippingAddress.phone": {
+                    $regex: safeSearch,
+                    $options: "i",
+                  },
+                },
+              ],
+            },
+          },
+        ]
+      : [];
+
     const pipeline = [
       { $match: orderMatch },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "user_id",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+
+      ...searchStage,
+
       {
         $lookup: {
           from: "orderitems",
@@ -299,6 +306,18 @@ const getOrders = async (req, res) => {
           ],
         },
       },
+
+      { $sort: { createdAt: -1 } },
+    ];
+
+    if (!download) {
+      pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
+    }
+
+    const orders = await Order.aggregate(pipeline);
+
+    const countPipeline = [
+      { $match: orderMatch },
       {
         $lookup: {
           from: "users",
@@ -308,18 +327,11 @@ const getOrders = async (req, res) => {
         },
       },
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-      { $sort: { createdAt: -1 } },
+      ...searchStage,
+      { $count: "total" },
     ];
 
-    if (!download) {
-      pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
-    }
-
-    const orders = await Order.aggregate(pipeline);
-    const totalCountAgg = await Order.aggregate([
-      { $match: orderMatch },
-      { $count: "total" },
-    ]);
+    const totalCountAgg = await Order.aggregate(countPipeline);
     const total = totalCountAgg[0]?.total || 0;
 
     sendResponse(res, true, {
@@ -332,10 +344,6 @@ const getOrders = async (req, res) => {
     sendResponse(res, false, null, err.message);
   }
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// 1B. GET PUBLIC USER ORDERS — store_user only sees their OWN orders
-// ═══════════════════════════════════════════════════════════════════════════════
 const getPublicUserOrders = async (req, res) => {
   try {
     const userId = req.user?._id;
@@ -513,7 +521,6 @@ const createOrder = async (req, res) => {
 
     let calculatedProductTotal = 0;
     const orderItems = [];
-    // let store_owner_id = null;
 
     for (const item of items) {
       const variant = await ProductVariant.findById(item.variant_id).populate(
@@ -527,11 +534,6 @@ const createOrder = async (req, res) => {
           null,
           `Not enough stock for ${variant.sku}`,
         );
-
-      // if (!store_owner_id && variant.product_id?.createdBy) {
-      //   store_owner_id =
-      //     variant.product_id.createdBy._id || variant.product_id.createdBy;
-      // }
 
       let price = variant.price;
       const discount_id = variant.product_id.discount_id;
@@ -584,7 +586,6 @@ const createOrder = async (req, res) => {
 
       status: "pending",
 
-      // store_owner_id: store_owner_id || null,
     });
 
     pushHistory(order, "pending", "customer", "Order placed");
@@ -884,7 +885,6 @@ const generatePackingSlip = async (req, res) => {
     const R = PW - 30;
     const W = R - L;
 
-    // ── Header ──
     doc.rect(L, 20, W, 28).fill("#1e3a5f");
     doc
       .fillColor("white")
@@ -900,7 +900,6 @@ const generatePackingSlip = async (req, res) => {
     const col2X = L + col1W + 8;
     const col2W = W - col1W - 8;
 
-    // ── Order Information ──
     doc.rect(L, y, col1W, INFO_H).stroke("#cccccc");
     doc
       .font("Helvetica-Bold")
@@ -935,7 +934,6 @@ const generatePackingSlip = async (req, res) => {
       oiy += isId ? 11 : 13;
     });
 
-    // ── Ship To ──
     doc.rect(col2X, y, col2W, INFO_H).stroke("#cccccc");
     doc
       .font("Helvetica-Bold")
@@ -993,7 +991,6 @@ const generatePackingSlip = async (req, res) => {
 
     y += INFO_H + 8;
 
-    // ── Barcode ──
     const barcodeW = W * 0.65;
     const barcodeH = 40;
     const barcodeX = L + (W - barcodeW) / 2;
@@ -1003,7 +1000,6 @@ const generatePackingSlip = async (req, res) => {
     });
     y += barcodeH + 6;
 
-    // ── Items Table ──
     const cols = [
       { x: L, w: W * 0.36, label: "Product", align: "left" },
       { x: L + W * 0.36, w: W * 0.15, label: "SKU", align: "left" },
@@ -1074,7 +1070,6 @@ const generatePackingSlip = async (req, res) => {
     doc.moveTo(L, y).lineTo(R, y).stroke("#cccccc");
     y += 10;
 
-    // ── Grand Total (label left, value right) ──
     doc
       .font("Helvetica-Bold")
       .fontSize(10)
@@ -1093,7 +1088,6 @@ const generatePackingSlip = async (req, res) => {
     doc.fillColor("black");
     y += 18;
 
-    // ── QR Code centered below Grand Total ──
     const QR_SIZE = 80;
     const qrX = L + (W - QR_SIZE) / 2;
     doc.image(qrBuffer, qrX, y, { width: QR_SIZE, height: QR_SIZE });
@@ -1106,7 +1100,6 @@ const generatePackingSlip = async (req, res) => {
     doc.fillColor("black");
     y += 14;
 
-    // ── COD Banner ──
     if (order.payment_method === "COD") {
       y += 4;
       doc.rect(L, y, W, 22).fill("#fff3cd").stroke("#ffc107");
@@ -1124,7 +1117,6 @@ const generatePackingSlip = async (req, res) => {
       y += 30;
     }
 
-    // ── Footer ──
     y += 8;
     doc.moveTo(L, y).lineTo(R, y).stroke("#cccccc");
     y += 6;
@@ -1203,7 +1195,6 @@ const assignCourier = async (req, res) => {
 
     sendResponse(res, true, order, "Courier assigned");
   } catch (err) {
-    console.error("[assignCourier error]", err.message);
     sendResponse(res, false, null, err.message);
   }
 };
@@ -1254,7 +1245,6 @@ const updateTracking = async (req, res) => {
     const tracking_url = safeString(req.body.tracking_url);
     const note = safeString(req.body.note);
 
-    // Validate tracking_url is http/https only
     if (tracking_url) {
       try {
         const parsed = new URL(tracking_url);
@@ -1265,7 +1255,6 @@ const updateTracking = async (req, res) => {
           order.courier.tracking_url = tracking_url;
         }
       } catch (_) {
-        // invalid URL — skip silently
       }
     }
 
@@ -1465,7 +1454,6 @@ const updateOrder = async (req, res) => {
   try {
     const { status, coupon_id } = req.body;
 
-    // FIX CWE-1287 Ln 1500: safeArray ensures items is always an array before .length check
     const items = safeArray(req.body.items);
 
     const order = await Order.findById(req.params.id);
@@ -1622,7 +1610,6 @@ const getOrderTracking = async (req, res) => {
     );
     if (!order) return sendResponse(res, false, null, "Order not found");
 
-    // ithink live tracking
     if (order.courier?.partner === "ithink" && order.courier?.awb_number) {
       try {
         const tracking = await trackIthinkAWB(order.courier.awb_number);
@@ -1669,13 +1656,10 @@ const getOrderTracking = async (req, res) => {
           },
         });
       } catch (trackErr) {
-        console.error("[tracking fetch error]", trackErr.message);
-        // ithink API fail — return DB data only
         return sendResponse(res, true, { order, live_tracking: null });
       }
     }
 
-    // Non-ithink — DB status_history only
     return sendResponse(res, true, { order, live_tracking: null });
   } catch (err) {
     sendResponse(res, false, null, err.message);

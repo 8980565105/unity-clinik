@@ -15,27 +15,84 @@ const getReviews = async (req, res) => {
     const download = isDownload.toLowerCase() === "true";
     const userRole = req.user?.role;
 
-    const query = {};
-
-    if (search) {
-      query.title = { $regex: search, $options: "i" };
-    }
-
-    if (is_approved === "true") query.is_approved = true;
-    else if (is_approved === "false") query.is_approved = false;
-
-    if (userRole === "admin") {
-    } else if (userRole === "store_owner") {
-    } else {
+    if (userRole !== "admin" && userRole !== "store_owner") {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
     }
 
-    if (download) {
-      const customerReviews = await CustomerReview.find(query)
-        .populate("user_id", "name email")
-        .populate("product_id", "name images")
-        .sort({ createdAt: -1 });
+    page = parseInt(page);
+    limit = parseInt(limit);
 
+    const matchQuery = {};
+    if (is_approved === "true") matchQuery.is_approved = true;
+    else if (is_approved === "false") matchQuery.is_approved = false;
+
+    const pipeline = [
+      { $match: matchQuery },
+
+      {
+        $lookup: {
+          from: "users",
+          localField: "user_id",
+          foreignField: "_id",
+          as: "user_id",
+        },
+      },
+      { $unwind: { path: "$user_id", preserveNullAndEmptyArrays: true } },
+
+      {
+        $lookup: {
+          from: "products",
+          localField: "product_id",
+          foreignField: "_id",
+          as: "product_id",
+        },
+      },
+      { $unwind: { path: "$product_id", preserveNullAndEmptyArrays: true } },
+    ];
+
+    if (search && search.trim() !== "") {
+      pipeline.push({
+        $match: {
+          $or: [
+            { "user_id.name": { $regex: search.trim(), $options: "i" } },
+            { "user_id.email": { $regex: search.trim(), $options: "i" } },
+            { title: { $regex: search.trim(), $options: "i" } },
+          ],
+        },
+      });
+    }
+
+    const countPipeline = [...pipeline, { $count: "total" }];
+    const countResult = await CustomerReview.aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+      {
+        $project: {
+          rating: 1,
+          title: 1,
+          comment: 1,
+          is_approved: 1,
+          beforeImage: 1,
+          afterImage: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          "user_id._id": 1,
+          "user_id.name": 1,
+          "user_id.email": 1,
+          "product_id._id": 1,
+          "product_id.name": 1,
+          "product_id.images": 1,
+        },
+      },
+    );
+
+    const customerReviews = await CustomerReview.aggregate(pipeline);
+
+    if (download) {
       return sendResponse(
         res,
         true,
@@ -43,17 +100,6 @@ const getReviews = async (req, res) => {
         "All reviews retrieved for download",
       );
     }
-
-    page = parseInt(page);
-    limit = parseInt(limit);
-
-    const total = await CustomerReview.countDocuments(query);
-    const customerReviews = await CustomerReview.find(query)
-      .populate("user_id", "name email")
-      .populate("product_id", "name images")
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ createdAt: -1 });
 
     sendResponse(res, true, {
       customerReviews,
@@ -65,7 +111,6 @@ const getReviews = async (req, res) => {
     sendResponse(res, false, null, err.message);
   }
 };
-
 const getReviewById = async (req, res) => {
   try {
     const review = await CustomerReview.findById(req.params.id)

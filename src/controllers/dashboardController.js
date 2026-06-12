@@ -232,7 +232,6 @@ const getDashboard = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Dashboard error:", error);
     return sendResponse(res, false, null, error.message);
   }
 };
@@ -255,7 +254,6 @@ const getDashboardcount = async (req, res) => {
       totalRevenue,
     });
   } catch (error) {
-    console.error("Dashboard error:", error);
     return sendResponse(res, false, null, error.message);
   }
 };

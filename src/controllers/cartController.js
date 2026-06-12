@@ -120,7 +120,6 @@ const addCartItem = async (req, res) => {
         Number(item.pack_of) === Number(pack_of),
     );
 
-    console.log("REQ BODY", req.body);
 
     if (existingItem) {
       existingItem.quantity += Number(quantity || 1);
@@ -147,8 +146,6 @@ const addCartItem = async (req, res) => {
     }
 
     await cart.save();
-
-    console.log("CART AFTER SAVE", JSON.stringify(cart, null, 2));
 
     const populatedCart = await Cart.findById(cart._id)
       .populate({

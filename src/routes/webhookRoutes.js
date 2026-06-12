@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const { handleIthinkWebhook } = require("../controllers/webhookController");
 
-// Raw body needed for signature verification
 router.post(
   "/ithink",
   express.raw({ type: "application/json" }),

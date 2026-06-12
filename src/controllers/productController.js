@@ -125,6 +125,8 @@ const buildPipeline = ({
   limit,
   download,
 }) => {
+  const hasVariantFilter = Object.keys(variantMatch).length > 0;
+
   const pipeline = [
     { $match: productMatch },
     {
@@ -145,7 +147,6 @@ const buildPipeline = ({
       },
     },
     { $unwind: { path: "$discount", preserveNullAndEmptyArrays: true } },
-
     {
       $lookup: {
         from: "users",
@@ -163,7 +164,7 @@ const buildPipeline = ({
           {
             $match: {
               $expr: { $eq: ["$product_id", "$$productId"] },
-              ...variantMatch,
+              ...(hasVariantFilter ? variantMatch : {}),
             },
           },
           {
@@ -182,7 +183,6 @@ const buildPipeline = ({
               as: "type",
             },
           },
-
           {
             $addFields: {
               brand_id: { $arrayElemAt: ["$brand", 0] },
@@ -208,7 +208,11 @@ const buildPipeline = ({
         as: "variants",
       },
     },
-    { $match: { "variants.0": { $exists: true } } },
+
+    ...(hasVariantFilter
+      ? [{ $match: { "variants.0": { $exists: true } } }]
+      : []),
+
     { $sort: { createdAt: -1 } },
   ];
 
@@ -332,7 +336,6 @@ const getPublicProducts = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("❌ getPublicProducts error:", err);
     sendResponse(res, false, null, err.message);
   }
 };
@@ -341,10 +344,15 @@ const getProducts = async (req, res) => {
   try {
     let {
       page = 1,
-      limit = 50,
+      limit = 10,
       search = "",
       isDownload = "false",
       status,
+      categories,
+      brands,
+      types,
+      minPrice,
+      maxPrice,
     } = req.query;
 
     const download = isDownload.toString().toLowerCase() === "true";
@@ -353,26 +361,48 @@ const getProducts = async (req, res) => {
 
     const productMatch = {};
 
-    if (search) {
-      productMatch.name = {
-        $regex: search,
-        $options: "i",
-      };
+    if (search && search.trim()) {
+      productMatch.name = { $regex: search.trim(), $options: "i" };
     }
 
     if (status) {
       productMatch.status = status;
     }
+
+    if (categories) {
+      const categoryArray = Array.isArray(categories)
+        ? categories
+        : String(categories).split(",");
+      productMatch.category_id = {
+        $in: categoryArray.map((id) => new mongoose.Types.ObjectId(id.trim())),
+      };
+    }
+
     const variantMatch = {};
 
-    const pipeline = buildPipeline({
-      productMatch,
-      variantMatch,
-      page,
-      limit,
-      download,
-    });
-    const products = await Product.aggregate(pipeline);
+    if (brands) {
+      const brandsArray = Array.isArray(brands)
+        ? brands
+        : String(brands).split(",");
+      variantMatch.brand_id = {
+        $in: brandsArray.map((id) => new mongoose.Types.ObjectId(id.trim())),
+      };
+    }
+
+    if (types) {
+      const typesArray = Array.isArray(types)
+        ? types
+        : String(types).split(",");
+      variantMatch.type_id = {
+        $in: typesArray.map((id) => new mongoose.Types.ObjectId(id.trim())),
+      };
+    }
+
+    if (minPrice || maxPrice) {
+      variantMatch.price = {};
+      if (minPrice) variantMatch.price.$gte = Number(minPrice);
+      if (maxPrice) variantMatch.price.$lte = Number(maxPrice);
+    }
 
     const countPipeline = [
       { $match: productMatch },
@@ -384,17 +414,31 @@ const getProducts = async (req, res) => {
             {
               $match: {
                 $expr: { $eq: ["$product_id", "$$productId"] },
+                ...(Object.keys(variantMatch).length ? variantMatch : {}),
               },
             },
           ],
           as: "variants",
         },
       },
-      { $match: { "variants.0": { $exists: true } } },
+      ...(Object.keys(variantMatch).length
+        ? [{ $match: { "variants.0": { $exists: true } } }]
+        : []),
       { $count: "total" },
     ];
+
     const countResult = await Product.aggregate(countPipeline);
     const totalCount = countResult[0]?.total || 0;
+
+    const pipeline = buildPipeline({
+      productMatch,
+      variantMatch,
+      page,
+      limit,
+      download,
+    });
+
+    const products = await Product.aggregate(pipeline);
 
     sendResponse(
       res,
@@ -408,7 +452,6 @@ const getProducts = async (req, res) => {
       "Products retrieved successfully",
     );
   } catch (err) {
-    console.error("❌ getProducts error:", err);
     sendResponse(res, false, null, err.message);
   }
 };
@@ -538,7 +581,6 @@ const createProduct = async (req, res) => {
       "Product created with variants successfully",
     );
   } catch (err) {
-    console.error("Error creating product:", err);
     sendResponse(res, false, null, err.message);
   }
 };
@@ -611,8 +653,6 @@ const updateProduct = async (req, res) => {
 
     sendResponse(res, true, updatedProduct, "Product updated successfully");
   } catch (err) {
-    console.error("UPDATE ERROR:", err);
-
     sendResponse(res, false, null, err.message);
   }
 };
@@ -635,7 +675,6 @@ const updateProductStatus = async (req, res) => {
     );
     sendResponse(res, true, updated, `Product status updated to ${status}`);
   } catch (err) {
-    console.error("❌ updateProductStatus error:", err);
     sendResponse(res, false, null, err.message);
   }
 };
@@ -726,7 +765,6 @@ const duplicateProduct = async (req, res) => {
       "Product duplicated successfully",
     );
   } catch (err) {
-    console.error("❌ duplicateProduct error:", err);
     sendResponse(res, false, null, err.message);
   }
 };

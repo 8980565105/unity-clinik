@@ -3,7 +3,6 @@ const User = require("../models/User");
 const { sendResponse } = require("../utils/response");
 
 const getStoreId = async (req) => {
-  // if (req.user?.storeId) return req.user.storeId;
 
   const userId = req.user?._id || req.user?.id;
   if (!userId) return null;
@@ -14,8 +13,6 @@ const getStoreId = async (req) => {
 
 const getUserSettings = async (req, res) => {
   try {
-    // const storeId = await getStoreId(req);
-    // if (!storeId) return sendResponse(res, false, null, "Store ID not found");
 
     let settings = await SystemSettingModel.findOne({});
     if (!settings) {
@@ -45,15 +42,12 @@ const getUserSettings = async (req, res) => {
     }
     return sendResponse(res, true, settings, "Settings fetched successfully");
   } catch (error) {
-    console.error("getUserSettings error:", error);
     return sendResponse(res, false, null, "Internal server error");
   }
 };
 
 const updateUserSettings = async (req, res) => {
   try {
-    // const storeId = await getStoreId(req); // ✅
-    // if (!storeId) return sendResponse(res, false, null, "Store ID not found");
 
     const {
       razorpaykey,
@@ -228,7 +222,6 @@ const updateUserSettings = async (req, res) => {
 
     return sendResponse(res, true, updatedDoc, "Settings saved successfully");
   } catch (error) {
-    console.error("updateUserSettings error:", error);
     return sendResponse(
       res,
       false,
@@ -280,7 +273,6 @@ const getPublicSettings = async (req, res) => {
       "Public settings fetched successfully",
     );
   } catch (error) {
-    console.error("getPublicSettings error:", error);
     return sendResponse(res, false, null, "Internal server error");
   }
 };

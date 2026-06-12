@@ -2,69 +2,19 @@ const Warehouse = require("../models/Warehouse");
 const { sendResponse } = require("../utils/response");
 const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
-// const getWarehouses = async (req, res) => {
-//   try {
-//     const { page = 1, limit = 10, search = "", status, isDownload } = req.query;
-
-//     const query = {};
-
-//     if (search) {
-//       query.name = { $regex: search, $options: "i" };
-//     }
-//     applyOwnershipFilter(req, query);
-
-//     if (status && ["active", "inactive"].includes(status)) {
-//       query.status = status;
-//     }
-
-//     if (isDownload === "true") {
-//       const warehouses = await Warehouse.find(query).sort({ createdAt: -1 });
-//       return sendResponse(
-//         res,
-//         true,
-//         { warehouses, total: warehouses.length },
-//         "Warehouses retrieved successfully",
-//       );
-//     }
-
-//     const skip = (Number(page) - 1) * Number(limit);
-
-//     const [warehouses, total] = await Promise.all([
-//       Warehouse.find(query)
-//         .sort({ createdAt: -1 })
-//         .skip(skip)
-//         .limit(Number(limit)),
-//       Warehouse.countDocuments(query),
-//     ]);
-
-//     sendResponse(
-//       res,
-//       true,
-//       { warehouses, total },
-//       "Warehouses retrieved successfully",
-//     );
-//   } catch (err) {
-//     sendResponse(res, false, null, err.message);
-//   }
-// };
-
 const getWarehouses = async (req, res) => {
   try {
     const { page = 1, limit = 10, search = "", status, isDownload } = req.query;
 
     let query = {};
 
-    // જો સર્ચ હોય તો
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
 
-    // મહત્વનું: જો યુઝર admin હોય તો બધો ડેટા બતાવવો,
-    // જો store_owner હોય તો ફક્ત તેના સ્ટોરનો ડેટા[cite: 5, 6]
     if (req.user.role === "store_owner") {
       query.storeId = req.user.storeId;
     } else if (req.user.role !== "admin") {
-      // અન્ય કોઈ રોલ માટે (જો લાગુ પડતું હોય)
       applyOwnershipFilter(req, query);
     }
 
@@ -72,7 +22,6 @@ const getWarehouses = async (req, res) => {
       query.status = status;
     }
 
-    // ડાઉનલોડ લોજિક
     if (isDownload === "true") {
       const warehouses = await Warehouse.find(query).sort({ createdAt: -1 });
       return sendResponse(
@@ -109,22 +58,6 @@ const getWarehouseById = async (req, res) => {
     sendResponse(res, false, null, err.message);
   }
 };
-
-// const createWarehouse = async (req, res) => {
-//   try {
-//     const { name, status } = req.body;
-//     if (!name) return sendResponse(res, false, null, "name is required");
-//     const warehouse = new Warehouse({
-//       name,
-//       status: status || "active",
-//       createdBy: req.user.id,
-//     });
-//     await warehouse.save();
-//     sendResponse(res, true, warehouse, "Warehouse created successfully");
-//   } catch (err) {
-//     sendResponse(res, false, null, err.message);
-//   }
-// };
 
 const createWarehouse = async (req, res) => {
   try {

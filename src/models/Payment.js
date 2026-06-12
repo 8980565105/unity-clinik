@@ -12,11 +12,6 @@ const paymentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    // store_owner_id: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "User",
-    //   default: null,
-    // },
     payment_method: {
       type: String,
       required: true,

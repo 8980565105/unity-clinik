@@ -18,11 +18,6 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 
-// const {
-//   injectPublicStoreFilter,
-//   injectOwnershipFilter,
-// } = require("../middlewares/ownershipFilter");
-
 router.get("/public", getPublicResults);
 router.use(authMiddleware);
 router.get("/", getResults);

@@ -12,7 +12,7 @@ const deleteOldProfilePicture = (filename) => {
 
   if (fs.existsSync(filePath)) {
     fs.unlink(filePath, (err) => {
-      if (err) console.error("[Upload] Error:", err.message);
+      if (err) ("[Upload] Error:", err.message);
     });
   }
 };

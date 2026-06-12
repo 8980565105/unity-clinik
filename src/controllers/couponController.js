@@ -2,8 +2,6 @@ const Coupon = require("../models/Coupon");
 const { sendResponse } = require("../utils/response");
 const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
 
-
-
 const getCoupons = async (req, res) => {
   try {
     let {

@@ -1,7 +1,6 @@
 const nodemailer = require("nodemailer");
 const escapeHtml = require("escape-html");
 
-// ─── Sanitize helper — always wrap dynamic data with e() ─────────────────────
 const e = (val) => (val != null ? escapeHtml(String(val)) : "—");
 
 let _transporter = null;
@@ -12,7 +11,6 @@ const getTransporter = () => {
   const pass = process.env.SMTP_PASS;
 
   if (!user || !pass) {
-    console.error("[Email] ❌ SMTP_USER or SMTP_PASS missing in .env!");
     return null;
   }
 
@@ -25,8 +23,8 @@ const getTransporter = () => {
   });
 
   _transporter.verify((err) => {
-    if (err) console.error("[Email] ❌ SMTP connection failed:", err.message);
-    else console.log("[Email] ✅ SMTP connected — ready to send emails");
+    if (err) ("[Email] ❌ SMTP connection failed:", err.message);
+    else ("[Email] ✅ SMTP connected — ready to send emails");
   });
 
   return _transporter;
@@ -39,16 +37,13 @@ const STORE_URL = () => process.env.STORE_URL || "#";
 
 const send = async (to, subject, html) => {
   if (!to) {
-    console.warn("[Email] ⚠️  No email address found — skipping:", subject);
     return;
   }
   const transport = getTransporter();
   if (!transport) return;
   try {
     const info = await transport.sendMail({ from: FROM(), to, subject, html });
-    console.log(`[Email] ✅ Sent "${subject}" → ${to} (${info.messageId})`);
   } catch (err) {
-    console.error(`[Email] ❌ Failed "${subject}" → ${to}:`, err.message);
   }
 };
 
@@ -448,7 +443,6 @@ ${preview ? `<div style="display:none;max-height:0;overflow:hidden;font-size:1px
 // ═════════════════════════════════════════════════════════════════════════════
 const sendAdminNewOrder = async (order, customerName, customerEmail) => {
   const adminEmail = ADMIN();
-  console.log("[Admin Email] Trying to send to:", adminEmail);
   if (!adminEmail) return;
   const subject = `🛒 New Order — ${order.order_number} | ${STORE()}`;
   await send(

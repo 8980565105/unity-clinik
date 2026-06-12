@@ -167,10 +167,6 @@ const addItemToWishlist = async (req, res) => {
             store_owner_id = product.createdBy;
           }
         } catch (e) {
-          console.error(
-            "store_owner_id resolve failed for wishlist item:",
-            e.message,
-          );
         }
         wishlist.items.push({ product_id, variant_id, store_owner_id });
       }

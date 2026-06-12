@@ -75,7 +75,6 @@ const getStores = async (req, res) => {
       pages: Math.ceil(total / limit),
     });
   } catch (err) {
-    console.error("Error in getStores:", err);
     sendResponse(res, false, null, err.message);
   }
 };

@@ -8,7 +8,6 @@ const { sendResponse } = require("../utils/response");
 
 const otpStore = {};
 
-// ─── Email ────────────────────────────────────────────────────────────────────
 const createTransporter = () => {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
@@ -53,7 +52,7 @@ const generateToken = (user) =>
   jwt.sign(
     { id: user._id, role: user.role, storeId: user.storeId || null },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+    { expiresIn: process.env.JWT_EXPIRES_IN},
   );
 
 const cleanDomain = (raw) => {
@@ -79,10 +78,6 @@ const cleanDomain = (raw) => {
 
 const findUserForOtp = async (email, rawDomain) => {
   const domain = cleanDomain(rawDomain);
-  console.log(`\n[OTP] ─────────────────────────────────`);
-  console.log(`[OTP] email   = "${email}"`);
-  console.log(`[OTP] rawDomain = "${rawDomain}"`);
-  console.log(`[OTP] cleanedDomain = "${domain}"`);
 
   if (domain) {
     const store = await Store.findOne({ domain })
@@ -91,22 +86,13 @@ const findUserForOtp = async (email, rawDomain) => {
 
     if (store) {
       const user = await User.findOne({ email, storeId: store._id });
-      console.log(
-        `[OTP] User in store:`,
-        user ? `FOUND → role=${user.role}` : "NOT FOUND",
-      );
 
       if (user) {
         const otpKey = `${email}__${store._id.toString()}`;
-        console.log(`[OTP] otpKey = "${otpKey}"`);
         return { user, storeName: store.name, otpKey };
       }
     } else {
       const allDomains = await Store.find({}).select("domain name").lean();
-      console.log(
-        `[OTP] All stores in DB:`,
-        allDomains.map((s) => `"${s.domain}" (${s.name})`),
-      );
     }
   }
 
@@ -116,13 +102,9 @@ const findUserForOtp = async (email, rawDomain) => {
   });
   if (user) {
     const otpKey = `${email}__${user.storeId?.toString() || "global"}`;
-    console.log(
-      `[OTP] Fallback user found: role=${user.role}, otpKey="${otpKey}"`,
-    );
     return { user, storeName: process.env.STORE_NAME || "MyApp", otpKey };
   }
 
-  console.log(`[OTP] ❌ No user found for email="${email}"`);
   return { user: null, storeName: null, otpKey: null };
 };
 
@@ -159,7 +141,6 @@ const login = async (req, res) => {
     const userObj = user.toObject();
     delete userObj.password;
 
-    console.log(`[Login] ✅ ${user.email} (${user.role})`);
     return sendResponse(
       res,
       true,
@@ -167,7 +148,6 @@ const login = async (req, res) => {
       "Login successful",
     );
   } catch (err) {
-    console.error("[Login] Error:", err.message);
     return sendResponse(res, false, null, err.message);
   }
 };
@@ -308,9 +288,7 @@ const register = async (req, res) => {
       const userObj = user.toObject();
       delete userObj.password;
       userObj.storeId = store;
-      // console.log(
-      //   `[Register] Store owner: ${user.email}, store: ${store.name}, domain: ${finalDomain}`,
-      // );
+      
       return sendResponse(
         res,
         true,
@@ -318,22 +296,6 @@ const register = async (req, res) => {
         "Store owner registered successfully",
       );
     }
-
-    // const finalDomain = cleanDomain(domain || "");
-    // if (!finalDomain)
-    //   return sendResponse(
-    //     res,
-    //     false,
-    //     null,
-    //     "Domain is required for store user registration",
-    //   );
-
-    // const store = await Store.findOne({ domain: finalDomain });
-    // if (!store)
-    //   return res.status(404).json({
-    //     success: false,
-    //     message: `Store not found for domain: ${finalDomain}`,
-    //   });
 
     const alreadyUser = await User.findOne({ email });
 
@@ -360,9 +322,6 @@ const register = async (req, res) => {
     const token = generateToken(user);
     const userObj = user.toObject();
     delete userObj.password;
-    // console.log(
-    //   `[Register] Store user: ${user.email}, store: ${store.name}, domain: ${finalDomain}`,
-    // );
     return sendResponse(
       res,
       true,
@@ -370,7 +329,6 @@ const register = async (req, res) => {
       "User registered successfully",
     );
   } catch (err) {
-    console.error("[Register] Error:", err.message);
     if (err.code === 11000) {
       const keys = err.keyPattern || {};
       if (keys.email && keys.storeId)
@@ -411,10 +369,8 @@ const forgotPassword = async (req, res) => {
 
     const otp = generateOtp();
     otpStore[otpKey] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 };
-    console.log(`[ForgotPassword] ✅ OTP="${otp}" stored at key="${otpKey}"`);
 
     await sendOtpEmail(email, otp, storeName);
-    console.log(`[ForgotPassword] ✅ Email sent to "${email}"`);
 
     return res.status(200).json({
       success: true,
@@ -422,7 +378,6 @@ const forgotPassword = async (req, res) => {
       message: "OTP sent to your email address",
     });
   } catch (err) {
-    console.error("[ForgotPassword] ❌", err.message);
     return res.status(500).json({
       success: false,
       data: null,
@@ -449,10 +404,6 @@ const resetPassword = async (req, res) => {
         .json({ success: false, message: "User not found" });
 
     const record = otpStore[otpKey];
-    console.log(
-      `[ResetPassword] otpKey="${otpKey}" record:`,
-      record ? "EXISTS" : "NOT FOUND",
-    );
 
     if (!record)
       return res.status(400).json({
@@ -478,7 +429,6 @@ const resetPassword = async (req, res) => {
     await userDoc.save();
 
     delete otpStore[otpKey];
-    console.log(`[ResetPassword] ✅ Password updated. key="${otpKey}"`);
 
     const freshUser = await User.findById(user._id)
       .select("-password")
@@ -491,7 +441,6 @@ const resetPassword = async (req, res) => {
       message: "Password reset successfully.",
     });
   } catch (err) {
-    console.error("[ResetPassword] ❌", err.message);
     return res.status(500).json({
       success: false,
       data: null,

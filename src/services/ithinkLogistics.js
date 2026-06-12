@@ -6,7 +6,6 @@ const ACCESS_TOKEN = process.env.ITHINK_API_KEY;
 const SECRET_KEY = process.env.ITHINK_SECRET;
 const WEBHOOK_SECRET = process.env.ITHINK_WEBHOOK_SECRET;
 
-// ── Status map ─────────────────────────────────────────────────────────
 const mapIthinkStatus = (s) => {
   const map = {
     Manifested: "shipped",
@@ -28,7 +27,6 @@ const mapIthinkStatus = (s) => {
   return map[s] || null;
 };
 
-// ── Step 1: Sync order → ithink ─────────────────────────────────────────
 const syncOrderToIthink = async ({ order, orderItems }) => {
   const addr = order.shippingAddress;
 
@@ -108,14 +106,12 @@ const syncOrderToIthink = async ({ order, orderItems }) => {
     headers: { "Content-Type": "application/json" },
   });
 
-  console.log("[ithink sync response]", JSON.stringify(syncRes.data));
 
   const result = syncRes.data?.data?.["1"];
   if (!result || result.status !== "Success") {
     throw new Error(result?.remark || "ithink order sync failed");
   }
 
-  // Step 2: Get AWB
   const awbRes = await axios.post(
     `${ITHINK_BASE}/order/getawb.json`,
     {
@@ -128,7 +124,6 @@ const syncOrderToIthink = async ({ order, orderItems }) => {
     { headers: { "Content-Type": "application/json" } },
   );
 
-  console.log("[ithink awb response]", JSON.stringify(awbRes.data));
 
   const awb =
     awbRes.data?.data?.awb_number || awbRes.data?.data?.[0]?.awb_number;
@@ -144,7 +139,6 @@ const syncOrderToIthink = async ({ order, orderItems }) => {
   };
 };
 
-// ── Track AWB ───────────────────────────────────────────────────────────
 const trackIthinkAWB = async (awb_number) => {
   const res = await axios.post(
     `${ITHINK_BASE}/order/track.json`,
@@ -158,14 +152,12 @@ const trackIthinkAWB = async (awb_number) => {
     { headers: { "Content-Type": "application/json" } },
   );
 
-  console.log("[ithink track response]", JSON.stringify(res.data));
 
   const data = res.data?.data?.[String(awb_number)];
   if (!data) throw new Error("AWB not found in ithink tracking response");
   return data;
 };
 
-// ── Verify webhook signature ────────────────────────────────────────────
 const verifyIthinkSignature = (rawBody, receivedSig) => {
   if (!WEBHOOK_SECRET) return true;
   const expected = crypto

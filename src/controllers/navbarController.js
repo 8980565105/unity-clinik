@@ -1,23 +1,5 @@
 const Navbar = require("../models/Navbar");
 const { sendResponse } = require("../utils/response");
-// const { applyOwnershipFilter } = require("../middlewares/ownershipFilter");
-
-// const getPublicNavbars = async (req, res) => {
-//   try {
-//     if (!req.storeFilter || !req.storeFilter.storeId) {
-//       return res.json({ success: true, data: [] });
-//     }
-
-//     const navbars = await Navbar.find({
-//       status: "active",
-//       storeId: req.storeFilter.storeId,
-//     }).sort({ order: 1 });
-
-//     res.json({ success: true, data: navbars });
-//   } catch (err) {
-//     sendResponse(res, false, null, err.message);
-//   }
-// };
 
 const getPublicNavbars = async (req, res) => {
   try {
@@ -49,8 +31,6 @@ const getNavbars = async (req, res) => {
     if (search) query.label = { $regex: search, $options: "i" };
     if (status && ["active", "inactive"].includes(status))
       query.status = status;
-
-    // applyOwnershipFilter(req, query);
 
     if (download) {
       const navbars = await Navbar.find(query).sort({ order: 1 });
@@ -101,9 +81,6 @@ const createNavbar = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Label and URL are required" });
     }
-
-    // const storeId =
-    //   req.user.role === "admin" ? req.body.storeId || null : req.user.storeId;
 
     const image_url = req.file ? `/uploads/navbar/${req.file.filename}` : null;
 

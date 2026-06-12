@@ -14,11 +14,6 @@ const {
   authMiddleware,
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
-// const {
-//   injectPublicStoreFilter,
-//   injectOwnershipFilter,
-// } = require("../middlewares/ownershipFilter");
-
 
 router.get("/public", getPublicProductLabels);
 router.use(authMiddleware);

@@ -28,6 +28,7 @@ const getPublicSlider = async (req, res) => {
   }
 };
 
+
 const getSlides = async (req, res) => {
   try {
     let {
@@ -38,10 +39,22 @@ const getSlides = async (req, res) => {
       status,
       section,
     } = req.query;
+
     const query = {};
 
+    if (search && search.trim() !== "") {
+      query.section = { $regex: search.trim(), $options: "i" };
+    }
+
+    if (status && ["active", "inactive"].includes(status)) {
+      query.status = status;
+    }
+
     const total = await Slider.countDocuments(query);
-    const docs = await Slider.find(query).sort({ createdAt: -1 });
+    const docs = await Slider.find(query)
+      .sort({ createdAt: -1 })
+      .skip((parseInt(page) - 1) * parseInt(limit)) // ✅ pagination પણ fix
+      .limit(parseInt(limit));
 
     sendResponse(res, true, {
       slides: docs,
@@ -76,7 +89,7 @@ const createSlide = async (req, res) => {
       return sendResponse(res, false, null, "Valid section required");
 
     if (["banner2", "banner3", "banner4"].includes(section)) {
-      const bannerKey = section; 
+      const bannerKey = section;
       const bannerData = req.body[bannerKey];
       const doc = new Slider({
         section,

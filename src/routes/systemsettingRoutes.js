@@ -9,7 +9,6 @@ const {
   authMiddleware,
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
-// const { injectPublicStoreFilter } = require("../middlewares/ownershipFilter");
 
 router.get("/public", getPublicSettings);
 

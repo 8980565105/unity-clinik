@@ -13,16 +13,13 @@ const {
 } = require("../controllers/categoryController");
 
 const { authMiddleware, authorizeMinRole } = require("../middlewares/authMiddleware");
-const {
-  injectPublicStoreFilter,  
-  injectOwnershipFilter,    
-} = require("../middlewares/ownershipFilter");
+
 const upload = require("../middlewares/upload");
 
-router.get("/public", injectPublicStoreFilter, getAllCategories);
+router.get("/public", getAllCategories);
 router.use(authMiddleware);
-router.get("/", injectOwnershipFilter, getCategories);
-router.get("/all", injectPublicStoreFilter, getAllCategories);
+router.get("/", getCategories);
+router.get("/all", getAllCategories);
 router.get("/:id", authorizeMinRole("admin"), getCategoryById);
 router.post(
   "/",

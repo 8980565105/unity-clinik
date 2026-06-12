@@ -2,18 +2,6 @@ const { default: slugify } = require("slugify");
 const Type = require("../models/Type");
 const { sendResponse } = require("../utils/response");
 
-// const getPublicTypes = async (req, res) => {
-//   try {
-//     const types = await Type.find({
-//       status: "active",
-//       storeId: req.storeFilter.storeId,
-//     }).sort({ createdAt: -1 });
-
-//     res.json({ success: true, data: types });
-//   } catch (err) {
-//     sendResponse(res, false, null, err.message);
-//   }
-// };
 const getPublicTypes = async (req, res) => {
   try {
     const types = await Type.find();

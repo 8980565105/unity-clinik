@@ -20,11 +20,8 @@ const getCustomerInfo = (order) => {
   return { email, name };
 };
 
-// POST /api/webhooks/ithink
-// Called by ithink Logistics on every status change
 const handleIthinkWebhook = async (req, res) => {
   try {
-    // 1. Verify signature
     const signature = req.headers["x-ithink-signature"] || "";
     const rawBody = req.rawBody || JSON.stringify(req.body);
 
@@ -32,7 +29,6 @@ const handleIthinkWebhook = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid signature" });
     }
 
-    // 2. Parse payload — ithink sends array of events
     const events = Array.isArray(req.body) ? req.body : [req.body];
 
     for (const event of events) {
@@ -44,22 +40,18 @@ const handleIthinkWebhook = async (req, res) => {
 
       if (!awb || !ithinkStatus) continue;
 
-      // 3. Find our order by AWB
       const order = await Order.findOne({ "courier.awb_number": awb }).populate(
         "user_id",
         "name email"
       );
       if (!order) continue;
 
-      // 4. Map status
       const newStatus = mapIthinkStatus(ithinkStatus);
       if (!newStatus || newStatus === order.status) continue;
 
-      // 5. Update order
       const prevStatus = order.status;
       order.status = newStatus;
 
-      // Update courier tracking
       if (order.courier) {
         order.courier.last_status = ithinkStatus;
         order.courier.last_updated = new Date(updatedAt);
@@ -68,7 +60,6 @@ const handleIthinkWebhook = async (req, res) => {
         }
       }
 
-      // Push to status_history
       order.status_history.push({
         status: newStatus,
         changed_by: "ithink-webhook",
@@ -78,7 +69,6 @@ const handleIthinkWebhook = async (req, res) => {
 
       await order.save();
 
-      // 6. Send notifications
       const { email, name } = getCustomerInfo(order);
 
       if (newStatus === "shipped" && prevStatus !== "shipped") {
@@ -95,11 +85,8 @@ const handleIthinkWebhook = async (req, res) => {
       }
     }
 
-    // Always respond 200 fast — ithink retries on non-200
     res.status(200).json({ success: true, received: events.length });
   } catch (err) {
-    console.error("ithink webhook error:", err.message);
-    // Still 200 so ithink doesn't spam retries
     res.status(200).json({ success: true, error: err.message });
   }
 };

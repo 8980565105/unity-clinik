@@ -15,52 +15,6 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 
-// router.get("/public", getFooters);
-
-// router.use(authMiddleware);
-
-// router.get(
-//   "/",
-//   authorizeMinRole("store_owner"),
-//   getFooters,
-// );
-
-// router.get(
-//   "/:id",
-//   authorizeMinRole("store_owner"),
-//   getFooterById,
-// );
-
-// router.post(
-//   "/",
-//   authorizeMinRole("store_owner"),
-//   createFooter,
-// );
-
-// router.put(
-//   "/:id",
-//   authorizeMinRole("store_owner"),
-//   updateFooter,
-// );
-
-// router.put(
-//   "/:id/status",
-//   authorizeMinRole("store_owner"),
-//   updateFooterStatus,
-// );
-
-// router.delete(
-//   "/:id",
-//   authorizeMinRole("store_owner"),
-//   deleteFooter,
-// );
-
-// router.post(
-//   "/bulk-delete",
-//   authorizeMinRole("store_owner"),
-//   bulkDeleteFooters,
-// );
-
 router.get("/public", getFooters);
 
 router.use(authMiddleware);
