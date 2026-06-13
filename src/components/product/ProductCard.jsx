@@ -234,10 +234,9 @@ export default function ProductCard({
     <Link to={`/products/${product._id}`}>
       <div className="border border-1 p-3 w-full transition-all group bg-white h-full">
         <div className="relative">
-        
           {labelData && (
             <div
-              className="absolute z-20 text-white px-2 py-1 text-xs rounded"
+              className="absolute z-10 text-white px-2 py-1 text-xs rounded"
               style={{
                 backgroundColor: labelData.color,
               }}
@@ -245,10 +244,12 @@ export default function ProductCard({
               {labelData.name}
             </div>
           )}
-          
+
           <img
             src={displayedImage}
             alt={product.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>

@@ -93,6 +93,7 @@ export default function Result() {
   useEffect(() => {
     dispatch(fetchResults());
     dispatch(fetchPages());
+    dispatch(fetchPageBySlug("results"));
   }, [dispatch]);
 
   if (slugLoading) return <Loding />;

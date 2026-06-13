@@ -1,11 +1,20 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  Suspense,
+  lazy,
+} from "react";
 import Section from "../ui/Section";
 import Row from "../ui/Row";
-import ReviewCard from "../reviews/reviewscard";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllReviews } from "../../features/reivews/reviewsThunk";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading";
+import Loding from "../loding/loding";
+
+const ReviewCard = lazy(() => import("../reviews/reviewscard"));
 
 export default function Customerreviews() {
   const dispatch = useDispatch();
@@ -29,7 +38,8 @@ export default function Customerreviews() {
   const [currentIndex, setCurrentIndex] = useState(total);
   const [isCenter, setIsCenter] = useState(false);
 
-  const tripled = total > 0 ? [...allReviews, ...allReviews, ...allReviews] : [];
+  const tripled =
+    total > 0 ? [...allReviews, ...allReviews, ...allReviews] : [];
 
   useEffect(() => {
     dispatch(fetchAllReviews());
@@ -134,7 +144,9 @@ export default function Customerreviews() {
                   className="flex-shrink-0"
                   style={{ width: `${CARD_W}px` }}
                 >
-                  <ReviewCard review={review} index={i} />
+                  <Suspense fallback={<Loding />}>
+                    <ReviewCard review={review} index={i} />
+                  </Suspense>
                 </div>
               ))
             )}

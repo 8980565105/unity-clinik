@@ -3,25 +3,11 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { getImageUrl } from "../utils/helper";
 import NavBtn from "../ui/Navbtn";
-import shoppingImg from "../../assets/shopping.png";
-import kurtiImg from "../../assets/Kurti.png";
-import JeansImg from "../../assets/Jeans.png";
-import jewelleryImg from "../../assets/jewellery.png";
-import cropImg from "../../assets/Crop Tops.png";
 import Section from "../ui/Section";
 import Row from "../ui/Row";
 import Heading from "../ui/Heading";
 
-const STATIC_CATEGORIES = [
-  { _id: "s1", name: "Saree", image_url: shoppingImg, isStatic: true },
-  { _id: "s2", name: "Kurti", image_url: kurtiImg, isStatic: true },
-  { _id: "s3", name: "Jeans", image_url: JeansImg, isStatic: true },
-  { _id: "s4", name: "Jewellery", image_url: jewelleryImg, isStatic: true },
-  { _id: "s5", name: "Crop Tops", image_url: cropImg, isStatic: true },
-  { _id: "s6", name: "Jewellery", image_url: jewelleryImg, isStatic: true },
-  { _id: "s7", name: "Saree", image_url: shoppingImg, isStatic: true },
-  { _id: "s8", name: "Kurti", image_url: kurtiImg, isStatic: true },
-];
+const STATIC_CATEGORIES = [];
 
 const CARD_W = 250;
 const GAP = 40;
@@ -39,7 +25,6 @@ const CategoriesSection = () => {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const isAnimating = useRef(false);
-  const initializedRef = useRef(false);
 
   const [currentIndex, setCurrentIndex] = useState(total);
   const [isCenter, setIsCenter] = useState(false);
@@ -142,7 +127,7 @@ const CategoriesSection = () => {
               <div
                 key={`${cat._id}-${i}`}
                 className="flex-shrink-0 w-[250px] px-2 cursor-pointer"
-                onClick={() => navigate(`/shop?category=${cat.name}`)}
+                onClick={() => navigate(`/allproducts?category=${cat.name}`)}
               >
                 <div className="group border bg-gradient-to-b from-[#f2fafc] to-[#d1eaff] border-gray-100 rounded-xl overflow-hidden hover:border-primary transition-all duration-200">
                   <div className="text-center text-[18px] capitalize text-primary min-h-[44px] flex items-center justify-center font-semibold px-1 pt-1">
@@ -157,13 +142,12 @@ const CategoriesSection = () => {
                           : getImageUrl(cat.image_url)
                       }
                       alt={cat.name}
+                      loading="lazy"
+                      decoding="async"
                       className="w-[90%] h-[90%] object-cover transition-transform duration-300 group-hover:scale-[1.05]"
                     />
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   </div>
-                  {/* <div className="px-2 py-3 text-center text-[18px] capitalize text-primary min-h-[44px] flex items-center justify-center">
-                    {cat.name}
-                  </div> */}
                 </div>
               </div>
             ))}

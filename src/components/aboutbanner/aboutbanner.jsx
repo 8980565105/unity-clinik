@@ -1,4 +1,3 @@
-import faqBg from "../../assets/size-bg.png";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPageBySlug } from "../../features/pages/pagesThunk";
 import { useEffect } from "react";

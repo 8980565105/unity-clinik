@@ -24,7 +24,7 @@ function ContactHome() {
                 <Phone size={20} fill="white" />
               </div>
               <span className="text-2xl font-bold tracking-wider">
-                Call +00 568 99 22
+                Call +919327148908
               </span>
             </div>
           </div>

@@ -1,24 +1,22 @@
 import { useState, useRef, useEffect } from "react";
-import { FiFacebook } from "react-icons/fi";
-import { TfiTwitter, TfiEmail } from "react-icons/tfi";
 import {
-  FaInstagram,
-  FaLinkedin,
-  FaPaperPlane,
-  FaPinterest,
-  FaTiktok,
-  FaYoutube,
-} from "react-icons/fa";
-import { BsTelephone } from "react-icons/bs";
-import { MapPin } from "lucide-react";
-import visaImg from "../../assets/visa.png";
-import mastercardImg from "../../assets/mastercard.png";
-import discoverImg from "../../assets/discover.png";
-import paypalImg from "../../assets/paypal.png";
+  Facebook,
+  Twitter,
+  Mail,
+  Phone,
+  MapPin,
+  Instagram,
+  Youtube,
+  Send,
+} from "lucide-react";
+import visaImg from "../../assets/visa.webp";
+import mastercardImg from "../../assets/mastercard.webp";
+import discoverImg from "../../assets/discover.webp";
+import paypalImg from "../../assets/paypal.webp";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
 import { Link } from "react-router-dom";
-import mylogo from "../../assets/logo.png";
+import mylogo from "../../assets/logo.webp";
 import { fetchFooter } from "../../features/footer/footerThunk";
 import { createEmails } from "../../features/emails/emailsThunk";
 import { toast } from "react-hot-toast";
@@ -26,15 +24,12 @@ import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 const getSocialIcon = (platform) => {
   const p = platform?.toLowerCase();
-  if (p?.includes("facebook")) return { icon: FiFacebook, color: "#1877F2" };
-  if (p?.includes("instagram")) return { icon: FaInstagram, color: "#E1306C" };
-  if (p?.includes("youtube")) return { icon: FaYoutube, color: "#FF0000" };
+  if (p?.includes("facebook")) return { icon: Facebook, color: "#1877F2" };
+  if (p?.includes("instagram")) return { icon: Instagram, color: "#E1306C" };
+  if (p?.includes("youtube")) return { icon: Youtube, color: "#FF0000" };
   if (p?.includes("twitter") || p?.includes("x"))
-    return { icon: TfiTwitter, color: "#1DA1F2" };
-  if (p?.includes("linkedin")) return { icon: FaLinkedin, color: "#0A66C2" };
-  if (p?.includes("tiktok")) return { icon: FaTiktok, color: "#000000" };
-  if (p?.includes("pinterest")) return { icon: FaPinterest, color: "#E60023" };
-  return { icon: FiFacebook, color: "#555" };
+    return { icon: Twitter, color: "#1DA1F2" };
+  return { icon: Facebook, color: "#555" };
 };
 
 export default function Footer() {
@@ -66,10 +61,8 @@ export default function Footer() {
       storeInfo?.address?.zip_code,
     ]
       .filter(Boolean)
-      .join(", ") || 
-      // "215, Dhara Arcade near Lajamani Chowk, Surat";
+      .join(", ") ||
     "unity clinic shop no 10 11 ground floor dhara arcade mahadev chowk mota varcha, surat , Gujarat, Surat, 394101";
-
 
   useEffect(() => {
     dispatch(fetchFooter({ isPublic: true }));
@@ -103,11 +96,11 @@ export default function Footer() {
 
   const navigationLinks = reversedFooters
     .filter((item) => item.status === "active")
-    .slice(0, 4);
+    .slice(0, 5);
 
   const supportLinks = reversedFooters
     .filter((item) => item.status === "active")
-    .slice(4, 9);
+    .slice(5, 10);
 
   const BASE = process.env.REACT_APP_API_URL_IMAGE;
   const dynamicLogoUrl = (() => {
@@ -145,7 +138,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
                 <div className="w-[20px]">
-                  <TfiEmail className="mt-1" size={20} />
+                  <Mail className="mt-1" size={20} />
                 </div>
                 <Link
                   to="mailto:info@gmail.com"
@@ -156,7 +149,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
                 <div className="w-[20px]">
-                  <BsTelephone className="mt-1" size={20} />
+                  <Phone className="mt-1" size={20} />
                 </div>
                 <p>{contactPhone}</p>
               </div>
@@ -211,7 +204,7 @@ export default function Footer() {
                     onChange={(e) => setEmailInput(e.target.value)}
                     disabled={emailLoading}
                   />
-                  <FaPaperPlane
+                  <Send
                     onClick={() => {
                       handleEmailSubmit();
                     }}
@@ -264,7 +257,6 @@ export default function Footer() {
                   >
                     <IconComponent
                       size={30}
-                      // style={{ color: color }}
                       className="transition-transform hover:scale-110 text-white"
                     />
                   </Link>

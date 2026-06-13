@@ -5,7 +5,7 @@ import Button from "../components/ui/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../features/auth/authThunk";
 import toast, { Toaster } from "react-hot-toast";
-import HeaderLogo from "../assets/logo.png";
+import HeaderLogo from "../assets/logo.webp";
 import LoginForm from "./Login";
 
 const RegistrationForm = ({ onClose }) => {

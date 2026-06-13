@@ -23,11 +23,13 @@ import toast, { Toaster } from "react-hot-toast";
 import OrderTracking from "../../pages/orderTraking";
 import Loding from "../loding/loding";
 import { Link } from "react-router-dom";
-import order from "../../assets/order.png";
+import order from "../../assets/order.webp";
 import Row from "../ui/Row";
 import Button from "../ui/Button";
 import NavBtn from "../ui/Navbtn";
 import Section from "../ui/Section";
+import { fetchPageBySlug } from "../../features/pages/pagesThunk";
+import SEO from "../seo/seo";
 
 const STATUS_CONFIG = {
   pending: {
@@ -176,7 +178,6 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
-      {/* ── DESKTOP views */}
       <div className="hidden lg:flex min-h-[100px]">
         <div className={`w-1 flex-shrink-0 ${statusCfg.leftBar}`} />
         <div
@@ -246,9 +247,7 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
         </div>
       </div>
 
-      {/* mobile views */}
       <div className="lg:hidden">
-        {/* Row 1: status bar + order info */}
         <div className="">
           <div className={`w-1 flex-shrink-0 ${statusCfg.leftBar}`} />
           <div className={`flex items-center px-3 py-3 ${statusCfg.bgcolor}`}>
@@ -275,7 +274,6 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
           </div>
         </div>
 
-        {/* Row 2: product image + details */}
         <div className="flex items-center gap-3 px-3 py-3 border-t border-gray-100">
           <Link to={`/products/${product?._id}`} className="flex-shrink-0">
             <img
@@ -304,7 +302,6 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
           </div>
         </div>
 
-        {/* Row 3: total + payment */}
         <div className="flex items-center justify-between px-3 py-2.5 border-t border-gray-100 ">
           <div>
             <p className="text-[11px] text-gray-400">Total Amount</p>
@@ -315,7 +312,6 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
           <PaymentBadge method={order.payment_method} />
         </div>
 
-        {/* Row 4: action buttons */}
         <div className="flex items-center gap-2 px-3 py-3 border-t border-gray-100">
           <button
             onClick={() => onReview(order)}
@@ -354,7 +350,8 @@ export default function Orders() {
     comment: "",
     product_id: "",
   });
-
+  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const homePage = pages?.find((page) => page.slug === "order");
   const { success: reviewSuccess, loading: reviewLoading } = useSelector(
     (state) => state.reviews,
   );
@@ -376,6 +373,7 @@ export default function Orders() {
 
   useEffect(() => {
     dispatch(fetchUserOrders({ page, limit }));
+    dispatch(fetchPageBySlug("order"));
   }, [dispatch, page]);
 
   useEffect(() => {
@@ -463,6 +461,12 @@ export default function Orders() {
 
   return (
     <>
+      <SEO
+        title={homePage?.meta_title}
+        description={homePage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${homePage?.seo_image}`}
+      />
+
       <Toaster position="top-center" />
 
       <Section>

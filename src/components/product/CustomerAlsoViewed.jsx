@@ -1,4 +1,3 @@
-
 import React, {
   useMemo,
   useRef,
@@ -16,7 +15,7 @@ import ProductCard from "./ProductCard";
 
 const getGap = () => {
   if (window.innerWidth <= 768) return 0;
-  
+
   return 16;
 };
 const GAP = getGap();
@@ -24,6 +23,7 @@ const GAP = getGap();
 export default function CustomerAlsoViewed({
   currentProductId = null,
   setShowLoginPopup,
+  productLabels,
 }) {
   const { products = [] } = useSelector((state) => state.products);
   const containerRef = useRef(null);
@@ -170,6 +170,7 @@ export default function CustomerAlsoViewed({
                   <ProductCard
                     product={product}
                     setShowLoginPopup={setShowLoginPopup}
+                    productLabels={productLabels}
                   />
                 </div>
               ))}

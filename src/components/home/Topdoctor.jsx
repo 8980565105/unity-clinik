@@ -119,6 +119,8 @@ export default function TopDoctorCarousel() {
                     <img
                       src={getImageUrl(doc.image)}
                       alt={doc.name}
+                      loading="lazy"
+                      decoding="async"
                       className={`
     absolute left-0 w-full block
     origin-bottom

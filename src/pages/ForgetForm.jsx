@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword, resetPassword } from "../features/auth/authThunk";
 import { clearPasswordResetState } from "../features/auth/authSlice";
 import toast, { Toaster } from "react-hot-toast";
-import HeaderLogo from "../assets/logo.png";
+import HeaderLogo from "../assets/logo.webp";
 
 const steps = [
   { icon: Mail, label: "Email" },

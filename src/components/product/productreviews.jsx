@@ -38,11 +38,10 @@ function Productreviews({ productId, setShowLoginPopup }) {
     afterImage: null,
   });
 
-  useEffect(() => {
-    if (productId) {
-      dispatch(fetchProductReviews({ productId, page: 1, limit: 100 }));
-    }
-  }, [dispatch, productId]);
+  // useEffect(() => {
+  //   if (productId) {
+  //   }
+  // }, [dispatch, productId]);
 
   useEffect(() => {
     if (reviewSuccess) {

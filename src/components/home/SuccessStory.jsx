@@ -30,11 +30,14 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
             controlsList="nodownload"
             className="w-full h-full object-fill"
             onEnded={onVideoEnd}
+            loading="lazy"
           />
         ) : (
           <img
             src={imgSrc(slide.mainImage)}
             alt={slide.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
         )}
@@ -50,7 +53,9 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
             <div className="relative">
               <img
                 src={imgSrc(slide.beforeImage)}
-                alt=""
+                alt="before"
+                loading="lazy"
+                decoding="async"
                 className="w-16 h-16 rounded-xl object-cover border border-white"
               />
               <span className="absolute bottom-0 left-0 right-0 text-center text-[9px] bg-black/60 text-white rounded-b-xl">
@@ -63,7 +68,9 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
             <div className="relative">
               <img
                 src={imgSrc(slide.afterImage)}
-                alt=""
+                alt="after"
+                loading="lazy"
+                decoding="async"
                 className="w-16 h-16 rounded-xl object-cover border border-white"
               />
               <span className="absolute bottom-0 left-0 right-0 text-center text-[9px] bg-black/60 text-white rounded-b-xl">
@@ -128,7 +135,6 @@ export default function SuccessStorySection() {
 
     return path.replace("/", "");
   }, [location.pathname]);
-  //   const sectionData = slidesData?.data;
   const shouldShow = sectionData?.showOnPages?.includes(currentPage);
 
   const slidesList = sectionData?.successStorySlides || [];
@@ -146,7 +152,6 @@ export default function SuccessStorySection() {
       <Row>
         <div className="flex gap-5 overflow-x-auto px-2 py-2">
           {slidesList.map((slide) => (
-            
             <StoryCard
               key={slide._id}
               slide={slide}

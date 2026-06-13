@@ -3,13 +3,16 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import Heading from "../components/ui/Heading";
 import SEO from "../components/seo/seo";
+import { fetchPageBySlug } from "../features/pages/pagesThunk";
 
 export default function RefundPolicy() {
   const dispatch = useDispatch();
   const { data, loading } = useSelector((state) => state.systemseting);
-
+  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const ReturnPage = pages?.find((page) => page.slug === "returns");
   useEffect(() => {
     dispatch(fetchSystemSettings());
+    dispatch(fetchPageBySlug("returns"));
   }, [dispatch]);
 
   if (loading && !data) {
@@ -23,8 +26,9 @@ export default function RefundPolicy() {
   return (
     <>
       <SEO
-        title={"Return & Refund Policy"}
-        description={"Return & Refund Description"}
+        title={ReturnPage?.meta_title}
+        description={ReturnPage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${ReturnPage?.seo_image}`}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-10">

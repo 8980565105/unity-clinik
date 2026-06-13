@@ -22,6 +22,7 @@ export default function SimilarProducts({
   product,
   products = [],
   setShowLoginPopup,
+  productLabels
 }) {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
@@ -169,6 +170,7 @@ export default function SimilarProducts({
                   <ProductCard
                     product={p}
                     setShowLoginPopup={setShowLoginPopup}
+                     productLabels={productLabels}
                   />
                 </div>
               ))}

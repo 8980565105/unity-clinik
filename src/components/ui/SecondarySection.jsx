@@ -1,5 +1,5 @@
 import React from "react";
-import underlineImg from "../../assets/underline.png";
+import underlineImg from "../../assets/underline.webp";
 import Section from "./Section";
 import Row from "./Row";
 

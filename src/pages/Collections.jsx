@@ -2,11 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getImageUrl } from "../components/utils/helper";
-import shoppingImg from "../assets/shopping.png";
-import kurtiImg from "../assets/Kurti.png";
-import JeansImg from "../assets/Jeans.png";
-import jewelleryImg from "../assets/jewellery.png";
-import cropImg from "../assets/Crop Tops.png";
 import Row from "../components/ui/Row";
 import Section from "../components/ui/Section";
 import NavBtn from "../components/ui/Navbtn";
@@ -26,13 +21,13 @@ export default function Collections({ products = [] }) {
     (state) => state.subcategories,
   );
   const { pages } = useSelector((state) => state.pages);
-  const collectionPage = pages?.find((page) => page.slug === "collection");
+  const collectionPage = pages?.find((page) => page.slug === "collections");
   const params = new URLSearchParams(location.search);
   const categoryIdFromUrl = params.get("categoryId");
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchPageBySlug("collection"));
+    dispatch(fetchPageBySlug("collections"));
   }, [dispatch]);
 
   useEffect(() => {
@@ -156,10 +151,9 @@ export default function Collections({ products = [] }) {
   return (
     <>
       <SEO
-        title={collectionPage?.meta_title || "collection"}
-        description={
-          collectionPage?.meta_description || "collection page description"
-        }
+        title={collectionPage?.meta_title}
+        description={collectionPage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${collectionPage?.seo_image}`}
       />
 
       <Section>
@@ -231,7 +225,7 @@ export default function Collections({ products = [] }) {
               <div
                 key={sub._id}
                 className="text-center cursor-pointer"
-                onClick={() => navigate(`/shop?category=${sub.name}`)}
+                onClick={() => navigate(`/allproducts?category=${sub.name}`)}
               >
                 <div className="w-[140px] h-[140px] mx-auto rounded-full overflow-hidden border-4 border-gray-300">
                   <img

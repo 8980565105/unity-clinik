@@ -411,9 +411,6 @@ export default function WomenCollections() {
     [],
   );
 
-  // const handleCategoryChange = (name) => {
-  //   setSelectedCategories((prev) => (prev.includes(name) ? [] : [name]));
-  // };
   const handleCategoryChange = (name) => {
     setSelectedCategories((prev) =>
       prev.includes(name)
@@ -750,9 +747,6 @@ export default function WomenCollections() {
             selectedTypes={selectedTypes}
             handleTypeChange={handleTypeChange}
             handleResetTypes={() => setSelectedTypes([])}
-            // selectedDiscounts={selectedDiscounts}
-            // handleDiscountChange={handleDiscountChange}
-            // handleResetDiscounts={() => setSelectedDiscounts([])}
             selectedLabels={selectedLabels}
             handleLabelChange={handleLabelChange}
             handleResetLabels={() => setSelectedLabels([])}
@@ -779,13 +773,6 @@ export default function WomenCollections() {
               </div>
             </div>
           </div>
-          {/* <p className="text-sm text-gray-600 mb-8">
-            <span className="text-black border-b border-black lg:border-none">
-              <Link to="/home">Home</Link>
-            </span>
-            <span className="text-black"> / </span>
-            <span className="font-regular text-[#989696]">Shop</span>
-          </p> */}
           <div className="mb-3 lg:hidden">
             <MobileFilterBar
               sortBy={currentSortLabel}
@@ -816,9 +803,6 @@ export default function WomenCollections() {
               selectedTypes={selectedTypes}
               handleTypeChange={handleTypeChange}
               handleResetTypes={() => setSelectedTypes([])}
-              // selectedDiscounts={selectedDiscounts}
-              // handleDiscountChange={handleDiscountChange}
-              // handleResetDiscounts={() => setSelectedDiscounts([])}
               selectedLabels={selectedLabels}
               handleLabelChange={handleLabelChange}
               handleResetLabels={() => setSelectedLabels([])}
@@ -850,12 +834,6 @@ export default function WomenCollections() {
                     {showingResults}
                   </span>{" "}
                   results for "
-                  {/* <span className="font-medium text-black">
-                    {selectedCategories.length > 0
-                      ? 
-                      selectedCategories.join(", ")
-                      : "Products"}
-                  </span> */}
                   <span className="font-medium text-black">
                     {selectedCategories.length > 0
                       ? selectedCategories
@@ -912,10 +890,6 @@ export default function WomenCollections() {
                             setSelectedTypes((p) =>
                               p.filter((x) => x !== value),
                             );
-                          // if (type === "discount")
-                          //   setSelectedDiscounts((p) =>
-                          //     p.filter((d) => d.id !== value),
-                          //   );
                           if (type === "label")
                             setSelectedLabels((p) =>
                               p.filter((l) => l.id !== value),

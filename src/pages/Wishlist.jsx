@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchPages } from "../features/pages/pagesThunk";
 import { useEffect } from "react";
 import { getImageUrl } from "../components/utils/helper";
-import wishlistBg from "../assets/wishlistbg.png";
+import wishlistBg from "../assets/wishlistbg.webp";
 import Loding from "../components/loding/loding";
 import SEO from "../components/seo/seo";
 const staticBg = {

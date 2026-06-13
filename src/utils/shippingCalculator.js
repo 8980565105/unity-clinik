@@ -5,40 +5,14 @@
  * @param {object} settings - from redux systemseting.data
  * @returns {number} shipping charge
  */
-// export function calculateShipping(orderAmount, paymentType, settings) {
-//     if (!settings) return 0;
-
-//     const config = paymentType === "cod" ? settings.cod : settings.prepaid;
-//     if (!config) return 0;
-
-//     // Free threshold check
-//     if (config.freeThreshold > 0 && orderAmount >= config.freeThreshold) {
-//         return 0;
-//     }
-
-//     // Range match
-//     const matched = (config.ranges || []).find(
-//         (r) => orderAmount >= r.from && orderAmount < r.to
-//     );
-
-//     if (!matched) return 0;
-
-//     if (matched.chargeType === "free_shipping") return 0;
-//     if (matched.chargeType === "percentage") {
-//         return Math.round((orderAmount * matched.charge) / 100);
-//     }
-//     return matched.charge; // fixed
-// }
 
 export function calculateShipping(orderAmount, paymentType, settings) {
   if (!settings) return 0;
 
-  // payment type મુજબ config
   const config = paymentType === "cod" ? settings.cod : settings.prepaid;
 
   if (!config) return 0;
 
-  // Free Shipping Check
   if (
     Number(config.freeThreshold) > 0 &&
     orderAmount >= Number(config.freeThreshold)
@@ -46,7 +20,6 @@ export function calculateShipping(orderAmount, paymentType, settings) {
     return 0;
   }
 
-  // Range Match
   const matchedRange = (config.ranges || []).find(
     (range) =>
       orderAmount >= Number(range.from) && orderAmount <= Number(range.to),
@@ -77,5 +50,5 @@ export function calculatePartialCodAdvance(totalAmount, settings) {
   if (codType === "percentage") {
     return Math.round((totalAmount * value) / 100);
   }
-  return value; // fixed or range
+  return value; 
 }

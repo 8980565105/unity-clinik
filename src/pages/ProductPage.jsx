@@ -14,7 +14,6 @@ import ProductInfo from "../components/product/ProductInfo";
 import ProductTabs from "../components/product/ProductTabs";
 import SimilarProducts from "../components/product/SimilarProducts";
 import CustomerAlsoViewed from "../components/product/CustomerAlsoViewed";
-import { fetchPages } from "../features/pages/pagesThunk";
 import { addRecentlyViewed } from "../components/utils/recentlyViewed";
 import LoginForm from "./Login";
 import Heading from "../components/ui/Heading";
@@ -28,6 +27,7 @@ import ProductSections, {
   SectionRenderer,
 } from "../components/product/ProductSections";
 import Productreviews from "../components/product/productreviews";
+import { fetchProductLabels } from "../features/productLabels/productlabelsThunk";
 
 export default function Product() {
   const { id } = useParams();
@@ -50,6 +50,9 @@ export default function Product() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
   const [handleAddToWishlistFn, setHandleAddToWishlistFn] = useState(null);
+
+  const { productLabels = [] } = useSelector((state) => state.productLabels);
+
   const getVisible = () => {
     if (window.innerWidth < 640) return 1;
     if (window.innerWidth < 1024) return 2;
@@ -68,7 +71,7 @@ export default function Product() {
 
   useEffect(() => {
     dispatch(fetchProducts());
-    dispatch(fetchPages());
+    dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
 
   useEffect(() => {
@@ -97,9 +100,6 @@ export default function Product() {
   if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
   if (!product) return <Loding />;
 
-  // const otherRecommendedSection = product?.sections?.find(
-  //   (section) => section.type === "Other Recommended Solutions",
-  // );
   const otherRecommendedSection = product?.sections?.find(
     (section) =>
       section.type === "Other Recommended Solutions" &&
@@ -160,11 +160,13 @@ export default function Product() {
         product={product}
         products={products}
         setShowLoginPopup={setShowLoginPopup}
+        productLabels={productLabels}
       />
 
       <ProductSections
         sections={remainingSections}
         setShowLoginPopup={setShowLoginPopup}
+        productLabels={productLabels}
       />
 
       {allReviews.length > 0 && (
@@ -211,7 +213,11 @@ export default function Product() {
         setShowLoginPopup={setShowLoginPopup}
       />
 
-      <CustomerAlsoViewed products={products} currentProductId={product?._id} />
+      <CustomerAlsoViewed
+        products={products}
+        currentProductId={product?._id}
+        productLabels={productLabels}
+      />
 
       {showStickyBar && (
         <div className="fixed  bottom-0 left-0 right-0 z-[10] bg-white border-t shadow-xl">

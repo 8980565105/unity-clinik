@@ -14,6 +14,8 @@ import { useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
 import Solutionstagecard from "./solutionstagecard";
 import OtherRecommendedCard from "./OtherRecommendedCard";
+import { fetchProductReviews } from "../../features/reivews/reviewsThunk";
+import { useDispatch } from "react-redux";
 
 function FaqItem({ faq, isOpen, onToggle }) {
   return (
@@ -179,7 +181,11 @@ lg:w-[485px]
   );
 }
 
-export default function ProductSections({ sections, setShowLoginPopup }) {
+export default function ProductSections({
+  sections,
+  setShowLoginPopup,
+  productLabels,
+}) {
   const activeSections = (sections || []).filter(
     (sec) => sec?.data?.status === true || sec?.data?.status === undefined,
   );
@@ -192,13 +198,14 @@ export default function ProductSections({ sections, setShowLoginPopup }) {
           key={idx}
           section={section}
           setShowLoginPopup={setShowLoginPopup}
+          productLabels={productLabels}
         />
       ))}
     </>
   );
 }
 
-export function SectionRenderer({ section, setShowLoginPopup }) {
+export function SectionRenderer({ section, setShowLoginPopup, productLabels }) {
   const { type, data } = section;
   const items = data?.items || [];
   const scrollRef = useRef(null);
@@ -211,6 +218,7 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
   const [open, setOpen] = useState(true);
   const [activeSlider, setActiveSlider] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [visibleCount, setVisibleCount] = useState(
     typeof window !== "undefined" && window.innerWidth < 768 ? 2 : 4,
@@ -651,7 +659,7 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
               modules={[Pagination, Autoplay]}
               pagination={{ clickable: true }}
               autoplay={{ delay: 3000, disableOnInteraction: false }}
-              loop={items.length > 3}
+              loop
               spaceBetween={24}
               breakpoints={{
                 0: { slidesPerView: 1 },
@@ -1040,7 +1048,7 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
               modules={[Pagination, Autoplay]}
               pagination={{ clickable: true }}
               autoplay={{ delay: 3000, disableOnInteraction: false }}
-              loop={recommendedProducts.length > 1}
+              loop
               breakpoints={{
                 0: {
                   slidesPerView: 1.5,
@@ -1062,6 +1070,7 @@ export function SectionRenderer({ section, setShowLoginPopup }) {
                   <ProductCard
                     product={product}
                     setShowLoginPopup={setShowLoginPopup}
+                    productLabels={productLabels}
                   />
                 </SwiperSlide>
               ))}

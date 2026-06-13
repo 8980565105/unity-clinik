@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import CheckoutForm from "../components/checkout/CheckoutForm";
 import OrderSummary from "../components/checkout/OrderSummary";
 import Section from "../components/ui/Section";
@@ -7,14 +7,20 @@ import CartProgress from "../components/cart/CartProgress";
 import { Link } from "react-router-dom";
 import SEO from "../components/seo/seo";
 
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import emptycart from "../assets/emptycart.webp";
 import { Truck } from "lucide-react";
+import { fetchPageBySlug } from "../features/pages/pagesThunk";
 
 export default function Checkout() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const { items = [] } = useSelector((state) => state.cart);
+  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const checkoutPage = pages?.find((page) => page.slug === "checkout");
+
   const [appliedCoupon] = useState(null);
   const [formData, setFormData] = React.useState({
     email: "",
@@ -27,10 +33,17 @@ export default function Checkout() {
     pincode: "",
     phone: "",
   });
+  useEffect(() => {
+    dispatch(fetchPageBySlug("checkout"));
+  }, [dispatch]);
 
   return (
     <div>
-      <SEO title={"Checkout"} description={"Checkout Description"} />
+      <SEO
+        title={checkoutPage?.meta_title}
+        description={checkoutPage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${checkoutPage?.seo_image}`}
+      />
 
       <CartProgress currentStep={2} />
 

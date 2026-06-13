@@ -59,7 +59,6 @@ export default function ContactSection() {
               onChange={handleChange}
               required
             />
-            {/* <div className="flex sm:grid flex-col sm:grid-cols-2 gap-[15px] md:gap-[28px]"> */}
             <input
               type="text"
               name="subject"
@@ -90,13 +89,13 @@ export default function ContactSection() {
         <div className="w-full h-[500px] md:h-full rounded-md overflow-hidden shadow-md">
           <iframe
             title="Google Map"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3682.857730642045!2d72.86647431503077!3d21.205491385909074!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04fb03e1e8c8b%3A0x93dcdbb0e08da8c!2sMota%20Varachha%2C%20Surat!5e0!3m2!1sen!2sin!4v1677840410877!5m2!1sen!2sin"
+            src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d3718.8641114288503!2d72.8829878!3d21.2372365!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f44e00969b3%3A0xf68c5249f9bae7a0!2sdhara%20arcade%2C%20Mota%20Varachha%2C%20Surat%2C%20Gujarat%20394101!5e0!3m2!1sen!2sin!4v1781174341607!5m2!1sen!2sin"
             width="100%"
             height="100%"
-            allowFullScreen
+            allowfullscreen
             loading="lazy"
             className="border-0"
-          />
+          ></iframe>
         </div>
       </Row>
     </Section>

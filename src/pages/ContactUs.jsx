@@ -9,7 +9,7 @@ import SecondarySection from "../components/ui/SecondarySection";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import { getImageUrl } from "../components/utils/helper";
-import contactBg from "../assets/contact.jpg";
+import contactBg from "../assets/contact.webp";
 import SEO from "../components/seo/seo";
 
 const staticBg = {
@@ -61,23 +61,23 @@ export default function ContactUs() {
           <ContactCard
             icon={<MapPinIcon />}
             title="Visit Us"
-            description="215, Dhara Arcade, near lajamani chowk (Surat)."
+            description="10,11 dhara arcade settelite road mahadev chowk mota varacha Surat."
             linkText="View on Google Maps"
-            linkHref="https://maps.google.com"
+            linkHref="https://maps.app.goo.gl/8EGGwPHV9Ye8wxeW9"
           />
           <ContactCard
             icon={<EnvelopeIcon />}
             title="Email Us"
-            description="Visit our office HR"
-            linkText="Sales@untitledul.com"
-            linkHref="mailto:Sales@uniteddul.com"
+            description="Visit our clinic"
+            linkText="Support@zyfolixo.com"
+            linkHref="mailto:Support@zyfolixo.com"
           />
           <ContactCard
             icon={<PhoneIcon />}
             title="Call Us"
-            description="Mon-Fri 8am to 6pm"
-            linkText="+1[155]000-0000"
-            linkHref="tel:+1155000000"
+            description="Mon-Satur 10am to 6pm"
+            linkText="+91 9327148908"
+            linkHref="tel:+91 9327148908"
           />
         </Row>
       </Section>

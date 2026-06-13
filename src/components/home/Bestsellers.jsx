@@ -1,18 +1,27 @@
-import React, { useRef, useState, useCallback, useEffect } from "react";
+import React, {
+  lazy,
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  Suspense,
+} from "react";
 import Row from "../ui/Row.jsx";
 import { useSelector } from "react-redux";
 import Section from "../ui/Section.jsx";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading.jsx";
-import ProductCard from "../product/ProductCard";
+import Loding from "../loding/loding.jsx";
+
+const ProductCard = lazy(() => import("../product/ProductCard"));
 
 const getGap = () => {
   if (window.innerWidth <= 768) return 0;
-  
+
   return 16;
 };
 const GAP = getGap();
-const Bestsellers = ({ setShowLoginPopup }) => {
+const Bestsellers = ({ setShowLoginPopup, productLabels }) => {
   const { products = [] } = useSelector((state) => state.products);
 
   const sellersProducts = products.filter(
@@ -151,10 +160,13 @@ const Bestsellers = ({ setShowLoginPopup }) => {
                   className="flex-shrink-0"
                   style={{ width: `${cardWidth}px` }}
                 >
-                  <ProductCard
-                    product={product}
-                    setShowLoginPopup={setShowLoginPopup}
-                  />
+                  <Suspense fallback={<Loding />}>
+                    <ProductCard
+                      product={product}
+                      setShowLoginPopup={setShowLoginPopup}
+                      productLabels={productLabels}
+                    />
+                  </Suspense>
                 </div>
               ))}
             </div>

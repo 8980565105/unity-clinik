@@ -36,35 +36,6 @@ export default function AboutPage() {
       />
       <AboutBanner />
       <AboutContent />
-
-      {sortedFeatures.length > 0 && (
-        <Section>
-          <Row className="grid grid-cols-1 md:grid-cols-4 gap-[40px] pt-[25px] md:pt-[50px]">
-            {sortedFeatures.map((item, i) => (
-              <div key={item._id || i} className="flex items-start gap-[22px]">
-                <div className="w-[62px] h-[50px] rounded-bl-[20px] bg-[linear-gradient(90deg,var(--primary-color)_0%,#ffffff_80%)] relative overflow-hidden flex-shrink-0">
-                  <img
-                    src={
-                      item.image_url ? getImageUrl(item.image_url) : item.icon
-                    }
-                    className="h-[42px] w-[42px] object-contain absolute bottom-0 right-0"
-                    alt="feature icon"
-                  />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-medium text-20px mb-[10px] leading">
-                    {item.title}
-                  </h3>
-                  <p className="text-14 sec-text-color">
-                    {item.description || item.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </Row>
-        </Section>
-      )}
-
       <SuccessStorySection />
     </>
   );

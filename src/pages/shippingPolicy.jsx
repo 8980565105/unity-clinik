@@ -3,19 +3,24 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import Heading from "../components/ui/Heading";
 import SEO from "../components/seo/seo";
+import { fetchPageBySlug } from "../features/pages/pagesThunk";
 
 export default function ShippingPolicy() {
   const dispatch = useDispatch();
   const { data, loading } = useSelector((state) => state.systemseting);
+  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const shipingPage = pages?.find((page) => page.slug === "shipping");
 
   useEffect(() => {
     dispatch(fetchSystemSettings());
+    dispatch(fetchPageBySlug("shipping"));
   }, [dispatch]);
 
   if (loading && !data) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-500">Loading...</p>
+        
       </div>
     );
   }
@@ -23,8 +28,9 @@ export default function ShippingPolicy() {
   return (
     <>
       <SEO
-        title={"Shipping & Delivery Policy "}
-        description={"Shipping & Delivery  Description"}
+        title={shipingPage?.meta_title}
+        description={shipingPage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${shipingPage?.seo_image}`}
       />
 
       <div className="max-w-4xl mx-auto px-4 py-10">

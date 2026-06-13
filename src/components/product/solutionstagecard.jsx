@@ -17,6 +17,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Pagination, Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { Star } from "lucide-react";
 
 function Solutionstagecard({ data, items = [], products = [] }) {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ function Solutionstagecard({ data, items = [], products = [] }) {
 
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
+  const { productReviews } = useSelector((state) => state.reviews);
 
   const handleAddToCart = async (e, product) => {
     e.stopPropagation();
@@ -70,8 +72,6 @@ function Solutionstagecard({ data, items = [], products = [] }) {
 
   if (!items || items.length === 0) return null;
 
-  const enableLoop = items.length > 3;
-
   return (
     <Section className="py-16 bg-white">
       <Row>
@@ -87,12 +87,12 @@ function Solutionstagecard({ data, items = [], products = [] }) {
               disableOnInteraction: false,
               pauseOnMouseEnter: true,
             }}
-            loop={enableLoop}
+            loop
             spaceBetween={20}
             breakpoints={{
-              0: { slidesPerView: 2 },
+              0: { slidesPerView: 1.5 },
               678: { slidesPerView: 3 },
-              1024: { slidesPerView: 4 },
+              1024: { slidesPerView: 5 },
             }}
             className="!pb-12"
           >
@@ -102,9 +102,7 @@ function Solutionstagecard({ data, items = [], products = [] }) {
               );
 
               const rawMainImg =
-                linkedProduct?.variants?.[0]?.images?.[0] ||
-                linkedProduct?.images ||
-                null;
+                linkedProduct?.images;
               const mainImg = rawMainImg
                 ? rawMainImg.startsWith("http")
                   ? rawMainImg
@@ -124,7 +122,21 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                 origPrice > offerPrice
                   ? Math.floor(((origPrice - offerPrice) / origPrice) * 100)
                   : 0;
-              const reviewCount = linkedProduct?.reviewCount || 0;
+
+              const reviewList =
+                productReviews?.[linkedProduct?._id]?.reviews || [];
+
+              const reviewCount = reviewList.length;
+
+              const averageRating =
+                reviewCount > 0
+                  ? (
+                      reviewList.reduce(
+                        (sum, review) => sum + Number(review.rating || 0),
+                        0,
+                      ) / reviewCount
+                    ).toFixed(1)
+                  : "0.0";
 
               return (
                 <SwiperSlide key={i}>
@@ -133,36 +145,41 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                       item.product_id &&
                       navigate(`/products/${item.product_id}`)
                     }
-                    className="bg-white rounded-3xl border border-gray-200 p-2 flex flex-col shadow-sm cursor-pointer h-full"
+                    className="bg-white rounded-xl border border-gray-200 flex flex-col shadow-sm cursor-pointer h-full"
                   >
-                    <div className="relative bg-[#f8f9fa] rounded-2xl h-56 overflow-hidden">
+                    <div className="relative bg-[#f8f9fa] rounded-xl h-56 overflow-hidden">
                       {bgImg && (
-                        <img
+                        <video
                           src={bgImg}
-                          alt={item.title}
-                          className="w-full h-full object-cover rounded-2xl"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-fill"
+                          onLoadedMetadata={(e) => {
+                            e.currentTarget.playbackRate = 0.75;
+                          }}
                         />
                       )}
 
                       <div className="absolute top-3 left-3 bg-white px-2 py-1 rounded-lg flex items-center gap-1 shadow-sm z-10">
-                        ⭐
-                        <span className="text-xs font-bold text-gray-600">
-                          {reviewCount}
+                        <Star
+                          size={16}
+                          className="text-yellow-400 fill-yellow-400"
+                        />
+                        <span className="text-xs font-bold text-gray-700">
+                          {averageRating}
                         </span>
                       </div>
-
-                      <span className="absolute top-3 left-1/2 -translate-x-1/2 text-[#005b9f] font-black uppercase text-lg z-10 whitespace-nowrap">
-                        {item.title}
-                      </span>
                     </div>
 
                     {mainImg && (
                       <div className="relative z-30 flex justify-center -mt-14">
-                        <div className="w-[105px] h-[105px] bg-white rounded-[20px] shadow-xl border border-gray-100 overflow-hidden">
+                        <div className="w-[100px] h-[100px] rounded-[12px] shadow-xl overflow-hidden">
                           <img
                             src={mainImg}
                             alt={linkedProduct?.name}
-                            className="w-full h-full object-contain p-2"
+                            className="w-full h-full object-cover"
                           />
                         </div>
                       </div>
@@ -173,7 +190,7 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                         {item.title}
                       </span>
 
-                      <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 leading-snug mb-3">
+                      <h3 className="text-[16px] font-semibold line-clamp-2 h-[40px] leading-[20px] text-left">
                         {linkedProduct?.name}
                       </h3>
 

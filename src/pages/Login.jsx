@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
-import HeaderLogo from "../assets/logo.png";
+import HeaderLogo from "../assets/logo.webp";
 
 const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
   const dispatch = useDispatch();
@@ -102,17 +102,6 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
               className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
             />
           </div>
-          {/* <div>
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="input-common w-full border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
-            />
-          </div> */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}

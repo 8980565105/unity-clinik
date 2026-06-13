@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
 import ShopBannerSlider from "../components/shop/ShopBannerSlider";
-import { fetchProducts } from "../features/products/productsThunk";
 import { useDispatch, useSelector } from "react-redux";
 import ProductCard from "../components/product/ProductCard";
 import { fetchSlides } from "../features/slides/slideThunk";
@@ -14,6 +13,9 @@ import { ChevronRight, ShoppingCart } from "lucide-react";
 import { fetchBrands } from "../features/brands/brandsThunk";
 import { fetchtypes } from "../features/types/typeThunk";
 import { fetchProductLabels } from "../features/productLabels/productlabelsThunk";
+import { useSearchParams } from "react-router-dom";
+import { fetchPageBySlug } from "../features/pages/pagesThunk";
+import SEO from "../components/seo/seo";
 
 const NAVBAR_HEIGHT = 100;
 
@@ -38,6 +40,8 @@ function Allproducts() {
   const { productLabels = [], loading: labelsLoading } = useSelector(
     (state) => state.productLabels,
   );
+  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const allproductsPage = pages?.find((page) => page.slug === "allproducts");
 
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeSubCategory, setActiveSubCategory] = useState("all");
@@ -46,6 +50,11 @@ function Allproducts() {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedLabel, setSelectedLabel] = useState("all");
   const [activeFilter, setActiveFilter] = useState(null);
+
+  const [searchParams] = useSearchParams();
+
+  const categoryName = searchParams.get("category");
+
   useEffect(() => {
     if (subcategories.length > 0) {
     }
@@ -74,7 +83,6 @@ function Allproducts() {
   const categorySubIds = filteredSubCategories.map((sub) => String(sub._id));
 
   const filteredProducts = products.filter((product) => {
-    // Category Filter
     if (activeCategory !== "all") {
       const productSubIds =
         product.category_id?.map((id) => normalizeId(id)) || [];
@@ -90,7 +98,6 @@ function Allproducts() {
       }
     }
 
-    // Brand Filter
     if (selectedBrand !== "all") {
       const brandId = product?.variants?.[0]?.brand?.[0]?._id;
 
@@ -99,7 +106,6 @@ function Allproducts() {
       }
     }
 
-    // Type Filter
     if (selectedType !== "all") {
       const typeId = product?.variants?.[0]?.type?.[0]?._id;
 
@@ -108,7 +114,6 @@ function Allproducts() {
       }
     }
 
-    // Label Filter
     if (selectedLabel !== "all") {
       const labels = product?.variants?.[0]?.labels || [];
 
@@ -117,7 +122,6 @@ function Allproducts() {
       }
     }
 
-    // Price Filter
     const price =
       Number(product?.variants?.[0]?.offerprice) ||
       Number(product?.variants?.[0]?.price) ||
@@ -176,7 +180,7 @@ function Allproducts() {
   };
 
   useEffect(() => {
-    dispatch(fetchProducts());
+    dispatch(fetchPageBySlug("allproducts"));
     dispatch(fetchSlides());
     dispatch(fetchCategories());
     dispatch(fetchsubCategories());
@@ -184,6 +188,25 @@ function Allproducts() {
     dispatch(fetchtypes({ status: "active" }));
     dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!categoryName || subcategories.length === 0) return;
+
+    const selectedSubCategory = subcategories.find(
+      (sub) => sub.name?.toLowerCase() === categoryName.toLowerCase(),
+    );
+
+    if (selectedSubCategory) {
+      setActiveSubCategory(selectedSubCategory._id);
+
+      const parentId =
+        typeof selectedSubCategory.parent_id === "object"
+          ? selectedSubCategory.parent_id._id
+          : selectedSubCategory.parent_id;
+
+      setActiveCategory(parentId);
+    }
+  }, [categoryName, subcategories]);
 
   const handleCategoryClick = (categoryId) => {
     setActiveCategory(categoryId);
@@ -233,6 +256,12 @@ function Allproducts() {
 
   return (
     <>
+      <SEO
+        title={allproductsPage?.meta_title}
+        description={allproductsPage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${allproductsPage?.seo_image}`}
+      />
+
       <div className="flex bg-gray-50">
         <aside
           className="w-[85px] top-[50px] md:top-[74px] border-r border-gray-200 shrink-0 bg-white overflow-y-auto z-20 scrollbar-hide"
@@ -244,17 +273,13 @@ function Allproducts() {
             <button
               onClick={() => handleCategoryClick("all")}
               className={`w-full flex flex-col items-center py-3 gap-1 transition-all duration-200 sticky top-0
-              ${
-                activeCategory === "all"
-                  ? "bg-blue-50 border-l-[3px] border-blue-600"
-                  : "border-l-[3px] border-transparent hover:bg-gray-50"
-              }`}
+              ${activeCategory === "all" ? "border-primary" : ""}`}
             >
               <div
                 className={`w-12 h-12 rounded-xl border flex items-center justify-center text-lg
                 ${
                   activeCategory === "all"
-                    ? "border-blue-300 bg-blue-100 text-blue-600"
+                    ? "border-primary text-primary"
                     : "border-gray-200 bg-gray-50 text-gray-500"
                 }`}
               >
@@ -274,8 +299,10 @@ function Allproducts() {
                 </svg>
               </div>
               <span
-                className={`text-[11px] font-medium leading-tight text-center ${
-                  activeCategory === "all" ? "text-blue-600" : "text-gray-600"
+                className={`text-[16px] font-medium leading-tight text-center ${
+                  activeCategory === "all"
+                    ? "text-primary !font-bold"
+                    : "text-gray-600"
                 }`}
               >
                 All Products
@@ -287,31 +314,29 @@ function Allproducts() {
                 key={cat._id}
                 onClick={() => handleCategoryClick(cat._id)}
                 className={`w-full flex flex-col items-center py-3 gap-1 transition-all duration-200
-                ${
-                  activeCategory === cat._id
-                    ? "bg-blue-50 border-l-[3px] border-blue-600"
-                    : "border-l-[3px] border-transparent hover:bg-gray-50"
-                }`}
+                
+               
+                `}
               >
                 <div
-                  className={`w-12 h-12 rounded-xl border flex items-center justify-center overflow-hidden
+                  className={`w-[70px] h-[70px] rounded-xl border  flex items-center justify-center overflow-hidden
                   ${
                     activeCategory === cat._id
-                      ? "border-blue-300 bg-blue-100"
-                      : "border-gray-200 bg-gray-50"
+                      ? "border-primary border-2"
+                      : "border-gray-100"
                   }`}
                 >
                   {cat.image_url ? (
                     <img
                       src={getImageUrl(cat.image_url)}
                       alt={cat.name}
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover p-1"
                     />
                   ) : (
                     <span
-                      className={`text-base font-semibold ${
+                      className={` ${
                         activeCategory === cat._id
-                          ? "text-blue-600"
+                          ? "text-primary font-bold"
                           : "text-gray-500"
                       }`}
                     >
@@ -320,10 +345,8 @@ function Allproducts() {
                   )}
                 </div>
                 <span
-                  className={`text-[11px] font-medium leading-tight text-center px-1 ${
-                    activeCategory === cat._id
-                      ? "text-blue-600"
-                      : "text-gray-600"
+                  className={`text-[16px] font-bold leading-tight text-center px-1 ${
+                    activeCategory === cat._id ? "text-primary" : "text-black"
                   }`}
                 >
                   {cat.name}
@@ -336,7 +359,7 @@ function Allproducts() {
             <button
               onClick={() => handleFilterClick("brand")}
               className={`w-full py-3 text-sm font-medium ${
-                activeFilter === "brand" ? "bg-blue-50 text-blue-600" : ""
+                activeFilter === "brand" ? " text-primary" : ""
               }`}
             >
               Brand
@@ -344,8 +367,8 @@ function Allproducts() {
 
             <button
               onClick={() => handleFilterClick("type")}
-              className={`w-full py-3 text-sm font-medium ${
-                activeFilter === "type" ? "bg-blue-50 text-blue-600" : ""
+              className={`w-full py-3 text-[16px] font-bold ${
+                activeFilter === "type" ? "text-primary" : ""
               }`}
             >
               Type
@@ -353,8 +376,8 @@ function Allproducts() {
 
             <button
               onClick={() => handleFilterClick("label")}
-              className={`w-full py-3 text-sm font-medium ${
-                activeFilter === "label" ? "bg-blue-50 text-blue-600" : ""
+              className={`w-full py-3 text-[16px] font-bold ${
+                activeFilter === "label" ? "text-primary" : ""
               }`}
             >
               Product Label
@@ -365,7 +388,7 @@ function Allproducts() {
         <div className="flex-1 min-w-0 flex flex-col">
           <div
             className="sticky top-[50px] lg:top-[74px]
-  bg-white border-b border-gray-200 z-10"
+  bg-white border-b border-gray-200 z-20"
           >
             <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
               {activeFilter
@@ -381,7 +404,14 @@ function Allproducts() {
                         if (activeFilter === "label")
                           setSelectedLabel(item._id);
                       }}
-                      className="px-4 py-2 rounded-full border"
+                      className={`px-4 py-2 rounded-full border transition-all duration-200
+    ${
+      (activeFilter === "brand" && selectedBrand === item._id) ||
+      (activeFilter === "type" && selectedType === item._id) ||
+      (activeFilter === "label" && selectedLabel === item._id)
+        ? "bg-primary text-white border-primary"
+        : "bg-white text-black hover:text-white border-primary hover:bg-primary"
+    }`}
                     >
                       {item.name}
                     </button>
@@ -390,7 +420,12 @@ function Allproducts() {
                     <button
                       key={sub._id}
                       onClick={() => setActiveSubCategory(sub._id)}
-                      className="px-4 py-2 rounded-full border"
+                      className={`px-4 py-2 rounded-full border transition-all duration-200
+    ${
+      activeSubCategory === sub._id
+        ? "bg-primary text-white border-primary"
+        : "bg-white text-black hover:text-white border-primary hover:bg-primary"
+    }`}
                     >
                       {sub.name}
                     </button>
@@ -424,7 +459,7 @@ function Allproducts() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 lg:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
                 {filteredProducts.map((product) => (
                   <ProductCard
                     key={product._id}

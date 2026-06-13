@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button.jsx";
 import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import { calculateShipping } from "../utils/shippingCalculator";
+import { fetchPageBySlug } from "../features/pages/pagesThunk.js";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -24,9 +25,12 @@ export default function Cart() {
   const { coupons = [] } = useSelector((state) => state.coupons);
   const { items = [] } = useSelector((state) => state.cart);
   const settings = useSelector((state) => state.systemseting.data);
+  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const cartPage = pages?.find((page) => page.slug === "cart");
 
   useEffect(() => {
     dispatch(fetchSystemSettings());
+    dispatch(fetchPageBySlug("cart"));
   }, [dispatch]);
 
   const getDiscountedPrice = (item) => {
@@ -97,12 +101,16 @@ export default function Cart() {
 
   return (
     <>
-      <SEO title={"Cart page"} description={"Cart Description"} />
+      <SEO
+        title={cartPage?.meta_title}
+        description={cartPage?.meta_description}
+        image={`${process.env.REACT_APP_API_URL_IMAGE}${cartPage?.seo_image}`}
+      />
+
       <CartProgress currentStep={1} />
       <Section>
         <Row className="grid grid-cols-1 custom-lg:grid-cols-[3fr_1fr] gap-[30px] items-start">
           <div className="flex-1 flex flex-col gap-4">
-            {/* ✅ Free Shipping Progress Bar - API thi dynamic */}
             {items.length > 0 && (
               <div className="bg-white rounded-[12px] px-[20px] py-[14px] shadow-sm border border-gray-100">
                 <div className="flex justify-between items-center mb-[8px]">
@@ -216,7 +224,6 @@ export default function Cart() {
               </div>
             )}
 
-            {/* ✅ CartSummary ne settings pass karo */}
             <CartSummary appliedCoupon={appliedCoupon} />
           </div>
         </Row>

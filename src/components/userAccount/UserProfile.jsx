@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Section from "../ui/Section";
 import Row from "../ui/Row";
 import { useDispatch, useSelector } from "react-redux";
-import defaultimg from "../../assets/default-avatar.png";
+import defaultimg from "../../assets/default-avatar.webp";
 import { Pencil } from "lucide-react";
 import { uploadProfilePicture } from "../../features/user/userThunk";
 import toast from "react-hot-toast";

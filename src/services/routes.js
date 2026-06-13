@@ -160,4 +160,7 @@ export const ROUTES = {
   SystemSettings: {
     get: "/system-setting/public",
   },
+  aboutpage: {
+    get: "/aboutpage/public",
+  },
 };

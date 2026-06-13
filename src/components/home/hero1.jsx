@@ -4,11 +4,12 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { FaHeart, FaStar, FaGoogle } from "react-icons/fa";
+import { FaGoogle } from "react-icons/fa";
 import { getImageUrl } from "../utils/helper";
 import Button from "../ui/Button";
 import { fetchSlides } from "../../features/slides/slideThunk";
-import g from "../../assets/g.png";
+import g from "../../assets/g.webp";
+import { Heart, Star } from "lucide-react";
 export default function Hero1() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export default function Hero1() {
     dots: true,
     infinite: true,
     speed: 1000,
+    lazyLoad: "ondemand",
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: true,
@@ -96,7 +98,7 @@ export default function Hero1() {
                         Customers
                       </p>
                       <div className="absolute -bottom-5 bg-white rounded-full w-12 h-12 flex items-center justify-center shadow">
-                        <FaHeart className="text-red-400" size={28} />
+                        <Heart className="text-red-400" size={28} />
                       </div>
                     </div>
                     <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
@@ -107,7 +109,7 @@ export default function Hero1() {
                         Saw results*
                       </p>
                       <div className="absolute -bottom-5 bg-white rounded-full w-12 h-12 flex items-center justify-center shadow">
-                        <FaStar className="text-yellow-400" size={28} />
+                        <Star className="text-yellow-400" size={28} />
                       </div>
                     </div>
                     <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
@@ -130,7 +132,10 @@ export default function Hero1() {
                     <div className="absolute top-[18px] w-[350px] h-[400px] z-10">
                       <img
                         src={getImageUrl(slide.mainImage)}
-                        alt=""
+                        alt="main"
+                        fetchPriority="high"
+                        loading="eager"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -140,7 +145,9 @@ export default function Hero1() {
                         <div className="relative">
                           <img
                             src={getImageUrl(slide.beforeImage)}
-                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            alt="before"
                             className="w-[250px] h-[250px] object-cover"
                           />
                           <p className="absolute bottom-[2%] text-white uppercase left-[37%] font-bold">
@@ -151,7 +158,9 @@ export default function Hero1() {
                         <div className="relative">
                           <img
                             src={getImageUrl(slide.afterImage)}
-                            alt=""
+                            loading="lazy"
+                            decoding="async"
+                            alt="after"
                             className="w-[250px] h-[250px] object-cover"
                           />
                           <p className="absolute bottom-[2%] text-white uppercase left-[37%] font-bold">
@@ -168,7 +177,7 @@ export default function Hero1() {
                         <span className="text-[20px]">Age {slide.age}</span>
                         <div className="flex items-center">
                           {[...Array(5)].map((_, i) => (
-                            <FaStar
+                            <Star
                               key={i}
                               className="text-yellow-400"
                               size={20}
@@ -196,7 +205,9 @@ export default function Hero1() {
                       <img
                         src={getImageUrl(slide.beforeImage)}
                         alt="before"
-                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-[115px] h-[108px] object-cover"
                       />
                       <span
                         className="absolute bottom-[6px] left-[8px] text-white text-[10px] font-bold uppercase tracking-wider"
@@ -209,7 +220,9 @@ export default function Hero1() {
                       <img
                         src={getImageUrl(slide.afterImage)}
                         alt="after"
-                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                        className="w-[115px] h-[108px] object-cover"
                       />
                       <span
                         className="absolute bottom-[6px] left-[8px] text-white text-[10px] font-bold uppercase tracking-wider"
@@ -241,6 +254,9 @@ export default function Hero1() {
                   <img
                     src={getImageUrl(slide.mainImage)}
                     alt="main"
+                    fetchPriority="high"
+                    loading="eager"
+                    decoding="async"
                     className="w-full object-contain object-top"
                     style={{ height: "340px" }}
                   />
@@ -257,12 +273,12 @@ export default function Hero1() {
                     {
                       val: "1L+",
                       label: "Customers",
-                      icon: <FaHeart className="text-red-400" size={17} />,
+                      icon: <Heart className="text-red-400" size={17} />,
                     },
                     {
                       val: "95%",
                       label: "Saw results*",
-                      icon: <FaStar className="text-yellow-400" size={17} />,
+                      icon: <Star className="text-yellow-400" size={17} />,
                     },
                     {
                       val: "4.8",

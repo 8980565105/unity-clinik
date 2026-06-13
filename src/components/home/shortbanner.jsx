@@ -1,8 +1,5 @@
 import React from "react";
 import Section from "../ui/Section";
-// import bs1 from "../../assets/bs1.png";
-// import bsr1 from "../../assets/bsr1.png";
-
 import { useSelector } from "react-redux";
 import { getImageUrl } from "../utils/helper";
 
@@ -20,11 +17,15 @@ export default function ShortBanner() {
         <img
           src={desktopImg}
           alt="banner3"
+          loading="lazy"
+          decoding="async"
           className="hidden md:block w-full h-auto object-cover"
         />
         <img
           src={mobileImg}
           alt="banner3"
+          loading="lazy"
+          decoding="async"
           className="block md:hidden w-full h-auto object-cover"
         />
       </Section>

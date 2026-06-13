@@ -20,7 +20,6 @@ const ContactCard = ({ icon, title, description, linkText, linkHref }) => {
           <p className="text-[#989696] text-14 break">{description}</p>
           <a
             href={linkHref}
-            target="_blank"
             rel="noopener noreferrer"
             className="text-theme font-medium underline text-left break "
           >

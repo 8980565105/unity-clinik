@@ -1,6 +1,6 @@
 import {useNavigate } from "react-router-dom";
 import SEO from "../components/seo/seo";
-import errorImg from "../assets/404.png";
+import errorImg from "../assets/404.webp";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
 import Button from "../components/ui/Button";

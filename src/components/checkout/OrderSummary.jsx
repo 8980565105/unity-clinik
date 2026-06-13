@@ -157,7 +157,6 @@ export default function OrderSummary({ formData }) {
     ? calculateShipping(subtotal, paymentType, settings)
     : 0;
 
-  // const total = Number((subtotal + shipping).toFixed(2));
   const total = Number((subtotal + shipping).toFixed(0));
   const totalSaved = itemDiscount + couponDiscount;
 
@@ -169,15 +168,6 @@ export default function OrderSummary({ formData }) {
     if (method === "razorpay") return "Online";
     return "Online";
   };
-
-  // const getStoreOwnerId = () => {
-  //   if (!items || items.length === 0) return null;
-  //   return (
-  //     items[0]?.product_id?.createdBy?._id ||
-  //     items[0]?.product_id?.createdBy ||
-  //     null
-  //   );
-  // };
 
   const validateForm = (userLS) => {
     if (!userLS || !userLS._id) {
@@ -244,7 +234,6 @@ export default function OrderSummary({ formData }) {
   };
 
   const handleCOD = async (userLS, orderId) => {
-    // const storeOwnerId = getStoreOwnerId();
     if (isPartialCod && partialCodAdvance > 0) {
       await handleRazorpayAmount(
         userLS,
@@ -258,7 +247,6 @@ export default function OrderSummary({ formData }) {
       createPayment({
         user_id: userLS._id,
         order_id: orderId,
-        // store_owner_id: storeOwnerId,
         items,
         subtotal,
         shipping,
@@ -274,6 +262,23 @@ export default function OrderSummary({ formData }) {
     toast("Order placed successfully! 🎉");
     navigate("/ordercompleted");
   };
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+
+      document.body.appendChild(script);
+    });
+  };
 
   const handleRazorpayAmount = async (
     userLS,
@@ -281,7 +286,6 @@ export default function OrderSummary({ formData }) {
     amount,
     paymentMethod = selectedPayment,
   ) => {
-    // const storeOwnerId = getStoreOwnerId();
     const razorRes = await dispatch(
       createRazorpayOrder({
         amount,
@@ -331,7 +335,6 @@ export default function OrderSummary({ formData }) {
           createPayment({
             user_id: userLS._id,
             order_id: orderId,
-            // store_owner_id: storeOwnerId,
             items,
             subtotal,
             shipping,
@@ -367,7 +370,6 @@ export default function OrderSummary({ formData }) {
   };
 
   const handlePhonePe = async (userLS, orderId) => {
-    // const storeOwnerId = getStoreOwnerId();
     const phonePeRes = await dispatch(
       createPhonePeOrder({
         amount: total,
@@ -390,7 +392,6 @@ export default function OrderSummary({ formData }) {
       createPayment({
         user_id: userLS._id,
         order_id: orderId,
-        // store_owner_id: storeOwnerId,
         items,
         subtotal,
         shipping,
