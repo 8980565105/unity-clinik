@@ -145,14 +145,15 @@ const createPage = async (req, res) => {
 const updatePage = async (req, res) => {
   try {
     const data = { ...req.body };
+    delete data.slug;
     const filter = { _id: req.params.id, ...buildStoreFilter(req) };
 
-    if (!data.slug && data.page_name) {
-      data.slug = data.page_name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)+/g, "");
-    }
+    // if (!data.slug && data.page_name) {
+    //   data.slug = data.page_name
+    //     .toLowerCase()
+    //     .replace(/[^a-z0-9]+/g, "-")
+    //     .replace(/(^-|-$)+/g, "");
+    // }
 
     // ─────────────────────────────────────────────────
     // Duplicate slug check — same store ma bija page ma

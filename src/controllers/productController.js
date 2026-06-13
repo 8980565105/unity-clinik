@@ -138,15 +138,15 @@ const buildPipeline = ({
       },
     },
     { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
-    {
-      $lookup: {
-        from: "discounts",
-        localField: "discount_id",
-        foreignField: "_id",
-        as: "discount",
-      },
-    },
-    { $unwind: { path: "$discount", preserveNullAndEmptyArrays: true } },
+    // {
+    //   $lookup: {
+    //     from: "discounts",
+    //     localField: "discount_id",
+    //     foreignField: "_id",
+    //     as: "discount",
+    //   },
+    // },
+    // { $unwind: { path: "$discount", preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
         from: "users",
@@ -460,7 +460,6 @@ const getPublicProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
       .populate("category_id", "name")
-      .populate("discount_id")
       .lean();
 
     if (!product) return sendResponse(res, false, null, "Product not found");
@@ -485,7 +484,6 @@ const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
       .populate("category_id", "name")
-      .populate("discount_id")
       .lean();
 
     if (!product) return sendResponse(res, false, null, "Product not found");
@@ -514,7 +512,7 @@ const createProduct = async (req, res) => {
       steps,
       category_id,
       status,
-      discount_id,
+      // discount_id,
       variants,
       sections,
     } = req.body;
@@ -536,7 +534,7 @@ const createProduct = async (req, res) => {
       description,
       steps,
       category_id: Array.isArray(category_id) ? category_id : [category_id],
-      discount_id: discount_id || null,
+      // discount_id: discount_id || null,
       status: status || "active",
       images: productImages,
       sections: normalizeSections(

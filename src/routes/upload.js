@@ -5,13 +5,34 @@ const upload = require("../middlewares/upload");
 router.post("/image", upload.single("image"), (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No file uploaded" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
     }
     res.json({
       success: true,
       data: {
-        image_url: `/uploads/${req.file.filename}`,  
-        url: `/uploads/${req.file.filename}`,  
+        image_url: `/uploads/${req.file.filename}`,
+        url: `/uploads/${req.file.filename}`,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.post("/video", upload.single("video"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
+    }
+    res.json({
+      success: true,
+      data: {
+        video_url: `/uploads/${req.file.filename}`,
+        url: `/uploads/${req.file.filename}`,
       },
     });
   } catch (err) {

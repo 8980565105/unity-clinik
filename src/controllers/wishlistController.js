@@ -166,8 +166,7 @@ const addItemToWishlist = async (req, res) => {
           if (product?.createdBy) {
             store_owner_id = product.createdBy;
           }
-        } catch (e) {
-        }
+        } catch (e) {}
         wishlist.items.push({ product_id, variant_id, store_owner_id });
       }
     }
@@ -205,12 +204,9 @@ const removeItemFromWishlist = async (req, res) => {
 const getWishlistByUser = async (req, res) => {
   try {
     const wishlist = await Wishlist.findOne({ user_id: req.params.user_id })
-      .populate({
-        path: "items.product_id",
-        populate: { path: "discount_id", select: "type value" },
-      })
+      .populate("items.product_id")
       .populate("items.variant_id");
-
+      
     if (!wishlist) return sendResponse(res, false, null, "Wishlist not found");
 
     sendResponse(res, true, wishlist, "Wishlist retrieved successfully");
