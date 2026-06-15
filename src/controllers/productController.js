@@ -138,15 +138,6 @@ const buildPipeline = ({
       },
     },
     { $unwind: { path: "$category", preserveNullAndEmptyArrays: true } },
-    // {
-    //   $lookup: {
-    //     from: "discounts",
-    //     localField: "discount_id",
-    //     foreignField: "_id",
-    //     as: "discount",
-    //   },
-    // },
-    // { $unwind: { path: "$discount", preserveNullAndEmptyArrays: true } },
     {
       $lookup: {
         from: "users",
@@ -206,6 +197,41 @@ const buildPipeline = ({
           },
         ],
         as: "variants",
+      },
+    },
+    {
+      $lookup: {
+        from: "customerreviews",
+        let: { productId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: { $eq: ["$product_id", "$$productId"] },
+              is_approved: true,
+            },
+          },
+          { $project: { rating: 1 } },
+        ],
+        as: "reviews",
+      },
+    },
+    {
+      $addFields: {
+        reviewStats: {
+          total: { $size: "$reviews" },
+          average: {
+            $cond: [
+              { $gt: [{ $size: "$reviews" }, 0] },
+              { $round: [{ $avg: "$reviews.rating" }, 1] },
+              0,
+            ],
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        reviews: 0,
       },
     },
 
@@ -638,7 +664,7 @@ const updateProduct = async (req, res) => {
               ProductWidth: Number(v.ProductWidth),
               ProductLength: Number(v.ProductLength),
             },
-            { new: true },
+            { returnDocument: "after" },
           );
         } else {
           await new ProductVariant({
@@ -669,7 +695,7 @@ const updateProductStatus = async (req, res) => {
     const updated = await Product.findByIdAndUpdate(
       id,
       { status },
-      { new: true },
+      { returnDocument: "after" },
     );
     sendResponse(res, true, updated, `Product status updated to ${status}`);
   } catch (err) {

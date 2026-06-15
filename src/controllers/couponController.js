@@ -83,7 +83,7 @@ const createCoupon = async (req, res) => {
   try {
     let { code, discount_type } = req.body;
 
-    if (discount_type === "freeshipping") {
+    if (discount_type === "freeshiping") {
       req.body.discount_value = 0;
     }
 
