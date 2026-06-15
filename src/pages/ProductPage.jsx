@@ -70,7 +70,6 @@ export default function Product() {
   }, [id, dispatch]);
 
   useEffect(() => {
-    dispatch(fetchProducts());
     dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
 
@@ -169,45 +168,6 @@ export default function Product() {
         productLabels={productLabels}
       />
 
-      {allReviews.length > 0 && (
-        <Section className="bg-[var(--ef3a96-9)] py-20">
-          <Row>
-            <Heading title={"What Our Customer Says!"} />
-
-            {!isCenter && (
-              <div className="flex items-center justify-end gap-3 mb-4">
-                <NavBtn direction="left" onClick={prev} variant="primary" />
-                <NavBtn direction="right" onClick={next} variant="primary" />
-              </div>
-            )}
-
-            <div className="overflow-hidden w-full">
-              <div
-                className={`flex transition-transform duration-500 ease-in-out pt-10 ${
-                  isCenter ? "justify-center" : "justify-start"
-                }`}
-                style={{
-                  gap: `${GAP}px`,
-                  transform: isCenter
-                    ? "none"
-                    : `translateX(-${offset * STEP}px)`,
-                }}
-              >
-                {allReviews.map((review, i) => (
-                  <div
-                    key={review._id}
-                    className="flex-shrink-0"
-                    style={{ width: `${CARD_W}px` }}
-                  >
-                    <ReviewCard review={review} index={i} />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Row>
-        </Section>
-      )}
-
       <Productreviews
         productId={product?._id}
         setShowLoginPopup={setShowLoginPopup}
@@ -261,7 +221,6 @@ export default function Product() {
 
               <button
                 onClick={() => {
-                  console.log("sticky add to cart");
                   handleAddToCartFn?.();
                 }}
                 disabled={addingToCart}

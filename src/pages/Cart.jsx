@@ -9,14 +9,18 @@ import { fetchCoupons } from "../features/coupons/couponsThunk";
 import SEO from "../components/seo/seo";
 import { Truck, Tag, ChevronRight } from "lucide-react";
 import CouponDrawer from "../components/cart/Coupondrawer.jsx";
-import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button.jsx";
 import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import { calculateShipping } from "../utils/shippingCalculator";
 import { fetchPageBySlug } from "../features/pages/pagesThunk.js";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function Cart() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [autoApplyCode, setAutoApplyCode] = useState(
+    location.state?.autoApplyCoupon || null,
+  );
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [cartCouponCode, setCartCouponCode] = useState("");
   const [couponMsg, setCouponMsg] = useState({ text: "", type: "" });
@@ -27,6 +31,12 @@ export default function Cart() {
   const settings = useSelector((state) => state.systemseting.data);
   const { pages, slugLoading } = useSelector((state) => state.pages);
   const cartPage = pages?.find((page) => page.slug === "cart");
+
+  useEffect(() => {
+    if (location.state?.openCouponDrawer) {
+      setDrawerOpen(true);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     dispatch(fetchSystemSettings());
@@ -241,6 +251,11 @@ export default function Cart() {
         onApplyCartCoupon={handleApplyCartCoupon}
         onSelectCoupon={handleSelectCoupon}
         subtotal={subtotal}
+        autoApplyCode={autoApplyCode}
+        onAutoApplyDone={() => {
+          setAutoApplyCode(null);
+          navigate(location.pathname, { replace: true, state: {} });
+        }}
       />
     </>
   );

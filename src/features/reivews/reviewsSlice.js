@@ -54,33 +54,6 @@ const reviewsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      // .addCase(fetchAllReviews.fulfilled, (state, action) => {
-      //   state.loading = false;
-      //   state.allReviews = action.payload?.data?.customerReviews || [];
-      // })
-      // .addCase(fetchAllReviews.fulfilled, (state, action) => {
-      //   state.loading = false;
-      //   const allReviews = action.payload?.data?.customerReviews || [];
-
-      //   // flat array ne product_id by group karo
-      //   allReviews.forEach((review) => {
-      //     const pid = review.product_id?.toString();
-      //     if (!pid) return;
-
-      //     if (!state.productReviews[pid]) {
-      //       state.productReviews[pid] = { reviews: [] };
-      //     }
-
-      //     // duplicate avoid karo
-      //     const exists = state.productReviews[pid].reviews.some(
-      //       (r) => r._id === review._id,
-      //     );
-
-      //     if (!exists) {
-      //       state.productReviews[pid].reviews.push(review);
-      //     }
-      //   });
-      // })
       .addCase(fetchAllReviews.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;

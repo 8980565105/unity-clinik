@@ -92,17 +92,12 @@ export default function ProductCard({
     return { originalPrice, offerPrice, discountPercent };
   };
 
-  const { productReviews } = useSelector((state) => state.reviews);
   const reviewData = useMemo(() => {
-    const reviews = productReviews?.[product?._id]?.reviews || [];
-    if (reviews.length === 0) return { average: 0, total: 0 };
-    const total = reviews.length;
-    const sum = reviews.reduce(
-      (acc, curr) => acc + (Number(curr.rating) || 0),
-      0,
-    );
-    return { average: (sum / total).toFixed(1), total };
-  }, [productReviews, product?._id]);
+    return {
+      average: product?.reviewStats?.average || 0,
+      total: product?.reviewStats?.total || 0,
+    };
+  }, [product]);
 
   const [currentIndex] = useState(0);
 

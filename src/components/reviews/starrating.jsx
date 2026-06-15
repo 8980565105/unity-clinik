@@ -31,7 +31,6 @@ export default function StarRating({ rating = 0, total = 0 }) {
         return <Star key={star} size={16} className="text-yellow-300" />;
       })}
 
-      {/* Rating + Count */}
       <span className="ml-1 font-medium text-black">{rating}</span>
       <span className="text-gray-500">({total})</span>
     </div>

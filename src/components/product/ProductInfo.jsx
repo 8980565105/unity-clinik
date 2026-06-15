@@ -12,6 +12,7 @@ import {
 import { useAddToWishlist } from "../wishlist/handleAddTowishlist";
 import toast, { Toaster } from "react-hot-toast";
 import { getImageUrl } from "../utils/helper";
+import Offer from "./offerdescount";
 
 const LS_KEY = "product_step_selections";
 const saveStepSelection = (stepIndex, slug) => {
@@ -232,7 +233,57 @@ export default function ProductInfo({
     }
   };
 
-  const handleAddToCart = async () => {
+  // const handleAddToCart = async () => {
+  //   if (!token) {
+  //     setShowLoginPopup(true);
+  //     return;
+  //   }
+
+  //   if (activeVariantState?.stock_quantity === 0) {
+  //     toast.error("This variant is out of stock!");
+  //     return;
+  //   }
+  //   setAddingToCartstat(true);
+  //   try {
+  //     let cartId = cart?._id || localStorage.getItem("cart_id");
+  //     if (!cartId) {
+  //       const user = JSON.parse(localStorage.getItem("user") || "{}");
+  //       if (!user?._id) {
+  //         toast.error("User session expired. Please login again.");
+  //         setShowLoginPopup(true);
+  //         return;
+  //       }
+  //       const newCart = await dispatch(
+  //         createCart({ user_id: user._id }),
+  //       ).unwrap();
+  //       cartId = newCart._id;
+  //     }
+
+  //     const payload = {
+  //       cart_id: cartId,
+  //       product_id: product._id,
+  //       variant_id: activeVariantState._id,
+  //       quantity: 1,
+  //       pack_of: Number(selectedPackState?.badge || 1),
+  //       price: Number(selectedPackState?.offerprice || 0),
+  //       original_price: Number(selectedPackState?.price || 0),
+  //     };
+
+  //     await dispatch(addToCart(payload)).unwrap();
+  //     await dispatch(fetchCart(cartId));
+  //     navigate("/cart");
+  //   } catch (err) {
+  //     const msg =
+  //       typeof err === "string"
+  //         ? err
+  //         : err?.message || "Failed to add item to cart. Please try again.";
+  //     toast.error(msg);
+  //   } finally {
+  //     setAddingToCartstat(false);
+  //   }
+  // };
+
+  const handleAddToCart = async (navState = null) => {
     if (!token) {
       setShowLoginPopup(true);
       return;
@@ -270,7 +321,12 @@ export default function ProductInfo({
 
       await dispatch(addToCart(payload)).unwrap();
       await dispatch(fetchCart(cartId));
-      navigate("/cart");
+
+      if (navState) {
+        navigate("/cart", { state: navState });
+      } else {
+        navigate("/cart");
+      }
     } catch (err) {
       const msg =
         typeof err === "string"
@@ -598,34 +654,16 @@ export default function ProductInfo({
         </span>
       </div>
 
-      {/* <div className="pb-[30px] border-dashed border-b-[2px] light-border">
-        <div className="mt-2 flex flex-wrap gap-4 text-sm text-gray-700">
-          <div>
-            <span className="font-bold">Weight:</span>
-            <span className="font-semibold ms-1">
-              {activeVariantState?.ProductWeight || "-"}
-            </span>
-          </div>
-          <div>
-            <span className="font-bold">Height:</span>
-            <span className="font-semibold ms-1">
-              {activeVariantState?.ProductHeight || "-"}
-            </span>
-          </div>
-          <div>
-            <span className="font-bold">Length:</span>
-            <span className="font-semibold ms-1">
-              {activeVariantState?.ProductLength || "-"}
-            </span>
-          </div>
-          <div>
-            <span className="font-bold">Width:</span>
-            <span className="font-semibold ms-1">
-              {activeVariantState?.ProductWidth || "-"}
-            </span>
-          </div>
-        </div>
-      </div> */}
+      <Offer
+        product={product}
+        price={priceData.offerPrice}
+        onApplyOffer={(coupon) =>
+          handleAddToCart({
+            autoApplyCoupon: coupon.code,
+            openCouponDrawer: true,
+          })
+        }
+      />
 
       <div className="mt-[15px] space-y-[28px]">
         <div key={selectionTick}>{renderSteps()}</div>

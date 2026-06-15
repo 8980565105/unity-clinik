@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import ShopBannerSlider from "../components/shop/ShopBannerSlider";
 import { useDispatch, useSelector } from "react-redux";
 import ProductCard from "../components/product/ProductCard";
@@ -17,8 +17,6 @@ import { useSearchParams } from "react-router-dom";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import SEO from "../components/seo/seo";
 
-const NAVBAR_HEIGHT = 100;
-
 function Allproducts() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -30,17 +28,11 @@ function Allproducts() {
     (state) => state.subcategories,
   );
 
-  const { brands = [], loading: brandLoading } = useSelector(
-    (state) => state.brands,
-  );
-  const { types = [], loading: typesLoading } = useSelector(
-    (state) => state.types,
-  );
+  const { brands = [] } = useSelector((state) => state.brands);
+  const { types = [] } = useSelector((state) => state.types);
 
-  const { productLabels = [], loading: labelsLoading } = useSelector(
-    (state) => state.productLabels,
-  );
-  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const { productLabels = [] } = useSelector((state) => state.productLabels);
+  const { pages } = useSelector((state) => state.pages);
   const allproductsPage = pages?.find((page) => page.slug === "allproducts");
 
   const [activeCategory, setActiveCategory] = useState("all");
@@ -239,20 +231,9 @@ function Allproducts() {
   }, 0);
 
   if (loading) return <Loding />;
-
-  const hasSubcategories =
-    activeCategory !== "all" && filteredSubCategories.length > 0;
-  const showFilterBar = hasSubcategories || activeFilter;
-
   const currentFilterOptions = activeFilter
     ? filterOptions[activeFilter]
     : filteredSubCategories;
-
-  const resetFilterValues = () => {
-    setSelectedBrand("all");
-    setSelectedType("all");
-    setSelectedLabel("all");
-  };
 
   return (
     <>
@@ -273,7 +254,7 @@ function Allproducts() {
             <button
               onClick={() => handleCategoryClick("all")}
               className={`w-full flex flex-col items-center py-3 gap-1 transition-all duration-200 sticky top-0
-              ${activeCategory === "all" ? "border-primary" : ""}`}
+              ${activeCategory === "all" ? "border-primary bg-white" : ""}`}
             >
               <div
                 className={`w-12 h-12 rounded-xl border flex items-center justify-center text-lg
@@ -420,7 +401,7 @@ function Allproducts() {
                     <button
                       key={sub._id}
                       onClick={() => setActiveSubCategory(sub._id)}
-                      className={`px-4 py-2 rounded-full border transition-all duration-200
+                      className={`px-4 py-2 text-nowrap rounded-full border transition-all duration-200
     ${
       activeSubCategory === sub._id
         ? "bg-primary text-white border-primary"

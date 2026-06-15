@@ -14,6 +14,8 @@ export default function CouponDrawer({
   onApplyCartCoupon,
   onSelectCoupon,
   subtotal,
+  autoApplyCode,
+  onAutoApplyDone,
 }) {
   const { coupons = [] } = useSelector((state) => state.coupons);
   const { items = [] } = useSelector((state) => state.cart);
@@ -36,6 +38,17 @@ export default function CouponDrawer({
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen || !autoApplyCode) return;
+    if (!coupons.length) return; // wait until coupons loaded
+
+    const match = coupons.find((c) => c.code === autoApplyCode);
+    if (match) {
+      onSelectCoupon(match.code);
+    }
+    // either matched or not, clear the auto-apply flag so it doesn't re-run
+    onAutoApplyDone?.();
+  }, [isOpen, autoApplyCode, coupons]);
 
   const filteredCoupons = coupons.filter((coupon) => {
     if (coupon.apply_type === "allproducts") return true;
