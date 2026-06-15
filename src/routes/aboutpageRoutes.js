@@ -5,7 +5,7 @@ const {
   getPublicAboutPage,
   getAboutPage,
   updateAboutPage,
-} = require("../controllers/aboutPageController");
+} = require("../controllers/aboutpageController");
 
 const {
   authMiddleware,

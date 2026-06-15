@@ -32,6 +32,7 @@ const emailsRoutes = require("./src/routes/emailRoutes");
 const sliderRoutes = require("./src/routes/sliderRoutes");
 const systemsettingRoutes = require("./src/routes/systemsettingRoutes");
 const webhookRoutes = require("./src/routes/webhookRoutes");
+// const aboutpageRoutes = require("./src/routes/aboutpageRoutes");
 const aboutpageRoutes = require("./src/routes/aboutpageRoutes");
 const helmet = require("helmet");
 
@@ -184,7 +185,7 @@ const ROUTE_SLUG_MAP = {
   "/term-service": "term-service",
   "/shipping-policy": "shipping-policy",
   "/allproducts": "allproducts",
-  "/results": "result", 
+  "/results": "result",
 };
 
 // HTML ma meta tags inject karo
