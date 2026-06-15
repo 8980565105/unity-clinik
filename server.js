@@ -32,7 +32,6 @@ const emailsRoutes = require("./src/routes/emailRoutes");
 const sliderRoutes = require("./src/routes/sliderRoutes");
 const systemsettingRoutes = require("./src/routes/systemsettingRoutes");
 const webhookRoutes = require("./src/routes/webhookRoutes");
-// const aboutpageRoutes = require("./src/routes/aboutpageRoutes");
 const aboutpageRoutes = require("./src/routes/aboutpageRoutes");
 const helmet = require("helmet");
 
