@@ -40,15 +40,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-// import { fetchProducts } from "@/features/products/productsThunk";
-// import { fetchUsers } from "@/features/users/usersThunk";
-// import { fetchColors } from "@/features/colors/colorsThunk";
-// import { fetchSizes } from "@/features/sizes/sizesThunk";
 import api from "@/services/api";
 import { ROUTES } from "@/services/routes";
 import { Order, OrderStatus } from "@/features/orders/ordersSlice";
 
-// ─── Status config ────────────────────────────────────────────────────────────
 const STATUS_LABEL: Record<string, string> = {
   pending: "New Order",
   processing: "Order Confirmed",
@@ -79,7 +74,6 @@ const STATUS_COLOR: Record<string, string> = {
 
 const COURIERS = ["Delhivery", "Blue Dart", "DTDC", "Shiprocket", "Custom"];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }: { status: string }) => (
   <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${STATUS_COLOR[status] || "bg-gray-100 text-gray-600"}`}>
     {STATUS_LABEL[status] || status}
@@ -92,7 +86,6 @@ const downloadPDF = async (url: string, filename: string) => {
   saveAs(blob, filename);
 };
 
-// ─── Modal wrapper ────────────────────────────────────────────────────────────
 const Modal = ({ title, onClose, children, wide = false }: {
   title: string; onClose: () => void; children: React.ReactNode; wide?: boolean;
 }) => (
@@ -107,7 +100,6 @@ const Modal = ({ title, onClose, children, wide = false }: {
   </div>
 );
 
-// ─── Advanced filters ─────────────────────────────────────────────────────────
 interface AdvancedFilters {
   products: string[]; users: string[]; colors: string[]; sizes: string[];
   minPrice?: number; maxPrice?: number; startDate: string; endDate: string;
@@ -148,61 +140,36 @@ function MultiSelectPopover({ label, options, selected, setSelected }: {
   );
 }
 
-// ─── Warehouse type ───────────────────────────────────────────────────────────
 interface Warehouse {
   _id: string;
   name: string;
   status: string;
 }
 
-// ════════════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ════════════════════════════════════════════════════════════════════════════════
 export default function Orders() {
   const dispatch = useDispatch<AppDispatch>();
 
   const { orders, total, loading, actionLoading, selectedOrder } = useSelector((state: RootState) => state.orders);
-  // const { products } = useSelector((state: RootState) => state.products);
-  // const { users } = useSelector((state: RootState) => state.users);
-  // const { colors } = useSelector((state: RootState) => state.colors);
-  // const { sizes } = useSelector((state: RootState) => state.sizes);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
-  // const [popoverOpen, setPopoverOpen] = useState(false);
-
   const [appliedFilters, setAppliedFilters] = useState({ status: "all", advanced: { ...DEFAULT_ADVANCED } });
-  // const [localAdvanced, setLocalAdvanced] = useState<AdvancedFilters>({ ...DEFAULT_ADVANCED });
-
-  // ─── Active modal ──────────────────────────────────────────────────────────
   type ModalType = "detail" | "confirm" | "cancel" | "pack" | "courier" | "ship" | "tracking" | "deliver" | "rto" | null;
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [targetOrder, setTargetOrder] = useState<Order | null>(null);
-
-  // ─── Form states for modals ────────────────────────────────────────────────
   const [adminNote, setAdminNote] = useState("");
   const [cancelReason, setCancelReason] = useState("");
   const [warehouseName, setWarehouseName] = useState("");
   const [courierForm, setCourierForm] = useState({ partner: "Delhivery", courier_name: "", awb_number: "", pickup_date: "" });
   const [trackingUrl, setTrackingUrl] = useState("");
   const [rtoForm, setRtoForm] = useState({ type: "rto" as "rto" | "returned" | "refunded", reason: "" });
-
-  // ─── Warehouse states ──────────────────────────────────────────────────────
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [warehouseLoading, setWarehouseLoading] = useState(false);
 
   const limit = 10;
-
-  // useEffect(() => {
-    // dispatch(fetchProducts({ page: 1, limit: 100 }));
-    // dispatch(fetchUsers({ page: 1, limit: 100 }));
-    // dispatch(fetchColors({ page: 1, limit: 100 }));
-    // dispatch(fetchSizes({ page: 1, limit: 100 }));
-  // }, [dispatch]);
-
   useEffect(() => {
     const handler = setTimeout(() => { setDebouncedQuery(searchQuery); setPage(1); }, 500);
     return () => clearTimeout(handler);
@@ -230,11 +197,9 @@ export default function Orders() {
     load();
   }, [debouncedQuery, page, appliedFilters, dispatch]);
 
-  // ─── Open modal ───────────────────────────────────────────────────────────
   const openModal = async (type: ModalType, order: Order) => {
     setTargetOrder(order);
     setActiveModal(type);
-    // Reset all form fields
     setAdminNote("");
     setCancelReason("");
     setWarehouseName("");
@@ -242,13 +207,11 @@ export default function Orders() {
     setTrackingUrl("");
     setRtoForm({ type: "rto", reason: "" });
 
-    // ── Fetch warehouses only when Pack modal opens ──
     if (type === "pack") {
       setWarehouses([]);
       setWarehouseLoading(true);
       try {
         const res = await dispatch(fetchWarehouse({ status: "active", limit: 1000 })).unwrap();
-        // thunk returns payload which may contain { warehouses, total }
         const list: Warehouse[] = res?.warehouses ?? res?.data ?? res ?? [];
         setWarehouses(Array.isArray(list) ? list.filter((w) => w.status === "active") : []);
       } catch {
@@ -258,11 +221,6 @@ export default function Orders() {
       }
     }
   };
-
-  // const openDetailModal = async (order: Order) => {
-  //   await dispatch(getOrderById(order._id));
-  //   setActiveModal("detail");
-  // };
 
   const closeModal = () => {
     setActiveModal(null);
@@ -278,7 +236,6 @@ export default function Orders() {
     }));
   };
 
-  // ─── Flow handlers ────────────────────────────────────────────────────────
   const handleConfirm = async () => {
     if (!targetOrder) return;
     try {
@@ -352,7 +309,6 @@ export default function Orders() {
     } catch (err: any) { toast.error(err || "Failed"); }
   };
 
-  // ─── Delete ───────────────────────────────────────────────────────────────
   const handleDelete = async (id: string) => {
     try {
       await dispatch(deleteOrder(id)).unwrap();
@@ -395,16 +351,6 @@ export default function Orders() {
 
   const totalPages = Math.ceil(total / limit);
 
-  // const activeAdvancedCount = [
-  //   appliedFilters.advanced.products.length > 0,
-  //   appliedFilters.advanced.users.length > 0,
-  //   appliedFilters.advanced.colors.length > 0,
-  //   appliedFilters.advanced.sizes.length > 0,
-  //   appliedFilters.advanced.minPrice !== undefined || appliedFilters.advanced.maxPrice !== undefined,
-  //   !!appliedFilters.advanced.startDate || !!appliedFilters.advanced.endDate,
-  // ].filter(Boolean).length;
-
-  // ─── Action buttons per status ────────────────────────────────────────────
   const renderActionButtons = (order: Order) => {
     switch (order.status) {
       case "pending":
@@ -461,7 +407,6 @@ export default function Orders() {
 
   return (
     <div className="mx-auto p-6 space-y-6">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
@@ -483,7 +428,6 @@ export default function Orders() {
       </div>
 
 
-      {/* Filters */}
       <Card className="border border-gray-200 shadow-sm">
         <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-3 flex-wrap">
           <div className="relative w-full md:max-w-sm">
@@ -517,7 +461,6 @@ export default function Orders() {
         <CardHeader className="bg-gray-50 px-4 py-3 border-b border-gray-200">
           <CardTitle className="text-base font-semibold text-gray-800">
             Orders
-            {/* <span className="text-gray-400 font-normal">({total})</span> */}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -576,7 +519,6 @@ export default function Orders() {
                           <td className="p-3">
                             <span className={`text-xs px-2 py-1 rounded-full font-medium ${order.payment_status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                               {order.payment_method}
-                              {/* · {order.payment_status} */}
                             </span>
                           </td>
                           <td className="p-3"><StatusBadge status={order.status} /></td>
@@ -592,9 +534,9 @@ export default function Orders() {
 
                               {renderActionButtons(order)}
 
-                              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleExpand(order._id)}>
+                              {/* <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleExpand(order._id)}>
                                 {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                              </Button>
+                              </Button> */}
 
                               <ConfirmDialog title="Delete Order" description={`Delete order "${order.order_number}"?`} confirmText="Delete" onConfirm={() => handleDelete(order._id)} danger>
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:bg-red-50">
@@ -615,7 +557,7 @@ export default function Orders() {
                                     <tr className="text-xs text-gray-500 border-b bg-gray-100">
                                       <th className="px-3 py-2 text-left">Product</th>
                                       <th className="px-3 py-2 text-left">Sku</th>
-                                      <th className="px-3 py-2 text-left">Variant</th>
+                                      {/* <th className="px-3 py-2 text-left">Variant</th> */}
                                       <th className="px-3 py-2 text-center">Qty</th>
                                       <th className="px-3 py-2 text-right">Price</th>
                                       <th className="px-3 py-2 text-right">Subtotal</th>
@@ -626,9 +568,9 @@ export default function Orders() {
                                       <tr key={item._id} className="hover:bg-white">
                                         <td className="px-3 py-2 font-medium">{item.product?.name || "Product"}</td>
                                         <td className="px-3 py-2">{item.variant?.sku}</td>
-                                        <td className="px-3 py-2 text-gray-500">
+                                        {/* <td className="px-3 py-2 text-gray-500">
                                           {item.variant ? `${item.variant.color?.[0]?.name || "-"} / ${item.variant.size?.[0]?.name || "-"}` : "-"}
-                                        </td>
+                                        </td> */}
                                         <td className="px-3 py-2 text-center">{item.quantity}</td>
                                         <td className="px-3 py-2 text-right">₹{item.price_at_order?.toFixed(2)}</td>
                                         <td className="px-3 py-2 text-right font-semibold">₹{(item.price_at_order * item.quantity)?.toFixed(2)}</td>
@@ -689,9 +631,6 @@ export default function Orders() {
         </CardContent>
       </Card>
 
-      {/* ═══ MODALS ═══════════════════════════════════════════════════════════ */}
-
-      {/* Order Detail Modal */}
       {activeModal === "detail" && selectedOrder && (
         <Modal title={`Order Detail — ${(selectedOrder as any).order?.order_number || (selectedOrder as any).order_number}`} onClose={closeModal} wide>
           <div className="space-y-4 text-sm">
@@ -732,7 +671,6 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* Confirm Order Modal */}
       {activeModal === "confirm" && targetOrder && (
         <Modal title={`Confirm Order — ${targetOrder.order_number}`} onClose={closeModal}>
           <p className="text-sm text-gray-600 mb-1">Verify payment and stock, then confirm this order.</p>
@@ -758,7 +696,6 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* Cancel Order Modal */}
       {activeModal === "cancel" && targetOrder && (
         <Modal title={`Cancel Order — ${targetOrder.order_number}`} onClose={closeModal}>
           <p className="text-sm text-gray-600 mb-3">Are you sure you want to cancel this order? Stock will be restored.</p>
@@ -776,7 +713,6 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* ─── Pack Order Modal — Warehouse SELECT from API ─────────────────── */}
       {activeModal === "pack" && targetOrder && (
         <Modal title={`Pack Order — ${targetOrder.order_number}`} onClose={closeModal}>
           <p className="text-sm text-gray-600 mb-4">Select a warehouse to pack this order.</p>
@@ -785,7 +721,6 @@ export default function Orders() {
               Warehouse <span className="text-red-500">*</span>
             </label>
 
-            {/* Loading state on the select itself */}
             {warehouseLoading ? (
               <div className="flex items-center gap-2 py-3 px-3 border rounded-lg bg-gray-50 text-sm text-gray-500">
                 <svg className="animate-spin h-4 w-4 text-yellow-500 flex-shrink-0" fill="none" viewBox="0 0 24 24">
@@ -834,8 +769,6 @@ export default function Orders() {
           </div>
         </Modal>
       )}
-
-      {/* Assign Courier Modal */}
       {activeModal === "courier" && targetOrder && (
         <Modal title={`Assign Courier — ${targetOrder.order_number}`} onClose={closeModal}>
           <div className="space-y-3">
@@ -873,7 +806,6 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* Ship / Dispatch Modal */}
       {activeModal === "ship" && targetOrder && (
         <Modal title={`Dispatch Order — ${targetOrder.order_number}`} onClose={closeModal}>
           <div className="p-3 bg-purple-50 rounded-lg text-sm mb-4">
@@ -891,7 +823,6 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* Tracking Modal */}
       {activeModal === "tracking" && targetOrder && (
         <Modal title={`Update Tracking — ${targetOrder.order_number}`} onClose={closeModal}>
           <div>
@@ -908,7 +839,6 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* Deliver Modal */}
       {activeModal === "deliver" && targetOrder && (
         <Modal title={`Mark as Delivered — ${targetOrder.order_number}`} onClose={closeModal}>
           <p className="text-sm text-gray-600 mb-2">Confirm that this order has been delivered to the customer.</p>
@@ -924,7 +854,6 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* RTO / Return Modal */}
       {activeModal === "rto" && targetOrder && (
         <Modal title={`Return / RTO — ${targetOrder.order_number}`} onClose={closeModal}>
           <div className="space-y-3">

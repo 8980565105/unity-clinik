@@ -21,14 +21,14 @@ export default function Pages() {
   const columns = [
     { key: "page_name", label: "Page Name" },
     { key: "slug", label: "Slug" },
-    {
-      key: "description",
-      label: "Description",
-      render: (item: any) =>
-        item.description?.length > 80
-          ? item.description.substring(0, 80) + "..."
-          : item.description || "-",
-    },
+    // {
+    //   key: "description",
+    //   label: "Description",
+    //   render: (item: any) =>
+    //     item.description?.length > 80
+    //       ? item.description.substring(0, 80) + "..."
+    //       : item.description || "-",
+    // },
     {
       key: "createdAt",
       label: "Created At",

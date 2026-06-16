@@ -5,7 +5,7 @@ import { AppDispatch, RootState } from "@/store";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Edit2, Trash2, Download } from "lucide-react";
+import { Search, Plus, Edit2, Trash2, Download, Eye } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
@@ -22,9 +22,6 @@ import { Switch } from "@/components/ui/switch";
 import { fetchCategories } from "@/features/categories/categoriesThunk";
 import { fetchBrands } from "@/features/brands/brandsThunk";
 import { fetchTypes } from "@/features/types/typesThunk";
-// import { fetchFabrics } from "@/features/fabrics/fabricsThunk";
-// import { fetchColors } from "@/features/colors/colorsThunk";
-import { fetchSizes } from "@/features/sizes/sizesThunk";
 import { fetchProductLabels } from "@/features/productLabels/productLabelsThunk";
 import {
   Select,
@@ -47,12 +44,13 @@ export default function Products() {
     (state: RootState) => state.products
   );
 
+  const BASE_URL = import.meta.env.VITE_API_URL_IMAGE;
   const { categories: subCategories } = useSelector((state: RootState) => state.subcategori);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
-  const limit = 5;
+  const limit = 10;
   const basePath = useBasePath();
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "">(
     ""
@@ -61,8 +59,6 @@ export default function Products() {
   const [brandFilter, setBrandFilter] = useState<string[]>([]);
   const [sizeFilter, setSizeFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<string[]>([]);
-  // const [fabricFilter, setFabricFilter] = useState<string[]>([]);
-  // const [colorFilter, setColorFilter] = useState<string[]>([]);
   const [priceFilter, setPriceFilter] = useState<{
     min?: number;
     max?: number;
@@ -71,9 +67,6 @@ export default function Products() {
   const { categories } = useSelector((state: RootState) => state.categories);
   const { brands } = useSelector((state: RootState) => state.brands);
   const { types } = useSelector((state: RootState) => state.types);
-  // const { fabrics } = useSelector((state: RootState) => state.fabrics);
-  // const { colors } = useSelector((state: RootState) => state.colors);
-  // const { sizes } = useSelector((state: RootState) => state.sizes);
   const { labels: productLabels } = useSelector(
     (state: RootState) => state.productLabels
   );
@@ -92,8 +85,6 @@ export default function Products() {
     brands: brandFilter.length ? brandFilter.join(",") : undefined,
     sizes: sizeFilter.length ? sizeFilter.join(",") : undefined,
     types: typeFilter.length ? typeFilter.join(",") : undefined,
-    // fabrics: fabricFilter.length ? fabricFilter.join(",") : undefined,
-    // colors: colorFilter.length ? colorFilter.join(",") : undefined,
     productLabels: productLabelsFilter.length
       ? productLabelsFilter.join(",")
       : undefined,
@@ -111,11 +102,22 @@ export default function Products() {
     brandFilter,
     sizeFilter,
     typeFilter,
-    // fabricFilter,
-    // colorFilter,
     priceFilter,
     productLabelsFilter,
     dispatch,
+  ]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [
+    debouncedQuery,
+    statusFilter,
+    categoryFilter,
+    brandFilter,
+    sizeFilter,
+    typeFilter,
+    priceFilter,
+    productLabelsFilter,
   ]);
 
   const handleDelete = async (id: string) => {
@@ -160,14 +162,11 @@ export default function Products() {
   const totalPages = Math.ceil(total / limit);
 
   useEffect(() => {
-    dispatch(fetchCategories({ page: 1, limit: 100 }));
-    dispatch(fetchBrands({ page: 1, limit: 100 }));
-    dispatch(fetchTypes({ page: 1, limit: 100 }));
-    // dispatch(fetchFabrics({ page: 1, limit: 100 }));
-    // dispatch(fetchColors({ page: 1, limit: 100 }));
-    // dispatch(fetchSizes({ page: 1, limit: 100 }));
-    dispatch(fetchProductLabels({ page: 1, limit: 100 }));
-    dispatch(fetchsubCategories({ page: 1, limit: 100, status: "active" }));
+    // dispatch(fetchCategories({ page: 1, limit: 100 }));
+    // dispatch(fetchBrands({ page: 1, limit: 100 }));
+    // dispatch(fetchTypes({ page: 1, limit: 100 }));
+    // dispatch(fetchProductLabels({ page: 1, limit: 100 }));
+    // dispatch(fetchsubCategories({ page: 1, limit: 100, status: "active" }));
   }, [dispatch]);
 
 
@@ -214,8 +213,6 @@ export default function Products() {
     const [localBrand, setLocalBrand] = useState(brandFilter);
     const [localSize, setLocalSize] = useState(sizeFilter);
     const [localType, setLocalType] = useState(typeFilter);
-    // const [localFabric, setLocalFabric] = useState(fabricFilter);
-    // const [localColor, setLocalColor] = useState(colorFilter);
     const [localPrice, setLocalPrice] = useState(priceFilter);
     const [localLabels, setLocalLabels] = useState(productLabelsFilter);
 
@@ -224,8 +221,6 @@ export default function Products() {
       setLocalBrand([]);
       setLocalSize([]);
       setLocalType([]);
-      // setLocalFabric([]);
-      // setLocalColor([]);
       setLocalPrice({});
       setLocalLabels([]);
     };
@@ -235,8 +230,6 @@ export default function Products() {
       setBrandFilter(localBrand);
       setSizeFilter(localSize);
       setTypeFilter(localType);
-      // setFabricFilter(localFabric);
-      // setColorFilter(localColor);
       setPriceFilter(localPrice);
       setProductLabelsFilter(localLabels);
       onApply();
@@ -265,14 +258,6 @@ export default function Products() {
           setSelected={setLocalBrand}
         />
 
-        {/* <h4 className="font-semibold text-gray-700">Filter by Size</h4>
-        <MultiSelectPopover
-          label="Select Sizes"
-          options={sizes.map((s) => ({ value: s._id, label: s.name }))}
-          selected={localSize}
-          setSelected={setLocalSize}
-        /> */}
-
         <h4 className="font-semibold text-gray-700">Other Filters</h4>
         <div className="grid grid-cols-2 gap-2">
           <MultiSelectPopover
@@ -281,18 +266,6 @@ export default function Products() {
             selected={localType}
             setSelected={setLocalType}
           />
-          {/* <MultiSelectPopover
-            label="Fabrics"
-            options={fabrics.map((f) => ({ value: f._id, label: f.name }))}
-            selected={localFabric}
-            setSelected={setLocalFabric}
-          /> */}
-          {/* <MultiSelectPopover
-            label="Colors"
-            options={colors.map((c) => ({ value: c._id, label: c.name }))}
-            selected={localColor}
-            setSelected={setLocalColor}
-          /> */}
           <MultiSelectPopover
             label="Product Labels"
             options={productLabels.map((p) => ({
@@ -423,8 +396,6 @@ export default function Products() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">
               Products
-              {/* {" "} */}
-              {/* <span className="text-gray-400 font-normal">({total})</span> */}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -445,11 +416,12 @@ export default function Products() {
                         }
                       />
                     </th>
+                    <th className="p-3 text-left">Image</th>
                     <th className="p-3 text-left">Product</th>
-                    <th className="p-3 text-left">SubCategory</th>
-                    <th className="p-3 text-left">Discount</th>
-                    <th className="p-3 text-left">Price / Stock</th>
-                    <th className="p-3 w-32 text-left">Status</th>
+                    {/* <th className="p-3 text-center">SubCategory</th> */}
+                    {/* <th className="p-3 text-center">Discount</th> */}
+                    <th className="p-3 text-center">Price / Stock</th>
+                    <th className="p-3 w-32 text-center">Status</th>
                     <th className="p-3 w-32 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -461,29 +433,7 @@ export default function Products() {
                         colSpan={6}
                         className="text-center py-10 text-gray-500"
                       >
-                        {/* <div className="flex items-center justify-center gap-2">
-                          <svg
-                            className="animate-spin h-5 w-5 text-gray-400"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            />
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8v8z"
-                            />
-                          </svg>
-                          Loading products...
-                        </div> */}
+
                       </td>
                     </tr>
                   ) : products?.length === 0 ? (
@@ -520,31 +470,27 @@ export default function Products() {
                                 }
                               />
                             </td>
-                            <td className="p-3 flex items-center gap-2">
+
+                            <td className="p-3">
+                              
+                              <img
+                                src={`${BASE_URL}${product?.images}`}
+                                alt={product?.name}
+                                className="w-10 h-10 object-cover"
+                              />
+                            </td>
 
 
-                              {Array.isArray(product.images) && product.images.length > 0 && (
-                                <img
-                                  src={`${import.meta.env.VITE_API_URL_IMAGE}${product.images[0]}`}
-                                  alt={product.name}
-                                  className="w-10 h-10 rounded object-cover"
-                                />
-                              )}
 
+
+
+
+                            <td className="p-3 flex items-center justify-start gap-2">
                               <span className="truncate">{product.name}</span>
                             </td>
-                            <td className="p-3 text-gray-500 truncate">
 
-                              {typeof product.category_id === "object"
-                                ? product.category_id?.name
-                                : subCategories.find((c) => c._id === product.category_id)?.name || "-"}
-                            </td>
 
-                            <td className="p-3">
-                              {product?.discount?.name || "-"}
-                            </td>
-
-                            <td className="p-3">
+                            <td className="p-3 text-center">
                               $
                               {minPrice === maxPrice
                                 ? minPrice
@@ -552,7 +498,7 @@ export default function Products() {
                               / Stock: {totalStock}
                             </td>
 
-                            <td className="p-3">
+                            <td className="p-3 text-center">
                               <Switch
                                 checked={product.status === "active"}
                                 onCheckedChange={() =>
@@ -562,6 +508,7 @@ export default function Products() {
                             </td>
 
                             <td className="p-3 text-right flex gap-2 justify-end items-center">
+
                               <Link
                                 to={`${basePath}/products/${product._id}/edit`}
                                 className="p-1 text-blue-600 hover:bg-blue-50 rounded-md"
@@ -579,92 +526,9 @@ export default function Products() {
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </ConfirmDialog>
+
                             </td>
                           </tr>
-
-                          {product?.variants?.length > 0 && (
-                            <tr >
-                              <td colSpan={6} className="p-0">
-                                <details>
-                                  <summary className="p-2 pl-5 cursor-pointer text-gray-600">
-                                    {product?.variants?.length} Variants
-                                  </summary>
-                                  <div className="overflow-x-auto">
-                                    <table className="w-full text-sm">
-                                      <thead>
-                                        <tr className="text-gray-700">
-                                          <th className="p-2 text-left">
-                                            SKU
-                                          </th>
-                                          <th className="p-2 text-left">
-                                            Brand
-                                          </th>
-                                          <th className="p-2 text-left">
-                                            Type
-                                          </th>
-                                          {/* <th className="p-2 text-left">
-                                            Fabric
-                                          </th>
-                                          <th className="p-2 text-left">
-                                            Color / Size
-                                          </th> */}
-                                          <th className="p-2 text-left">
-                                            Price / Stock
-                                          </th>
-                                          <th className="p-2 text-left">
-                                            Labels
-                                          </th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {product?.variants?.map((v) => (
-                                          <tr
-                                            key={v?._id}
-                                            className="text-gray-600"
-                                          >
-                                            <td className="p-2">{v.sku}</td>
-                                            <td className="p-2">
-                                              {v?.brand?.[0]?.name || "-"}
-                                            </td>
-                                            <td className="p-2">
-                                              {v?.type?.[0]?.name || "-"}
-                                            </td>
-                                            {/* <td className="p-2">
-                                              {v?.fabric?.[0]?.name || "-"}
-                                            </td> */}
-                                            <td className="p-2">
-                                              {/* {v?.color?.[0]?.name || "-"} /{" "} */}
-                                              {v?.size?.[0]?.name || "-"}
-                                            </td>
-                                            <td className="p-2">
-                                              ${v?.price} / {v?.stock_quantity}
-                                            </td>
-                                            <td className="p-2 flex gap-1 flex-wrap">
-                                              {v?.is_featured && (
-                                                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
-                                                  Featured
-                                                </span>
-                                              )}
-                                              {v?.is_best_seller && (
-                                                <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded text-xs">
-                                                  Best Seller
-                                                </span>
-                                              )}
-                                              {v?.is_trending && (
-                                                <span className="bg-pink-100 text-pink-800 px-2 py-0.5 rounded text-xs">
-                                                  Trending
-                                                </span>
-                                              )}
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                </details>
-                              </td>
-                            </tr>
-                          )}
                         </React.Fragment>
                       );
                     })

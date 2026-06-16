@@ -223,14 +223,14 @@ export default function PageFormPage() {
                   onChange={(e) => setPageName(e.target.value)}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label>Description</Label>
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Short page description..."
                 />
-              </div>
+              </div> */}
             </CardContent>
           </Card>
           <Card className="shadow-md border border-gray-200">
@@ -461,7 +461,7 @@ export default function PageFormPage() {
                                   onChange={(e) =>
                                     updateSlide(sectionIndex, slideIndex, "description", e.target.value)
                                   }
-                                   placeholder="Enter slide description"
+                                  placeholder="Enter slide description"
                                 />
                               </div>
                               <div className="space-y-2">

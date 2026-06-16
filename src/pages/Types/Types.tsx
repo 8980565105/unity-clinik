@@ -16,11 +16,10 @@ export default function TypesPage() {
   const dispatch = useDispatch<AppDispatch>();
  const basePath = useBasePath();
   const columns = [
-    { key: "name", label: "Name", width: "w-48" },
+    { key: "name", label: "Name",  },
     {
       key: "description",
       label: "Description",
-      width: "w-64",
       exportValue: (item: any) => item.description || "-",
     },
   ];

@@ -21,8 +21,6 @@ import TypeFormPage from "./pages/Types/TypeForm";
 import Types from "./pages/Types/Types";
 import ProductLabels from "./pages/ProductLabels/ProductLabels";
 import ProductLabelFormPage from "./pages/ProductLabels/ProductLabelForm";
-// import Discounts from "./pages/Discount/Discounts";
-// import DiscountFormPage from "./pages/Discount/DiscountForm";
 import CouponFormPage from "./pages/coupons/CouponForm";
 import CouponsPage from "./pages/coupons/Coupons";
 import Orders from "./pages/Orders/Orders";
@@ -47,8 +45,8 @@ import WarehouseFormPage from "./pages/Warehouse/WarehouseForm";
 import Forgatepassword from "./pages/Forgatepassword";
 import Subcategories from "./pages/Subcategories/Subcategories"
 import SubCategoryFormPage from "./pages/Subcategories/SubcategoryForm";
-import FaqsFrom from "./pages/Faqs/FaqsFrom";
-import Faqspage from "./pages/Faqs/Faqs";
+// import FaqsFrom from "./pages/Faqs/FaqsFrom";
+// import Faqspage from "./pages/Faqs/Faqs";
 import ResultFrom from "./pages/Result/ResultFrom";
 import Result from "./pages/Result/Result";
 import EmailsFormPage from "./pages/Email/EmailFrom";
@@ -58,6 +56,7 @@ import Register from "./pages/Register";
 import SliderPage from "./pages/slider/slider";
 import SlideFormPage from "./pages/slider/sliderFrom";
 import SystemSettings from "./pages/systemseting/systemsetingFrom";
+import AboutPageFrom from "./pages/aboutpage/aboutpageform";
 
 
 const queryClient = new QueryClient();
@@ -72,16 +71,11 @@ const App = () => (
           <Route path="login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgate-password" element={<Forgatepassword />}></Route>
-          {/* ════════════════════════════════════════════════════════════════
-              ADMIN ROUTES   —   prefix: /
-          ════════════════════════════════════════════════════════════════ */}
           <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
             <Route path="/" element={<AdminLayout />}>
 
-              {/* Dashboard */}
               <Route index element={<VelzonDashboard />} />
 
-              {/* Catalog */}
               <Route path="products" element={<Products />} />
               <Route path="products/add" element={<AddProduct />} />
               <Route path="products/:id/edit" element={<AddProduct />} />
@@ -103,22 +97,16 @@ const App = () => (
               <Route path="product-labels/add" element={<ProductLabelFormPage />} />
               <Route path="product-labels/:id/edit" element={<ProductLabelFormPage />} />
 
-              {/* <Route path="discounts" element={<Discounts />} />
-              <Route path="discounts/add" element={<DiscountFormPage />} />
-              <Route path="discounts/:id/edit" element={<DiscountFormPage />} /> */}
               <Route path="coupons" element={<CouponsPage />} />
               <Route path="coupons/add" element={<CouponFormPage />} />
               <Route path="coupons/:id/edit" element={<CouponFormPage />} />
 
-              {/* Sales */}
               <Route path="orders" element={<Orders />} />
               <Route path="payments" element={<Payments />} />
-
               <Route path="warehouse" element={<Warehouse />} />
               <Route path="warehouse/add" element={<WarehouseFormPage />} />
               <Route path="warehouse/:id/edit" element={<WarehouseFormPage />} />
 
-              {/* Customers */}
               <Route path="users" element={<Users />} />
               <Route path="users/add" element={<UserFormPage />} />
               <Route path="users/:id/edit" element={<UserFormPage />} />
@@ -129,20 +117,23 @@ const App = () => (
               <Route path="wishlists" element={<Wishlist />} />
               <Route path="carts" element={<Cart />} />
 
-              {/* pages */}
-              <Route path="faqs" element={<Faqspage />} />
-              <Route path="faqs/add" element={<FaqsFrom />} />\
-              <Route path="faqs/:id/edit" element={<FaqsFrom />} />
+              {/* <Route path="faqs" element={<Faqspage />} />
+              <Route path="faqs/add" element={<FaqsFrom />} />
+              <Route path="faqs/:id/edit" element={<FaqsFrom />} /> */}
+              <Route path="about" element={<AboutPageFrom />} />
+
               <Route path="results" element={<Result />} />
               <Route path="results/add" element={<ResultFrom />} />
               <Route path="results/:id/edit" element={<ResultFrom />} />
 
-              {/* emails */}
+
+
+
+
               <Route path="emails" element={<EmailsPage />} />
               <Route path="emails/add" element={<EmailsFormPage />} />
               <Route path="emails/:id/edit" element={<EmailsFormPage />} />
 
-              {/* System */}
               <Route path="pages" element={<Pages />} />
               <Route path="pages/add" element={<PageFormPage />} />
               <Route path="pages/:id/edit" element={<PageFormPage />} />

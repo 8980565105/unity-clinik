@@ -78,9 +78,9 @@ export default function CategoriesPage() {
             —
           </div>
         ),
-      width: "w-20",
+     
     },
-    { key: "name", label: "Name", width: "w-48" },
+    { key: "name", label: "Name", },
     ...(isAdmin
       ? [
         {
@@ -91,7 +91,7 @@ export default function CategoriesPage() {
               {getCreatorName(item.createdBy)}
             </span>
           ),
-          width: "w-48",
+          // width: "w-48",
         },
       ]
       : []),

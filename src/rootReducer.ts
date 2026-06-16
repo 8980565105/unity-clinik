@@ -28,6 +28,9 @@ import subcategoriReducer from "./features/subcategories/subcategoriesSlice";
 import faqsReducer from "./features/faqs/faqsSlice";
 import slidesReducer from "./features/slider/sliderSlice";
 import SystemSettingsReducer from "./features/systemsetting/systemsettingSlice";
+import aboutpageReducer from "./features/about/aboutSlice";
+// import sectionReducer from "@/features/sections/sectionSlice";
+// import pagesectionReducer from "@/features/pagesection/pagesectionSlice";
 
 export const rootReducer = {
   auth: authReducer,
@@ -60,4 +63,7 @@ export const rootReducer = {
   faqs: faqsReducer,
   slider: slidesReducer,
   systemseting: SystemSettingsReducer,
+  // sections: sectionReducer,
+  // pagesections: pagesectionReducer,
+  aboutpage: aboutpageReducer,
 };

@@ -15,8 +15,8 @@ export default function ProductLabelsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const basePath = useBasePath();
   const columns = [
-    { key: "name", label: "Name", width: "w-48" },
-    { key: "color", label: "Color", width: "w-32" },
+    { key: "name", label: "Name", },
+    { key: "color", label: "Color", },
   ];
 
   return (

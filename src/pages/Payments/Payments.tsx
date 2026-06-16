@@ -20,12 +20,6 @@ export default function PaymentsPage() {
     },
     { key: "payment_method", label: "Payment Method", width: "w-48" },
     {
-      key: "discount_amount",
-      label: "Discount",
-      width: "w-30",
-      render: (item: any) => `$${item?.discount_amount?.toFixed(2) || "0.00"}`,
-    },
-    {
       key: "amount_paid",
       label: "Amount",
       width: "w-30",
@@ -38,10 +32,10 @@ export default function PaymentsPage() {
       render: (item: any) => (
         <span
           className={`px-3 py-1 rounded-full text-xs font-semibold ${item.status === "completed"
-              ? "bg-green-100 text-green-800"
-              : item.status === "pending"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-red-100 text-red-800"
+            ? "bg-green-100 text-green-800"
+            : item.status === "pending"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-red-100 text-red-800"
             }`}
         >
           {item.status.charAt(0).toUpperCase() + item.status.slice(1)}

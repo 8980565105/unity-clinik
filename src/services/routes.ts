@@ -63,11 +63,11 @@ export const ROUTES = {
     delete: (id: string) => `/product-labels/${id}`,
     bulkDelete: "/product-labels/bulk-delete",
   },
- 
+
   upload: {
     image: "/uploads/image",
   },
- 
+
   coupons: {
     getAll: "/coupons",
     getById: (id: string) => `/coupons/${id}`,
@@ -157,17 +157,17 @@ export const ROUTES = {
     delete: (id: string) => `/pages/${id}`,
     bulkDelete: "/pages/bulk-delete",
   },
-  faqs: {
-    create: "/faqs",
-    getAll: "/faqs",
-    getById: (id: string) => `/faqs/${id}`,
-    update: (id: string) => `/faqs/${id}`,
-    updateStatus: (id: string) => `/faqs/${id}/status`,
-    delete: (id: string) => `/faqs/${id}`,
-    bulkDelete: "/faqs/bulk-delete",
-    saveBanner: "/faqs/banner",
-    getBanner: "/faqs/banner/public",
-  },
+  // faqs: {
+  //   create: "/faqs",
+  //   getAll: "/faqs",
+  //   getById: (id: string) => `/faqs/${id}`,
+  //   update: (id: string) => `/faqs/${id}`,
+  //   updateStatus: (id: string) => `/faqs/${id}/status`,
+  //   delete: (id: string) => `/faqs/${id}`,
+  //   bulkDelete: "/faqs/bulk-delete",
+  //   saveBanner: "/faqs/banner",
+  //   getBanner: "/faqs/banner/public",
+  // },
 
   navbar: {
     getAll: "/navbar",
@@ -219,19 +219,19 @@ export const ROUTES = {
     delete: (id: string) => `/warehouses/${id}`,
     bulkDelete: "/warehouses/bulk-delete",
   },
-  aboutPage: {
-    get: "/about",
-    getPublic: "/about/public",
-    save: "/about",
-    updateHero: "/about/hero",
-    addContent: "/about/content",
-    updateContent: (itemId: string) => `/about/content/${itemId}`,
-    updateContentStatus: (itemId: string) => `/about/content/${itemId}/status`,
-    deleteContent: (itemId: string) => `/about/content/${itemId}`,
-    addFeature: "/about/feature",
-    updateFeature: (featureId: string) => `/about/feature/${featureId}`,
-    deleteFeature: (featureId: string) => `/about/feature/${featureId}`,
-  },
+  // aboutPage: {
+  //   get: "/about",
+  //   getPublic: "/about/public",
+  //   save: "/about",
+  //   updateHero: "/about/hero",
+  //   addContent: "/about/content",
+  //   updateContent: (itemId: string) => `/about/content/${itemId}`,
+  //   updateContentStatus: (itemId: string) => `/about/content/${itemId}/status`,
+  //   deleteContent: (itemId: string) => `/about/content/${itemId}`,
+  //   addFeature: "/about/feature",
+  //   updateFeature: (featureId: string) => `/about/feature/${featureId}`,
+  //   deleteFeature: (featureId: string) => `/about/feature/${featureId}`,
+  // },
   results: {
     getAll: "/results",
     getById: (id: string) => `/results/${id}`,
@@ -263,4 +263,26 @@ export const ROUTES = {
     get: "/system-setting",
     update: "/system-setting",
   },
+  aboutpage: {
+    get: "/aboutpage",
+    update: "/aboutpage",
+  },
+  // sections: {
+  //   getall: "/section",
+  //   create: "/section",
+  //   update: (id: string) => `/section/${id}`,
+  //   delete: (id: string) => `/section/${id}`,
+  //   bulkDelete: "/section/bulk-delete",
+  //   getById: (id: string) => `/section/${id}`,
+  //   updateStatus: (id: string) => `/section/${id}/status`,
+  // },
+  // pagesections: {
+  //   getall: "/pagesections",
+  //   create: "/pagesections",
+  //   update: (id: string) => `/pagesections/${id}`,
+  //   delete: (id: string) => `/pagesections/${id}`,
+  //   bulkDelete: "/pagesections/bulk-delete",
+  //   getById: (id: string) => `/pagesections/${id}`,
+  //   updateStatus: (id: string) => `/pagesections/${id}/status`,
+  // },
 };

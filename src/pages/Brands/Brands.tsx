@@ -31,13 +31,12 @@ export default function BrandsPage() {
             —
           </div>
         ),
-      width: "w-20",
       exportValue: (item: any) =>
         item.image_url
           ? `${import.meta.env.VITE_API_URL_IMAGE}${item.image_url}`
           : "-",
     },
-    { key: "name", label: "Name", width: "w-48" },
+    { key: "name", label: "Name",  },
   ];
 
   return (

@@ -469,7 +469,7 @@ export default function SystemSettings() {
                     </div>
                     <div className="grid grid-cols-2 gap-5">
                         <div><Label>Refund Policy</Label><TiptapEditor value={refundPolicy} onChange={setRefundPolicy} /><Err field="refundPolicy" /></div>
-                        <div><Label>About Us</Label><TiptapEditor value={aboutUs} onChange={setAboutUs} /><Err field="aboutUs" /></div>
+                        {/* <div><Label>About Us</Label><TiptapEditor value={aboutUs} onChange={setAboutUs} /><Err field="aboutUs" /></div> */}
                     </div>
                     <div className="grid grid-cols-2 gap-5">
                         <div><Label>Shipping &amp; Delivery Policy</Label><TiptapEditor value={shippingPolicy} onChange={setShippingPolicy} /><Err field="shippingPolicy" /></div>

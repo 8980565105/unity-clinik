@@ -27,18 +27,18 @@ export default function subCategoriesPage() {
             className="h-10 w-10 rounded-md object-cover border"
           />
         ) : (
-          <div className="h-10 w-10 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs border border-dashed">
-            —
-          </div>
+          // <div className="h-10 w-10 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs border border-dashed">
+          //   —
+          // </div>
+          ""
         ),
-      width: "w-20",
+     
     },
-    { key: "name", label: "Name", width: "w-48" },
+    { key: "name", label: "Name",  },
     {
       key: "parent_id",
       label: "Parent",
       render: (item: any) => item.parent_id?.name || "-",
-      width: "w-48",
     },
   ];
 

@@ -132,7 +132,7 @@ interface VideoUploadProps {
     onUploadingChange: (loading: boolean) => void;
 }
 
-function VideoUpload({ value, uploading, onChange, onUploadingChange }: VideoUploadProps) {
+export function VideoUpload({ value, uploading, onChange, onUploadingChange }: VideoUploadProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const MAX_MB = 10;
     const handleFile = async (file: File) => {
@@ -840,9 +840,7 @@ export default function SlideFormPage() {
                                 </Label>
                                 <Switch id="status" checked={status} onCheckedChange={setStatus} />
                             </div>
-                            {/* <p className="text-xs text-gray-400 mt-2">
-                                {status ? "✅ Visible on the website." : "❌ Hidden from the website."}
-                            </p> */}
+
 
                             {showOnPages.length > 0 && (
                                 <div className="mt-3 pt-3 border-t">
@@ -854,9 +852,7 @@ export default function SlideFormPage() {
                                     </div>
                                 </div>
                             )}
-                            {/* {showOnPages.length === 0 && selectedSection && (
-                                <p className="text-xs text-amber-600 mt-2">⚠ Showing on all pages</p>
-                            )} */}
+
                         </CardContent>
                     </Card>
                 </div>

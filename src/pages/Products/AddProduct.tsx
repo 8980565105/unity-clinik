@@ -31,6 +31,7 @@ import { fetchsubCategories } from "@/features/subcategories/subcategoriesThunk"
 import { fetchBrands } from "@/features/brands/brandsThunk";
 import { fetchTypes } from "@/features/types/typesThunk";
 import { fetchProductLabels } from "@/features/productLabels/productLabelsThunk";
+import { VideoUpload } from "../slider/sliderFrom";
 
 
 const generateSlug = (text: string) =>
@@ -90,7 +91,7 @@ const buildSectionData = (type: string) => {
     case "use and Others points":
       return { status: true, title: "", description: "", items: [{ name: "", description: "" }] };
     case "Solution By Stage Section":
-      return { status: true, title: "", description: "", items: [{ title: "", description: "", image: "", product_id: "" }] };
+      return { status: true, title: "", description: "", items: [{ title: "", description: "", image: "", product_id: "", videoUploading: false }] };
     case "Product Recommendation Section":
       return { status: true, title: "", description: "", items: [{ title: "", description: "", product_id: "" }] };
     case "Product Attribute Section":
@@ -1002,10 +1003,37 @@ const SectionRenderer = React.memo(function SectionRenderer({
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Title</Label><Input value={item.title || ""} placeholder="Enter Title" onChange={(e) => updateSectionItem(itemIdx, "title", e.target.value)} /></div>
               <div><Label>Description</Label><Input value={item.description || ""} placeholder="Enter Description" onChange={(e) => updateSectionItem(itemIdx, "description", e.target.value)} /></div>
-              <div>
+              {/* <div>
                 <Label>Image</Label>
-                <ImageUpload value={item.image || ""} onChange={(val: any) => { const image = typeof val === "string" ? val : Array.isArray(val) ? val[0] : ""; updateSectionItem(itemIdx, "image", image); }} multiple={false} />
+
+                <ImageUpload value={item.image || ""}
+                  onChange={(val: any) => {
+                    const image = typeof val === "string"
+                      ? val : Array.isArray(val) ? val[0] : "";
+                    updateSectionItem(itemIdx, "image", image);
+                  }}
+                  multiple={false} />
+
+              </div> */}
+
+              <div>
+                <Label className="font-semibold text-gray-700">
+                  Video <span className="text-gray-400 font-normal text-xs">(Max 10MB)</span>
+                </Label>
+
+                <VideoUpload
+                  value={item.image || null}
+                  uploading={item.videoUploading || false}
+                  onChange={(url) => {
+                    updateSectionItem(itemIdx, "image", url);
+                  }}
+                  onUploadingChange={(loading) => {
+                    updateSectionItem(itemIdx, "videoUploading", loading);
+                  }}
+                />
               </div>
+
+
               <div>
                 <Label>Select Product</Label>
                 <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
@@ -1801,6 +1829,7 @@ export default function ProductFormPage() {
                       description: item.description || "",
                       image: item.image || "",
                       product_id: item.product_id || null,
+                      videoUploading: false,
                     })),
                   },
                 };
@@ -2076,7 +2105,7 @@ export default function ProductFormPage() {
           <CardHeader><CardTitle className="text-lg font-semibold">Product Info</CardTitle></CardHeader>
           <CardContent className="space-y-5">
             <div>
-              
+
               <Label>Product Name *</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
@@ -2185,12 +2214,15 @@ export default function ProductFormPage() {
                     <div className="flex flex-wrap gap-2 mt-1">
                       {(productLabels as any[]).map((label) => (
                         <label key={label._id} className="inline-flex items-center gap-2 cursor-pointer">
-                          <input type="checkbox" value={label._id} checked={v.labels.includes(label._id)}
-                            onChange={(e) => {
-                              const checked = e.target.checked;
-                              const updatedLabels = checked ? [...v.labels, label._id] : v.labels.filter((l: string) => l !== label._id);
-                              handleVariantChange(idx, "labels", updatedLabels);
-                            }} className="form-checkbox h-4 w-4 text-blue-600" />
+
+                          <input
+                            type="checkbox"
+                            checked={v.labels?.[0] === label._id}
+                            onChange={() => {
+                              handleVariantChange(idx, "labels", [label._id]);
+                            }}
+                            className="form-checkbox h-4 w-4 text-blue-600"
+                          />
                           <span>{label.name}</span>
                         </label>
                       ))}
@@ -2264,7 +2296,7 @@ export default function ProductFormPage() {
             <Button type="button" variant="outline" className="w-full">Cancel</Button>
           </Link>
         </div>
-      
+
       </form>
     </div>
   );
