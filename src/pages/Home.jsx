@@ -8,7 +8,7 @@ import Hero1 from "../components/home/hero1.jsx";
 import Section from "../components/ui/Section.jsx";
 import Loding from "../components/loding/loding.jsx";
 import { getImageUrl } from "../components/utils/helper.js";
-import { fetchProductLabels } from "../features/productLabels/productlabelsThunk.js";
+// import { fetchProductLabels } from "../features/productLabels/productlabelsThunk.js";
 
 const CategoriesSection = lazy(
   () => import("../components/home/CategoriesSection"),
@@ -57,13 +57,18 @@ const Home = () => {
   const homePage = pages?.find((page) => page.slug === "home");
   const { slides } = useSelector((state) => state.slides);
   const banner2 = slides.find((s) => s.section === "banner2");
-  const desktopImg = getImageUrl(banner2?.banner2?.image);
-  const mobileImg = getImageUrl(banner2?.banner2?.mobileimg);
   const { productLabels = [] } = useSelector((state) => state.productLabels);
+
+  const bannerImage = banner2?.banner2?.image;
+  const bannerMobileImage = banner2?.banner2?.mobileimg;
+
+  const desktopImg = bannerImage ? getImageUrl(bannerImage) : null;
+
+  const mobileImg = bannerMobileImage ? getImageUrl(bannerMobileImage) : null;
 
   useEffect(() => {
     dispatch(fetchPageBySlug("home"));
-    dispatch(fetchProductLabels({ status: "active" }));
+    // dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
 
   return (
@@ -89,7 +94,7 @@ const Home = () => {
         <Suspense fallback={<Loding />}>
           <Bestsellers
             setShowLoginPopup={setShowLoginPopup}
-            productLabels={productLabels}
+            // productLabels={productLabels}
           />
         </Suspense>
 
@@ -97,11 +102,12 @@ const Home = () => {
           <BannerSlider />
         </Suspense>
 
-        <Section className="w-full">
+        {desktopImg && (
           <Section className="w-full">
             <picture>
-              <source media="(max-width: 767px)" srcSet={mobileImg} />
-              <source media="(min-width: 768px)" srcSet={desktopImg} />
+              {mobileImg && (
+                <source media="(max-width: 767px)" srcSet={mobileImg} />
+              )}
 
               <img
                 src={desktopImg}
@@ -112,7 +118,8 @@ const Home = () => {
               />
             </picture>
           </Section>
-        </Section>
+        )}
+
         <Suspense fallback={<Loding />}>
           <CategoriesSection />
         </Suspense>
@@ -125,7 +132,7 @@ const Home = () => {
         <Suspense fallback={<Loding />}>
           <TrendingClothes
             setShowLoginPopup={setShowLoginPopup}
-            productLabels={productLabels}
+            // productLabels={productLabels}
           />
         </Suspense>
 
@@ -135,7 +142,7 @@ const Home = () => {
         <Suspense fallback={<Loding />}>
           <FeaturedProducts
             setShowLoginPopup={setShowLoginPopup}
-            productLabels={productLabels}
+            // productLabels={productLabels}
           />
         </Suspense>
         <Suspense fallback={<Loding />}>
@@ -144,7 +151,7 @@ const Home = () => {
         <Suspense fallback={<Loding />}>
           <RecommendedSection
             setShowLoginPopup={setShowLoginPopup}
-            productLabels={productLabels}
+            // productLabels={productLabels}
           />
         </Suspense>
         <Suspense fallback={<Loding />}>

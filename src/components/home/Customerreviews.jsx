@@ -113,6 +113,12 @@ export default function Customerreviews() {
     }, 310);
   };
 
+  if (loading) return null;
+  
+  if (!allReviews || allReviews.length === 0) {
+    return null;
+  }
+
   return (
     <Section className="bg-[var(--ef3a96-9)] py-20">
       <Row>

@@ -82,11 +82,11 @@ export default function Hero1() {
                       {slide.description}
                     </p>
                     <Button
-                      onClick={() => navigate(slide.button_link || "/shop")}
+                      onClick={() => navigate(slide.button_link)}
                       variant="commone"
                       className="!bg-white !text-primary rounded-full min-w-[150px]"
                     >
-                      {slide.button_name || "Shop Now"}
+                      {slide.button_name}
                     </Button>
                   </div>
                   <div className="flex gap-5 justify-start items-center">
@@ -118,7 +118,7 @@ export default function Hero1() {
                       </h2>
                       <p className="text-gray-600 mt-1 text-[20px]">Ratings</p>
                       <div className="absolute -bottom-5 bg-white rounded-full w-12 h-12 flex items-center justify-center shadow">
-                        <img src={g} className="w-[50px] h-[50px]" />
+                        <img src={g} alt="g" className="w-[50px] h-[50px]" />
                       </div>
                     </div>
                   </div>
@@ -241,7 +241,9 @@ export default function Hero1() {
                         {slide.title}
                       </h1>
                       <Button
-                        onClick={() => navigate(slide.button_link || "/shop")}
+                        onClick={() =>
+                          navigate(slide.button_link || "/allproducts")
+                        }
                         variant="commone"
                         className="!bg-white !text-primary rounded-full min-w-[150px]"
                       >

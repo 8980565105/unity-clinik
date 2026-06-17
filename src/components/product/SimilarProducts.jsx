@@ -4,13 +4,14 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  lazy,
+  Suspense,
 } from "react";
-import ProductCard from "./ProductCard";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading";
-
+const ProductCard = lazy(() => import("./ProductCard"));
 const getGap = () => {
   if (window.innerWidth <= 768) return 0;
 
@@ -22,7 +23,7 @@ export default function SimilarProducts({
   product,
   products = [],
   setShowLoginPopup,
-  productLabels
+  productLabels,
 }) {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
@@ -167,11 +168,13 @@ export default function SimilarProducts({
                   className="flex-shrink-0"
                   style={{ width: `${cardWidth}px` }}
                 >
-                  <ProductCard
-                    product={p}
-                    setShowLoginPopup={setShowLoginPopup}
-                     productLabels={productLabels}
-                  />
+                  <Suspense>
+                    <ProductCard
+                      product={p}
+                      setShowLoginPopup={setShowLoginPopup}
+                      productLabels={productLabels}
+                    />
+                  </Suspense>
                 </div>
               ))}
             </div>

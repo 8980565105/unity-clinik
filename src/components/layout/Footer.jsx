@@ -249,12 +249,7 @@ export default function Footer() {
                   link.platform,
                 );
                 return (
-                  <Link
-                    key={index}
-                    to={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <Link key={index} to={link.url} target="_blank" >
                     <IconComponent
                       size={30}
                       className="transition-transform hover:scale-110 text-white"

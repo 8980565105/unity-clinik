@@ -14,6 +14,7 @@ import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thu
 import { calculateShipping } from "../utils/shippingCalculator";
 import { fetchPageBySlug } from "../features/pages/pagesThunk.js";
 import { useLocation, useNavigate } from "react-router-dom";
+import cart from "../assets/emptycart.webp";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function Cart() {
   const { coupons = [] } = useSelector((state) => state.coupons);
   const { items = [] } = useSelector((state) => state.cart);
   const settings = useSelector((state) => state.systemseting.data);
-  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const { pages } = useSelector((state) => state.pages);
   const cartPage = pages?.find((page) => page.slug === "cart");
 
   useEffect(() => {
@@ -108,6 +109,31 @@ export default function Cart() {
       ? appliedCoupon.discount_value
       : Math.round((subtotal * appliedCoupon.discount_value) / 100)
     : 0;
+
+  if (items.length === 0) {
+    return (
+      <>
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-3xl shadow-sm text-center max-w-md w-full">
+            <img
+              alt="Empty Cart"
+              className="w-48 h-48 mx-auto mb-6 opacity-80"
+              src={cart}
+            />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Your cart is empty
+            </h2>
+            <p className="text-gray-500 mb-8 leading-relaxed">
+              Looks like you haven't added anything to your cart yet.
+            </p>
+            <Button variant="common" onClick={() => navigate("/allproducts")}>
+              Start Shopping
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

@@ -10,7 +10,11 @@ export const fetchStoreInfo = createAsyncThunk(
       if (res.data.success) return res.data.data;
       return rejectWithValue(res.data.message || "Failed to fetch store info");
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Server Error");
+      return rejectWithValue({
+        code: err.code,
+        status: err.response?.status,
+        message: err.response?.data?.message || err.message,
+      });
     }
   },
   {
@@ -22,4 +26,3 @@ export const fetchStoreInfo = createAsyncThunk(
     },
   },
 );
-

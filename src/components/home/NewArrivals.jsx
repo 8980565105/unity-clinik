@@ -3,43 +3,10 @@ import { useSelector } from "react-redux";
 import NavBtn from "../ui/Navbtn";
 import Row from "../ui/Row";
 import ProductCard from "../productcard/ProductCard";
-import shoesimg from "../../assets/shoes.png";
-import winterimg from "../../assets/winter-clothes.png";
-import watchimg from "../../assets/watch.png";
-import earringsimg from "../../assets/earrings.png";
 import Section from "../ui/Section";
 import Heading from "../ui/Heading";
 
-const staticProducts = [
-  {
-    _id: "s1",
-    name: "Earings",
-    images: [earringsimg],
-    variants: [],
-    discount: null,
-  },
-  {
-    _id: "s2",
-    name: "Shoes",
-    images: [shoesimg],
-    variants: [],
-    discount: null,
-  },
-  {
-    _id: "s3",
-    name: "Watch",
-    images: [watchimg],
-    variants: [],
-    discount: null,
-  },
-  {
-    _id: "s4",
-    name: "Winter Cloths",
-    images: [winterimg],
-    variants: [],
-    discount: null,
-  },
-];
+const staticProducts = [];
 
 const CARD_W = 320;
 const GAP = 40;
@@ -65,7 +32,6 @@ export default function NewArrivals({ setShowLoginPopup }) {
     trackRef.current.style.transform = `translateX(-${newIndex * STEP}px)`;
   };
 
-  // ✅ Next = scroll LEFT (show next items) = increase index
   const handleNext = () => {
     if (isAnimating.current || total === 0 || isCenter) return;
     isAnimating.current = true;

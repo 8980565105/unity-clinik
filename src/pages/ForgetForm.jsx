@@ -49,9 +49,7 @@ const StepBar = ({ current }) => (
           {i < steps.length - 1 && (
             <div
               className={`w-10 h-[2px] mb-4 transition-all duration-300 ${
-                done
-                  ? "bg-primary"
-                  : "bg-black"
+                done ? "bg-primary" : "bg-black"
               }`}
             />
           )}
@@ -145,9 +143,7 @@ const ResendTimer = ({ onResend, loading }) => {
       {secs > 0 ? (
         <>
           Resend OTP in{" "}
-          <span className="text-primary font-semibold">
-            {secs}s
-          </span>
+          <span className="text-primary font-semibold">{secs}s</span>
         </>
       ) : (
         <button
@@ -361,16 +357,16 @@ const ForgetForm = ({ onClose, onSwitch }) => {
             alt="Logo"
             className="mx-auto mb-6"
           />
-          <h1 class="text-3xl font-bold text-primary">
-            Forgot Password
-          </h1>
+          <h1 className="text-3xl font-bold text-primary">Forgot Password</h1>
         </div>
 
         <StepBar current={step} />
 
         {step === 0 && (
           <form onSubmit={handleSendOtp} className="space-y-4">
-            <p class="text-gray-500 mt-2 text-center">Enter your email to reset your password</p>
+            <p className="text-gray-500 mt-2 text-center">
+              Enter your email to reset your password
+            </p>
             <input
               type="email"
               name="email"
@@ -406,9 +402,7 @@ const ForgetForm = ({ onClose, onSwitch }) => {
           <form onSubmit={handleVerifyOtp} className="space-y-2">
             <p className="text-sm text-primary text-center">
               We sent a 6-digit OTP to{" "}
-              <span className="font-semibold text-primary">
-                {email}
-              </span>
+              <span className="font-semibold text-primary">{email}</span>
             </p>
 
             <OtpInput value={otp} onChange={setOtp} />

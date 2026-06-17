@@ -32,7 +32,6 @@ export default function ShippingPolicy() {
         description={shipingPage?.meta_description}
         image={`${process.env.REACT_APP_API_URL_IMAGE}${shipingPage?.seo_image}`}
       />
-
       <div className="max-w-4xl mx-auto px-4 py-10">
         <Heading title={"Shipping and Delivery Policy"} />
 

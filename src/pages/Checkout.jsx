@@ -4,21 +4,21 @@ import OrderSummary from "../components/checkout/OrderSummary";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
 import CartProgress from "../components/cart/CartProgress";
-import { Link } from "react-router-dom";
 import SEO from "../components/seo/seo";
 
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import emptycart from "../assets/emptycart.webp";
 import { Truck } from "lucide-react";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
+import Button from "../components/ui/Button";
+import cart from "../assets/emptycart.webp";
 
 export default function Checkout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { items = [] } = useSelector((state) => state.cart);
-  const { pages, slugLoading } = useSelector((state) => state.pages);
+  const { pages } = useSelector((state) => state.pages);
   const checkoutPage = pages?.find((page) => page.slug === "checkout");
 
   const [appliedCoupon] = useState(null);
@@ -36,6 +36,31 @@ export default function Checkout() {
   useEffect(() => {
     dispatch(fetchPageBySlug("checkout"));
   }, [dispatch]);
+
+  if (items.length === 0) {
+    return (
+      <>
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-3xl shadow-sm text-center max-w-md w-full">
+            <img
+              alt="Empty Cart"
+              className="w-48 h-48 mx-auto mb-6 opacity-80"
+              src={cart}
+            />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Your cart is empty
+            </h2>
+            <p className="text-gray-500 mb-8 leading-relaxed">
+              Looks like you haven't added anything to your cart yet.
+            </p>
+            <Button variant="common" onClick={() => navigate("/allproducts")}>
+              Start Shopping
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div>

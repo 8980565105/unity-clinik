@@ -69,7 +69,7 @@ const FIXED_NAV_ITEMS = [
 
 const FALLBACK_EXTRA_ITEMS = [];
 
-const SKIP_LABELS = ["home", "shop"];
+const SKIP_LABELS = ["home", "allproducts"];
 
 function SearchBar({ products, onNavigate }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -141,7 +141,11 @@ function SearchBar({ products, onNavigate }) {
 
   return (
     <div ref={containerRef} className="relative">
-      <button onClick={handleOpen} className="flex items-center justify-center">
+      <button
+        onClick={handleOpen}
+        aria-label="search"
+        className="flex items-center justify-center"
+      >
         <Search size={22} />
       </button>
 
@@ -316,7 +320,7 @@ const Header = () => {
   const wishlistCount = wishlist?.length || 0;
   const [megaMenuPage, setMegaMenuPage] = useState(1);
   const [mobileMenuPage, setMobileMenuPage] = useState(1);
-  const isShopActive = location.pathname === "/shop";
+  const isShopActive = location.pathname === "/allproducts";
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeSubCategory, setActiveSubCategory] = useState(null);
 
@@ -393,7 +397,7 @@ const Header = () => {
       icon: item.icon ? (
         <img
           src={`${process.env.REACT_APP_API_URL_IMAGE}${item.icon}`}
-          alt={item.label}
+          alt={item.label | "label"}
           className="w-5 h-5 object-contain"
         />
       ) : null,
@@ -410,7 +414,7 @@ const Header = () => {
     dispatch(clearOrders());
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    navigate("/shop");
+    navigate("/allproducts");
     toast.success("Logged out successfully!");
   };
 
@@ -477,7 +481,7 @@ const Header = () => {
     <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border-b border-gray-100 p-2">
       <Row className="flex items-center justify-between gap-[10px]">
         <button
-          className="custom-lg:hidden text-light transition-colors duration-300 border rounded-[3px] p-[5px] border-[#D2AF9F]"
+          className="custom-lg:hidden text-black transition-colors duration-300 border rounded-[3px] p-[5px]"
           onClick={() => setIsMenuOpen(true)}
         >
           <Menu size={20} />
@@ -498,7 +502,8 @@ const Header = () => {
             <ul className="flex gap-[24px] xl:gap-[32px] text-base font-normal">
               {navItems.map((item, i) => (
                 <li
-                  key={i}
+                  // key={i}
+                  key={`nav-${item.path}-${i}`}
                   className="relative"
                   onMouseEnter={
                     item.isMegaMenu
@@ -522,15 +527,15 @@ const Header = () => {
                         className={`relative cursor-pointer transition-all duration-300 pb-[10px] flex items-center text-[18px]
                           ${
                             isShopActive
-                              ? "text-primary font-medium"
-                              : "text-black hover:text-primary"
+                              ? "text-primary font-medium after:opacity-100"
+                              : "text-black hover:text-primary after:opacity-0 hover:after:opacity-100"
                           }
                           after:content-['•••'] after:absolute after:left-[52%] after:-bottom-[4px]
-                          after:-translate-x-1/2 after:text-[20px] after:tracking-[3px]
-                          after:font-bold after:text-primary
-                          after:h-[14px] after:leading-[14px]
-                          after:transition-opacity after:duration-300
-                          ${isShopActive ? "after:opacity-100 " : "after:opacity-0 hover:after:opacity-100"}`}
+                        after:-translate-x-1/2 after:text-[20px] after:tracking-[3px]
+                        after:font-bold after:text-primary
+                        after:h-[14px] after:leading-[14px]
+                        after:transition-opacity after:duration-300
+                          `}
                       >
                         {item.name}
                         <ChevronDown
@@ -577,6 +582,7 @@ const Header = () => {
                               <div className="flex flex-col p-3">
                                 {categories.map((cat) => (
                                   <div
+                                    key={cat._id}
                                     onClick={() => {
                                       setActiveCategory(cat._id);
                                       setActiveSubCategory(null);
@@ -764,7 +770,7 @@ const Header = () => {
                         ${
                           isActive
                             ? "text-primary font-medium after:opacity-100"
-                            : "text-black hover:text-primary  after:opacity-0 hover:after:opacity-100"
+                            : "text-black hover:text-primary after:opacity-0 hover:after:opacity-100"
                         }
                         after:content-['•••'] after:absolute after:left-[52%] after:-bottom-[4px]
                         after:-translate-x-1/2 after:text-[20px] after:tracking-[3px]
@@ -928,6 +934,7 @@ const Header = () => {
 
             <button
               onClick={() => openProtectedLink("/wishlist")}
+              aria-label="add to whislist"
               className="relative text-black "
             >
               {isWishlistActive ? (
@@ -946,6 +953,7 @@ const Header = () => {
               className={`relative ${
                 isCartActive ? "text-primary" : "text-black"
               }`}
+              aria-label="add to cart"
               onClick={() => openProtectedLink("/cart")}
             >
               <FontAwesomeIcon icon={faCartShopping} className="" size={22} />
@@ -972,15 +980,19 @@ const Header = () => {
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <button
-          className="absolute top-4 bg-white right-2 transition-colors text-light border rounded-[3px] p-[5px] border-[#D2AF9F]"
-          onClick={() => setIsMenuOpen(false)}
-        >
-          <XCircleIcon size={22} />
-        </button>
-
+        <div className="bg-white w-full absolute top-0 py-2 flex justify-between px-3">
+          <div>
+            <img src={HeaderLogo} alt="logo" className="h-[35px] w-[100px]" />
+          </div>
+          <button
+            className=" bg-white  transition-colors text-light border rounded-[3px] p-[5px] border-[#D2AF9F]"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <XCircleIcon size={22} />
+          </button>
+        </div>
         <div className="flex h-full flex-col overflow-y-auto no-scrollbar">
-          <nav className="mt-12 py-3">
+          <nav className="mt-12 pb-3">
             {navItems.map((item, i) => {
               const isOdd = i % 2 !== 0;
 
@@ -1000,7 +1012,7 @@ const Header = () => {
                       </Link>
                       <button
                         onClick={() => setIsMobileMegaMenuOpen((prev) => !prev)}
-                        className="py-4 px-4 border-l border-gray-100"
+                        className="py-4 px-4 border-l border-black"
                       >
                         <ChevronDown
                           className={`w-4 h-4 transition-transform duration-300 ${
@@ -1023,7 +1035,7 @@ const Header = () => {
                     </div>
 
                     {isMobileMegaMenuOpen && (
-                      <div className="bg-white border-t border-[#D2AF9F]">
+                      <div className="bg-white">
                         <div className="flex flex-col w-full">
                           <div className="bg-gray-50 border-b border-gray-100">
                             <p className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
@@ -1250,9 +1262,9 @@ const Header = () => {
                 >
                   {item.icon}
                   <span>{item.name}</span>
-                  <span className="ml-auto">
+                  {/* <span className="ml-auto">
                     <ChevronRight className="w-4 h-4" />
-                  </span>
+                  </span> */}
                 </NavLink>
               );
             })}

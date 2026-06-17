@@ -107,7 +107,10 @@ const RouterWrapper = () => {
     }
   }, [storeData]);
 
-  if (errorInfo) {
+  if (
+    errorInfo?.code === "ERR_NETWORK" ||
+    errorInfo?.message === "Network Error"
+  ) {
     return <ServerDown />;
   }
 
@@ -162,6 +165,7 @@ const RouterWrapper = () => {
         <button
           className="bg-green-500 rounded-full p-3 whatsapp-pulse shadow-lg"
           onClick={openWhatsApp}
+          aria-label="whatsapp"
         >
           <svg
             stroke="currentColor"

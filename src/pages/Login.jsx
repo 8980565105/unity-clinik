@@ -85,9 +85,9 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
             alt="Logo"
             className="mx-auto mb-6"
           />
-          <h1 class="text-3xl font-bold text-primary">Welcome Back</h1>
+          <h1 className="text-3xl font-bold text-primary">Welcome Back</h1>
 
-          <p class="text-gray-500 mt-2">Login to your Unity Hair account</p>
+          <p className="text-gray-500 mt-2">Login to your Unity Hair account</p>
         </div>
 
         <form className="space-y-4 w-full" onSubmit={handleSubmit}>

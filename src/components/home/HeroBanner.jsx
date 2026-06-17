@@ -11,7 +11,7 @@ const heroBannerItem = {
   title: "Flesh Deals",
   description: "Best outfits for every occasion",
   button_name: "Shop Now",
-  button_link: "/shop",
+  button_link: "/allproduicts",
   image_url: herobannerImage,
   isStatic: true,
 };

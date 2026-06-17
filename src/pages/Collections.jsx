@@ -80,16 +80,47 @@ export default function Collections({ products = [] }) {
   const initializedRef = useRef(false);
   const [currentIndex, setCurrentIndex] = useState(total);
   const [visibleCount, setVisibleCount] = useState(5);
+  // useEffect(() => {
+  //   if (!containerRef.current) return;
+  //   const el = containerRef.current;
+  //   const measure = () => {
+  //     setVisibleCount(Math.floor(containerRef.current.offsetWidth / STEP));
+  //   };
+  //   measure();
+  //   const observer = new ResizeObserver(measure);
+  //   observer.observe(containerRef.current);
+  //   return () => observer.disconnect();
+  // }, []);
+
   useEffect(() => {
     if (!containerRef.current) return;
+
+    const el = containerRef.current; // ✅ reference save કરો
+
     const measure = () => {
-      setVisibleCount(Math.floor(containerRef.current.offsetWidth / STEP));
+      if (!el) return; // ✅ null check
+      setVisibleCount(Math.floor(el.offsetWidth / STEP));
     };
+
     measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target) {
+          // ✅ null check
+          setVisibleCount(Math.floor(entry.contentRect.width / STEP));
+        }
+      }
+    });
+
+    observer.observe(el);
+
+    return () => {
+      observer.unobserve(el); // ✅ cleanup
+      observer.disconnect();
+    };
+  }, []); // ✅ empty dependency - એકવાર જ run થાય
+
   const isCenter = total <= visibleCount;
   const isReady = true;
   useEffect(() => {

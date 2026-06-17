@@ -240,11 +240,12 @@ export default function CouponDrawer({
                         </button>
                         {isExpanded && (
                           <p className="text-[11px] text-gray-400 mt-[4px] leading-[1.5]">
-                            Valid on eligible products only. Cannot be combined
+                            {/* Valid on eligible products only. Cannot be combined
                             with other offers.
                             {coupon.min_order_amount
                               ? ` Minimum order: ₹${coupon.min_order_amount}.`
-                              : ""}
+                              : ""} */}
+                            {coupon.description}
                           </p>
                         )}
                       </div>

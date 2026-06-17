@@ -446,7 +446,7 @@ export default function WomenCollections() {
     setIsBestSeller(false);
     setMinPrice(500);
     setMaxPrice(5000);
-    navigate("/shop", { replace: true });
+    navigate("/allproducts", { replace: true });
   };
 
   useEffect(() => {
@@ -516,7 +516,7 @@ export default function WomenCollections() {
       params.set("label", selectedLabels.map((l) => l.name).join(","));
     if (minPrice !== 500) params.set("min", minPrice);
     if (maxPrice !== 5000) params.set("max", maxPrice);
-    const newUrl = `/shop${params.toString() ? `?${params.toString()}` : ""}`;
+    const newUrl = `/allproducts${params.toString() ? `?${params.toString()}` : ""}`;
     const currentUrl = location.pathname + location.search;
     if (newUrl !== currentUrl) {
       navigate(newUrl, { replace: true });

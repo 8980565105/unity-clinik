@@ -102,7 +102,7 @@ function BannerCard({ banner, cardH, cardW }) {
           {banner.description}
         </p>
         <button
-          onClick={() => navigate(banner.button_link || "/shop")}
+          onClick={() => navigate(banner.button_link || "/allproducts")}
           className="bg-primary text-white font-bold rounded-full transition-colors duration-200 whitespace-nowrap"
           style={{ fontSize: s.btnFontSize, padding: s.btnPadding }}
         >

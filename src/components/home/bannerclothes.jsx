@@ -9,7 +9,7 @@ const bannerItem = {
   title: "Up To 20% Off",
   description: "Best outfits for every occasion",
   button_name: "Shop Now",
-  button_link: "/shop",
+  button_link: "/allproducts",
   image_url: clothesBanner,
   isStatic: true,
 };

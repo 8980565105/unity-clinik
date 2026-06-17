@@ -46,7 +46,7 @@ const RegistrationForm = ({ onClose }) => {
     data.append("gender", formData.gender);
     data.append("date_of_birth", formData.date_of_birth);
     data.append("domain", window.location.origin);
-    data.append("role", "store_user");  
+    data.append("role", "user");  
     if (formData.profile_picture instanceof File) {
       data.append("profile_picture", formData.profile_picture);
     }
@@ -100,8 +100,8 @@ const RegistrationForm = ({ onClose }) => {
             className="mx-auto mb-6"
           />
 
-          <h1 class="text-3xl font-bold text-primary">Create Account</h1>
-          <p class="text-gray-500 mt-2">Join the Unity Hair family</p>
+          <h1 className="text-3xl font-bold text-primary">Create Account</h1>
+          <p className="text-gray-500 mt-2">Join the Unity Hair family</p>
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>

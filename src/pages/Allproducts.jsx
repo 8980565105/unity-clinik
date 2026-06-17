@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import ShopBannerSlider from "../components/shop/ShopBannerSlider";
 import { useDispatch, useSelector } from "react-redux";
-import ProductCard from "../components/product/ProductCard";
 import { fetchSlides } from "../features/slides/slideThunk";
 import Loding from "../components/loding/loding";
 import { fetchCategories } from "../features/categories/categoriesThunk";
@@ -16,6 +15,7 @@ import { fetchProductLabels } from "../features/productLabels/productlabelsThunk
 import { useSearchParams } from "react-router-dom";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import SEO from "../components/seo/seo";
+const ProductCard = lazy(() => import("../components/product/ProductCard"));
 
 function Allproducts() {
   const dispatch = useDispatch();
@@ -442,12 +442,17 @@ function Allproducts() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 lg:gap-4">
                 {filteredProducts.map((product) => (
-                  <ProductCard
+                  <Suspense
                     key={product._id}
-                    product={product}
-                    setShowLoginPopup={() => {}}
-                    productLabels={productLabels}
-                  />
+                    fallback={
+                      <div className="h-[300px] bg-gray-100 animate-pulse rounded" />
+                    }
+                  >
+                    <ProductCard
+                      product={product}
+                      setShowLoginPopup={() => {}}
+                    />
+                  </Suspense>
                 ))}
               </div>
             )}

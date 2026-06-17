@@ -11,7 +11,7 @@ import NavBtn from "../ui/Navbtn";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
 import Heading from "../ui/Heading";
-import Loding from "../loding/loding";
+
 const ProductCard = lazy(() => import("../product/ProductCard"));
 
 const getGap = () => {
@@ -168,7 +168,7 @@ export default function TrendingClothes({ setShowLoginPopup, productLabels }) {
                   className="flex-shrink-0"
                   style={{ width: `${cardWidth}px` }}
                 >
-                  <Suspense fallback={<Loding />}>
+                  <Suspense>
                     <ProductCard
                       product={product}
                       setShowLoginPopup={setShowLoginPopup}

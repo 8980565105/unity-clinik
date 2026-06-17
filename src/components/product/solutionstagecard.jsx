@@ -25,7 +25,6 @@ function Solutionstagecard({ data, items = [], products = [] }) {
 
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
-  const { productReviews } = useSelector((state) => state.reviews);
 
   const handleAddToCart = async (e, product) => {
     e.stopPropagation();
@@ -38,6 +37,11 @@ function Solutionstagecard({ data, items = [], products = [] }) {
     const variant = product?.variants?.[0];
     if (!variant?._id) {
       toast.error("Variant not found");
+      return;
+    }
+
+    if (variant?.stock_quantity === 0) {
+      toast.error("This product is out of stock");
       return;
     }
 
@@ -101,8 +105,7 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                 (p) => p._id === item.product_id,
               );
 
-              const rawMainImg =
-                linkedProduct?.images;
+              const rawMainImg = linkedProduct?.images;
               const mainImg = rawMainImg
                 ? rawMainImg.startsWith("http")
                   ? rawMainImg
@@ -116,6 +119,7 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                 : null;
 
               const variant = linkedProduct?.variants?.[0];
+              const isOutOfStock = variant?.stock_quantity === 0;
               const offerPrice = variant?.offerprice || variant?.price || 0;
               const origPrice = variant?.price || 0;
               const discount =
@@ -123,20 +127,8 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                   ? Math.floor(((origPrice - offerPrice) / origPrice) * 100)
                   : 0;
 
-              const reviewList =
-                productReviews?.[linkedProduct?._id]?.reviews || [];
-
-              const reviewCount = reviewList.length;
-
-              const averageRating =
-                reviewCount > 0
-                  ? (
-                      reviewList.reduce(
-                        (sum, review) => sum + Number(review.rating || 0),
-                        0,
-                      ) / reviewCount
-                    ).toFixed(1)
-                  : "0.0";
+              const averageRating = linkedProduct?.reviewStats?.average;
+              const reviewCount = linkedProduct?.reviewStats?.total;
 
               return (
                 <SwiperSlide key={i}>
@@ -215,9 +207,11 @@ function Solutionstagecard({ data, items = [], products = [] }) {
                           type="button"
                           onClick={(e) => handleAddToCart(e, linkedProduct)}
                           variant="outline"
+                          aria-label="add to cart"
+                          disabled={isOutOfStock}
                           className="!w-full border-2 font-bold !min-w-[auto]"
                         >
-                          Add to Cart
+                          {isOutOfStock ? "Out of Stock" : "Add to Cart"}
                         </Button>
                       </div>
                     </div>

@@ -10,6 +10,7 @@ import {
 } from "../../features/cart/cartThunk";
 import { updateLocalQuantity } from "../../features/cart/cartSlice";
 import Button from "../ui/Button";
+import { useState } from "react";
 
 export default function OtherRecommendedCard({
   product,
@@ -23,6 +24,8 @@ export default function OtherRecommendedCard({
   const cart = useSelector((state) => state.cart.cart);
   const { items = [] } = useSelector((state) => state.cart);
 
+  const [addingToCart, setAddingToCart] = useState(false);
+
   const cartItem = items.find(
     (item) =>
       item.product_id?._id === product._id || item.product_id === product._id,
@@ -35,6 +38,7 @@ export default function OtherRecommendedCard({
   const originalPrice = Number(variant?.price || 0);
 
   const offerPrice = Number(variant?.offerprice || originalPrice);
+  const isOutOfStock = variant?.stock_quantity === 0;
 
   const discount =
     originalPrice > offerPrice
@@ -51,29 +55,60 @@ export default function OtherRecommendedCard({
       return;
     }
 
-    let cartId = cart?._id || localStorage.getItem("cart_id");
+    if (isOutOfStock) return;
+    setAddingToCart(true);
 
-    if (!cartId) {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+    try {
+      let cartId = cart?._id || localStorage.getItem("cart_id");
 
-      const newCart = await dispatch(
-        createCart({ user_id: user._id }),
+      if (!cartId) {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+        const newCart = await dispatch(
+          createCart({ user_id: user._id }),
+        ).unwrap();
+
+        cartId = newCart._id;
+      }
+
+      await dispatch(
+        addToCart({
+          cart_id: cartId,
+          product_id: product._id,
+          variant_id: variant._id,
+          quantity: 1,
+        }),
       ).unwrap();
 
-      cartId = newCart._id;
+      dispatch(fetchCart(cartId));
+    } finally {
+      setAddingToCart(false);
     }
-
-    await dispatch(
-      addToCart({
-        cart_id: cartId,
-        product_id: product._id,
-        variant_id: variant._id,
-        quantity: 1,
-      }),
-    );
-
-    dispatch(fetchCart(cartId));
   };
+
+  //   let cartId = cart?._id || localStorage.getItem("cart_id");
+
+  //   if (!cartId) {
+  //     const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  //     const newCart = await dispatch(
+  //       createCart({ user_id: user._id }),
+  //     ).unwrap();
+
+  //     cartId = newCart._id;
+  //   }
+
+  //   await dispatch(
+  //     addToCart({
+  //       cart_id: cartId,
+  //       product_id: product._id,
+  //       variant_id: variant._id,
+  //       quantity: 1,
+  //     }),
+  //   );
+
+  //   dispatch(fetchCart(cartId));
+  // };
 
   const handleIncrease = async (e) => {
     e.preventDefault();
@@ -274,11 +309,17 @@ export default function OtherRecommendedCard({
                     e.stopPropagation();
                     handleAdd();
                   }}
+                  aria-label="add to cart"
                   variant="common"
+                  disabled={addingToCart || isOutOfStock}
                   className="
              mt-3 rounded-[12px] w-full lg:w-[200px] border text-primary hover:text-white flex items-center justify-center gap-2 transition"
                 >
-                  ADD
+                  {addingToCart
+                    ? "Adding..."
+                    : isOutOfStock
+                      ? "Out of Stock"
+                      : "ADD"}
                 </Button>
               ) : (
                 <div

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import ProductCard from "../product/ProductCard";
+import React, { lazy, Suspense, useState } from "react";
+const ProductCard = lazy(() => import("../product/ProductCard"));
 
 import Loding from "../loding/loding";
 const ProductGrid = ({ products = [], loading, setShowLoginPopup }) => {
@@ -11,20 +11,20 @@ const ProductGrid = ({ products = [], loading, setShowLoginPopup }) => {
   const visibleProducts = products.slice(0, visibleCount);
   return (
     <div className="mt-[50px]">
-       {visibleProducts.length > 0 ? "": <Loding/>}
+      {visibleProducts.length > 0 ? "" : <Loding />}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[10px] md:gap-[30px]">
         {visibleProducts.length > 0 ? (
           visibleProducts.map((product, index) => (
-            <ProductCard
-              key={product._id || product.id || index}
-              product={product}
-              setShowLoginPopup={setShowLoginPopup}
-            />
+            <Suspense>
+              <ProductCard
+                key={product._id || product.id || index}
+                product={product}
+                setShowLoginPopup={setShowLoginPopup}
+              />
+            </Suspense>
           ))
         ) : (
-          <>
-         
-          </>
+          <></>
         )}
       </div>
 
@@ -35,7 +35,7 @@ const ProductGrid = ({ products = [], loading, setShowLoginPopup }) => {
             className="text-[18px] theme-border text-theme w-[187px] h-[70px] sm:w-[220px] sm:h-[75px] font-medium rounded-[10px] shadow-lg transition duration-300 uppercase"
             style={{
               boxShadow: "inset 0px 0px 30px ",
-               }}
+            }}
           >
             Load More
           </button>

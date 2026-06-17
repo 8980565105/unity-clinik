@@ -4,6 +4,8 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  lazy,
+  Suspense,
 } from "react";
 import { getRecentlyViewed } from "../utils/recentlyViewed";
 import { useSelector } from "react-redux";
@@ -11,8 +13,8 @@ import Section from "../ui/Section";
 import Row from "../ui/Row";
 import NavBtn from "../ui/Navbtn";
 import Heading from "../ui/Heading";
-import ProductCard from "./ProductCard";
 
+const ProductCard = lazy(() => import("./ProductCard"));
 const getGap = () => {
   if (window.innerWidth <= 768) return 0;
 
@@ -167,11 +169,13 @@ export default function CustomerAlsoViewed({
                   className="flex-shrink-0"
                   style={{ width: `${cardWidth}px` }}
                 >
-                  <ProductCard
-                    product={product}
-                    setShowLoginPopup={setShowLoginPopup}
-                    productLabels={productLabels}
-                  />
+                  <Suspense>
+                    <ProductCard
+                      product={product}
+                      setShowLoginPopup={setShowLoginPopup}
+                      productLabels={productLabels}
+                    />
+                  </Suspense>
                 </div>
               ))}
             </div>

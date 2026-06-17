@@ -176,7 +176,7 @@ export default function CartItem() {
       <div className="bg-white rounded-[16px] border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-[24px] py-[18px] border-b border-gray-100">
           <span className="text-[24px] font-bold text-gray-900 mb-6 tracking-tight">
-            Review your items ({items.length})
+            Carts items is ({items.length})
           </span>
         </div>
 

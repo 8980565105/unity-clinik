@@ -27,7 +27,7 @@ import ProductSections, {
   SectionRenderer,
 } from "../components/product/ProductSections";
 import Productreviews from "../components/product/productreviews";
-import { fetchProductLabels } from "../features/productLabels/productlabelsThunk";
+// import { fetchProductLabels } from "../features/productLabels/productlabelsThunk";
 
 export default function Product() {
   const { id } = useParams();
@@ -69,9 +69,9 @@ export default function Product() {
     if (id) dispatch(fetchProductById(id));
   }, [id, dispatch]);
 
-  useEffect(() => {
-    dispatch(fetchProductLabels({ status: "active" }));
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchProductLabels({ status: "active" }));
+  // }, [dispatch]);
 
   useEffect(() => {
     if (product && product._id) {

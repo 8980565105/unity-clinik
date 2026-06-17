@@ -160,11 +160,10 @@ const Bestsellers = ({ setShowLoginPopup, productLabels }) => {
                   className="flex-shrink-0"
                   style={{ width: `${cardWidth}px` }}
                 >
-                  <Suspense fallback={<Loding />}>
+                  <Suspense>
                     <ProductCard
                       product={product}
                       setShowLoginPopup={setShowLoginPopup}
-                      productLabels={productLabels}
                     />
                   </Suspense>
                 </div>

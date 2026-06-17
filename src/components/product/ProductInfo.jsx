@@ -233,56 +233,6 @@ export default function ProductInfo({
     }
   };
 
-  // const handleAddToCart = async () => {
-  //   if (!token) {
-  //     setShowLoginPopup(true);
-  //     return;
-  //   }
-
-  //   if (activeVariantState?.stock_quantity === 0) {
-  //     toast.error("This variant is out of stock!");
-  //     return;
-  //   }
-  //   setAddingToCartstat(true);
-  //   try {
-  //     let cartId = cart?._id || localStorage.getItem("cart_id");
-  //     if (!cartId) {
-  //       const user = JSON.parse(localStorage.getItem("user") || "{}");
-  //       if (!user?._id) {
-  //         toast.error("User session expired. Please login again.");
-  //         setShowLoginPopup(true);
-  //         return;
-  //       }
-  //       const newCart = await dispatch(
-  //         createCart({ user_id: user._id }),
-  //       ).unwrap();
-  //       cartId = newCart._id;
-  //     }
-
-  //     const payload = {
-  //       cart_id: cartId,
-  //       product_id: product._id,
-  //       variant_id: activeVariantState._id,
-  //       quantity: 1,
-  //       pack_of: Number(selectedPackState?.badge || 1),
-  //       price: Number(selectedPackState?.offerprice || 0),
-  //       original_price: Number(selectedPackState?.price || 0),
-  //     };
-
-  //     await dispatch(addToCart(payload)).unwrap();
-  //     await dispatch(fetchCart(cartId));
-  //     navigate("/cart");
-  //   } catch (err) {
-  //     const msg =
-  //       typeof err === "string"
-  //         ? err
-  //         : err?.message || "Failed to add item to cart. Please try again.";
-  //     toast.error(msg);
-  //   } finally {
-  //     setAddingToCartstat(false);
-  //   }
-  // };
-
   const handleAddToCart = async (navState = null) => {
     if (!token) {
       setShowLoginPopup(true);
@@ -290,7 +240,7 @@ export default function ProductInfo({
     }
 
     if (activeVariantState?.stock_quantity === 0) {
-      toast.error("This variant is out of stock!");
+      toast.error("This product is out of stock!");
       return;
     }
     setAddingToCartstat(true);
@@ -685,6 +635,7 @@ export default function ProductInfo({
             variant="common"
             className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px]"
             onClick={handleAddToCart}
+            aria-label="add to cart"
             disabled={addingToCartstate}
           >
             <span className="flex items-center gap-[10px]">

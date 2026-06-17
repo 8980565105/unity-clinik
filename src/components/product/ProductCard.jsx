@@ -61,10 +61,10 @@ export default function ProductCard({
   const [addingToCart, setAddingToCart] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
 
-  const labelId = product?.variants?.[0]?.labels?.[0];
+  // const labelId = product?.variants?.[0]?.labels?.[0];
 
-  const labelData = productLabels?.find((label) => label._id === labelId);
-
+  // const labelData = productLabels?.find((label) => label._id === labelId);
+  const labelData = product?.variants?.[0]?.labelsInfo?.[0] || null;
   const cartItem = useMemo(() => {
     if (!product?._id) return null;
     return (
@@ -129,7 +129,7 @@ export default function ProductCard({
     const variant = currentVariant;
     if (!variant?._id) return toast.error("Variant not found!");
     if (variant?.stock_quantity === 0)
-      return toast.error("This variant is out of stock!");
+      return toast.error("This pr4oduct is out of stock!");
 
     setAddingToCart(true);
     try {
@@ -226,7 +226,7 @@ export default function ProductCard({
   };
 
   return (
-    <Link to={`/products/${product._id}`}>
+    <Link to={`/products/${product._id}`} aria-label="View product">
       <div className="border border-1 p-3 w-full transition-all group bg-white h-full">
         <div className="relative">
           {labelData && (
@@ -289,6 +289,7 @@ export default function ProductCard({
               }}
               disabled={addingToCart || isOutOfStock}
               variant="common"
+              aria-label="add to cart"
               className="mt-3 rounded-[12px] w-full border text-primary hover:text-white flex items-center justify-center gap-2 transition"
             >
               {addingToCart
@@ -307,6 +308,7 @@ export default function ProductCard({
             >
               <button
                 onClick={handleDecrease}
+                aria-label="quntity"
                 className="flex-1 text-primary py-2 px-2 transition text-xl font-bold border-r border-primary"
               >
                 −
@@ -315,6 +317,7 @@ export default function ProductCard({
                 {cartQuantity}
               </span>
               <button
+                aria-label="quntity"
                 onClick={handleIncrease}
                 className="flex-1 text-primary py-2 px-2 border-l border-primary transition text-xl font-bold"
               >

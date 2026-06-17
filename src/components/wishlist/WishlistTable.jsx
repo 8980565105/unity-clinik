@@ -306,6 +306,7 @@ const Wishlist = ({ product }) => {
                         <Button
                           variant="common"
                           onClick={() => handleAddToCart(item, index)}
+                          aria-label="add to cart"
                           className="!min-w-[113px] !py-[5px] !px-[8px] text-14"
                         >
                           Add To Cart

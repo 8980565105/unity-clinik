@@ -286,6 +286,13 @@ export default function OrderSummary({ formData }) {
     amount,
     paymentMethod = selectedPayment,
   ) => {
+    const loaded = await loadRazorpay();
+    
+    if (!loaded) {
+      toast.error("Failed to load Razorpay SDK");
+      return;
+    }
+
     const razorRes = await dispatch(
       createRazorpayOrder({
         amount,

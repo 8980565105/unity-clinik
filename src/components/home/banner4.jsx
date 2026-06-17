@@ -7,13 +7,19 @@ import { getImageUrl } from "../utils/helper";
 export default function Banner4() {
   const { slides, loading } = useSelector((state) => state.slides);
   const banner4 = slides.find((s) => s.section === "banner4");
-  const desktopImg = getImageUrl(banner4?.banner4?.image);
-  const mobileImg = getImageUrl(banner4?.banner4?.mobileimg);
-  if (loading) return null;
+
+  const bannerImage = banner4?.banner4?.image;
+  const bannerMobileImage = banner4?.banner4?.mobileimg;
+
+  const desktopImg = bannerImage ? getImageUrl(bannerImage) : null;
+
+  const mobileImg = bannerMobileImage ? getImageUrl(bannerMobileImage) : null;
+  // const desktopImg = getImageUrl(banner4?.banner4?.image);
+  // const mobileImg = getImageUrl(banner4?.banner4?.mobileimg);
 
   return (
     <>
-      <Section className="w-full">
+      {/* <Section className="w-full">
         <img
           src={desktopImg}
           alt="banner4"
@@ -24,7 +30,25 @@ export default function Banner4() {
           alt="banner4"
           className="block md:hidden w-full h-auto object-cover"
         />
-      </Section>
+      </Section> */}
+
+      {desktopImg && (
+        <Section className="w-full">
+          <picture>
+            {mobileImg && (
+              <source media="(max-width: 767px)" srcSet={mobileImg} />
+            )}
+
+            <img
+              src={desktopImg}
+              alt="banner4"
+              loading="lazy"
+              decoding="async"
+              className="w-full h-auto object-cover"
+            />
+          </picture>
+        </Section>
+      )}
     </>
   );
 }

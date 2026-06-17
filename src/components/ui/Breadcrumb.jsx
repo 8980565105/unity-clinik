@@ -27,7 +27,7 @@ export default function Breadcrumb() {
         <span className="mx-2">/</span>
         <li>
           <Link
-            to={`/shop?category=${encodeURIComponent(categoryName)}`}
+            to={`/allproducts?category=${encodeURIComponent(categoryName)}`}
             className="capitalize"
           >
             {categoryName}
