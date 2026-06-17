@@ -7,7 +7,6 @@ import { AppDispatch, RootState } from "../store";
 import { registerUser } from "@/features/auth/authThunk";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
-// import { Toast } from "@radix-ui/react-toast";
 
 export default function Register() {
   const dispatch = useDispatch<AppDispatch>();
@@ -65,8 +64,6 @@ export default function Register() {
     const allEmpty = Object.values(obj).every((v) => v === "");
     return allEmpty ? null : obj;
   };
-
-
 
   const validateForm = () => {
     if (!form.name.trim()) {
@@ -129,7 +126,7 @@ export default function Register() {
       gender: form.gender || undefined,
       date_of_birth: form.date_of_birth || undefined,
       address: cleanAddress(form.address),
-      role: "store_owner",
+      role: "admin",
       storeName: form.storeName,
       storeEmail: form.storeEmail,
       storePhone: form.storePhone || undefined,
@@ -144,8 +141,8 @@ export default function Register() {
     const result = await dispatch(registerUser(payload));
 
     if (registerUser.fulfilled.match(result)) {
-      toast.success("Store owner registered successfully!");
-      navigate("/dashboard");
+      toast.success("admin registered successfully!");
+      navigate("/");
     } else {
       toast.error((result.payload as string) || "Registration failed");
     }

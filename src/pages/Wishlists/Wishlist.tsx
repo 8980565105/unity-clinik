@@ -26,7 +26,6 @@ export default function Wishlist() {
 
   const { user } = useSelector((state: RootState) => state.auth);
   const isAdmin = user?.role === "admin";
-  const isStoreOwner = user?.role === "store_owner";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);

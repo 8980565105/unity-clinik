@@ -400,7 +400,7 @@ export default function StoreFormPage() {
 
       if (createStore.fulfilled.match(result) || updateStore.fulfilled.match(result)) {
         toast.success(isEditMode ? "Store updated successfully!" : "Store created successfully!");
-        navigate("/stores");
+        navigate("/");
       } else {
         toast.error((result.payload as string) || "Something went wrong");
       }
@@ -413,7 +413,7 @@ export default function StoreFormPage() {
     <div className="p-6 mx-auto">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
-        <Link to="/stores">
+        <Link to="/">
           <Button variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>

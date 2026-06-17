@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../features/auth/authThunk";
 import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../store";
-import { Link } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,8 +23,8 @@ export default function Login() {
     if (loginUser.fulfilled.match(result)) {
       toast.success("Logged in successfully!");
 
-      const userRole = result.payload.user.role;
-      if (userRole === "admin") navigate("/");
+      // const userRole = result.payload.user.role;
+      navigate("/");
     } else {
       const message =
         (result.payload as string) || "Login failed: Invalid credentials";
@@ -114,15 +113,7 @@ export default function Login() {
           </button>
 
         </form>
-        {/* <div className="flex justify-center mt-2 text-red-500">
-          <button
-            type="button"
 
-            onClick={() => navigate("/register")}
-          >
-            Create account?
-          </button>
-        </div> */}
 
       </div>
     </div>

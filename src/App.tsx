@@ -5,7 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminLayout } from "./components/layout/AdminLayout";
-// import Register from "./pages/Register";
 import VelzonDashboard from "./pages/VelzonDashboard";
 import Products from "./pages/Products/Products";
 import AddProduct from "./pages/Products/AddProduct";
@@ -45,8 +44,6 @@ import WarehouseFormPage from "./pages/Warehouse/WarehouseForm";
 import Forgatepassword from "./pages/Forgatepassword";
 import Subcategories from "./pages/Subcategories/Subcategories"
 import SubCategoryFormPage from "./pages/Subcategories/SubcategoryForm";
-// import FaqsFrom from "./pages/Faqs/FaqsFrom";
-// import Faqspage from "./pages/Faqs/Faqs";
 import ResultFrom from "./pages/Result/ResultFrom";
 import Result from "./pages/Result/Result";
 import EmailsFormPage from "./pages/Email/EmailFrom";
@@ -116,19 +113,10 @@ const App = () => (
 
               <Route path="wishlists" element={<Wishlist />} />
               <Route path="carts" element={<Cart />} />
-
-              {/* <Route path="faqs" element={<Faqspage />} />
-              <Route path="faqs/add" element={<FaqsFrom />} />
-              <Route path="faqs/:id/edit" element={<FaqsFrom />} /> */}
               <Route path="about" element={<AboutPageFrom />} />
-
               <Route path="results" element={<Result />} />
               <Route path="results/add" element={<ResultFrom />} />
               <Route path="results/:id/edit" element={<ResultFrom />} />
-
-
-
-
 
               <Route path="emails" element={<EmailsPage />} />
               <Route path="emails/add" element={<EmailsFormPage />} />
@@ -138,14 +126,9 @@ const App = () => (
               <Route path="pages/add" element={<PageFormPage />} />
               <Route path="pages/:id/edit" element={<PageFormPage />} />
 
-
-
               <Route path="slider" element={<SliderPage />} />
               <Route path="slider/add" element={<SlideFormPage />} />
               <Route path="slider/:id/edit" element={<SlideFormPage />} />
-
-
-
 
               <Route path="navbar" element={<Navbar />} />
               <Route path="navbar/add" element={<NavbarFormPage />} />
@@ -161,112 +144,9 @@ const App = () => (
               <Route path="store-owners/add" element={<StoreOwnerFormPage />} />
               <Route path="store-owners/:id/edit" element={<StoreOwnerFormPage />} />
               <Route path="system_settings" element={<SystemSettings />} />
-
             </Route>
-
             <Route path="*" element={<NotFound />} />
           </Route>
-
-          {/* ════════════════════════════════════════════════════════════════
-              STORE-OWNER ROUTES   —   prefix: /store_owner
-          ════════════════════════════════════════════════════════════════ */}
-          {/* <Route element={<ProtectedRoute allowedRoles={["store_owner"]} />}>
-            <Route path="/store_owner" element={<AdminLayout />}>
-
-              <Route index element={<VelzonDashboard />} />
-
-              <Route path="products" element={<Products />} />
-              <Route path="products/add" element={<AddProduct />} />
-              <Route path="products/:id/edit" element={<AddProduct />} />
-              <Route path="categories" element={<Categories />} />
-              <Route path="categories/add" element={<CategoryFormPage />} />
-              <Route path="categories/:id/edit" element={<CategoryFormPage />} />
-
-              <Route path="subcategories" element={<Subcategories />} />
-              <Route path="subcategories/add" element={<SubCategoryFormPage />} />
-              <Route path="subcategories/:id/edit" element={<SubCategoryFormPage />} />
-
-
-              <Route path="brands" element={<Brands />} />
-              <Route path="brands/add" element={<BrandFormPage />} />
-              <Route path="brands/:id/edit" element={<BrandFormPage />} />
-              <Route path="types" element={<Types />} />
-              <Route path="types/add" element={<TypeFormPage />} />
-              <Route path="types/:id/edit" element={<TypeFormPage />} />
-              {/* <Route path="fabrics" element={<Fabrics />} />
-              <Route path="fabrics/add" element={<FabricFormPage />} />
-              <Route path="fabrics/:id/edit" element={<FabricFormPage />} />
-              <Route path="product-labels" element={<ProductLabels />} />
-              <Route path="product-labels/add" element={<ProductLabelFormPage />} />
-              <Route path="product-labels/:id/edit" element={<ProductLabelFormPage />} />
-              {/* <Route path="colors" element={<Colors />} />
-              <Route path="colors/add" element={<ColorFormPage />} />
-              <Route path="colors/:id/edit" element={<ColorFormPage />} /> */}
-          {/* <Route path="sizes" element={<Sizes />} />
-              <Route path="sizes/add" element={<SizeFormPage />} />
-              <Route path="sizes/:id/edit" element={<SizeFormPage />} /> */}
-
-          {/* Promotions */}
-          {/* <Route path="discounts" element={<Discounts />} />
-              <Route path="discounts/add" element={<DiscountFormPage />} />
-              <Route path="discounts/:id/edit" element={<DiscountFormPage />} /> 
-              <Route path="coupons" element={<CouponsPage />} />
-              <Route path="coupons/add" element={<CouponFormPage />} />
-              <Route path="coupons/:id/edit" element={<CouponFormPage />} />
-
-              <Route path="orders" element={<Orders />} />
-              <Route path="payments" element={<Payments />} />
-
-              <Route path="warehouse" element={<Warehouse />} />
-              <Route path="warehouse/add" element={<WarehouseFormPage />} />
-              <Route path="warehouse/:id/edit" element={<WarehouseFormPage />} />
-
-
-              <Route path="stores" element={<Stores />} />
-              <Route path="stores/add" element={<StoreFormPage />} />
-              <Route path="stores/:id/edit" element={<StoreFormPage />} />
-              <Route path="users" element={<Users />} />
-              <Route path="users/add" element={<UserFormPage />} />
-              <Route path="users/:id/edit" element={<UserFormPage />} />
-              <Route path="customer-reviews" element={<CustomerReviews />} />
-              <Route path="customer-reviews" element={<CustomerReviews />} />
-              <Route path="customer-reviews/add" element={<CustomerReviewsFrom />} />
-              <Route path="customer-reviews/:id/edit" element={<CustomerReviewsFrom />} />
-
-              <Route path="wishlists" element={<Wishlist />} />
-              <Route path="carts" element={<Cart />} />
-
-              <Route path="faqs" element={<Faqspage />} />
-              <Route path="faqs/add" element={<FaqsFrom />} />
-              <Route path="faqs/:id/edit" element={<FaqsFrom />} />
-              <Route path="results" element={<Result />} />
-              <Route path="results/add" element={<ResultFrom />} />
-              <Route path="results/:id/edit" element={<ResultFrom />} />
-
-
-              <Route path="emails" element={<EmailsPage />} />
-              <Route path="emails/add" element={<EmailsFormPage />} />
-              <Route path="emails/:id/edit" element={<EmailsFormPage />} />
-
-
-
-
-              <Route path="pages" element={<Pages />} />
-              <Route path="pages/add" element={<PageFormPage />} />
-              <Route path="pages/:id/edit" element={<PageFormPage />} />
-              <Route path="navbar" element={<Navbar />} />
-              <Route path="navbar/add" element={<NavbarFormPage />} />
-              <Route path="navbar/:id/edit" element={<NavbarFormPage />} />
-              <Route path="footer" element={<Footer />} />
-              <Route path="footer/add" element={<FooterFormPage />} />
-              <Route path="footer/:id/edit" element={<FooterFormPage />} />
-              <Route path="contact-messages" element={<ContactUs />} />
-              <Route path="settings" element={<Settings />} />
-
-            </Route>
-
-            <Route path="/store_owner/*" element={<NotFound />} />
-          </Route> */}
 
         </Routes>
       </BrowserRouter>

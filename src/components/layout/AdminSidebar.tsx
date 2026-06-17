@@ -114,77 +114,6 @@ const adminSections = [
   },
 ];
 
-const storeOwnerSections = [
-  {
-    label: "Main",
-    items: [
-      { title: "Dashboard", url: "/", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "Catalog",
-    items: [
-      { title: "Categories", url: "/store_owner/categories", icon: FolderTree },
-      { title: "SubCategories", url: "/store_owner/subcategories", icon: FolderTree },
-      { title: "Brands", url: "/store_owner/brands", icon: Tag },
-      { title: "Types", url: "/store_owner/types", icon: Shirt },
-      { title: "Product Labels", url: "/store_owner/product-labels", icon: Tags },
-      { title: "Products", url: "/store_owner/products", icon: Package },
-
-    ],
-  },
-  {
-    label: "Promotions",
-    items: [
-      { title: "Coupons", url: "/store_owner/coupons", icon: Ticket },
-    ],
-  },
-  {
-    label: "Sales",
-    items: [
-      { title: "Orders", url: "/store_owner/orders", icon: ShoppingCart },
-      { title: "payment", url: "/store_owner/payments", icon: CreditCard },
-      { title: "Warehouse", url: "/store_owner/warehouse", icon: Warehouse },
-    ],
-  },
-  {
-    label: "Customers",
-    items: [
-      { title: "Users", url: "/store_owner/users", icon: Users },
-      { title: "Customer Reviews", url: "/store_owner/customer-reviews", icon: Star },
-      { title: "Wishlist", url: "/store_owner/wishlists", icon: Heart },
-      { title: "Cart", url: "/store_owner/carts", icon: ShoppingBasket },
-    ],
-  },
-  {
-    label: "Pages",
-    items: [
-      { title: "Faqs", url: "/store_owner/faqs", icon: Columns },
-      { title: "Result", url: "/store_owner/results", icon: Columns },
-
-
-    ]
-  },
-  {
-    label: "E-Mail",
-    items: [
-      { title: "Email", url: "/store_owner/emails", icon: Navigation }
-    ]
-  },
-  {
-    label: "System",
-    items: [
-      { title: "Pages", url: "/store_owner/pages", icon: Layers },
-      { title: "Navbar", url: "/store_owner/navbar", icon: Navigation },
-      { title: "Footer", url: "/store_owner/footer", icon: Columns },
-      { title: "Contact Messages", url: "/store_owner/contact-messages", icon: MessageSquare },
-      { title: "Settings", url: "/store_owner/settings", icon: Settings },
-      { title: "System Settings", url: "/store_owner/system_settings", icon: Settings },
-    ],
-  },
-];
-
-
 export function AdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
@@ -212,12 +141,10 @@ export function AdminSidebar() {
     ].join(" ");
   };
 
-  const sections =
-    user?.role === "store_owner" ? storeOwnerSections : adminSections;
-
-  const panelLabel =
-    user?.role === "store_owner" ? "Store Dashboard" : "Admin Dashboard";
-
+  
+  const sections = adminSections;
+  const panelLabel = "Admin Dashboard";
+ 
   return (
     <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">

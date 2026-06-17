@@ -154,7 +154,7 @@ export default function StoreOwnerFormPage() {
 
       if (createUser.fulfilled.match(result) || updateUser.fulfilled.match(result)) {
         toast.success(isEditMode ? "Store owner updated!" : "Store owner created!");
-        navigate("/store-owners");
+        navigate("/");
       } else {
         toast.error((result.payload as string) || "Something went wrong");
       }

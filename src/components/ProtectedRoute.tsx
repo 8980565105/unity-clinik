@@ -20,23 +20,23 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
     // return <Navigate to="/" replace />;
     if (user.role === "admin") return <Navigate to="/" replace />;
-    if (user.role === "store_owner") return <Navigate to="/store_owner" replace />;
+    // if (user.role === "store_owner") return <Navigate to="/store_owner" replace />;
     return <Navigate to="/login" replace />;
   }
 
 
   // ── 3. Admin manually types /store_owner/* → block ──────────────────────────
-  if (user.role === "admin" && location.pathname.startsWith("/store_owner")) {
+  if (user.role === "admin") {
     return <Navigate to="/" replace />;
   }
 
   // ── 4. Store-owner manually types any non /store_owner/* route → block ───────
-  if (
-    user.role === "store_owner" &&
-    !location.pathname.startsWith("/store_owner")
-  ) {
-    return <Navigate to="/store_owner" replace />;
-  }
+  // if (
+  //   user.role === "store_owner" &&
+  //   !location.pathname.startsWith("/store_owner")
+  // ) {
+  //   return <Navigate to="/store_owner" replace />;
+  // }
   // ✅ 3️⃣ Authorized → allow access\
   return <Outlet />;
 };

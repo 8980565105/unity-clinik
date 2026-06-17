@@ -10,7 +10,7 @@ interface AuthState {
   user: {
     name: string;
     email: string;
-    role: "admin" | "store_owner" | "store_user";
+    role: "admin" | "store_user";
   } | null;
   token: string | null;
   loading: boolean;
