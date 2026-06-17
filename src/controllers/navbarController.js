@@ -119,7 +119,7 @@ const updateNavbar = async (req, res) => {
     const updatedNavbar = await Navbar.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!updatedNavbar)
@@ -142,7 +142,7 @@ const updateNavbarStatus = async (req, res) => {
     const navbar = await Navbar.findByIdAndUpdate(
       id,
       { status },
-      { new: true },
+       { returnDocument: "after" },
     );
     if (!navbar) return sendResponse(res, false, null, "Navbar not found");
 

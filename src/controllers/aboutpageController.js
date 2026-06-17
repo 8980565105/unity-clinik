@@ -1,4 +1,4 @@
-const AboutPage = require("../models/AboutPage");
+const AboutPage = require("../models/Aboutpage");
 const { sendResponse } = require("../utils/response");
 
 const getPublicAboutPage = async (req, res) => {

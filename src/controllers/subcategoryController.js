@@ -118,7 +118,7 @@ const updatesubCategory = async (req, res) => {
     const updatedSubCategory = await SubCategory.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true },
+       { returnDocument: "after" },
     ).populate("parent_id", "_id name");
 
     if (!updatedSubCategory)
@@ -138,7 +138,9 @@ const updatesubCategoryStatus = async (req, res) => {
     if (!["active", "inactive"].includes(status))
       return sendResponse(res, false, null, "Invalid status value");
 
-    const subcategory = await SubCategory.findByIdAndUpdate(id, { status }, { new: true });
+    const subcategory = await SubCategory.findByIdAndUpdate(id, { status }, 
+    { returnDocument: "after" },
+  );
     if (!subcategory) return sendResponse(res, false, null, "SubCategory not found");
 
     sendResponse(res, true, subcategory, "SubCategory status updated successfully");

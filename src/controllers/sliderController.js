@@ -206,7 +206,7 @@ const updateSlideStatus = async (req, res) => {
     const doc = await Slider.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true },
+      { returnDocument: "after" },
     );
     if (!doc) return sendResponse(res, false, null, "Not found");
     sendResponse(res, true, doc, "Status updated");

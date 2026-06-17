@@ -116,7 +116,7 @@ const updateCategory = async (req, res) => {
     const updatedCategory = await Category.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!updatedCategory)
@@ -138,7 +138,8 @@ const updateCategoryStatus = async (req, res) => {
     const category = await Category.findByIdAndUpdate(
       id,
       { status },
-      { new: true },
+      { returnDocument: "after" },
+      
     );
     if (!category) return sendResponse(res, false, null, "Category not found");
 

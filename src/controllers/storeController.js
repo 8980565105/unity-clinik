@@ -149,7 +149,7 @@ const updateStore = async (req, res) => {
     const updatedStore = await Store.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true },
+       { returnDocument: "after" },
     );
     if (!updatedStore) return sendResponse(res, false, null, "Store not found");
     sendResponse(res, true, updatedStore, "Store updated successfully");
@@ -234,7 +234,7 @@ const updateMyStore = async (req, res) => {
     const updatedStore = await Store.findByIdAndUpdate(
       store._id,
       { $set: req.body },
-      { new: true },
+    { returnDocument: "after" },
     );
 
     sendResponse(res, true, updatedStore, "Store updated successfully");

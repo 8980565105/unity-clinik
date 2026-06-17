@@ -19,14 +19,14 @@ const {
 router.get("/info", getStoreByDomain);
 router.use(authMiddleware);
 
-router.get("/my", authorizeMinRole("store_owner"), getMyStore);
-router.put("/my", authorizeMinRole("store_owner"), updateMyStore);
+router.get("/my", authorizeMinRole("admin"), getMyStore);
+router.put("/my", authorizeMinRole("admin"), updateMyStore);
 
-router.get("/", authorizeMinRole("store_owner"), getStores);
-router.get("/:id", authorizeMinRole("store_owner"), getStoreById);
-router.post("/", authorizeMinRole("store_owner"), createStore);
-router.put("/:id", authorizeMinRole("store_owner"), updateStore);
-router.delete("/:id", authorizeMinRole("store_owner"), deleteStore);
-router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteStores);
+router.get("/", authorizeMinRole("admin"), getStores);
+router.get("/:id", authorizeMinRole("admin"), getStoreById);
+router.post("/", authorizeMinRole("admin"), createStore);
+router.put("/:id", authorizeMinRole("admin"), updateStore);
+router.delete("/:id", authorizeMinRole("admin"), deleteStore);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteStores);
 
 module.exports = router;

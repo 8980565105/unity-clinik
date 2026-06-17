@@ -119,7 +119,7 @@ const updateProductLabel = async (req, res) => {
     const updatedLabel = await ProductLabel.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true },
+      { returnDocument: "after" },
     );
     if (!updatedLabel)
       return sendResponse(res, false, null, "Product label not found");
@@ -141,7 +141,7 @@ const updateProductLabelStatus = async (req, res) => {
     const label = await ProductLabel.findByIdAndUpdate(
       id,
       { status },
-      { new: true },
+      { returnDocument: "after" },
     );
     if (!label)
       return sendResponse(res, false, null, "Product label not found");

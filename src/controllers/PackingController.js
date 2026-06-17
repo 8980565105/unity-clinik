@@ -102,7 +102,7 @@ const updatePackingStatus = async (req, res) => {
     const packing = await Packing.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true },
+ { returnDocument: "after" },
     );
     if (!packing) return sendResponse(res, false, null, "Packing not found");
     sendResponse(res, true, packing, "Packing status updated successfully");

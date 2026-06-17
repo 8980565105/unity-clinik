@@ -187,9 +187,17 @@ const buildPipeline = ({
               },
             },
           },
+          // {
+          //   $lookup: {
+          //     from: "labels",
+          //     localField: "labels",
+          //     foreignField: "_id",
+          //     as: "labelsInfo",
+          //   },
+          // },
           {
             $lookup: {
-              from: "labels",
+              from: "productlabels",
               localField: "labels",
               foreignField: "_id",
               as: "labelsInfo",

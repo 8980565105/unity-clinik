@@ -52,7 +52,7 @@ const generateToken = (user) =>
   jwt.sign(
     { id: user._id, role: user.role, storeId: user.storeId || null },
     process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN},
+    { expiresIn: process.env.JWT_EXPIRES_IN },
   );
 
 const cleanDomain = (raw) => {
@@ -78,31 +78,27 @@ const cleanDomain = (raw) => {
 
 const findUserForOtp = async (email, rawDomain) => {
   const domain = cleanDomain(rawDomain);
-
-  if (domain) {
-    const store = await Store.findOne({ domain })
-      .select("_id name domain")
-      .lean();
-
-    if (store) {
-      const user = await User.findOne({ email, storeId: store._id });
-
-      if (user) {
-        const otpKey = `${email}__${store._id.toString()}`;
-        return { user, storeName: store.name, otpKey };
-      }
-    } else {
-      const allDomains = await Store.find({}).select("domain name").lean();
-    }
+  const adminOrOwner = await User.findOne({
+    email,
+    role: "admin",
+  });
+  if (adminOrOwner) {
+    const otpKey = `${email}__${adminOrOwner.storeId?.toString() || "global"}`;
+    return {
+      user: adminOrOwner,
+      storeName: process.env.STORE_NAME || "MyApp",
+      otpKey,
+    };
   }
 
-  const user = await User.findOne({
-    email,
-    role: { $in: ["admin", "store_owner"] },
-  });
-  if (user) {
-    const otpKey = `${email}__${user.storeId?.toString() || "global"}`;
-    return { user, storeName: process.env.STORE_NAME || "MyApp", otpKey };
+  const regularUser = await User.findOne({ email, role: "user" });
+  if (regularUser) {
+    const otpKey = `${email}__${regularUser.storeId?.toString() || "global"}`;
+    return {
+      user: regularUser,
+      storeName: process.env.STORE_NAME || "MyApp",
+      otpKey,
+    };
   }
 
   return { user: null, storeName: null, otpKey: null };
@@ -158,7 +154,7 @@ const register = async (req, res) => {
       name,
       email,
       password,
-      role = "store_user",
+      role = "user",
       mobile_number,
       domain,
       gender,
@@ -210,50 +206,6 @@ const register = async (req, res) => {
       const adminExists = await User.findOne({ role: "admin" });
       if (adminExists)
         return sendResponse(res, false, null, "Admin already exists");
-      const user = await User.create({
-        name,
-        email,
-        password,
-        role: "store_user",
-        domain: "",
-        storeId: null,
-        mobile_number: mobile_number || null,
-        gender: gender || undefined,
-        date_of_birth: date_of_birth || null,
-        address: cleanAddress,
-        profile_picture,
-      });
-      const token = generateToken(user);
-      const userObj = user.toObject();
-      delete userObj.password;
-      return sendResponse(
-        res,
-        true,
-        { token, user: userObj },
-        "Admin registered successfully",
-      );
-    }
-
-    if (role === "store_owner") {
-      if (!storeName || !storeEmail)
-        return sendResponse(
-          res,
-          false,
-          null,
-          "Store name and email are required",
-        );
-
-      const emailTaken = await User.findOne({
-        email,
-        role: { $in: ["admin", "store_owner"] },
-      });
-      if (emailTaken)
-        return sendResponse(
-          res,
-          false,
-          null,
-          "A store owner with this email already exists",
-        );
 
       const parsedTheme = parseIfString(storeTheme) || {};
       const parsedStoreAddr = parseIfString(storeAddress);
@@ -276,7 +228,9 @@ const register = async (req, res) => {
         name,
         email,
         password,
-        role,
+        role: "admin",
+        storeId: store._id,
+        domain: "",
         mobile_number: mobile_number || null,
         gender: gender || undefined,
         date_of_birth: date_of_birth || null,
@@ -288,15 +242,14 @@ const register = async (req, res) => {
       const userObj = user.toObject();
       delete userObj.password;
       userObj.storeId = store;
-      
+
       return sendResponse(
         res,
         true,
         { token, user: userObj },
-        "Store owner registered successfully",
+        "Admin registered successfully",
       );
     }
-
     const alreadyUser = await User.findOne({ email });
 
     if (alreadyUser) {
@@ -342,11 +295,6 @@ const register = async (req, res) => {
     }
     return sendResponse(res, false, null, err.message);
   }
-};
-
-const registerStoreOwner = async (req, res) => {
-  req.body.role = "store_owner";
-  return register(req, res);
 };
 
 const forgotPassword = async (req, res) => {
@@ -452,7 +400,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
   login,
   register,
-  registerStoreOwner,
+  // registerStoreOwner,
   forgotPassword,
   resetPassword,
 };

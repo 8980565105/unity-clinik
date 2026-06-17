@@ -38,12 +38,6 @@ const productSchema = new mongoose.Schema(
       unique: true,
     },
 
-    // discount_id: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Discount",
-    //   default: null,
-    // },
-
     status: {
       type: String,
       enum: ["active", "inactive"],

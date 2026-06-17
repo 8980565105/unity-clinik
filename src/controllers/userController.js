@@ -37,11 +37,8 @@ const getUsers = async (req, res) => {
 
     if (loggedInUser.role === "admin") {
       if (roleFilter) baseQuery.role = roleFilter;
-    } else if (loggedInUser.role === "store_owner") {
-      if (!loggedInUser.storeId)
-        return sendResponse(res, false, null, "Store not found for this owner");
-      baseQuery.storeId = loggedInUser.storeId;
-      baseQuery.role = "store_user";
+    } else if (loggedInUser.role === "user") {
+      baseQuery.role = "user";
     } else {
       return sendResponse(res, false, null, "Access denied: Unauthorized role");
     }
@@ -118,7 +115,7 @@ const createUser = async (req, res) => {
       name,
       email,
       password,
-      role = "store_user",
+      role = "user",
       mobile_number,
       addresses,
       gender,
@@ -147,21 +144,13 @@ const createUser = async (req, res) => {
       }
     }
 
-    if (!resolvedStoreId && req.user?.role === "store_owner") {
+    if (!resolvedStoreId && req.user?.role === "user") {
       resolvedStoreId = req.user.storeId;
       if (!storeDomain) {
         const store = await Store.findById(resolvedStoreId).select("domain");
         if (store) storeDomain = store.domain;
       }
     }
-
-    if (role === "store_user" && !resolvedStoreId)
-      return sendResponse(
-        res,
-        false,
-        null,
-        "storeId or domain is required for store_user",
-      );
 
     const exists = await User.findOne({ email });
 
@@ -172,8 +161,8 @@ const createUser = async (req, res) => {
     const newUser = await User.create({
       name,
       email,
-      password: password || "Temp1234!",
-      role: role || "store_user",
+      password: password,
+      role: role,
       mobile_number,
       addresses,
       gender,
@@ -225,7 +214,6 @@ const updateUser = async (req, res) => {
     if (email && email !== existingUser.email) {
       const dup = await User.findOne({
         email,
-        storeId: existingUser.storeId,
         _id: { $ne: userId },
       });
       if (dup)
@@ -257,8 +245,9 @@ const updateUser = async (req, res) => {
     if (role && req.user.role === "admin") updateData.role = role;
 
     const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
+      returnDocument: "after",
     }).select("-password");
+
     return sendResponse(
       res,
       true,
@@ -428,7 +417,7 @@ const updateOwnProfile = async (req, res) => {
     }
 
     const updatedUser = await User.findByIdAndUpdate(req.user._id, updateData, {
-      new: true,
+      returnDocument: "after",
     }).select("-password");
     return sendResponse(
       res,

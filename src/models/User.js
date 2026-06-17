@@ -69,8 +69,8 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["admin", "store_owner", "store_user"],
-      default: "store_user",
+      enum: ["admin", "user"],
+      default: "user",
     },
 
     domain: {
@@ -126,14 +126,13 @@ userSchema.index(
   },
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
   if (!this.isModified("password")) {
-    return next();
+    return;
   }
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-
 });
 
 module.exports = mongoose.model("User", userSchema);

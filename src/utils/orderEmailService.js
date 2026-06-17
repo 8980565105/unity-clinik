@@ -24,7 +24,7 @@ const getTransporter = () => {
 
   _transporter.verify((err) => {
     if (err) ("[Email] ❌ SMTP connection failed:", err.message);
-    else ("[Email] ✅ SMTP connected — ready to send emails");
+    else "[Email] ✅ SMTP connected — ready to send emails";
   });
 
   return _transporter;
@@ -43,8 +43,7 @@ const send = async (to, subject, html) => {
   if (!transport) return;
   try {
     const info = await transport.sendMail({ from: FROM(), to, subject, html });
-  } catch (err) {
-  }
+  } catch (err) {}
 };
 
 const rupee = (n) => `&#8377;${Number(n).toLocaleString("en-IN")}`;
@@ -439,7 +438,7 @@ ${preview ? `<div style="display:none;max-height:0;overflow:hidden;font-size:1px
 </html>`;
 
 // ═════════════════════════════════════════════════════════════════════════════
-// ADMIN NOTIFICATIONS
+// ADMIN new order
 // ═════════════════════════════════════════════════════════════════════════════
 const sendAdminNewOrder = async (order, customerName, customerEmail) => {
   const adminEmail = ADMIN();
@@ -467,6 +466,9 @@ const sendAdminNewOrder = async (order, customerName, customerEmail) => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order conform
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminOrderConfirmed = async (order, customerName) => {
   const adminEmail = ADMIN();
   if (!adminEmail) return;
@@ -491,6 +493,9 @@ const sendAdminOrderConfirmed = async (order, customerName) => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order packed
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminOrderPacked = async (order, customerName, warehouseName) => {
   const adminEmail = ADMIN();
   if (!adminEmail) return;
@@ -515,6 +520,9 @@ const sendAdminOrderPacked = async (order, customerName, warehouseName) => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order couriar
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminCourierAssigned = async (order, customerName) => {
   const adminEmail = ADMIN();
   if (!adminEmail) return;
@@ -542,6 +550,9 @@ const sendAdminCourierAssigned = async (order, customerName) => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order shipped
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminOrderShipped = async (order, customerName) => {
   const adminEmail = ADMIN();
   if (!adminEmail) return;
@@ -569,6 +580,9 @@ const sendAdminOrderShipped = async (order, customerName) => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order trakingupdate
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminTrackingUpdated = async (order, customerName, note = "") => {
   const adminEmail = ADMIN();
   if (!adminEmail) return;
@@ -595,6 +609,9 @@ const sendAdminTrackingUpdated = async (order, customerName, note = "") => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order delivered
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminOrderDelivered = async (order, customerName) => {
   const adminEmail = ADMIN();
   if (!adminEmail) return;
@@ -619,6 +636,9 @@ const sendAdminOrderDelivered = async (order, customerName) => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order cancelled
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminOrderCancelled = async (order, customerName) => {
   const adminEmail = ADMIN();
   if (!adminEmail) return;
@@ -644,6 +664,9 @@ const sendAdminOrderCancelled = async (order, customerName) => {
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// ADMIN order rto
+// ═════════════════════════════════════════════════════════════════════════════
 const sendAdminOrderRTO = async (
   order,
   customerName,
@@ -694,6 +717,41 @@ const sendAdminOrderRTO = async (
   );
 };
 
+// ═════════════════════════════════════════════════════════════════════════════
+// user create reviews ADMIN mail send
+// ═════════════════════════════════════════════════════════════════════════════
+const sendAdminNewReview = async (review, customerName, productName) => {
+  const adminEmail = ADMIN();
+  if (!adminEmail) return;
+
+  const stars =
+    "★".repeat(Number(review.rating || 0)) +
+    "☆".repeat(5 - Number(review.rating || 0));
+
+  const subject = `⭐ New Review Submitted — ${productName} | ${STORE()}`;
+
+  await send(
+    adminEmail,
+    subject,
+    adminBase(
+      `
+    <h2>New Customer Review ⭐</h2>
+    <span class="badge" style="background:#fef9c3;color:#713f12;">⏳ Pending Approval</span>
+    <div class="box">
+      <div class="row"><span class="lbl">Customer</span><span class="val">${e(customerName)}</span></div>
+      <div class="row"><span class="lbl">Product</span><span class="val">${e(productName)}</span></div>
+      <div class="row"><span class="lbl">Rating</span><span class="val" style="color:#f59e0b;font-size:16px">${stars} (${e(review.rating)}/5)</span></div>
+      <div class="row"><span class="lbl">Title</span><span class="val">${e(review.title)}</span></div>
+      ${review.comment ? `<div class="row"><span class="lbl">Comment</span><span class="val">${e(review.comment)}</span></div>` : ""}
+      <div class="row"><span class="lbl">Submitted On</span><span class="val">${e(fmtDate(review.createdAt || new Date()))}</span></div>
+    </div>
+    <p>Login to the admin panel to approve or reject this review.</p>
+    `,
+      `New review for ${productName} by ${customerName}`,
+    ),
+  );
+};
+
 module.exports = {
   // User emails
   sendOrderPlaced,
@@ -715,4 +773,6 @@ module.exports = {
   sendAdminOrderDelivered,
   sendAdminOrderCancelled,
   sendAdminOrderRTO,
+  // user create reviews mail send admin
+  sendAdminNewReview,
 };

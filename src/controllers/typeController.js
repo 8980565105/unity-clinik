@@ -111,7 +111,12 @@ const updateTypeStatus = async (req, res) => {
     if (!["active", "inactive"].includes(status))
       return sendResponse(res, false, null, "Invalid status value");
 
-    const type = await Type.findByIdAndUpdate(id, { status }, { new: true });
+    const type = await Type.findByIdAndUpdate(
+      id,
+      { status },
+
+      { returnDocument: "after" },
+    );
     if (!type) return sendResponse(res, false, null, "Type not found");
 
     sendResponse(res, true, type, "Type status updated successfully");

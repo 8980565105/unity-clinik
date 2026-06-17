@@ -3,12 +3,9 @@ const path = require("path");
 const fs = require("fs");
 const sharp = require("sharp");
 const ffmpeg = require("fluent-ffmpeg");
+const ffmpegStatic = require("ffmpeg-static");
 
-if (process.platform === "win32") {
-  ffmpeg.setFfmpegPath(
-    "C:\\Users\\LENOVO\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\\ffmpeg-8.1.1-full_build\\bin\\ffmpeg.exe",
-  );
-}
+ffmpeg.setFfmpegPath(ffmpegStatic);
 
 const uploadPath = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadPath)) {

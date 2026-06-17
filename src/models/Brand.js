@@ -5,7 +5,7 @@ const brandSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     slug: { type: String },
-    image_url: { type: String, required: true },
+    image_url: { type: String },
     description: { type: String, default: "" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
   },

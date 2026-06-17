@@ -3,7 +3,6 @@ const router = express.Router();
 const {
   login,
   register,
-  registerStoreOwner,
   forgotPassword,
   resetPassword,
 } = require("../controllers/authController");
@@ -15,8 +14,6 @@ router.post(
   upload.fields([{ name: "profile_picture", maxCount: 1 }]),
   register,
 );
-
-router.post("/register-store-owner", registerStoreOwner);
 
 router.post("/login", login);
 router.post("/forgot-password", forgotPassword);

@@ -24,13 +24,32 @@ const getCoupons = async (req, res) => {
 
     const userRole = req.user?.role;
 
-    if (!req.user || userRole === "store_user") {
+  
+
+    if (!req.user || userRole === "user") {
       query.status = "active";
-    } else if (userRole === "store_owner") {
-      query.createdBy = req.user.id;
-      if (status && ["active", "inactive"].includes(status)) {
-        query.status = status;
-      }
+      query.$and = [
+        {
+          $or: [
+            { end_date: { $exists: false } },
+            { end_date: null },
+            { end_date: { $gt: new Date() } },
+          ],
+        },
+        {
+          $or: [
+            { start_date: { $exists: false } },
+            { start_date: null },
+            { start_date: { $lte: new Date() } },
+          ],
+        },
+        {
+          $or: [
+            { usage_limit: null },
+            { $expr: { $lt: ["$used_count", "$usage_limit"] } },
+          ],
+        },
+      ];
     } else if (userRole === "admin") {
       if (status && ["active", "inactive"].includes(status)) {
         query.status = status;
@@ -117,7 +136,7 @@ const updateCoupon = async (req, res) => {
     const updatedCoupon = await Coupon.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!updatedCoupon)
@@ -141,7 +160,7 @@ const updateCouponStatus = async (req, res) => {
     const coupon = await Coupon.findByIdAndUpdate(
       id,
       { status },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!coupon) {

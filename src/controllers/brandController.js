@@ -88,7 +88,7 @@ const createBrand = async (req, res) => {
     description: description || "",
     status: status || "active",
     createdBy: req.user._id,
-    storeId, 
+    storeId,
   };
 
   try {
@@ -113,7 +113,7 @@ const updateBrand = async (req, res) => {
     const updatedBrand = await Brand.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true },
+      { returnDocument: "after" },
     );
 
     if (!updatedBrand) return sendResponse(res, false, null, "Brand not found");
@@ -131,7 +131,11 @@ const updateBrandStatus = async (req, res) => {
     if (!["active", "inactive"].includes(status))
       return sendResponse(res, false, null, "Invalid status value");
 
-    const brand = await Brand.findByIdAndUpdate(id, { status }, { new: true });
+    const brand = await Brand.findByIdAndUpdate(
+      id,
+      { status },
+      { returnDocument: "after" },
+    );
     if (!brand) return sendResponse(res, false, null, "Brand not found");
 
     sendResponse(res, true, brand, "Brand status updated successfully");

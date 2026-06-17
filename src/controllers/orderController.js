@@ -1548,7 +1548,7 @@ const updateOrderStatus = async (req, res) => {
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true },
+       { returnDocument: "after" },
     );
     if (!order) return sendResponse(res, false, null, "Order not found");
     sendResponse(res, true, order, "Order status updated successfully");

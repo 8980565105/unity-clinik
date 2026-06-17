@@ -1,6 +1,7 @@
 const CustomerReview = require("../models/CustomerReview");
 const Product = require("../models/Product");
 const { sendResponse } = require("../utils/response");
+const { sendAdminNewReview } = require("../utils/orderEmailService");
 
 const getReviews = async (req, res) => {
   try {
@@ -15,7 +16,7 @@ const getReviews = async (req, res) => {
     const download = isDownload.toLowerCase() === "true";
     const userRole = req.user?.role;
 
-    if (userRole !== "admin" && userRole !== "store_owner") {
+    if (userRole !== "admin") {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
     }
 
@@ -174,6 +175,17 @@ const createReview = async (req, res) => {
     const review = new CustomerReview(reviewData);
     const savedReview = await review.save();
 
+    try {
+      const userName = req.user?.name || "Customer";
+      const productName = product?.name || "Unknown Product";
+      await sendAdminNewReview(savedReview, userName, productName);
+    } catch (mailErr) {
+      console.error(
+        "[Review Mail] Failed to send admin notification:",
+        mailErr.message,
+      );
+    }
+
     sendResponse(res, true, savedReview, "Review submitted successfully.");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -191,7 +203,7 @@ const updateReview = async (req, res) => {
     const updatedReview = await CustomerReview.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true },
+      { returnDocument: "after" },
     )
       .populate("user_id", "name email")
       .populate("product_id", "name images");
@@ -219,7 +231,7 @@ const updateReviewStatus = async (req, res) => {
     const updated = await CustomerReview.findByIdAndUpdate(
       id,
       { is_approved, updatedAt: new Date() },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     sendResponse(res, true, updated, "Review status updated successfully");

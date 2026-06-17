@@ -1,7 +1,7 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const connectDB = require("./src/config/db");
-const { limiter, authLimiter } = require("./src/middlewares/rateLimiter");
+// const { limiter, authLimiter } = require("./src/middlewares/rateLimiter");
 const cors = require("cors");
 const { errorHandler } = require("./src/middlewares/errorMiddleware");
 const authRoutes = require("./src/routes/authRoutes");
@@ -40,8 +40,7 @@ connectDB();
 
 const app = express();
 
-const ALLOWED_ORIGINS = (process.env.ADMIN_ORIGINS || "")
-  .split(",")
+const ALLOWED_ORIGINS = process.env.ADMIN_ORIGINS.split(",")
   .map((o) => o.trim())
   .filter(Boolean);
 
@@ -61,6 +60,31 @@ app.use(
   }),
 );
 
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: {
+//       directives: {
+//         defaultSrc: ["'self'"],
+//         imgSrc: [
+//           "'self'",
+//           "data:",
+//           "blob:",
+//           "http://localhost:5000",
+//           "https://your-production-url.com",
+//         ],
+//         scriptSrc: ["'self'", "'unsafe-inline'"],
+//         styleSrc: ["'self'", "'unsafe-inline'"],
+//         connectSrc: [
+//           "'self'",
+//           "http://localhost:5000",
+//           "https://your-production-url.com",
+//         ],
+//       },
+//     },
+//     crossOriginResourcePolicy: { policy: "cross-origin" },
+//   }),
+// );
+
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -71,15 +95,21 @@ app.use(
           "data:",
           "blob:",
           "http://localhost:5000",
-          "https://your-production-url.com",
-        ],
+          "https://zyfolixowellness.tech",
+          "https://www.zyfolixowellness.tech",
+          "https://admin.zyfolixowellness.tech",
+          process.env.IMAGE_BASE_URL || "",
+        ].filter(Boolean),
         scriptSrc: ["'self'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         connectSrc: [
           "'self'",
           "http://localhost:5000",
-          "https://your-production-url.com",
-        ],
+          "https://zyfolixowellness.tech",
+          "https://www.zyfolixowellness.tech",
+          "https://admin.zyfolixowellness.tech",
+          process.env.IMAGE_BASE_URL || "",
+        ].filter(Boolean),
       },
     },
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -87,7 +117,7 @@ app.use(
 );
 
 app.use(express.json());
-app.use("/api", limiter);
+// app.use("/api", limiter);
 app.use(
   "/uploads",
   (req, res, next) => {
@@ -96,7 +126,7 @@ app.use(
   },
   express.static("uploads"),
 );
-app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/settings", settingRoutes);
 app.use("/api/webhooks", webhookRoutes);
 app.use("/api/users", userRoutes);
@@ -134,7 +164,7 @@ app.get("/sitemap.xml", async (req, res) => {
     status: "active",
   }).select("slug updatedAt");
 
-  const SITE_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+  const SITE_URL = process.env.FRONTEND_URL;
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
@@ -177,8 +207,6 @@ const ROUTE_SLUG_MAP = {
   "/home": "home",
   "/about": "about",
   "/contact-us": "contact-us",
-  "/faqs": "faqs",
-  "/offer": "offer",
   "/privacy": "privacy",
   "/refund-policy": "refund-policy",
   "/term-service": "term-service",
@@ -187,7 +215,6 @@ const ROUTE_SLUG_MAP = {
   "/results": "result",
 };
 
-// HTML ma meta tags inject karo
 function injectMeta(html, { title, description, image, url } = {}) {
   const fullTitle = title ? `${BRAND} | ${title}` : BRAND;
   const desc = (description || "").replace(/"/g, "&quot;").substring(0, 200);
@@ -249,7 +276,7 @@ if (fs.existsSync(FRONTEND_BUILD)) {
             title: product.name,
             description: product.description,
             image: buildImageUrl(product.images?.[0]),
-            url: `https://unityclinic.in/products/${productId}`,
+            url: `${process.env.FRONTEND_URL}/products/${productId}`,
           });
         }
         return res.send(html);
@@ -265,7 +292,7 @@ if (fs.existsSync(FRONTEND_BUILD)) {
             title: page.meta_title,
             description: page.meta_description,
             image: buildImageUrl(page.seo_image),
-            url: `https://unityclinic.in${pathname}`,
+            url: `${process.env.FRONTEND_URL}${pathname}`,
           });
         }
       }
