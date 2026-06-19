@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword, resetPassword } from "../features/auth/authThunk";
 import { clearPasswordResetState } from "../features/auth/authSlice";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import HeaderLogo from "../assets/logo.webp";
 
 const steps = [
@@ -341,7 +341,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
 
   return (
     <>
-      <Toaster />
 
       <div className="p-10 relative">
         <button

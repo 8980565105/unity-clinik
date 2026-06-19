@@ -23,18 +23,62 @@ function Solutionstagecard({ data, items = [], products = [] }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { token } = useSelector((state) => state.auth);
+  // const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
 
+  // const handleAddToCart = async (e, product) => {
+  //   e.stopPropagation();
+
+  //   if (!token) {
+  //     toast.error("Please login first");
+  //     return;
+  //   }
+
+  //   const variant = product?.variants?.[0];
+  //   if (!variant?._id) {
+  //     toast.error("Variant not found");
+  //     return;
+  //   }
+
+  //   if (variant?.stock_quantity === 0) {
+  //     toast.error("This product is out of stock");
+  //     return;
+  //   }
+
+  //   try {
+  //     let cartId = cart?._id || localStorage.getItem("cart_id");
+
+  //     if (!cartId) {
+  //       const user = JSON.parse(localStorage.getItem("user") || "{}");
+  //       const newCart = await dispatch(
+  //         createCart({ user_id: user._id }),
+  //       ).unwrap();
+  //       cartId = newCart._id;
+  //     }
+
+  //     await dispatch(
+  //       addToCart({
+  //         cart_id: cartId,
+  //         product_id: product._id,
+  //         variant_id: variant._id,
+  //         quantity: 1,
+  //       }),
+  //     ).unwrap();
+
+  //     await dispatch(fetchCart(cartId));
+  //     toast.success("Added to cart");
+  //     navigate("/cart");
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to add to cart");
+  //   }
+  // };
   const handleAddToCart = async (e, product) => {
+    e.preventDefault();
     e.stopPropagation();
 
-    if (!token) {
-      toast.error("Please login first");
-      return;
-    }
-
     const variant = product?.variants?.[0];
+
     if (!variant?._id) {
       toast.error("Variant not found");
       return;
@@ -49,11 +93,13 @@ function Solutionstagecard({ data, items = [], products = [] }) {
       let cartId = cart?._id || localStorage.getItem("cart_id");
 
       if (!cartId) {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        const newCart = await dispatch(
-          createCart({ user_id: user._id }),
-        ).unwrap();
+        const newCart = await dispatch(createCart()).unwrap();
+
         cartId = newCart._id;
+
+        if (cartId) {
+          localStorage.setItem("cart_id", cartId);
+        }
       }
 
       await dispatch(
@@ -65,8 +111,9 @@ function Solutionstagecard({ data, items = [], products = [] }) {
         }),
       ).unwrap();
 
-      await dispatch(fetchCart(cartId));
-      toast.success("Added to cart");
+      await dispatch(fetchCart());
+
+      toast.success("cart updated successfully!");
       navigate("/cart");
     } catch (err) {
       console.error(err);

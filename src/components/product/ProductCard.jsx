@@ -11,7 +11,7 @@ import {
   deleteCartItem,
 } from "../../features/cart/cartThunk";
 import { updateLocalQuantity } from "../../features/cart/cartSlice";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import Button from "../ui/Button";
 import StarRating from "../reviews/starrating";
 
@@ -51,11 +51,9 @@ function CountdownTimer({ endDate }) {
 
 export default function ProductCard({
   product,
-  // setShowLoginPopup,
   productLabels,
 }) {
   const dispatch = useDispatch();
-  // const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
   const { items = [] } = useSelector((state) => state.cart);
   const [addingToCart, setAddingToCart] = useState(false);
@@ -96,13 +94,11 @@ export default function ProductCard({
     };
   }, [product]);
 
-  // const [currentIndex] = useState(0);
 
   const displayedImage = product?.images
     ? getImageUrl(product.images)
     : "/placeholder.png";
 
-  // const { handleAddToWishlist } = useAddToWishlist(setShowLoginPopup);
   const wishlistProductIds = useSelector((state) => state.wishlist.productIds);
 
   const getVariantForColor = (product, colorCode) => {
@@ -118,49 +114,6 @@ export default function ProductCard({
   const isOutOfStock = currentVariant?.stock_quantity === 0;
   const priceData = getPriceData(product);
 
-  // const handleAddToCart = async () => {
-  //   if (!token) {
-  //     setShowLoginPopup(true);
-  //     return;
-  //   }
-  //   const variant = currentVariant;
-  //   // if (!variant?._id) return toast.error("Variant not found!");
-  //   if (variant?.stock_quantity === 0)
-  //     return toast.error("This pr4oduct is out of stock!");
-
-  //   setAddingToCart(true);
-  //   try {
-  //     let cartId = cart?._id || localStorage.getItem("cart_id");
-  //     if (!cartId) {
-  //       const user = JSON.parse(localStorage.getItem("user") || "{}");
-  //       if (!user?._id) {
-  //         toast.error("Please login again");
-  //         setShowLoginPopup(true);
-  //         return;
-  //       }
-  //       const newCart = await dispatch(
-  //         createCart({ user_id: user._id }),
-  //       ).unwrap();
-  //       cartId = newCart._id;
-  //     }
-  //     await dispatch(
-  //       addToCart({
-  //         cart_id: cartId,
-  //         product_id: product._id,
-  //         variant_id: variant._id,
-  //         quantity: 1,
-  //       }),
-  //     ).unwrap();
-  //     await dispatch(fetchCart(cartId));
-  //     toast.success("cart update Successfully!");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to add to cart");
-  //   } finally {
-  //     setAddingToCart(false);
-  //   }
-  // };
-
   const handleAddToCart = async () => {
     const variant = currentVariant;
     if (!variant?._id) return toast.error("Variant not found!");
@@ -168,11 +121,9 @@ export default function ProductCard({
 
     setAddingToCart(true);
     try {
-      // Get cart_id from redux state or localStorage
       let cartId = cart?._id || localStorage.getItem("cart_id");
 
       if (!cartId) {
-        // createCart thunk automatically uses guest_id or user_id
         const newCart = await dispatch(createCart()).unwrap();
         cartId = newCart._id;
       }
@@ -186,9 +137,8 @@ export default function ProductCard({
         }),
       ).unwrap();
 
-      // fetchCart thunk automatically uses guest_id or user_id
       await dispatch(fetchCart());
-      toast.success("Added to cart!");
+      toast.success("cart updated successfully!");
     } catch (err) {
       console.error(err);
       toast.error("Failed to add to cart");
@@ -204,7 +154,7 @@ export default function ProductCard({
     const cartId = cart?._id || localStorage.getItem("cart_id");
     if (!cartId) return;
     const newQty = cartItem.quantity + 1;
-    toast.success("Cart updated!");
+    toast.success("Cart updated successfully!");
     dispatch(updateLocalQuantity({ item_id: cartItem._id, quantity: newQty }));
     dispatch(
       updateCartItem({
@@ -237,7 +187,7 @@ export default function ProductCard({
         .then(() => dispatch(fetchCart()));
     } else {
       const newQty = cartItem.quantity - 1;
-      toast.success("Cart updated!");
+      toast.success("Cart updated successfully!");
       dispatch(
         updateLocalQuantity({ item_id: cartItem._id, quantity: newQty }),
       );
@@ -260,72 +210,8 @@ export default function ProductCard({
     }
   };
 
-  // const handleIncrease = async (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   if (!cartItem) return;
-  //   const cartId = cart?._id || localStorage.getItem("cart_id");
-  //   if (!cartId) return;
-  //   const newQty = cartItem.quantity + 1;
-  //   toast.success("cart updated Successfully!");
-  //   dispatch(updateLocalQuantity({ item_id: cartItem._id, quantity: newQty }));
-  //   dispatch(
-  //     updateCartItem({
-  //       cart_id: cartId,
-  //       item_id: cartItem._id,
-  //       quantity: newQty,
-  //     }),
-  //   )
-  //     .unwrap()
-  //     .catch(() => {
-  //       dispatch(
-  //         updateLocalQuantity({
-  //           item_id: cartItem._id,
-  //           quantity: cartItem.quantity,
-  //         }),
-  //       );
-  //     });
-  // };
-
-  // const handleDecrease = async (e) => {
-  //   e.preventDefault();
-  //   e.stopPropagation();
-  //   if (!cartItem) return;
-  //   const cartId = cart?._id || localStorage.getItem("cart_id");
-  //   if (!cartId) return;
-
-  //   if (cartItem.quantity <= 1) {
-  //     dispatch(deleteCartItem({ cart_id: cartId, item_id: cartItem._id }))
-  //       .unwrap()
-  //       .then(() => dispatch(fetchCart(cartId)));
-  //   } else {
-  //     const newQty = cartItem.quantity - 1;
-  //     toast.success("cart updated Successfully!");
-  //     dispatch(
-  //       updateLocalQuantity({ item_id: cartItem._id, quantity: newQty }),
-  //     );
-  //     dispatch(
-  //       updateCartItem({
-  //         cart_id: cartId,
-  //         item_id: cartItem._id,
-  //         quantity: newQty,
-  //       }),
-  //     )
-  //       .unwrap()
-  //       .catch(() => {
-  //         dispatch(
-  //           updateLocalQuantity({
-  //             item_id: cartItem._id,
-  //             quantity: cartItem.quantity,
-  //           }),
-  //         );
-  //       });
-  //   }
-  // };
-
   return (
     <>
-      <Toaster position="top-center" />
       <Link to={`/products/${product._id}`} aria-label="View product">
         <div className="border border-1 p-1 md:p-3 w-full transition-all group bg-white h-full">
           <div className="relative">

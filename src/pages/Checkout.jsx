@@ -11,7 +11,7 @@ import { Truck, ArrowRight } from "lucide-react";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import Button from "../components/ui/Button";
 import cart from "../assets/emptycart.webp";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { clearCart } from "../features/cart/cartSlice";
 import {
   createPayment,
@@ -33,7 +33,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const { items = [] } = useSelector((state) => state.cart);
+  const { items = [], loading } = useSelector((state) => state.cart);
   const { pages } = useSelector((state) => state.pages);
   const { loading: paymentLoading } = useSelector((state) => state.payments);
   const { user } = useSelector((state) => state.auth);
@@ -406,7 +406,7 @@ export default function Checkout() {
     else await handleRazorpayAmount(userLS, orderId, total, selectedPayment);
   };
 
-  if (items.length === 0) {
+  if (!loading && items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white p-8 rounded-3xl shadow-sm text-center max-w-md w-full">
@@ -432,8 +432,6 @@ export default function Checkout() {
   return (
     <>
       <div className="pb-24">
-        <Toaster position="top-center" />
-
         <SEO
           title={checkoutPage?.meta_title}
           description={checkoutPage?.meta_description}
@@ -457,7 +455,11 @@ export default function Checkout() {
                   </span>
                 </div>
               )}
-              <CheckoutForm formData={formData} setFormData={setFormData} />
+              <CheckoutForm
+                formData={formData}
+                setFormData={setFormData}
+                setShowLoginPopup={setShowLoginPopup}
+              />
             </div>
 
             <div className="custom-lg:sticky custom-lg:top-[100px]">

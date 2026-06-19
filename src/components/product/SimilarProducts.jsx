@@ -22,7 +22,6 @@ const GAP = getGap();
 export default function SimilarProducts({
   product,
   products = [],
-  setShowLoginPopup,
   productLabels,
 }) {
   const containerRef = useRef(null);
@@ -171,7 +170,6 @@ export default function SimilarProducts({
                   <Suspense>
                     <ProductCard
                       product={p}
-                      setShowLoginPopup={setShowLoginPopup}
                       productLabels={productLabels}
                     />
                   </Suspense>

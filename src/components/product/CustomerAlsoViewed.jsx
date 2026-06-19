@@ -24,7 +24,6 @@ const GAP = getGap();
 
 export default function CustomerAlsoViewed({
   currentProductId = null,
-  setShowLoginPopup,
   productLabels,
 }) {
   const { products = [] } = useSelector((state) => state.products);
@@ -172,7 +171,6 @@ export default function CustomerAlsoViewed({
                   <Suspense>
                     <ProductCard
                       product={product}
-                      setShowLoginPopup={setShowLoginPopup}
                       productLabels={productLabels}
                     />
                   </Suspense>

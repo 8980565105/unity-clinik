@@ -4,7 +4,7 @@ import { X, Eye, EyeOff } from "lucide-react";
 import Button from "../components/ui/Button";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../features/auth/authThunk";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import HeaderLogo from "../assets/logo.webp";
 import LoginForm from "./Login";
 
@@ -80,7 +80,6 @@ const RegistrationForm = ({ onClose }) => {
 
   return (
     <>
-      <Toaster />
 
       <div
         className="px-5 py-16 relative md:mx-0 md:px-20 "

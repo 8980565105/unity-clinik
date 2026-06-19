@@ -19,7 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUserOrders, cancelOrder } from "../../features/orders/orderThunk";
 import { addReview } from "../../features/reivews/reviewsThunk";
 import { resetReviewStatus } from "../../features/reivews/reviewsSlice";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import OrderTracking from "../../pages/orderTraking";
 import Loding from "../loding/loding";
 import { Link } from "react-router-dom";
@@ -466,8 +466,6 @@ export default function Orders() {
         description={homePage?.meta_description}
         image={`${process.env.REACT_APP_API_URL_IMAGE}${homePage?.seo_image}`}
       />
-
-      <Toaster position="top-center" />
 
       <Section>
         <Row>

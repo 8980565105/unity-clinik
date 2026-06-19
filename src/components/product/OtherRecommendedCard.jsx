@@ -11,16 +11,16 @@ import {
 import { updateLocalQuantity } from "../../features/cart/cartSlice";
 import Button from "../ui/Button";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function OtherRecommendedCard({
   product,
   badge,
   subtitle,
-  setShowLoginPopup,
+
 }) {
   const dispatch = useDispatch();
 
-  const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
   const { items = [] } = useSelector((state) => state.cart);
 
@@ -50,25 +50,23 @@ export default function OtherRecommendedCard({
     : getImageUrl(product.images);
 
   const handleAdd = async () => {
-    if (!token) {
-      setShowLoginPopup(true);
-      return;
-    }
-
     if (isOutOfStock) return;
+
     setAddingToCart(true);
+
+    toast.success("Cart updated successfully!");
 
     try {
       let cartId = cart?._id || localStorage.getItem("cart_id");
 
       if (!cartId) {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-        const newCart = await dispatch(
-          createCart({ user_id: user._id }),
-        ).unwrap();
+        const newCart = await dispatch(createCart()).unwrap();
 
         cartId = newCart._id;
+
+        if (cartId) {
+          localStorage.setItem("cart_id", cartId);
+        }
       }
 
       await dispatch(
@@ -80,7 +78,7 @@ export default function OtherRecommendedCard({
         }),
       ).unwrap();
 
-      dispatch(fetchCart(cartId));
+      await dispatch(fetchCart());
     } finally {
       setAddingToCart(false);
     }
@@ -97,6 +95,7 @@ export default function OtherRecommendedCard({
     if (!cartId) return;
 
     const newQty = cartItem.quantity + 1;
+    toast.success("Cart updated successfully!");
 
     dispatch(
       updateLocalQuantity({
@@ -144,6 +143,7 @@ export default function OtherRecommendedCard({
         .then(() => dispatch(fetchCart(cartId)));
     } else {
       const newQty = cartItem.quantity - 1;
+      toast.success("Cart updated successfully!");
 
       dispatch(
         updateLocalQuantity({
@@ -172,9 +172,10 @@ export default function OtherRecommendedCard({
   };
 
   return (
-    <Link to={`/products/${product._id}`}>
-      <div
-        className="
+    <>
+      <Link to={`/products/${product._id}`}>
+        <div
+          className="
     relative
     bg-white
     rounded-[24px]
@@ -186,10 +187,10 @@ export default function OtherRecommendedCard({
     transition-all
     hover:shadow-md
   "
-      >
-        {badge && (
-          <div
-            className="
+        >
+          {badge && (
+            <div
+              className="
              absolute
       -top-3
       left-1/2
@@ -204,53 +205,53 @@ export default function OtherRecommendedCard({
       py-1
       rounded-lg
       z-10"
-          >
-            {badge}
-          </div>
-        )}
+            >
+              {badge}
+            </div>
+          )}
 
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex justify-center md:block">
-            <img
-              src={image}
-              alt={product.name}
-              className="
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex justify-center md:block">
+              <img
+                src={image}
+                alt={product.name}
+                className="
           w-[110px]
           h-[110px]
           object-contain
           mx-auto
           md:mx-0
         "
-            />
-          </div>
-          <div className="flex-1 flex flex-col">
-            <h3
-              className="
+              />
+            </div>
+            <div className="flex-1 flex flex-col">
+              <h3
+                className="
           text-[18px]
           font-medium
           leading-tight
           line-clamp-2
           h-[50px] md:h-auto
         "
-            >
-              {product.name}
-            </h3>
+              >
+                {product.name}
+              </h3>
 
-            <div className="flex-cols md:flex-row items-center gap-2 mt-2">
-              <div className="flex items-center ">
-                <span className="font-bold text-[20px] md:text-[30px]">
-                  ₹{offerPrice}
-                </span>
-
-                {originalPrice > offerPrice && (
-                  <span className="line-through text-[#bdbdbd]">
-                    ₹{originalPrice}
+              <div className="flex-cols md:flex-row items-center gap-2 mt-2">
+                <div className="flex items-center ">
+                  <span className="font-bold text-[20px] md:text-[30px]">
+                    ₹{offerPrice}
                   </span>
-                )}
-              </div>
-              {discount > 0 && (
-                <span
-                  className="
+
+                  {originalPrice > offerPrice && (
+                    <span className="line-through text-[#bdbdbd]">
+                      ₹{originalPrice}
+                    </span>
+                  )}
+                </div>
+                {discount > 0 && (
+                  <span
+                    className="
               bg-primary
               text-white
               text-xs
@@ -258,78 +259,79 @@ export default function OtherRecommendedCard({
               py-1
               rounded-md
             "
-                >
-                  {discount}% Off
-                </span>
-              )}
-            </div>
+                  >
+                    {discount}% Off
+                  </span>
+                )}
+              </div>
 
-            {subtitle && (
-              <p
-                className="
+              {subtitle && (
+                <p
+                  className="
             text-primary
             font-semibold
             mt-2
             text-[16px]
           "
-              >
-                {subtitle}
-              </p>
-            )}
-
-            <div className="mt-auto">
-              {quantity === 0 ? (
-                <Button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleAdd();
-                  }}
-                  aria-label="add to cart"
-                  variant="common"
-                  disabled={addingToCart || isOutOfStock}
-                  className="
-             mt-3 rounded-[12px] w-full lg:w-[200px] border text-primary hover:text-white flex items-center justify-center gap-2 transition"
                 >
-                  {addingToCart
-                    ? "Adding..."
-                    : isOutOfStock
-                      ? "Out of Stock"
-                      : "ADD"}
-                </Button>
-              ) : (
-                <div
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  className="
+                  {subtitle}
+                </p>
+              )}
+
+              <div className="mt-auto">
+                {quantity === 0 ? (
+                  <Button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleAdd();
+                    }}
+                    aria-label="add to cart"
+                    variant="common"
+                    disabled={addingToCart || isOutOfStock}
+                    className="
+             mt-3 rounded-[12px] w-full lg:w-[200px] border text-primary hover:text-white flex items-center justify-center gap-2 transition"
+                  >
+                    {addingToCart
+                      ? "Adding..."
+                      : isOutOfStock
+                        ? "Out of Stock"
+                        : "ADD"}
+                  </Button>
+                ) : (
+                  <div
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    className="
              mt-3 w-[200px] border border-primary rounded-full flex items-center justify-between overflow-hidden
             "
-                >
-                  <Button
-                    className="flex-1 text-primary transition text-xl font-bold border-r border-primary"
-                    onClick={handleDecrease}
                   >
-                    -
-                  </Button>
+                    <Button
+                      className="flex-1 text-primary transition text-xl font-bold border-r !rounded-[0px] border-primary"
+                      onClick={handleDecrease}
+                    >
+                      -
+                    </Button>
 
-                  <span className="flex-1 text-center text-[15px] font-semibold text-black px-5">
-                    {quantity}
-                  </span>
+                    <span className="flex-1 text-center text-[15px] font-semibold text-black px-5">
+                      {quantity}
+                    </span>
 
-                  <Button
-                    className="flex-1  text-primary border-l border-primary transition text-xl font-bold"
-                    onClick={handleIncrease}
-                  >
-                    +
-                  </Button>
-                </div>
-              )}
+                    <Button
+                      className="flex-1  text-primary border-l !rounded-[0px]  border-primary transition text-xl font-bold"
+                      onClick={handleIncrease}
+                    >
+                      +
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </>
   );
 }

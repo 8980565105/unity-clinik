@@ -5,7 +5,7 @@ import {
   fetchOwnProfile,
   updateOwnProfile,
 } from "../../features/auth/authThunk";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
@@ -146,7 +146,6 @@ function AccountDetails() {
 
   return (
     <>
-      <Toaster />
       <p className="font-medium mb-3">Account Settings</p>
 
       <div className="space-y-4">

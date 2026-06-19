@@ -4,7 +4,7 @@ import Button from "../ui/Button";
 import Section from "../ui/Section";
 import { createContact } from "../../features/contact/contactThunk";
 import { useDispatch } from "react-redux";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 export default function ContactSection() {
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({
@@ -31,7 +31,6 @@ export default function ContactSection() {
 
   return (
     <Section className="w-full bg-white mb-[25px] md:mb-[50px]">
-      <Toaster position="top-center" />
       <Row className="grid grid-cols-1 md:grid-cols-2 gap-[30px]">
         <div>
           <h2 className="text-[36px] font-semibold text-dark mb-[18px]">

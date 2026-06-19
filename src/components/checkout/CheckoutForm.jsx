@@ -11,7 +11,6 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getImageUrl } from "../utils/helper";
-// import axios from "axios";
 import toast from "react-hot-toast";
 import Button from "../ui/Button";
 import api from "../../services/api";
@@ -135,50 +134,6 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const required = [
-  //     "fullName",
-  //     "phone",
-  //     "email",
-  //     "house",
-  //     "street",
-  //     "city",
-  //     "state",
-  //     "zip_code",
-  //   ];
-  //   for (const key of required) {
-  //     if (!form[key]?.trim()) {
-  //       toast.error(`Please fill: ${key}`);
-  //       return;
-  //     }
-  //   }
-  //   try {
-  //     setLoading(true);
-  //     // const token = localStorage.getItem("token");
-  //     // const updated = [...existingAddresses, form];
-  //     const updated = [
-  //       ...(Array.isArray(existingAddresses) ? existingAddresses : []),
-  //       form,
-  //     ];
-  //     // await axios.put(
-  //     //   Basic_url + "/users/me",
-  //     //   { addresses: updated },
-  //     //   { headers: { Authorization: `Bearer ${token}` } },
-  //     // );
-  //     await api.put("/users/me", {
-  //       addresses: updated,
-  //     });
-  //     toast.success("Address saved!");
-  //     onSaved(updated, updated.length - 1);
-  //     onClose();
-  //   } catch {
-  //     toast.error("Failed to save address");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -274,7 +229,6 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
                     name={name}
                     placeholder={placeholder}
                     value={form[name]}
-                    // onChange={handleChange}
                     onChange={(e) => {
                       if (name === "phone") {
                         const value = e.target.value.replace(/\D/g, "");
@@ -465,9 +419,13 @@ function ReviewOrder({ items }) {
   );
 }
 
-export default function CheckoutForm({ formData, setFormData }) {
+export default function CheckoutForm({
+  formData,
+  setFormData,
+  setShowLoginPopup,
+}) {
   const { items = [] } = useSelector((state) => state.cart);
-
+  const { user } = useSelector((state) => state.auth);
   const [addresses, setAddresses] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
@@ -520,6 +478,16 @@ export default function CheckoutForm({ formData, setFormData }) {
   };
 
   const selectedAddress = addresses[selectedIndex] || null;
+  const handleAddAddressClick = () => {
+    const userLS = JSON.parse(localStorage.getItem("user"));
+
+    if (!userLS?._id) {
+      setShowLoginPopup(true);
+      return;
+    }
+
+    setShowPopup(true);
+  };
 
   return (
     <div className="flex-1">
@@ -543,7 +511,7 @@ export default function CheckoutForm({ formData, setFormData }) {
             </div>
             <Button
               variant="outline"
-              onClick={() => setShowPopup(true)}
+              onClick={handleAddAddressClick}
               className="flex items-center gap-1.5 !min-w-[140px]  font-semibold text-[13px] hover:underline"
             >
               <Plus size={15} />
@@ -569,7 +537,7 @@ export default function CheckoutForm({ formData, setFormData }) {
               </p>
               <Button
                 variant="common"
-                onClick={() => setShowPopup(true)}
+                onClick={handleAddAddressClick}
                 className="inline-flex items-center gap-2  text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors"
               >
                 <Plus size={15} />

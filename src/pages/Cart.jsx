@@ -29,26 +29,18 @@ export default function Cart() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const dispatch = useDispatch();
   const { coupons = [] } = useSelector((state) => state.coupons);
-  const { items = [] } = useSelector((state) => state.cart);
   const settings = useSelector((state) => state.systemseting.data);
   const { pages } = useSelector((state) => state.pages);
   const cartPage = pages?.find((page) => page.slug === "cart");
+  const { items = [], loading } = useSelector((state) => state.cart);
 
   useEffect(() => {
     if (location.state?.openCouponDrawer) {
       setDrawerOpen(true);
     }
   }, [location.state]);
-
-  // useEffect(() => {
-  //   const cartId = localStorage.getItem("cart_id");
-
-  //   if (cartId) {
-  //     dispatch(fetchCart(cartId));
-  //   }
-  // }, [dispatch]);
   useEffect(() => {
-    dispatch(fetchCart()); // thunk handles guest_id vs user_id automatically
+    dispatch(fetchCart());
   }, [dispatch]);
 
   useEffect(() => {
@@ -130,7 +122,7 @@ export default function Cart() {
   const totalSaved = mrpTotal - subtotal + couponDiscountAmount;
   const orderTotal = subtotal - couponDiscountAmount;
 
-  if (items.length === 0) {
+  if (!loading && items.length === 0) {
     return (
       <>
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">

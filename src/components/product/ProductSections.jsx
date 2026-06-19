@@ -183,7 +183,6 @@ lg:w-[485px]
 
 export default function ProductSections({
   sections,
-  setShowLoginPopup,
   productLabels,
 }) {
   const activeSections = (sections || []).filter(
@@ -197,7 +196,6 @@ export default function ProductSections({
         <SectionRenderer
           key={idx}
           section={section}
-          setShowLoginPopup={setShowLoginPopup}
           productLabels={productLabels}
         />
       ))}
@@ -205,7 +203,7 @@ export default function ProductSections({
   );
 }
 
-export function SectionRenderer({ section, setShowLoginPopup, productLabels }) {
+export function SectionRenderer({ section, productLabels }) {
   const { type, data } = section;
   const items = data?.items || [];
   const scrollRef = useRef(null);
@@ -1069,7 +1067,6 @@ export function SectionRenderer({ section, setShowLoginPopup, productLabels }) {
                 <SwiperSlide key={product._id} className="">
                   <ProductCard
                     product={product}
-                    setShowLoginPopup={setShowLoginPopup}
                     productLabels={productLabels}
                   />
                 </SwiperSlide>
@@ -1250,7 +1247,6 @@ export function SectionRenderer({ section, setShowLoginPopup, productLabels }) {
                   product={product}
                   badge={product.badge}
                   subtitle={product.subtitle}
-                  setShowLoginPopup={setShowLoginPopup}
                 />
               ))}
             </div>
@@ -1265,7 +1261,6 @@ export function SectionRenderer({ section, setShowLoginPopup, productLabels }) {
                       product={product}
                       badge={product.badge}
                       subtitle={product.subtitle}
-                      setShowLoginPopup={setShowLoginPopup}
                     />
                   </div>
                 ))}

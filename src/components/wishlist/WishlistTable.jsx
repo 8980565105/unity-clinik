@@ -15,7 +15,7 @@ import {
   createCart,
   updateCartItem,
 } from "../../features/cart/cartThunk";
-import { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const Wishlist = ({ product }) => {
   const [quantities, setQuantities] = useState([]);
@@ -76,7 +76,7 @@ const Wishlist = ({ product }) => {
 
   const handleAddToCart = async (item, index) => {
     if (!token) {
-      Toaster("Please login to add items to cart");
+      toast("Please login to add items to cart");
       navigate("/login");
       return;
     }
@@ -87,7 +87,7 @@ const Wishlist = ({ product }) => {
     console.log("Adding to cart with quantity:", selectedQuantity);
 
     if (!product_id || !variant_id) {
-      Toaster("Product or variant not found!");
+      toast("Product or variant not found!");
       return;
     }
 
@@ -104,7 +104,7 @@ const Wishlist = ({ product }) => {
           cart_id = cartResult._id;
           localStorage.setItem("cart_id", cart_id);
         } catch {
-          Toaster("Could not create cart. Please try again.");
+          toast("Could not create cart. Please try again.");
           setAddingToCart(null);
           return;
         }
@@ -149,7 +149,7 @@ const Wishlist = ({ product }) => {
       navigate("/cart");
     } catch (err) {
       console.error("Add to cart error:", err);
-      Toaster(
+      toast(
         typeof err === "string"
           ? err
           : err?.message || "Failed to add item to cart. Please try again.",
@@ -200,12 +200,12 @@ const Wishlist = ({ product }) => {
       dispatch(bulkDeleteWishlistItems(selectedItems))
         .unwrap()
         .then(() => {
-          Toaster("Selected wishlist items deleted successfully!");
+          toast("Selected wishlist items deleted successfully!");
           setSelectedItems([]);
           dispatch(fetchWishlistByUser(userId));
         })
         .catch(() => {
-          Toaster("Bulk delete failed. Try again.");
+          toast("Bulk delete failed. Try again.");
         });
     }
   }, [selectedItems]);

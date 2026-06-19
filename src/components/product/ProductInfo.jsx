@@ -10,7 +10,7 @@ import {
   fetchCart,
 } from "../../features/cart/cartThunk";
 import { useAddToWishlist } from "../wishlist/handleAddTowishlist";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { getImageUrl } from "../utils/helper";
 import Offer from "./offerdescount";
 import BuyNowButton from "./BuyNowButton";
@@ -273,7 +273,7 @@ export default function ProductInfo({
 
       await dispatch(fetchCart());
 
-      toast.success("Added to cart!");
+      toast.success("cart updated successfully!");
       setIsAddedToCart(true);
     } catch (err) {
       console.error(err);
@@ -562,7 +562,6 @@ export default function ProductInfo({
 
   return (
     <div>
-      <Toaster position="top-center" reverseOrder={false} />
 
       <p className="text-theme pt-[20px] md:pt-0">
         No Side Effects <span className="text-[#BCBCBC]"> | </span> Clinically

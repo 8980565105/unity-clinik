@@ -2,13 +2,11 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import LoginForm from "./Login.jsx";
-import { Toaster } from "react-hot-toast";
 import SEO from "../components/seo/seo.js";
 import Hero1 from "../components/home/hero1.jsx";
 import Section from "../components/ui/Section.jsx";
 import Loding from "../components/loding/loding.jsx";
 import { getImageUrl } from "../components/utils/helper.js";
-// import { fetchProductLabels } from "../features/productLabels/productlabelsThunk.js";
 
 const CategoriesSection = lazy(
   () => import("../components/home/CategoriesSection"),
@@ -83,21 +81,18 @@ const Home = () => {
         image={`${process.env.REACT_APP_API_URL_IMAGE}${homePage?.seo_image}`}
       />
       <div className="text-center">
-        <Toaster position="top center" />
-
         <Hero1 />
 
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <SuccessStorySection />
         </Suspense>
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <Bestsellers
-            setShowLoginPopup={setShowLoginPopup}
-            // productLabels={productLabels}
+          // setShowLoginPopup={setShowLoginPopup}
           />
         </Suspense>
 
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <BannerSlider />
         </Suspense>
 
@@ -119,47 +114,38 @@ const Home = () => {
           </Section>
         )}
 
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <CategoriesSection />
         </Suspense>
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <ShortBanner />
         </Suspense>
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <Topdoctor />
         </Suspense>
-        <Suspense fallback={<Loding />}>
-          <TrendingClothes
-            setShowLoginPopup={setShowLoginPopup}
-            // productLabels={productLabels}
-          />
+        <Suspense>
+          <TrendingClothes />
         </Suspense>
 
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <Banner4 />
         </Suspense>
-        <Suspense fallback={<Loding />}>
-          <FeaturedProducts
-            setShowLoginPopup={setShowLoginPopup}
-            // productLabels={productLabels}
-          />
+        <Suspense>
+          <FeaturedProducts />
         </Suspense>
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <Countsection />
         </Suspense>
-        <Suspense fallback={<Loding />}>
-          <RecommendedSection
-            setShowLoginPopup={setShowLoginPopup}
-            // productLabels={productLabels}
-          />
+        <Suspense>
+          <RecommendedSection />
         </Suspense>
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <ContactHome />
         </Suspense>
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <Customerreviews />
         </Suspense>
-        <Suspense fallback={<Loding />}>
+        <Suspense>
           <FeatureSection />
         </Suspense>
       </div>

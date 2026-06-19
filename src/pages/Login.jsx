@@ -5,7 +5,7 @@ import { loginUser } from "../features/auth/authThunk";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import HeaderLogo from "../assets/logo.webp";
 
 const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
@@ -95,7 +95,6 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
 
   return (
     <>
-      <Toaster />
 
       <div className="p-10 relative">
         <button

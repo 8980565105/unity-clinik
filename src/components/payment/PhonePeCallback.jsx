@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { verifyPhonePePayment } from "../../features/payments/paymentThunk";
 import { clearCart } from "../../features/cart/cartSlice";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 export default function PhonePeCallback() {
   const navigate = useNavigate();
@@ -45,7 +45,6 @@ export default function PhonePeCallback() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <Toaster position="top-center" />
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
         <p className="text-lg font-medium">Verifying PhonePe payment...</p>

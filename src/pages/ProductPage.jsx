@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { fetchProductById } from "../features/products/productsThunk";
@@ -9,8 +9,6 @@ import Breadcrumb from "../components/ui/Breadcrumb";
 import ProductGallery from "../components/product/ProductGallery";
 import ProductInfo from "../components/product/ProductInfo";
 import ProductTabs from "../components/product/ProductTabs";
-import SimilarProducts from "../components/product/SimilarProducts";
-import CustomerAlsoViewed from "../components/product/CustomerAlsoViewed";
 import { addRecentlyViewed } from "../components/utils/recentlyViewed";
 import LoginForm from "./Login";
 import SEO from "../components/seo/seo";
@@ -24,7 +22,13 @@ import Productreviews from "../components/product/productreviews";
 import { useNavigate } from "react-router-dom";
 import BuyNowButton from "../components/product/BuyNowButton";
 import Button from "../components/ui/Button";
+const CustomerAlsoViewed = lazy(
+  () => import("../components/product/CustomerAlsoViewed"),
+);
 
+const SimilarProducts = lazy(
+  () => import("../components/product/SimilarProducts"),
+);
 export default function Product() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -76,7 +80,6 @@ export default function Product() {
           <Breadcrumb />
         </Row>
         <Row className="grid grid-cols-1 lg:grid-cols-[48%_52%] gap-[5px] md:gap-[40px] items-start">
-          {/* <div className="lg:sticky lg:top-[100px] self-start h-fit"> */}
           <div className="lg:sticky lg:top-[100px] self-start h-fit z-[9999]">
             <ProductGallery
               product={product}
@@ -114,12 +117,10 @@ export default function Product() {
           setShowLoginPopup={setShowLoginPopup}
         />
       )}
-
-      <SimilarProducts
-        product={product}
-        products={products}
-        setShowLoginPopup={setShowLoginPopup}
-      />
+      
+      <Suspense>
+        <SimilarProducts product={product} products={products} />
+      </Suspense>
 
       <ProductSections
         sections={remainingSections}
@@ -130,9 +131,12 @@ export default function Product() {
         productId={product?._id}
         setShowLoginPopup={setShowLoginPopup}
       />
-
-      <CustomerAlsoViewed products={products} currentProductId={product?._id} />
-
+      <Suspense>
+        <CustomerAlsoViewed
+          products={products}
+          currentProductId={product?._id}
+        />
+      </Suspense>
       {showStickyBar && (
         <div className="fixed  bottom-0 left-0 right-0 z-[10] bg-white border-t shadow-xl">
           <div className="hidden lg:flex w-[90%] md:w-[90%] lg:max-w-[1440px] mx-auto items-center justify-between px-6 py-3">

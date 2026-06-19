@@ -1,104 +1,10 @@
-// import { createAsyncThunk } from "@reduxjs/toolkit";
-// import api from "../../services/api";
-// import { ROUTES } from "../../services/routes";
-
-// const getAuthHeaders = () => ({
-//   "Content-Type": "application/json",
-//   Authorization: `Bearer ${localStorage.getItem("token")}`,
-// });
-
-// export const createCart = createAsyncThunk(
-//   "cart/createCart",
-//   async ({ user_id }, { rejectWithValue }) => {
-//     try {
-//       const response = await api.post(
-//         ROUTES.cart.getAll,
-//         { user_id },
-//         { headers: getAuthHeaders() },
-//       );
-
-//       const cart = response.data.data;
-//       localStorage.setItem("cart_id", cart._id);
-//       return cart;
-//     } catch (error) {
-//       return rejectWithValue(error.response?.data || "Create cart failed");
-//     }
-//   },
-// );
-
-// export const fetchCart = createAsyncThunk(
-//   "cart/fetchCart",
-//   async (cart_id, { rejectWithValue }) => {
-//     try {
-//       const res = await api.get(ROUTES.cart.getById(cart_id), {
-//         headers: getAuthHeaders(),
-//       });
-//       return res.data.data;
-//     } catch (error) {
-//       return rejectWithValue(error.response?.data || "Fetch cart failed");
-//     }
-//   },
-// );
-
-// export const addToCart = createAsyncThunk(
-//   "cart/addToCart",
-//   async (payload, { rejectWithValue }) => {
-//     try {
-      
-//       const res = await api.post(ROUTES.cart.addItem, payload, {
-//         headers: getAuthHeaders(),
-//       });
-
-//       return res.data.data;
-//     } catch (err) {
-//       return rejectWithValue(err.response?.data || "Add to cart failed");
-//     }
-//   },
-// );
-
-// export const updateCartItem = createAsyncThunk(
-//   "cart/updateCartItem",
-//   async ({ cart_id, item_id, quantity }, { rejectWithValue }) => {
-//     try {
-//       const res = await api.put(
-//         ROUTES.cart.updateItem,
-//         { cart_id, item_id, quantity },
-//         { headers: getAuthHeaders() },
-//       );
-//       return res.data.data;
-//     } catch (error) {
-//       return rejectWithValue(
-//         error.response?.data?.message || "Failed to update item",
-//       );
-//     }
-//   },
-// );
-
-// export const deleteCartItem = createAsyncThunk(
-//   "cart/deleteCartItem",
-//   async ({ cart_id, item_id }, { rejectWithValue }) => {
-//     try {
-//       const res = await api.delete(ROUTES.cart.deleteItem, {
-//         data: { cart_id, item_id },
-//         headers: getAuthHeaders(),
-//       });
-//       return res.data.data ?? res.data;
-//     } catch (err) {
-//       return rejectWithValue(err.response?.data?.message || err.message);
-//     }
-//   },
-// );
-
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 import { getOrCreateGuestId } from "../../utils/guestId";
 
-// No auth headers needed for cart — public routes
 const jsonHeaders = () => ({ "Content-Type": "application/json" });
 
-// ─── Helper: get identifier (guest_id or user_id) ───────────────────
 const getCartIdentifier = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const token = localStorage.getItem("token");
@@ -108,7 +14,6 @@ const getCartIdentifier = () => {
   return { guest_id: getOrCreateGuestId() };
 };
 
-// ─── CREATE CART ─────────────────────────────────────────────────────
 export const createCart = createAsyncThunk(
   "cart/createCart",
   async (_, { rejectWithValue }) => {
@@ -128,19 +33,16 @@ export const createCart = createAsyncThunk(
   },
 );
 
-// ─── FETCH CART ──────────────────────────────────────────────────────
 export const fetchCart = createAsyncThunk(
   "cart/fetchCart",
   async (_, { rejectWithValue }) => {
     try {
       const identifier = getCartIdentifier();
-      // params: ?user_id=xxx  OR  ?guest_id=xxx
       const res = await api.get(ROUTES.cart.getByIdentifier, {
         params: identifier,
         headers: jsonHeaders(),
       });
       const cart = res.data.data;
-      // Save cart_id to localStorage for add/update/delete operations
       if (cart?._id) {
         localStorage.setItem("cart_id", cart._id);
       }
@@ -151,7 +53,6 @@ export const fetchCart = createAsyncThunk(
   },
 );
 
-// ─── ADD TO CART ─────────────────────────────────────────────────────
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
   async (payload, { rejectWithValue }) => {
@@ -166,7 +67,6 @@ export const addToCart = createAsyncThunk(
   },
 );
 
-// ─── UPDATE CART ITEM ────────────────────────────────────────────────
 export const updateCartItem = createAsyncThunk(
   "cart/updateCartItem",
   async ({ cart_id, item_id, quantity }, { rejectWithValue }) => {
@@ -185,7 +85,6 @@ export const updateCartItem = createAsyncThunk(
   },
 );
 
-// ─── DELETE CART ITEM ────────────────────────────────────────────────
 export const deleteCartItem = createAsyncThunk(
   "cart/deleteCartItem",
   async ({ cart_id, item_id }, { rejectWithValue }) => {
@@ -201,7 +100,6 @@ export const deleteCartItem = createAsyncThunk(
   },
 );
 
-// ─── MERGE GUEST CART → USER CART (call after login) ─────────────────
 export const mergeGuestCart = createAsyncThunk(
   "cart/mergeGuestCart",
   async (user_id, { rejectWithValue }) => {

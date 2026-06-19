@@ -468,7 +468,7 @@ function Allproducts() {
                     />
                   </svg>
                   <p className="text-lg font-medium">No products found</p>
-                  <p className="text-sm mt-1">
+                  <p className="text-[12px] md:text-[16px] mt-1 text-center">
                     Try selecting a different category or subcategory
                   </p>
                 </div>

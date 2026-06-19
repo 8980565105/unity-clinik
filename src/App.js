@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { HelmetProvider } from "react-helmet-async";
 import Loding from "./components/loding/loding";
 import { fetchCart } from "./features/cart/cartThunk";
+import { Toaster } from "react-hot-toast";
 
 const Home = lazy(() => import("./pages/Home"));
 const Allproducts = lazy(() => import("./pages/Allproducts"));
@@ -126,6 +127,7 @@ const RouterWrapper = () => {
 
   return (
     <>
+      <Toaster position="top-center" reverseOrder={false} />
       <ScrollToTop />
       <Header />
 
