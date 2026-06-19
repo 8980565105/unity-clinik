@@ -268,6 +268,7 @@ export default function ProductGallery({
                     left: "calc(100% + 16px)",
                     width: "450px",
                     height: "450px",
+                    zIndex: 999999999,
                     ...zoomStyle,
                   }}
                 />
@@ -306,6 +307,12 @@ export default function ProductGallery({
                     <img
                       src={img}
                       alt={`Slide ${index}`}
+                      onClick={() => {
+                        setCurrentIndex(index);
+                        setCurrentImage(img);
+                        setIsFullscreen(true);
+                        setZoomLevel(1);
+                      }}
                       className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
                     />
                   </div>

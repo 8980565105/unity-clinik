@@ -414,7 +414,8 @@ const Header = () => {
     dispatch(clearOrders());
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    navigate("/allproducts");
+    localStorage.removeItem("recently_viewed_products");
+    navigate("/");
     toast.success("Logged out successfully!");
   };
 
@@ -903,7 +904,7 @@ const Header = () => {
 
                 <li className="p-[17px]">
                   <button
-                    onClick={() => openProtectedLink("/wishlist")}
+                    onClick={() => navigate("/wishlist")}
                     className="flex items-center gap-[15px] w-full"
                   >
                     <FontAwesomeIcon icon={farHeart} />
@@ -932,11 +933,12 @@ const Header = () => {
 
             <SearchBar products={products} onNavigate={navigate} />
 
-            <button
-              onClick={() => openProtectedLink("/wishlist")}
-              aria-label="add to whislist"
-              className="relative text-black "
+            {/* <button
+              onClick={() => navigate("/wishlist")}
+              aria-label="wishlist"
+              className="relative text-black hidden md:block"
             >
+             
               {isWishlistActive ? (
                 <Heart size={22} className="text-primary fill-primary " />
               ) : (
@@ -947,6 +949,13 @@ const Header = () => {
                   {wishlistCount}
                 </span>
               )}
+            </button> */}
+            <button
+              onClick={() => openProtectedLink("/account-details")}
+              aria-label="account"
+              className="relative text-black md:hidden"
+            >
+              <User />
             </button>
 
             <button
@@ -954,7 +963,7 @@ const Header = () => {
                 isCartActive ? "text-primary" : "text-black"
               }`}
               aria-label="add to cart"
-              onClick={() => openProtectedLink("/cart")}
+              onClick={() => navigate("/cart")}
             >
               <FontAwesomeIcon icon={faCartShopping} className="" size={22} />
 
@@ -980,7 +989,7 @@ const Header = () => {
           isMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="bg-white w-full absolute top-0 py-2 flex justify-between px-3">
+        <div className="bg-white w-full absolute top-0 z-20 py-2 flex justify-between px-3">
           <div>
             <img src={HeaderLogo} alt="logo" className="h-[35px] w-[100px]" />
           </div>
@@ -1120,7 +1129,7 @@ const Header = () => {
                           </div>
 
                           <div className="overflow-y-auto hide-scrollbar p-2 pt-0 h-[300px]">
-                            <div className="flex justify-between items-center mb-3 sticky bg-white top-0">
+                            <div className="flex justify-between items-center sticky bg-white top-0">
                               <h3 className="text-sm text-gray-400">
                                 Products
                               </h3>
@@ -1287,7 +1296,7 @@ const Header = () => {
               </div>
               <div className="py-4 px-4 cursor-pointer light-color">
                 <button
-                  onClick={() => openProtectedLink("/wishlist")}
+                  onClick={() => navigate("/wishlist")}
                   className="flex items-center gap-[15px]"
                 >
                   <FontAwesomeIcon icon={farHeart} /> Wishlist

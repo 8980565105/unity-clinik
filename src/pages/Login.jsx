@@ -21,6 +21,31 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   const loginData = {
+  //     email: formData.email,
+  //     password: formData.password,
+  //     domain: window.location.origin,
+  //   };
+
+  //   const res = await dispatch(loginUser(loginData));
+
+  //   if (res.meta.requestStatus === "fulfilled") {
+  //     toast.success(res.payload?.message || "Login successful!", {
+  //       position: "top-center",
+  //     });
+  //     setTimeout(() => {
+  //       onClose();
+  //     }, 1000);
+  //   } else {
+  //     const errorMessage =
+  //       res.payload?.message || res.payload || "Invalid email or password";
+  //     toast.error(errorMessage, { position: "top-center" });
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -36,6 +61,7 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
       toast.success(res.payload?.message || "Login successful!", {
         position: "top-center",
       });
+      // Cart merge thunk ma j thay chhe — koi extra code nathi joito
       setTimeout(() => {
         onClose();
       }, 1000);

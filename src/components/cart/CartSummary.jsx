@@ -158,7 +158,7 @@ export default function CartSummary({ appliedCoupon }) {
         </div>
       </div>
 
-      <div className="px-[20px] pb-[20px]">
+      {/* <div className="px-[20px] pb-[20px]">
         <Link to="/checkout">
           <Button
             variant="common"
@@ -167,7 +167,7 @@ export default function CartSummary({ appliedCoupon }) {
             PROCEED TO CHECKOUT
           </Button>
         </Link>
-      </div>
+      </div> */}
     </div>
   );
 }

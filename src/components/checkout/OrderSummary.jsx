@@ -1,81 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import Button from "../ui/Button";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchCart } from "../../features/cart/cartThunk";
-import {
-  createPayment,
-  createRazorpayOrder,
-  verifyRazorpayPayment,
-  createPhonePeOrder,
-  verifyPhonePePayment,
-} from "../../features/payments/paymentThunk";
-import { createOrder } from "../../features/orders/orderThunk";
-import toast, { Toaster } from "react-hot-toast";
-import { clearCart } from "../../features/cart/cartSlice";
-import {
-  calculateShipping,
-  calculatePartialCodAdvance,
-} from "../../utils/shippingCalculator";
-import { fetchSystemSettings } from "../../features/systemsetting/systemsetting.Thunk";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import React from "react";
+import { useSelector } from "react-redux";
+import { ShieldCheck } from "lucide-react";
 import Razorpay from "../icons/Razorpay";
 import Phonepe from "../icons/Phonepe";
 
-export default function OrderSummary({ formData }) {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
+export default function OrderSummary({
+  formData,
+  appliedCoupon,
+  selectedPayment,
+  setSelectedPayment,
+  shipping,
+  subtotal,
+  total,
+  mrpTotal,
+  itemDiscount,
+  couponDiscount,
+  partialCodAdvance,
+  settingsLoaded,
+}) {
   const { items = [], loading } = useSelector((state) => state.cart);
-  const { loading: paymentLoading } = useSelector((state) => state.payments);
-  const { user } = useSelector((state) => state.auth);
-  const settings = useSelector((state) => state.systemseting.data);
 
-  const [selectedPayment, setSelectedPayment] = useState("razorpay");
-
-  const [appliedCoupon] = useState(() => {
-    try {
-      const saved = localStorage.getItem("applied_coupon");
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
-
-  const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY;
-
-  useEffect(() => {
-    dispatch(fetchSystemSettings());
-  }, [dispatch]);
-
-  useEffect(() => {
-    const cart_id = localStorage.getItem("cart_id");
-    if (user && cart_id) dispatch(fetchCart(cart_id));
-  }, [dispatch, user]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const phonePeTxn = params.get("phonepe_txn");
-    const phonePeOrderId = params.get("order_id");
-    if (phonePeTxn && phonePeOrderId) {
-      (async () => {
-        const verifyRes = await dispatch(
-          verifyPhonePePayment({
-            transaction_id: phonePeTxn,
-            order_id: phonePeOrderId,
-          }),
-        );
-        if (verifyPhonePePayment.fulfilled.match(verifyRes)) {
-          dispatch(clearCart());
-          localStorage.removeItem("applied_coupon");
-          toast("PhonePe Payment Successful ✅");
-          navigate("/ordercompleted");
-        } else {
-          toast("PhonePe Payment Verification Failed ❌");
-        }
-      })();
-    }
-  }, []);
+  const isPartialCod = selectedPayment === "partial_cod";
 
   if (loading)
     return (
@@ -92,337 +37,19 @@ export default function OrderSummary({ formData }) {
       </div>
     );
 
-  const getDiscountedPrice = (item) => {
-    const originalPrice = Number(
-      item?.original_price || item?.variant_id?.price || 0,
-    );
-    const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
-    if (offerPrice > 0 && offerPrice < originalPrice) {
-      return { originalPrice, discountedPrice: offerPrice };
-    }
-    const discount = item?.product_id?.discount_id?.value || 0;
-    const discountedPrice =
-      discount > 0
-        ? originalPrice - (originalPrice * discount) / 100
-        : originalPrice;
-    return { originalPrice, discountedPrice };
-  };
-
-  const mrpTotal = items.reduce(
-    (sum, item) =>
-      sum + getDiscountedPrice(item).originalPrice * (item.quantity || 1),
-    0,
-  );
-
-  const offerPriceTotal = items.reduce(
-    (sum, item) =>
-      sum + getDiscountedPrice(item).discountedPrice * (item.quantity || 1),
-    0,
-  );
-
-  const itemDiscount = mrpTotal - offerPriceTotal;
-
-  let couponDiscount = 0;
-  if (appliedCoupon) {
-    couponDiscount =
-      appliedCoupon.discount_type === "fixed"
-        ? appliedCoupon.discount_value
-        : (offerPriceTotal * appliedCoupon.discount_value) / 100;
-    if (appliedCoupon.max_discount_amount) {
-      couponDiscount = Math.min(
-        couponDiscount,
-        appliedCoupon.max_discount_amount,
+  const renderShipping = () => {
+    if (shipping === 0) {
+      return (
+        <span className="text-[12px] font-bold text-green-600 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1 tracking-wide">
+          FREE
+        </span>
       );
     }
-  }
-
-  const subtotal = offerPriceTotal - couponDiscount;
-
-  const getPaymentType = (method) => {
-    switch (method) {
-      case "cod":
-      case "partial_cod":
-        return "cod";
-
-      case "razorpay":
-      case "PhonePe":
-      default:
-        return "prepaid";
-    }
-  };
-  const paymentType = getPaymentType(selectedPayment);
-
-  const settingsLoaded = !!settings;
-  const shipping = settingsLoaded
-    ? calculateShipping(subtotal, paymentType, settings)
-    : 0;
-
-  const total = Number((subtotal + shipping).toFixed(0));
-  const totalSaved = itemDiscount + couponDiscount;
-
-  const partialCodAdvance = calculatePartialCodAdvance(total, settings);
-  const isPartialCod = selectedPayment === "partial_cod";
-
-  const getBackendPaymentMethod = (method) => {
-    if (method === "partial_cod" || method === "cod") return "COD";
-    if (method === "razorpay") return "Online";
-    return "Online";
-  };
-
-  const validateForm = (userLS) => {
-    if (!userLS || !userLS._id) {
-      toast("Please login before placing order");
-      navigate("/login");
-      return false;
-    }
-    const requiredFields = {
-      firstName: "First Name",
-      address: "Address",
-      state: "State",
-      city: "City",
-      pincode: "Pin Code",
-    };
-    for (const [key, label] of Object.entries(requiredFields)) {
-      if (!formData[key] || formData[key].trim() === "") {
-        toast(`Please enter ${label}`);
-        return false;
-      }
-    }
-    if (!selectedPayment) {
-      toast("Select a payment method");
-      return false;
-    }
-    return true;
-  };
-
-  const createNewOrder = async (userLS) => {
-    const orderData = {
-      user_id: userLS._id,
-      items,
-
-      subtotal,
-      shipping_charge: shipping,
-      coupon_discount: couponDiscount,
-
-      total_price: total,
-
-      coupon_id: appliedCoupon?._id || null,
-
-      payment_method: getBackendPaymentMethod(selectedPayment),
-
-      shippingAddress: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        address: formData.address,
-        state: formData.state,
-        city: formData.city,
-        pincode: formData.pincode,
-        phone: formData.phone,
-      },
-    };
-    const orderAction = await dispatch(createOrder(orderData));
-    if (!createOrder.fulfilled.match(orderAction)) {
-      toast("Order creation failed ❌");
-      return null;
-    }
-    const orderId = orderAction.payload?.data?._id || orderAction.payload?._id;
-    if (!orderId) {
-      toast("Order ID missing ❌");
-      return null;
-    }
-    return orderId;
-  };
-
-  const handleCOD = async (userLS, orderId) => {
-    if (isPartialCod && partialCodAdvance > 0) {
-      await handleRazorpayAmount(
-        userLS,
-        orderId,
-        partialCodAdvance,
-        "partial_cod",
-      );
-      return;
-    }
-    await dispatch(
-      createPayment({
-        user_id: userLS._id,
-        order_id: orderId,
-        items,
-        subtotal,
-        shipping,
-        coupon_discount: couponDiscount,
-        total,
-        amount_paid: 0,
-        payment_method: "cod",
-        status: "pending",
-      }),
+    return (
+      <span className="text-[14px] font-bold text-green-600">
+        + ₹{Math.round(shipping).toLocaleString("en-IN")}
+      </span>
     );
-    dispatch(clearCart());
-    localStorage.removeItem("applied_coupon");
-    toast("Order placed successfully! 🎉");
-    navigate("/ordercompleted");
-  };
-  const loadRazorpay = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-
-      document.body.appendChild(script);
-    });
-  };
-
-  const handleRazorpayAmount = async (
-    userLS,
-    orderId,
-    amount,
-    paymentMethod = selectedPayment,
-  ) => {
-    const loaded = await loadRazorpay();
-    
-    if (!loaded) {
-      toast.error("Failed to load Razorpay SDK");
-      return;
-    }
-
-    const razorRes = await dispatch(
-      createRazorpayOrder({
-        amount,
-        order_id: orderId,
-      }),
-    );
-    if (!createRazorpayOrder.fulfilled.match(razorRes)) {
-      console.log("RAZOR ERROR", razorRes);
-      toast(razorRes.payload || "Razorpay order failed");
-      return;
-    }
-    console.log("RAZOR RESPONSE =", razorRes);
-    console.log("RAZOR PAYLOAD =", razorRes.payload);
-    console.log("WINDOW RAZORPAY =", window.Razorpay);
-    console.log("RAZOR RESPONSE", razorRes);
-    console.log("RAZOR PAYLOAD", razorRes.payload);
-
-    const razorOrder = razorRes.payload;
-    console.log(razorOrder);
-    if (!razorOrder) {
-      toast("Razorpay initialization failed ❌");
-      return;
-    }
-    const options = {
-      key: razorpayKey,
-      amount: razorOrder.amount,
-      currency: "INR",
-      name: "ZYFolixo",
-      description:
-        paymentMethod === "partial_cod"
-          ? `Advance Payment ₹${amount}`
-          : "Order Payment",
-      order_id: razorOrder.id,
-      handler: async function (response) {
-        const verifyRes = await dispatch(
-          verifyRazorpayPayment({
-            ...response,
-            order_id: orderId,
-            user_id: userLS._id,
-          }),
-        );
-        if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) {
-          toast("Payment verification failed ❌");
-          return;
-        }
-        await dispatch(
-          createPayment({
-            user_id: userLS._id,
-            order_id: orderId,
-            items,
-            subtotal,
-            shipping,
-            coupon_discount: couponDiscount,
-            total,
-            amount_paid: amount,
-            payment_method: paymentMethod,
-            status: paymentMethod === "partial_cod" ? "partial" : "completed",
-            transaction_id: response.razorpay_payment_id,
-          }),
-        );
-        dispatch(clearCart());
-        localStorage.removeItem("applied_coupon");
-        toast(
-          paymentMethod === "partial_cod"
-            ? `Advance ₹${amount} paid! Remaining ₹${Math.round(total - amount)} COD ✅`
-            : "Payment Successful ✅",
-        );
-        navigate("/ordercompleted");
-      },
-      prefill: {
-        name: `${formData.firstName} ${formData.lastName}`,
-        email: formData.email || user?.email,
-        contact: formData.phone || "",
-      },
-      theme: { color: "#1d4ed8" },
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.on("payment.failed", (response) => {
-      toast(`Payment failed: ${response.error.description} ❌`);
-    });
-    rzp.open();
-  };
-
-  const handlePhonePe = async (userLS, orderId) => {
-    const phonePeRes = await dispatch(
-      createPhonePeOrder({
-        amount: total,
-        order_id: orderId,
-        user_id: userLS._id,
-        redirect_url: `${window.location.origin}/payment/phonepe/callback?order_id=${orderId}`,
-      }),
-    );
-    if (!createPhonePeOrder.fulfilled.match(phonePeRes)) {
-      toast("PhonePe initialization failed ❌");
-      return;
-    }
-    const paymentUrl =
-      phonePeRes.payload?.data?.paymentUrl || phonePeRes.payload?.paymentUrl;
-    if (!paymentUrl) {
-      toast("PhonePe payment URL missing ❌");
-      return;
-    }
-    await dispatch(
-      createPayment({
-        user_id: userLS._id,
-        order_id: orderId,
-        items,
-        subtotal,
-        shipping,
-        coupon_discount: couponDiscount,
-        total,
-        amount_paid: 0,
-        payment_method: "PhonePe",
-        status: "pending",
-      }),
-    );
-    toast("Redirecting to PhonePe... 📱");
-    window.location.href = paymentUrl;
-  };
-
-  const handlePlaceOrder = async () => {
-    const userLS = JSON.parse(localStorage.getItem("user"));
-    if (!validateForm(userLS)) return;
-    const orderId = await createNewOrder(userLS);
-    if (!orderId) return;
-    if (selectedPayment === "PhonePe") await handlePhonePe(userLS, orderId);
-    else if (selectedPayment === "cod") await handleCOD(userLS, orderId);
-    else if (selectedPayment === "partial_cod")
-      await handleCOD(userLS, orderId);
-    else await handleRazorpayAmount(userLS, orderId, total, selectedPayment);
   };
 
   const paymentMethods = [
@@ -451,25 +78,8 @@ export default function OrderSummary({ formData }) {
       : []),
   ];
 
-  const renderShipping = () => {
-    if (shipping === 0) {
-      return (
-        <span className="text-[12px] font-bold text-green-600 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1 tracking-wide">
-          FREE
-        </span>
-      );
-    }
-    return (
-      <span className="text-[14px] font-bold text-green-600">
-        + ₹{Math.round(shipping).toLocaleString("en-IN")}
-      </span>
-    );
-  };
-
   return (
     <>
-      <Toaster position="top-center" />
-
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
         <div className="px-5 py-4 border-b border-gray-100">
           <span className="text-[16px] font-bold text-gray-900">
@@ -614,29 +224,6 @@ export default function OrderSummary({ formData }) {
             );
           })}
         </div>
-      </div>
-
-      <Button
-        onClick={handlePlaceOrder}
-        disabled={paymentLoading || !settingsLoaded}
-        variant="common"
-        className="w-full rounded-full disabled:opacity-60 text-white font-bold text-[15px] py-4 rounded-2xl transition-colors shadow-md shadow-blue-200 flex items-center justify-center gap-2"
-      >
-        {paymentLoading ? (
-          "PROCESSING..."
-        ) : !settingsLoaded ? (
-          "Loading..."
-        ) : (
-          <>
-            {" "}
-            Place Order <ArrowRight />{" "}
-          </>
-        )}
-      </Button>
-
-      <div className="flex items-center justify-center gap-2 mt-3">
-        <ShieldCheck size={14} className="text-gray-400" />
-        <p className="text-[11px] text-gray-400">100% Secure Checkout</p>
       </div>
     </>
   );

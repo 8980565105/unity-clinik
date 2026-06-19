@@ -13,6 +13,7 @@ import { useAddToWishlist } from "../wishlist/handleAddTowishlist";
 import toast, { Toaster } from "react-hot-toast";
 import { getImageUrl } from "../utils/helper";
 import Offer from "./offerdescount";
+import BuyNowButton from "./BuyNowButton";
 
 const LS_KEY = "product_step_selections";
 const saveStepSelection = (stepIndex, slug) => {
@@ -117,6 +118,7 @@ export default function ProductInfo({
   const cart = useSelector((state) => state.cart.cart);
   const [addingToCartstate, setAddingToCartstat] = useState(false);
   const { productReviews } = useSelector((state) => state.reviews);
+  const [isAddedToCart, setIsAddedToCart] = useState(false);
 
   const reviewData = useMemo(() => {
     const reviews = productReviews?.[product?._id]?.reviews || [];
@@ -141,6 +143,7 @@ export default function ProductInfo({
         packStep.variants.find((v) => Number(v.badge) === 1) ||
         packStep.variants[0];
       setSelectedPackState(defaultPack);
+      setSelectedPack?.(defaultPack);
     }
   }, [product]);
 
@@ -150,6 +153,7 @@ export default function ProductInfo({
       setSelectedColor(first.color_id?._id || null);
       setActiveVariantState(first);
       setSelectedVariant(first);
+      setActiveVariant?.(first);
     }
   }, [product, setSelectedColor, setSelectedVariant]);
 
@@ -164,6 +168,7 @@ export default function ProductInfo({
         variantsForColor[0];
       setActiveVariantState(firstAvailable);
       setSelectedVariant(firstAvailable);
+      setActiveVariant?.(firstAvailable); // ← ADD KARO
     }
   }, [selectedColor, product?.variants, setSelectedVariant]);
 
@@ -233,30 +238,25 @@ export default function ProductInfo({
     }
   };
 
-  const handleAddToCart = async (navState = null) => {
-    if (!token) {
-      setShowLoginPopup(true);
-      return;
-    }
-
+  const handleAddToCart = async () => {
     if (activeVariantState?.stock_quantity === 0) {
       toast.error("This product is out of stock!");
       return;
     }
+
     setAddingToCartstat(true);
+
     try {
       let cartId = cart?._id || localStorage.getItem("cart_id");
+
       if (!cartId) {
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        if (!user?._id) {
-          toast.error("User session expired. Please login again.");
-          setShowLoginPopup(true);
-          return;
-        }
-        const newCart = await dispatch(
-          createCart({ user_id: user._id }),
-        ).unwrap();
+        const newCart = await dispatch(createCart()).unwrap();
+
         cartId = newCart._id;
+
+        if (cartId) {
+          localStorage.setItem("cart_id", cartId);
+        }
       }
 
       const payload = {
@@ -270,19 +270,14 @@ export default function ProductInfo({
       };
 
       await dispatch(addToCart(payload)).unwrap();
-      await dispatch(fetchCart(cartId));
 
-      if (navState) {
-        navigate("/cart", { state: navState });
-      } else {
-        navigate("/cart");
-      }
+      await dispatch(fetchCart());
+
+      toast.success("Added to cart!");
+      setIsAddedToCart(true);
     } catch (err) {
-      const msg =
-        typeof err === "string"
-          ? err
-          : err?.message || "Failed to add item to cart. Please try again.";
-      toast.error(msg);
+      console.error(err);
+      toast.error("Failed to add to cart");
     } finally {
       setAddingToCartstat(false);
     }
@@ -504,14 +499,16 @@ export default function ProductInfo({
                     return (
                       <div
                         key={variantIdx}
-                        onClick={() =>
-                          setSelectedPackState({
+                        onClick={() => {
+                          const pack = {
                             badge: variant.badge,
                             price: Number(variant.price),
                             offerprice: Number(variant.offerprice),
                             image: variant.image,
-                          })
-                        }
+                          };
+                          setSelectedPackState(pack);
+                          setSelectedPack?.(pack);
+                        }}
                         className={`w-[120px] md:w-[180px] rounded-[10px] bg-[#F8F8F8] border overflow-hidden
                         transition-all duration-300 cursor-pointer hover:shadow-lg
                         ${
@@ -564,7 +561,7 @@ export default function ProductInfo({
   };
 
   return (
-    <>
+    <div>
       <Toaster position="top-center" reverseOrder={false} />
 
       <p className="text-theme pt-[20px] md:pt-0">
@@ -603,7 +600,6 @@ export default function ProductInfo({
           </p>
         </span>
       </div>
-
       <Offer
         product={product}
         price={priceData.offerPrice}
@@ -614,13 +610,12 @@ export default function ProductInfo({
           })
         }
       />
-
       <div className="mt-[15px] space-y-[28px]">
         <div key={selectionTick}>{renderSteps()}</div>
 
         <div
           ref={actionButtonsRef}
-          className="flex flex-col sm:flex-row gap-[17px] pt-[10px] hidden lg:flex "
+          className="flex flex-col sm:flex-row gap-[17px] pt-[10px]"
         >
           <Button
             variant="outline"
@@ -633,18 +628,34 @@ export default function ProductInfo({
 
           <Button
             variant="common"
-            className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px]"
-            onClick={handleAddToCart}
+            className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px] hidden lg:flex"
+            onClick={async () => {
+              if (isAddedToCart) {
+                navigate("/cart");
+                return;
+              }
+              await handleAddToCart();
+            }}
             aria-label="add to cart"
             disabled={addingToCartstate}
           >
             <span className="flex items-center gap-[10px]">
               <Handbag size={22} />
-              {addingToCartstate ? "Adding..." : "Add To Cart"}
+              {addingToCartstate
+                ? "Adding..."
+                : isAddedToCart
+                  ? "Go to Cart"
+                  : "Add To Cart"}
             </span>
           </Button>
         </div>
+        <BuyNowButton
+          product={product}
+          activeVariantState={activeVariantState}
+          selectedPackState={selectedPackState}
+          className="!mt-2 hidden lg:flex"
+        />
       </div>
-    </>
+    </div>
   );
 }

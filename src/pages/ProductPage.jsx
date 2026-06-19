@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import {
-  fetchProductById,
-  fetchProducts,
-} from "../features/products/productsThunk";
+import { fetchProductById } from "../features/products/productsThunk";
 import { fetchProductReviews } from "../features/reivews/reviewsThunk";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
@@ -16,62 +13,38 @@ import SimilarProducts from "../components/product/SimilarProducts";
 import CustomerAlsoViewed from "../components/product/CustomerAlsoViewed";
 import { addRecentlyViewed } from "../components/utils/recentlyViewed";
 import LoginForm from "./Login";
-import Heading from "../components/ui/Heading";
-import NavBtn from "../components/ui/Navbtn";
-import ReviewCard from "../components/reviews/reviewscard";
 import SEO from "../components/seo/seo";
 import Loding from "../components/loding/loding";
 import { getImageUrl } from "../components/utils/helper";
-import { Handbag, HeartIcon } from "lucide-react";
+import { Handbag } from "lucide-react";
 import ProductSections, {
   SectionRenderer,
 } from "../components/product/ProductSections";
 import Productreviews from "../components/product/productreviews";
-// import { fetchProductLabels } from "../features/productLabels/productlabelsThunk";
+import { useNavigate } from "react-router-dom";
+import BuyNowButton from "../components/product/BuyNowButton";
+import Button from "../components/ui/Button";
 
 export default function Product() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { product, products, loading, error } = useSelector(
-    (state) => state.products,
-  );
-  const { productReviews } = useSelector((state) => state.reviews);
+  const { product, products, error } = useSelector((state) => state.products);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
-  const [offset, setOffset] = useState(0);
-  const productReviewData = productReviews?.[product?._id];
-  const allReviews = productReviewData?.reviews || [];
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [priceData, setPriceData] = useState({});
-
-  const [selectedPack, setSelectedPack] = useState(null);
-  const [activeVariant, setActiveVariant] = useState(null);
   const [addingToCart, setAddingToCart] = useState(false);
   const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
   const [handleAddToWishlistFn, setHandleAddToWishlistFn] = useState(null);
-
-  const { productLabels = [] } = useSelector((state) => state.productLabels);
-
-  const getVisible = () => {
-    if (window.innerWidth < 640) return 1;
-    if (window.innerWidth < 1024) return 2;
-    return 3;
-  };
-
-  const [visible, setVisible] = useState(getVisible());
-
-  const CARD_W = visible === 1 ? 280 : visible === 2 ? 320 : 425;
-  const GAP = visible === 1 ? 20 : visible === 2 ? 30 : 55;
-  const STEP = CARD_W + GAP;
+  const [addedToCart, setAddedToCart] = useState(false);
+  const [activeVariantState, setActiveVariantState] = useState(null);
+  const [selectedPackState, setSelectedPackState] = useState(null);
 
   useEffect(() => {
     if (id) dispatch(fetchProductById(id));
   }, [id, dispatch]);
-
-  // useEffect(() => {
-  //   dispatch(fetchProductLabels({ status: "active" }));
-  // }, [dispatch]);
 
   useEffect(() => {
     if (product && product._id) {
@@ -81,20 +54,6 @@ export default function Product() {
       );
     }
   }, [product?._id, dispatch]);
-
-  useEffect(() => {
-    const handleResize = () => {
-      setVisible(getVisible());
-      setOffset(0);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const maxOffset = Math.max(0, allReviews.length - visible);
-  const prev = () => setOffset((o) => Math.max(0, o - 1));
-  const next = () => setOffset((o) => Math.min(maxOffset, o + 1));
-  const isCenter = allReviews.length <= visible;
 
   if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
   if (!product) return <Loding />;
@@ -116,8 +75,9 @@ export default function Product() {
         <Row>
           <Breadcrumb />
         </Row>
-        <Row className="grid grid-cols-1 lg:grid-cols-[48%_52%] gap-[40px] items-start">
-          <div className="lg:sticky lg:top-[100px] self-start h-fit">
+        <Row className="grid grid-cols-1 lg:grid-cols-[48%_52%] gap-[5px] md:gap-[40px] items-start">
+          {/* <div className="lg:sticky lg:top-[100px] self-start h-fit"> */}
+          <div className="lg:sticky lg:top-[100px] self-start h-fit z-[9999]">
             <ProductGallery
               product={product}
               activeVariant={selectedVariant}
@@ -134,11 +94,11 @@ export default function Product() {
               setShowLoginPopup={setShowLoginPopup}
               setShowStickyBar={setShowStickyBar}
               setPriceData={setPriceData}
-              setSelectedPack={setSelectedPack}
-              setActiveVariant={setActiveVariant}
               setAddingToCart={setAddingToCart}
               setHandleAddToCartFn={setHandleAddToCartFn}
               setHandleAddToWishlistFn={setHandleAddToWishlistFn}
+              setSelectedPack={setSelectedPackState}
+              setActiveVariant={setActiveVariantState}
             />
 
             <div className="border-dashed border-b-[2px] light-border my-5"></div>
@@ -159,13 +119,11 @@ export default function Product() {
         product={product}
         products={products}
         setShowLoginPopup={setShowLoginPopup}
-        productLabels={productLabels}
       />
 
       <ProductSections
         sections={remainingSections}
         setShowLoginPopup={setShowLoginPopup}
-        productLabels={productLabels}
       />
 
       <Productreviews
@@ -173,11 +131,7 @@ export default function Product() {
         setShowLoginPopup={setShowLoginPopup}
       />
 
-      <CustomerAlsoViewed
-        products={products}
-        currentProductId={product?._id}
-        productLabels={productLabels}
-      />
+      <CustomerAlsoViewed products={products} currentProductId={product?._id} />
 
       {showStickyBar && (
         <div className="fixed  bottom-0 left-0 right-0 z-[10] bg-white border-t shadow-xl">
@@ -208,38 +162,46 @@ export default function Product() {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <button
-                onClick={() =>
-                  handleAddToWishlistFn?.(product, selectedVariant)
-                }
-                className="px-8 h-[55px] border flex justify-center items-center gap-2 rounded-lg font-semibold"
-              >
-                <HeartIcon className="h-[22px] w-[22px]" />
-                Wishlist
-              </button>
+            <div className="flex items-center justify-center gap-3">
+              <BuyNowButton
+                product={product}
+                activeVariantState={activeVariantState}
+                selectedPackState={selectedPackState}
+                setShowLoginPopup={setShowLoginPopup}
+                className="!w-[200px]"
+              />
 
-              <button
-                onClick={() => {
-                  handleAddToCartFn?.();
+              <Button
+                variant="common"
+                onClick={async () => {
+                  if (addedToCart) {
+                    navigate("/cart");
+                    return;
+                  }
+                  await handleAddToCartFn?.();
+                  setAddedToCart(true);
                 }}
                 disabled={addingToCart}
-                className="px-10 h-[55px] flex gap-2 justify-center items-center rounded-lg bg-[var(--theme-color)] text-white font-semibold"
+                className="px-10 !w-[400px] h-[55px] flex gap-2 justify-center items-center text-nowrap rounded-lg bg-[var(--theme-color)] text-white font-semibold"
               >
                 <Handbag size={22} />
-                {addingToCart ? "Adding..." : "Add To Cart"}
-              </button>
+                {addingToCart
+                  ? "Adding..."
+                  : addedToCart
+                    ? "Go to Cart"
+                    : "Add To Cart"}
+              </Button>
             </div>
           </div>
 
           <div className="grid grid-cols-2 h-[60px] lg:hidden">
-            <button
-              onClick={() => handleAddToWishlistFn?.(product, activeVariant)}
-              className="flex items-center justify-center gap-2 border-r font-semibold bg-white"
-            >
-              <HeartIcon className="h-[22px] w-[22px]" />
-              Wishlist
-            </button>
+            <BuyNowButton
+              product={product}
+              activeVariantState={activeVariantState}
+              selectedPackState={selectedPackState}
+              setShowLoginPopup={setShowLoginPopup}
+              className="!bg-black !text-white !rounded-[0px]"
+            />
 
             <button
               onClick={() => {

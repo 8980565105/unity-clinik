@@ -122,7 +122,7 @@ function Address() {
   return (
     // <div className="space-y- md:space-y-5">
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-3">
         <h2 className="text-2xl font-semibold">Saved Addresses</h2>
 
         <button

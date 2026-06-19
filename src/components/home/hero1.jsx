@@ -73,14 +73,12 @@ export default function Hero1() {
                 <div className="text-left flex flex-col justify-between h-full w-full py-[30px] mb-[55px]">
                   <div className="text-white">
                     <p className="mt-5 text-[20px] uppercase">
-                      HAIR GROWTH TREATMENT BY DOCTORS
+                      {slide.title}
                     </p>
                     <h1 className="text-[70px] font-bold leading-none my-10">
-                      {slide.title}
-                    </h1>
-                    <p className="text-white text-[18px] mb-10">
                       {slide.description}
-                    </p>
+                    </h1>
+                    
                     <Button
                       onClick={() => navigate(slide.button_link)}
                       variant="commone"
@@ -235,10 +233,10 @@ export default function Hero1() {
                   <div className="flex-1 flex flex-col gap-[5px] pt-1">
                     <div className="text-white">
                       <p className="mt-5 text-[20px] uppercase">
-                        HAIR GROWTH TREATMENT BY DOCTORS
+                        {slide.title}
                       </p>
                       <h1 className="text-[24px] font-bold leading-none my-5">
-                        {slide.title}
+                        {slide.description}
                       </h1>
                       <Button
                         onClick={() =>
@@ -262,13 +260,13 @@ export default function Hero1() {
                     className="w-full object-contain object-top"
                     style={{ height: "340px" }}
                   />
-                  <div
+                  {/* <div
                     className="absolute bottom-0 left-0 right-0 h-10"
                     style={{
                       background:
                         "linear-gradient(to top, rgba(0,0,0,0.2), transparent)",
                     }}
-                  />
+                  /> */}
                 </div>
                 <div className="flex bg-white rounded-b-[20px] border-b">
                   {[

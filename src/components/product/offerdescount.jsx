@@ -109,7 +109,7 @@ export default function Offer({ product, price = 0, onApplyOffer }) {
             alt="offer"
             className="h-[50px] w-auto object-contain"
           />
-          <span className="font-semibold text-nowrap text-[14px] md:text-[18px] ">
+          <span className="font-semibold text-nowrap text-[13px] md:text-[18px] ">
             {open
               ? "Apply offers for maximum savings"
               : `Buy at ₹${bestPrice.toLocaleString("en-IN")}`}
@@ -128,7 +128,7 @@ export default function Offer({ product, price = 0, onApplyOffer }) {
 
       {open && (
         <div className="bg-white p-4 max-h-[315px] overflow-y-auto no-scrollbar ">
-          <div className="border rounded-xl p-4 bg-blue-50 mb-4 sticky top-0">
+          <div className="border rounded-xl p-4 bg-blue-50 mb-4 sticky top-0 z-0">
             <p className="text-2xl md:text-3xl font-bold">
               ₹{bestPrice.toLocaleString("en-IN")}
             </p>

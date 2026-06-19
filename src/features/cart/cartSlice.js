@@ -1,3 +1,118 @@
+// import { createSlice } from "@reduxjs/toolkit";
+// import {
+//   fetchCart,
+//   addToCart,
+//   updateCartItem,
+//   deleteCartItem,
+//   createCart,
+// } from "./cartThunk";
+
+// const initialState = {
+//   cart: null,
+//   items: [],
+//   loading: false,
+//   error: null,
+//   deletingItemId: null,
+// };
+
+// const cartSlice = createSlice({
+//   name: "cart",
+//   initialState,
+//   reducers: {
+//     clearCart: (state) => {
+//       state.items = [];
+//       state.cart = null;
+//       state.error = null;
+//       localStorage.removeItem("cart_id");
+//     },
+
+//     updateLocalQuantity: (state, action) => {
+//       const { item_id, quantity } = action.payload;
+
+//       const item = state.items.find((i) => i._id === item_id);
+
+//       if (item) {
+//         item.quantity = quantity;
+//       }
+
+//       const cartItem = state.cart?.items?.find((i) => i._id === item_id);
+
+//       if (cartItem) {
+//         cartItem.quantity = quantity;
+//       }
+//     },
+//   },
+//   extraReducers: (builder) => {
+//     builder
+
+//       .addCase(createCart.fulfilled, (state, action) => {
+//         state.cart = action.payload;
+//         state.items = action.payload?.items || [];
+//       })
+
+//       .addCase(fetchCart.pending, (state) => {
+//         state.loading = true;
+//         state.error = null;
+//       })
+//       .addCase(fetchCart.fulfilled, (state, action) => {
+//         state.loading = false;
+//         state.cart = action.payload;
+//         state.items = action.payload?.items || [];
+//       })
+//       .addCase(fetchCart.rejected, (state, action) => {
+//         state.loading = false;
+//         state.error = action.payload;
+//       })
+
+//       .addCase(addToCart.pending, (state) => {
+//         state.loading = true;
+//         state.error = null;
+//       })
+//       .addCase(addToCart.fulfilled, (state, action) => {
+//         state.loading = false;
+//         state.cart = action.payload;
+//         state.items = action.payload?.items || [];
+//       })
+//       .addCase(addToCart.rejected, (state, action) => {
+//         state.loading = false;
+//         state.error = action.payload;
+//       })
+
+//       .addCase(updateCartItem.fulfilled, (state, action) => {
+//         const updatedItem = action.payload?.item;
+//         if (!updatedItem) return;
+
+//         const existing = state.items.find((i) => i._id === updatedItem._id);
+
+//         if (existing) {
+//           existing.quantity = updatedItem.quantity;
+//         }
+
+//         const cartExisting = state.cart?.items?.find(
+//           (i) => i._id === updatedItem._id,
+//         );
+
+//         if (cartExisting) {
+//           cartExisting.quantity = updatedItem.quantity;
+//         }
+//       })
+//       .addCase(deleteCartItem.pending, (state, action) => {
+//         state.deletingItemId = action.meta.arg?.item_id;
+//       })
+//       .addCase(deleteCartItem.fulfilled, (state, action) => {
+//         state.deletingItemId = null;
+//         state.cart = action.payload;
+//         state.items = action.payload?.items || [];
+//       })
+//       .addCase(deleteCartItem.rejected, (state) => {
+//         state.deletingItemId = null;
+//       });
+//   },
+// });
+
+// export const { clearCart, updateLocalQuantity } = cartSlice.actions;
+// export default cartSlice.reducer;
+
 import { createSlice } from "@reduxjs/toolkit";
 import {
   fetchCart,
@@ -5,6 +120,7 @@ import {
   updateCartItem,
   deleteCartItem,
   createCart,
+  mergeGuestCart,
 } from "./cartThunk";
 
 const initialState = {
@@ -25,31 +141,23 @@ const cartSlice = createSlice({
       state.error = null;
       localStorage.removeItem("cart_id");
     },
-    
     updateLocalQuantity: (state, action) => {
       const { item_id, quantity } = action.payload;
-
       const item = state.items.find((i) => i._id === item_id);
-
-      if (item) {
-        item.quantity = quantity;
-      }
-
+      if (item) item.quantity = quantity;
       const cartItem = state.cart?.items?.find((i) => i._id === item_id);
-
-      if (cartItem) {
-        cartItem.quantity = quantity;
-      }
+      if (cartItem) cartItem.quantity = quantity;
     },
   },
   extraReducers: (builder) => {
     builder
-
+      // ── createCart ──────────────────────────────────────────────────
       .addCase(createCart.fulfilled, (state, action) => {
         state.cart = action.payload;
         state.items = action.payload?.items || [];
       })
 
+      // ── fetchCart ───────────────────────────────────────────────────
       .addCase(fetchCart.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -61,9 +169,12 @@ const cartSlice = createSlice({
       })
       .addCase(fetchCart.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        // No cart found is not an error — just keep empty
+        state.cart = null;
+        state.items = [];
       })
 
+      // ── addToCart ───────────────────────────────────────────────────
       .addCase(addToCart.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -78,24 +189,19 @@ const cartSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ── updateCartItem ──────────────────────────────────────────────
       .addCase(updateCartItem.fulfilled, (state, action) => {
         const updatedItem = action.payload?.item;
         if (!updatedItem) return;
-
         const existing = state.items.find((i) => i._id === updatedItem._id);
-
-        if (existing) {
-          existing.quantity = updatedItem.quantity;
-        }
-
+        if (existing) existing.quantity = updatedItem.quantity;
         const cartExisting = state.cart?.items?.find(
           (i) => i._id === updatedItem._id,
         );
-
-        if (cartExisting) {
-          cartExisting.quantity = updatedItem.quantity;
-        }
+        if (cartExisting) cartExisting.quantity = updatedItem.quantity;
       })
+
+      // ── deleteCartItem ──────────────────────────────────────────────
       .addCase(deleteCartItem.pending, (state, action) => {
         state.deletingItemId = action.meta.arg?.item_id;
       })
@@ -106,6 +212,12 @@ const cartSlice = createSlice({
       })
       .addCase(deleteCartItem.rejected, (state) => {
         state.deletingItemId = null;
+      })
+
+      // ── mergeGuestCart ──────────────────────────────────────────────
+      .addCase(mergeGuestCart.fulfilled, (state, action) => {
+        state.cart = action.payload;
+        state.items = action.payload?.items || [];
       });
   },
 });

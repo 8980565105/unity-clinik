@@ -68,7 +68,6 @@ const Home = () => {
 
   useEffect(() => {
     dispatch(fetchPageBySlug("home"));
-    // dispatch(fetchProductLabels({ status: "active" }));
   }, [dispatch]);
 
   return (

@@ -12,6 +12,7 @@ import { getImageUrl } from "../utils/helper";
 import Loding from "../loding/loding";
 import { X, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import toast, { Toaster } from "react-hot-toast";
 
 function ProductPopup({ item, onClose }) {
   const navigate = useNavigate();
@@ -115,6 +116,7 @@ export default function CartItem() {
     const cart_id = localStorage.getItem("cart_id");
     if (!cart_id) return;
     const newQuantity = item.quantity + 1;
+    toast.success("cart updated Successfully!");
     dispatch(updateLocalQuantity({ item_id: item._id, quantity: newQuantity }));
     dispatch(
       updateCartItem({ cart_id, item_id: item._id, quantity: newQuantity }),
@@ -131,6 +133,7 @@ export default function CartItem() {
     const cart_id = localStorage.getItem("cart_id");
     if (!cart_id || item.quantity <= 1) return;
     const newQuantity = item.quantity - 1;
+    toast.success("cart updated Successfully!");
     dispatch(updateLocalQuantity({ item_id: item._id, quantity: newQuantity }));
     dispatch(
       updateCartItem({ cart_id, item_id: item._id, quantity: newQuantity }),
@@ -173,6 +176,8 @@ export default function CartItem() {
 
   return (
     <>
+      <Toaster position="top-center" />
+
       <div className="bg-white rounded-[16px] border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-[24px] py-[18px] border-b border-gray-100">
           <span className="text-[24px] font-bold text-gray-900 mb-6 tracking-tight">

@@ -79,6 +79,8 @@ export const ROUTES = {
     getAll: "/carts",
     getById: (id) => `/carts/${id}`,
     addItem: "/carts/add-item",
+    getByIdentifier: "/carts/by-identifier",
+    merge: "/carts/merge",
     updateItem: "/carts/update-item",
     deleteItem: "/carts/delete-item",
   },

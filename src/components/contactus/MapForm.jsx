@@ -95,7 +95,9 @@ export default function ContactSection() {
             allowfullscreen
             loading="lazy"
             className="border-0"
-          ></iframe>
+          >
+            
+          </iframe>
         </div>
       </Row>
     </Section>

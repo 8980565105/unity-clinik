@@ -15,6 +15,7 @@ import { calculateShipping } from "../utils/shippingCalculator";
 import { fetchPageBySlug } from "../features/pages/pagesThunk.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import cart from "../assets/emptycart.webp";
+import { fetchCart } from "../features/cart/cartThunk";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -38,6 +39,17 @@ export default function Cart() {
       setDrawerOpen(true);
     }
   }, [location.state]);
+
+  // useEffect(() => {
+  //   const cartId = localStorage.getItem("cart_id");
+
+  //   if (cartId) {
+  //     dispatch(fetchCart(cartId));
+  //   }
+  // }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchCart()); // thunk handles guest_id vs user_id automatically
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchSystemSettings());
@@ -64,8 +76,6 @@ export default function Cart() {
   const remaining = Math.max(0, freeThreshold - subtotal);
   const progressPercent = Math.min(100, (subtotal / freeThreshold) * 100);
   const isFree = subtotal >= freeThreshold;
-
-  const shippingCharge = calculateShipping(subtotal, "prepaid", settings);
 
   useEffect(() => {
     if (!items.length) return;
@@ -109,6 +119,16 @@ export default function Cart() {
       ? appliedCoupon.discount_value
       : Math.round((subtotal * appliedCoupon.discount_value) / 100)
     : 0;
+
+  const mrpTotal = items.reduce((sum, item) => {
+    const originalPrice = Number(
+      item?.original_price || item?.variant_id?.price || 0,
+    );
+    return sum + originalPrice * (item.quantity || 1);
+  }, 0);
+
+  const totalSaved = mrpTotal - subtotal + couponDiscountAmount;
+  const orderTotal = subtotal - couponDiscountAmount;
 
   if (items.length === 0) {
     return (
@@ -283,6 +303,69 @@ export default function Cart() {
           navigate(location.pathname, { replace: true, state: {} });
         }}
       />
+
+      {items.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-[50] bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="w-[90%] lg:max-w-[1440px] mx-auto flex items-center justify-between py-3 px-2 hidden lg:flex">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-[22px] md:text-[26px] font-bold text-gray-900">
+                  ₹{Math.round(orderTotal).toLocaleString("en-IN")}
+                </span>
+                {mrpTotal > orderTotal && (
+                  <span className="text-[14px] text-gray-400 line-through">
+                    ₹{Math.round(mrpTotal).toLocaleString("en-IN")}
+                  </span>
+                )}
+              </div>
+              {totalSaved > 0 && (
+                <span className="text-[12px] font-semibold text-green-600">
+                  • Saved ₹{Math.round(totalSaved).toLocaleString("en-IN")} with
+                  offer
+                </span>
+              )}
+            </div>
+
+            <Button
+              variant="common"
+              onClick={() => navigate("/checkout")}
+              className="!px-2 !py-3 !text-[15px] !font-bold flex text-nowrap items-center gap-1 uppercase tracking-wide"
+            >
+              CHECKOUT ORDER
+              <ChevronRight size={18} />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-2 h-[60px] lg:hidden ms-2">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="text-[22px] md:text-[26px] font-bold text-gray-900">
+                  ₹{Math.round(orderTotal).toLocaleString("en-IN")}
+                </span>
+                {mrpTotal > orderTotal && (
+                  <span className="text-[14px] text-gray-400 line-through">
+                    ₹{Math.round(mrpTotal).toLocaleString("en-IN")}
+                  </span>
+                )}
+              </div>
+              {totalSaved > 0 && (
+                <span className="text-[12px] font-semibold text-green-600">
+                  • Saved ₹{Math.round(totalSaved).toLocaleString("en-IN")} with
+                  offer
+                </span>
+              )}
+            </div>
+            <Button
+              variant="common"
+              onClick={() => navigate("/checkout")}
+              className="!px-2 !py-3 !text-[15px] !font-bold flex text-nowrap items-center gap-1 uppercase tracking-wide rounded-[0px]"
+            >
+              CHECKOUT ORDER
+              <ChevronRight size={18} />
+            </Button>
+          </div>
+        </div>
+      )}
     </>
   );
 }

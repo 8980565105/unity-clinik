@@ -213,7 +213,7 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[80vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[60vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[18px] font-semibold text-gray-900">
             Add New Address
@@ -391,7 +391,7 @@ function ReviewOrder({ items }) {
             </span>
           </div>
           <Link
-            to="/shop"
+            to="/allproducts"
             className="flex items-center gap-1.5 text-primary text-sm font-medium hover:underline"
           >
             <ArrowLeft size={14} />

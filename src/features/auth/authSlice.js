@@ -8,6 +8,7 @@ import {
   resetPassword,
 } from "./authThunk";
 import { uploadProfilePicture, toFullImageUrl } from "../user/userThunk";
+// import { clearGuestCookie } from "../../utils/guestId";
 
 function safeParse(item) {
   try {
@@ -46,6 +47,7 @@ const authSlice = createSlice({
       localStorage.removeItem("token");
       localStorage.removeItem("cart_id");
       localStorage.removeItem("user");
+      // clearGuestCookie();
     },
     clearPasswordResetState: (state) => {
       state.otpLoading = false;

@@ -9,6 +9,7 @@ import { fetchStoreInfo } from "./features/store/storeThunk";
 import { useDispatch, useSelector } from "react-redux";
 import { HelmetProvider } from "react-helmet-async";
 import Loding from "./components/loding/loding";
+import { fetchCart } from "./features/cart/cartThunk";
 
 const Home = lazy(() => import("./pages/Home"));
 const Allproducts = lazy(() => import("./pages/Allproducts"));
@@ -83,6 +84,7 @@ const RouterWrapper = () => {
 
   useEffect(() => {
     dispatch(fetchStoreInfo());
+    dispatch(fetchCart());
   }, [dispatch]);
 
   useEffect(() => {
@@ -141,7 +143,7 @@ const RouterWrapper = () => {
           <Route path="/allreviews/:productId" element={<Allreviews />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/contact-us" element={<ContactUs />} />
-          <Route path="/account-details" element={<MyAccount />}></Route>
+          <Route path="/account-details" element={<MyAccount />} />
           <Route path="/cart" element={<Cart />}></Route>
           <Route path="/checkout" element={<Checkout />}></Route>
           <Route path="/products/:id" element={<Product />}></Route>

@@ -86,30 +86,6 @@ export default function OtherRecommendedCard({
     }
   };
 
-  //   let cartId = cart?._id || localStorage.getItem("cart_id");
-
-  //   if (!cartId) {
-  //     const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-  //     const newCart = await dispatch(
-  //       createCart({ user_id: user._id }),
-  //     ).unwrap();
-
-  //     cartId = newCart._id;
-  //   }
-
-  //   await dispatch(
-  //     addToCart({
-  //       cart_id: cartId,
-  //       product_id: product._id,
-  //       variant_id: variant._id,
-  //       quantity: 1,
-  //     }),
-  //   );
-
-  //   dispatch(fetchCart(cartId));
-  // };
-
   const handleIncrease = async (e) => {
     e.preventDefault();
     e.stopPropagation();
