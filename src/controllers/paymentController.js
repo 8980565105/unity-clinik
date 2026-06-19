@@ -8,20 +8,17 @@ const axios = require("axios");
 const { sendResponse } = require("../utils/response");
 const mongoose = require("mongoose");
 
-
 const createRazorpayOrder = async (req, res) => {
   try {
-
     const { amount, order_id } = req.body;
 
     const options = {
-     amount: Math.round(Number(amount) * 100),
+      amount: Math.round(Number(amount) * 100),
       currency: "INR",
       receipt: "receipt_" + order_id,
     };
 
     const order = await razorpay.orders.create(options);
-
 
     sendResponse(res, true, order, "Razorpay order created");
   } catch (err) {
@@ -42,8 +39,10 @@ const verifyRazorpayPayment = async (req, res) => {
       user_id,
     } = req.body;
 
+    if (!razorpay_payment_id) {
+      return sendResponse(res, false, null, "razorpay_payment_id missing");
+    }
     const body = razorpay_order_id + "|" + razorpay_payment_id;
-
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(body)
@@ -57,6 +56,14 @@ const verifyRazorpayPayment = async (req, res) => {
       payment_status: "paid",
       transaction_id: razorpay_payment_id,
     });
+
+    const existingPayment = await Payment.findOne({ order_id });
+    if (existingPayment) {
+      await Payment.findByIdAndUpdate(existingPayment._id, {
+        transaction_id: razorpay_payment_id,
+        status: "completed",
+      });
+    }
 
     sendResponse(res, true, { razorpay_payment_id }, "Payment verified");
   } catch (err) {
@@ -100,18 +107,12 @@ const razorpayWebhook = async (req, res) => {
   }
 };
 
-
 const createPhonePePayment = async (req, res) => {
   try {
     const { amount, order_id, user_id, redirect_url } = req.body;
 
     if (!amount || !order_id || !user_id || !redirect_url) {
-      return sendResponse(
-        res,
-        false,
-        null,
-        "Missing required fields: amount, order_id, user_id, redirect_url",
-      );
+      return sendResponse(res, false, null, "Missing required fields");
     }
 
     const merchantId = process.env.PHONEPE_MERCHANT_ID;
@@ -119,9 +120,10 @@ const createPhonePePayment = async (req, res) => {
     const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
     const isProduction = process.env.PHONEPE_ENV === "production";
 
-
     const amountInPaisa = Math.round(amount * 100);
-    const merchantTransactionId = `MT${order_id.toString().slice(-8)}${Date.now().toString().slice(-6)}`;
+
+    // ✅ Simpler, reliable merchantTransactionId
+    const merchantTransactionId = `MT${Date.now()}`;
 
     const payload = {
       merchantId,
@@ -131,11 +133,8 @@ const createPhonePePayment = async (req, res) => {
       redirectUrl: redirect_url,
       redirectMode: "REDIRECT",
       callbackUrl: `${process.env.BACKEND_URL}/api/payments/phonepe/callback`,
-      paymentInstrument: {
-        type: "PAY_PAGE",
-      },
+      paymentInstrument: { type: "PAY_PAGE" },
     };
-
 
     const base64Payload = Buffer.from(JSON.stringify(payload)).toString(
       "base64",
@@ -151,7 +150,6 @@ const createPhonePePayment = async (req, res) => {
       ? "https://api.phonepe.com/apis/hermes/pg/v1/pay"
       : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
 
-
     const response = await axios.post(
       phonePeUrl,
       { request: base64Payload },
@@ -163,7 +161,6 @@ const createPhonePePayment = async (req, res) => {
         },
       },
     );
-
 
     if (!response.data.success) {
       return sendResponse(
@@ -181,9 +178,18 @@ const createPhonePePayment = async (req, res) => {
       return sendResponse(res, false, null, "PhonePe payment URL missing");
     }
 
-    await Order.findByIdAndUpdate(order_id, {
-      merchant_transaction_id: merchantTransactionId,
-    });
+    // ✅ Save merchantTransactionId to Order - findByIdAndUpdate with { new: true } to confirm save
+    const updatedOrder = await Order.findByIdAndUpdate(
+      order_id,
+      { merchant_transaction_id: merchantTransactionId },
+      { new: true },
+    );
+
+    // ✅ Debug log - confirm it saved
+    console.log(
+      "Saved merchant_transaction_id:",
+      updatedOrder?.merchant_transaction_id,
+    );
 
     sendResponse(
       res,
@@ -192,7 +198,6 @@ const createPhonePePayment = async (req, res) => {
       "PhonePe order created",
     );
   } catch (err) {
-   
     sendResponse(res, false, null, err?.response?.data?.message || err.message);
   }
 };
@@ -200,26 +205,32 @@ const createPhonePePayment = async (req, res) => {
 const verifyPhonePePayment = async (req, res) => {
   try {
     let { merchantTransactionId, order_id } = req.body;
-
     if (!merchantTransactionId && order_id) {
       const order = await Order.findById(order_id).select(
         "merchant_transaction_id",
       );
-      if (!order?.merchant_transaction_id) {
+
+      console.log("Found order:", order);
+
+      if (!order) {
+        return sendResponse(res, false, null, "Order not found");
+      }
+
+      if (!order.merchant_transaction_id) {
         return sendResponse(
           res,
           false,
           null,
-          "merchantTransactionId not found in order",
+          `merchant_transaction_id missing in order ${order_id}`,
         );
       }
+
       merchantTransactionId = order.merchant_transaction_id;
     }
 
     if (!merchantTransactionId) {
       return sendResponse(res, false, null, "merchantTransactionId required");
     }
-
     const merchantId = process.env.PHONEPE_MERCHANT_ID;
     const saltKey = process.env.PHONEPE_SALT_KEY;
     const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
@@ -246,6 +257,7 @@ const verifyPhonePePayment = async (req, res) => {
       },
     });
 
+    console.log("PhonePe status response:", response.data);
 
     const paymentData = response.data?.data;
     const paymentSuccess =
@@ -261,22 +273,39 @@ const verifyPhonePePayment = async (req, res) => {
     }
 
     const transactionId = paymentData?.transactionId || merchantTransactionId;
+    const amountPaid = paymentData?.amount ? paymentData.amount / 100 : 0;
 
     await Order.findByIdAndUpdate(order_id, {
       payment_status: "paid",
       transaction_id: transactionId,
     });
 
-    await Payment.findOneAndUpdate(
-      { order_id },
-      {
+    const existingPayment = await Payment.findOne({ order_id });
+    if (existingPayment) {
+      await Payment.findByIdAndUpdate(existingPayment._id, {
         status: "completed",
         transaction_id: transactionId,
-        amount_paid: paymentData.amount / 100,
-      },
-    );
+        amount_paid: amountPaid,
+        payment_method: "PhonePe",
+      });
+    } else {
+      const order = await Order.findById(order_id);
+      await Payment.create({
+        order_id,
+        user_id: order?.user_id,
+        payment_method: "PhonePe",
+        amount_paid: amountPaid,
+        transaction_id: transactionId,
+        status: "completed",
+      });
+    }
 
-    sendResponse(res, true, { transactionId }, "PhonePe payment verified");
+    sendResponse(
+      res,
+      true,
+      { transactionId, amountPaid },
+      "PhonePe payment verified",
+    );
   } catch (err) {
     sendResponse(res, false, null, err?.response?.data?.message || err.message);
   }
@@ -296,6 +325,7 @@ const phonePeCallback = async (req, res) => {
 
     const saltKey = process.env.PHONEPE_SALT_KEY;
     const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
+    const crypto = require("crypto");
 
     const receivedChecksum = req.headers["x-verify"];
     const computedHash = crypto
@@ -311,19 +341,35 @@ const phonePeCallback = async (req, res) => {
     if (decoded?.code === "PAYMENT_SUCCESS") {
       const txnId = decoded?.data?.transactionId;
       const merchantTxnId = decoded?.data?.merchantTransactionId;
+      const amountPaid = decoded?.data?.amount ? decoded.data.amount / 100 : 0;
 
-    
-      const order_id = merchantTxnId?.split("_")[1];
+      const order = await Order.findOne({
+        merchant_transaction_id: merchantTxnId,
+      });
 
-      if (order_id) {
-        await Order.findByIdAndUpdate(order_id, {
+      if (order) {
+        await Order.findByIdAndUpdate(order._id, {
           payment_status: "paid",
           transaction_id: txnId,
         });
-        await Payment.findOneAndUpdate(
-          { order_id },
-          { status: "completed", transaction_id: txnId },
-        );
+
+        const existingPayment = await Payment.findOne({ order_id: order._id });
+        if (existingPayment) {
+          await Payment.findByIdAndUpdate(existingPayment._id, {
+            status: "completed",
+            transaction_id: txnId,
+            amount_paid: amountPaid,
+          });
+        } else {
+          await Payment.create({
+            order_id: order._id,
+            user_id: order.user_id,
+            payment_method: "PhonePe",
+            amount_paid: amountPaid,
+            transaction_id: txnId,
+            status: "completed",
+          });
+        }
       }
     }
 
@@ -333,9 +379,6 @@ const phonePeCallback = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// GET ALL PAYMENTS
-// ═══════════════════════════════════════════════════════════════════════════════
 const getPayments = async (req, res) => {
   try {
     let {
@@ -357,9 +400,7 @@ const getPayments = async (req, res) => {
       query.status = status;
     }
     if (userRole === "admin") {
-    } else 
-    
-    {
+    } else {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
     }
     if (download) {
@@ -409,19 +450,14 @@ const createPayment = async (req, res) => {
     const {
       user_id,
       order_id,
-      items,
       payment_method,
       amount_paid,
       discount_amount = 0,
       coupon_id,
       status,
-      subtotal,
-      taxes,
-      shipping,
-      total,
+      transaction_id,
     } = req.body;
 
-    
     const payment = new Payment({
       user_id,
       order_id,
@@ -430,6 +466,7 @@ const createPayment = async (req, res) => {
       discount_amount,
       coupon_id: coupon_id || null,
       status: status || "pending",
+      transaction_id: transaction_id || "", 
     });
 
     const savedPayment = await payment.save();
@@ -444,7 +481,7 @@ const updatePayment = async (req, res) => {
     const updatedPayment = await Payment.findByIdAndUpdate(
       req.params.id,
       req.body,
-       { returnDocument: "after" },
+      { returnDocument: "after" },
     );
     if (!updatedPayment)
       return sendResponse(res, false, null, "Payment not found");

@@ -1576,11 +1576,9 @@ const deleteOrder = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 const bulkDeleteOrders = async (req, res) => {
   try {
-    // FIX CWE-1287: safeArray ensures ids is always a real array before .length check
     const ids = safeArray(req.body.ids);
     if (!ids.length) return sendResponse(res, false, null, "No IDs provided");
 
-    // Validate each ID is a valid ObjectId before passing to DB
     const validIds = ids.filter((id) => mongoose.Types.ObjectId.isValid(id));
     if (!validIds.length)
       return sendResponse(res, false, null, "No valid IDs provided");

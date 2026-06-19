@@ -62,7 +62,6 @@ const orderSchema = new mongoose.Schema(
     payment_method: {
       type: String,
       enum: ["COD", "Online"],
-      default: "COD",
     },
     payment_status: {
       type: String,
@@ -70,6 +69,7 @@ const orderSchema = new mongoose.Schema(
       default: "pending",
     },
     transaction_id: { type: String, default: "" },
+    merchant_transaction_id: { type: String, default: "" },
 
     admin_note: { type: String, default: "" },
     cancel_reason: { type: String, default: "" },
