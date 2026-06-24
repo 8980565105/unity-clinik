@@ -47,7 +47,6 @@ const couponsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // ✅ Fetch
       .addCase(fetchCoupons.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -62,13 +61,11 @@ const couponsSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // ✅ Create
       .addCase(createCoupon.fulfilled, (state, action) => {
         state.coupons.unshift(action.payload);
         state.total += 1;
       })
 
-      // ✅ Update
       .addCase(updateCoupon.fulfilled, (state, action) => {
         const index = state.coupons.findIndex(
           (c) => c._id === action.payload._id,
@@ -85,13 +82,11 @@ const couponsSlice = createSlice({
         }
       })
 
-      // ✅ Delete
       .addCase(deleteCoupon.fulfilled, (state, action) => {
         state.coupons = state.coupons.filter((c) => c._id !== action.payload);
         state.total -= 1;
       })
 
-      // ✅ Bulk Delete
       .addCase(bulkDeleteCoupons.fulfilled, (state, action) => {
         state.coupons = state.coupons.filter(
           (c) => !action.payload.includes(c._id),

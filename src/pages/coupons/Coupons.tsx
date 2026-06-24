@@ -14,19 +14,19 @@ import {
 
 export default function CouponsPage() {
   const dispatch = useDispatch<AppDispatch>();
- const basePath = useBasePath();
+  const basePath = useBasePath();
   const columns = [
-    { key: "name", label: "Name", width: "w-40" },
-    { key: "code", label: "Code", width: "w-28" },
+    { key: "name", label: "Name", },
+    { key: "code", label: "Code", },
     {
       key: "discount_type",
-      label: "Type",
-      width: "w-24",
+      label: "Discount Type",
+
     },
     {
       key: "discount_value",
       label: "Value",
-      width: "w-24",
+
       render: (item: any) =>
         item.discount_type === "percentage"
           ? `${item.discount_value}%`
@@ -35,19 +35,19 @@ export default function CouponsPage() {
     {
       key: "min_purchase_amount",
       label: "Min Purchase",
-      width: "w-28",
+
       render: (item: any) => item.min_purchase_amount ?? 0,
     },
     {
       key: "max_discount_amount",
       label: "Max Discount",
-      width: "w-28",
+
       render: (item: any) => item.max_discount_amount ?? "-",
     },
     {
       key: "start_date",
       label: "Start Date",
-      width: "w-28",
+
       render: (item: any) =>
         item.start_date
           ? new Date(item.start_date).toLocaleDateString()
@@ -56,7 +56,7 @@ export default function CouponsPage() {
     {
       key: "end_date",
       label: "End Date",
-      width: "w-28",
+
       render: (item: any) =>
         item.end_date ? new Date(item.end_date).toLocaleDateString() : "-",
     },

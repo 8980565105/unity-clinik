@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useBasePath } from "@/hooks/useBasePath";
@@ -29,7 +28,8 @@ export default function UserFormPage() {
   const [role, setRole] = useState<"admin" | "user">("user");
   const [status, setStatus] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other">("male");
   const [dob, setDob] = useState<string>("");
@@ -74,6 +74,11 @@ export default function UserFormPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!isEditMode && !password) {
+      toast.error("Password is required");
+      return;
+    }
+
     const payload = {
       name,
       email,
@@ -84,7 +89,9 @@ export default function UserFormPage() {
       gender,
       date_of_birth: dob || null,
       address,
+      password: password,
     };
+
 
     try {
       let result;
@@ -138,6 +145,34 @@ export default function UserFormPage() {
               <div>
                 <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                 <Input id="email" type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1" />
+              </div>
+
+              <div>
+                <Label htmlFor="password">
+                  Password{" "}
+                  {!isEditMode && <span className="text-red-500">*</span>}
+                  {isEditMode && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </Label>
+                <div className="relative mt-1">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder={isEditMode ? "enter password" : "Enter password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required={!isEditMode}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <div>

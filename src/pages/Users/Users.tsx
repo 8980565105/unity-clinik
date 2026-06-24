@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
-import { Plus, Download } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useBasePath } from "@/hooks/useBasePath";
 
 import { AppDispatch, RootState } from "@/store";
@@ -13,6 +13,7 @@ import {
   updateUserStatus,
 } from "@/features/users/usersThunk";
 import { GenericTable } from "@/components/ui/adminTable";
+import { Label } from "recharts";
 
 export default function Users() {
   const dispatch = useDispatch<AppDispatch>();
@@ -45,6 +46,8 @@ export default function Users() {
       ),
     },
     { key: "email", label: "Email" },
+    { key: "mobile_number", label: "phone" },
+    { key: "authProvider", label: "Type" },
     { key: "role", label: "Role" },
 
   ];
@@ -108,15 +111,15 @@ export default function Users() {
           throw new Error(err?.message || "Failed to update status");
         }
       }}
-    // headerActions={
-    //   <>
-    //     <Link to={`${basePath}/users/add`}>
-    //       <Button className="flex items-center gap-2">
-    //         <Plus className="h-4 w-4" /> Add User
-    //       </Button>
-    //     </Link>
-    //   </>
-    // }
+      headerActions={
+        <>
+          <Link to={`${basePath}/users/add`}>
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" /> Add User
+            </Button>
+          </Link>
+        </>
+      }
     />
   );
 }

@@ -2,7 +2,6 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
-// ✅ Fetch coupons
 export const fetchCoupons = createAsyncThunk(
   "coupons/fetchCoupons",
   async (
@@ -19,7 +18,6 @@ export const fetchCoupons = createAsyncThunk(
   }
 );
 
-// ✅ Get coupon by ID
 export const getCouponById = createAsyncThunk(
   "coupons/getCouponById",
   async (id: string, { rejectWithValue }) => {
@@ -33,7 +31,6 @@ export const getCouponById = createAsyncThunk(
   }
 );
 
-// ✅ Create coupon
 export const createCoupon = createAsyncThunk(
   "coupons/createCoupon",
   async (data: any, { rejectWithValue }) => {
@@ -47,7 +44,6 @@ export const createCoupon = createAsyncThunk(
   }
 );
 
-// ✅ Update coupon
 export const updateCoupon = createAsyncThunk(
   "coupons/updateCoupon",
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
@@ -61,7 +57,6 @@ export const updateCoupon = createAsyncThunk(
   }
 );
 
-// ✅ Update coupon status
 export const updateCouponStatus = createAsyncThunk(
   "coupons/updateCouponStatus",
   async ({ id, status }: { id: string; status: "active" | "inactive" }, { rejectWithValue }) => {
@@ -75,7 +70,6 @@ export const updateCouponStatus = createAsyncThunk(
   }
 );
 
-// ✅ Delete coupon
 export const deleteCoupon = createAsyncThunk(
   "coupons/deleteCoupon",
   async (id: string, { rejectWithValue }) => {
@@ -89,7 +83,6 @@ export const deleteCoupon = createAsyncThunk(
   }
 );
 
-// ✅ Bulk delete coupons
 export const bulkDeleteCoupons = createAsyncThunk(
   "coupons/bulkDeleteCoupons",
   async (ids: string[], { rejectWithValue }) => {

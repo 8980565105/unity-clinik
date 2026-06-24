@@ -10,7 +10,6 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useBasePath } from "@/hooks/useBasePath";
-
 import {
   createCoupon,
   getCouponById,
@@ -29,20 +28,26 @@ const generateCouponCode = (length = 8) => {
   }
   return code;
 };
+
 export default function CouponFormPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
   const basePath = useBasePath();
-
-
   const [name, setName] = useState("");
-
   const [description, setDescription] = useState("");
-  const [discountType, setDiscountType] = useState<"percentage" | "fixed" | "freeshiping">(
-    "percentage"
-  );
+  const [discountType, setDiscountType] = useState<
+    "percentage" | "fixed" | "freeshiping" | "product" | "buy x get y"
+  >("percentage");
+  const [giftProducts, setGiftProducts] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [buyQuantity, setBuyQuantity] = useState(0);
+  const [getQuantity, setGetQuantity] = useState(0);
+  const [couponType, setCouponType] = useState<
+    "normal" | "first_order" | "free_gift" | "referral" | "buy_x_get_y"
+  >("normal");
   const [discountValue, setDiscountValue] = useState<string>("");
   const [minPurchaseAmount, setMinPurchaseAmount] = useState<string>("0");
   const [maxDiscountAmount, setMaxDiscountAmount] = useState<string>("");
@@ -52,66 +57,37 @@ export default function CouponFormPage() {
   const [status, setStatus] = useState(true);
   const [code, setCode] = useState("");
   const [autoGenerate, setAutoGenerate] = useState(false);
-
-
   const [products, setProducts] = useState<any[]>([]);
   const [subCategories, setSubCategories] = useState<any[]>([]);
-
-  const [apply, setApplyCoupon] =
-    useState("allproducts");
-
-  const [selectedProducts,
-    setSelectedProducts] =
-    useState<any[]>([]);
-
-  const [selectedSubCategories,
-    setSelectedSubCategories] =
-    useState<any[]>([]);
-
-
-
+  const [apply, setApplyCoupon] = useState("allproducts");
+  const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
+  const [freeProducts, setFreeProducts] = useState<any[]>([]);
+  const [selectedSubCategories, setSelectedSubCategories] = useState<any[]>([]);
 
   useEffect(() => {
     loadProducts();
     loadSubCategories();
   }, []);
 
-
   const loadProducts = async () => {
     try {
-      const res = await dispatch(
-        fetchProducts({})
-      ).unwrap();
+      const res = await dispatch(fetchProducts({})).unwrap();
       setProducts(res.products || []);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const loadSubCategories =
-    async () => {
-      try {
-        const res =
-          await dispatch(
-            fetchsubCategories({
-              page: 1,
-              limit: 1000,
-            })
-          ).unwrap();
-
-        console.log(
-          "subcategory api",
-          res
-        );
-
-        setSubCategories(
-          res?.categories ||
-          []
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    };
+  const loadSubCategories = async () => {
+    try {
+      const res = await dispatch(
+        fetchsubCategories({ page: 1, limit: 1000 })
+      ).unwrap();
+      setSubCategories(res?.categories || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
     if (isEditMode && id) {
@@ -122,6 +98,30 @@ export default function CouponFormPage() {
           setCode(coupon.code || "");
           setDescription(coupon.description || "");
           setDiscountType(coupon.discount_type || "percentage");
+          setCouponType(coupon.coupon_type || "normal");
+          setBuyQuantity(Number(coupon.buy_x_get_y?.buy_quantity));
+          setGetQuantity(Number(coupon.buy_x_get_y?.get_quantity));
+
+          if (coupon.gift_product_ids && coupon.gift_product_ids.length > 0) {
+            setGiftProducts(
+              coupon.gift_product_ids.map((p: any) => ({
+                value: p._id || p,
+                label: p.name || "Gift Product",
+              }))
+            );
+          }
+          if (coupon.coupon_type === "buy_x_get_y") {
+            setBuyQuantity(coupon.buy_x_get_y?.buy_quantity || 0);
+            setGetQuantity(coupon.buy_x_get_y?.get_quantity || 0);
+
+            setFreeProducts(
+              (coupon.buy_x_get_y?.free_products || []).map((product) => ({
+                value: product._id,
+                label: product.name,
+              }))
+            );
+          }
+
           setDiscountValue(String(coupon.discount_value || ""));
           setMinPurchaseAmount(String(coupon.min_purchase_amount ?? "0"));
           setMaxDiscountAmount(
@@ -130,48 +130,31 @@ export default function CouponFormPage() {
               : ""
           );
           setUsageLimit(String(coupon.usage_limit || "1"));
-          setStartDate(coupon.start_date
-            ? new Date(coupon.start_date).toISOString().slice(0, 16)
-            : ""
+          setStartDate(
+            coupon.start_date
+              ? new Date(coupon.start_date).toISOString().slice(0, 16)
+              : ""
           );
-          setEndDate(coupon.end_date
-            ? new Date(coupon.end_date).toISOString().slice(0, 16)
-            : ""
+          setEndDate(
+            coupon.end_date
+              ? new Date(coupon.end_date).toISOString().slice(0, 16)
+              : ""
           );
 
-          setApplyCoupon(
-            coupon.apply_type ||
-            "allproducts"
-          );
+          setApplyCoupon(coupon.apply_type || "allproducts");
 
           setSelectedProducts(
-            coupon.products?.map(
-              (p: any) => ({
-                value:
-                  p._id ||
-                  p,
-
-                label:
-                  p.name ||
-                  p.title ||
-                  "Product",
-              })
-            ) || []
+            coupon.products?.map((p: any) => ({
+              value: p._id || p,
+              label: p.name || p.title || "Product",
+            })) || []
           );
 
           setSelectedSubCategories(
-            coupon.subcategories?.map(
-              (s: any) => ({
-                value:
-                  s._id ||
-                  s,
-
-                label:
-                  s.name ||
-                  s.title ||
-                  "SubCategory",
-              })
-            ) || []
+            coupon.subcategories?.map((s: any) => ({
+              value: s._id || s,
+              label: s.name || s.title || "SubCategory",
+            })) || []
           );
 
           setStatus(coupon.status === "active");
@@ -193,22 +176,24 @@ export default function CouponFormPage() {
     e.preventDefault();
 
     if (!name.trim()) return toast.error("Please enter coupon name");
-    if (!code.trim()) return toast.error("Please enter or generate a coupon code");
-
+    if (!code.trim())
+      return toast.error("Please enter or generate a coupon code");
     if (!usageLimit || Number(usageLimit) < 1)
       return toast.error("Please enter a valid usage limit");
     if (!startDate) return toast.error("Please select a start date & time");
-
     if (!endDate) return toast.error("Please select an end date & time");
     if (new Date(endDate) < new Date(startDate))
       return toast.error("End date cannot be before start date");
+    if (couponType === "free_gift" && giftProducts.length === 0) {
+      return toast.error("Please select at least one gift product");
+    }
 
-
-    const payload = {
+    const payload: any = {
       name,
       code: code.toUpperCase(),
       description,
       discount_type: discountType,
+      coupon_type: couponType,
       discount_value: Number(discountValue),
       min_purchase_amount: Number(minPurchaseAmount),
       max_discount_amount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
@@ -216,27 +201,27 @@ export default function CouponFormPage() {
       start_date: startDate ? new Date(startDate).toISOString() : null,
       end_date: endDate ? new Date(endDate).toISOString() : null,
       status: status ? "active" : "inactive",
-      apply_type:
-        apply,
+      gift_product_ids:
+        couponType === "free_gift"
+          ? giftProducts.map((p) => p.value)
+          : [],
+
+      buy_x_get_y:
+        couponType === "buy_x_get_y"
+          ? { buy_quantity: buyQuantity, get_quantity: getQuantity, free_products: freeProducts.map((p) => p.value), }
+          : undefined,
+
+      apply_type: apply,
 
       products:
-        apply ===
-          "specificproducts"
-          ? selectedProducts.map(
-            (p) =>
-              p.value
-          )
+        apply === "specificproducts" || apply === "Excludeproduct"
+          ? selectedProducts.map((p) => p.value)
           : [],
 
       subcategories:
-        apply ===
-          "specificsubcategory"
-          ? selectedSubCategories.map(
-            (s) =>
-              s.value
-          )
+        apply === "specificsubcategory" || apply === "Excludecategories"
+          ? selectedSubCategories.map((s) => s.value)
           : [],
-
     };
 
     try {
@@ -252,12 +237,9 @@ export default function CouponFormPage() {
         updateCoupon.fulfilled.match(result)
       ) {
         toast.success(
-          isEditMode
-            ? "Coupon updated successfully!"
-            : "Coupon created successfully!"
+          isEditMode ? "Coupon updated successfully!" : "Coupon created successfully!"
         );
         navigate(`${basePath}/coupons`);
-
       } else {
         toast.error((result.payload as string) || "Something went wrong");
       }
@@ -266,17 +248,21 @@ export default function CouponFormPage() {
     }
   };
 
-
-
   const handleDiscountTypeChange = (value: string) => {
-    setDiscountType(value as "percentage" | "fixed");
-    if (value === "freeshiping") {
-      setDiscountValue("0");
-    } else {
-      setDiscountValue("0");
-    }
+    setDiscountType(value as any);
+    setDiscountValue("0");
   };
 
+  const handleCouponTypeChange = (value: string) => {
+    setCouponType(value as any);
+    if (value === "free_gift") {
+      setDiscountType("product" as any);
+      setDiscountValue("0");
+    }
+    if (value !== "free_gift") {
+      setGiftProducts([]);
+    }
+  };
 
   return (
     <div className="p-6 mx-auto">
@@ -313,10 +299,12 @@ export default function CouponFormPage() {
                   onChange={(e) => setName(e.target.value)}
                 />
               </div>
+
               <div className="flex justify-between items-center">
                 <div>
-                  <Label htmlFor="name">Coupon Code *</Label>
+                  <Label htmlFor="code">Coupon Code *</Label>
                   <Input
+                    id="code"
                     value={code}
                     onChange={(e) => {
                       if (!autoGenerate) {
@@ -324,7 +312,7 @@ export default function CouponFormPage() {
                       }
                     }}
                     readOnly={autoGenerate}
-                    placeholder="e.g.save20"
+                    placeholder="e.g. SAVE20"
                     className={autoGenerate ? "bg-gray-100 cursor-not-allowed" : ""}
                   />
                 </div>
@@ -334,7 +322,7 @@ export default function CouponFormPage() {
                     type="checkbox"
                     onChange={(e) => handleAutoGenerateToggle(e.target.checked)}
                   />
-                  <Label htmlFor="name">Auto Generate</Label>
+                  <Label>Auto Generate</Label>
                 </div>
               </div>
 
@@ -348,26 +336,50 @@ export default function CouponFormPage() {
                 />
               </div>
 
-              <div>
-                <Label htmlFor="discountType">Discount Type</Label>
-                <select
-                  id="discountType"
-                  value={discountType}
-
-                  onChange={(e) => handleDiscountTypeChange(e.target.value)}
-                  className="mt-1 w-full border rounded-md p-2"
-                >
-                  <option value="percentage">Percentage</option>
-                  <option value="fixed">Fixed</option>
-                  <option value="freeshiping">Free Shiping</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="discountType">Discount Type</Label>
+                  <select
+                    id="discountType"
+                    value={discountType}
+                    onChange={(e) => handleDiscountTypeChange(e.target.value)}
+                    disabled={
+                      couponType === "free_gift" || couponType === "buy_x_get_y"
+                    }
+                    className="mt-1 w-full border rounded-md p-2"
+                  >
+                    <option value="percentage">Percentage</option>
+                    <option value="fixed">Fixed</option>
+                    <option value="freeshiping">Free Shipping</option>
+                    {couponType === "free_gift" && (
+                      <option value="product">Free Gift Product</option>
+                    )}
+                    {couponType === "buy_x_get_y" && (
+                      <option value="buy_x_get_y">Buy X Get Y</option>
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="couponType">Coupon Type</Label>
+                  <select
+                    id="couponType"
+                    value={couponType}
+                    onChange={(e) => handleCouponTypeChange(e.target.value)}
+                    className="mt-1 w-full border rounded-md p-2"
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="first_order">First Order Coupon</option>
+                    <option value="free_gift">Free Gift Coupon</option>
+                    <option value="referral">Referral Coupon</option>
+                    <option value="buy_x_get_y">Buy X Get Y Free</option>
+                  </select>
+                </div>
               </div>
 
-              {discountType === "percentage" ? (
+              {discountType === "percentage" && couponType !== "free_gift" && (
                 <div>
-                  <Label htmlFor="percentage">Percentage (%) Value</Label>
+                  <Label>Percentage (%) Value</Label>
                   <Input
-                    id="percentage"
                     type="number"
                     value={discountValue}
                     onChange={(e) => setDiscountValue(e.target.value)}
@@ -375,34 +387,90 @@ export default function CouponFormPage() {
                     max={100}
                   />
                 </div>
-              )
-                :
-                discountType === "fixed" ?
-                  (
-                    <div>
-                      <Label htmlFor="fixedValue">Fixed Value</Label>
-                      <Input
-                        id="fixedValue"
-                        type="number"
-                        value={discountValue}
-                        onChange={(e) => setDiscountValue(e.target.value)}
-                        min={1}
-                      />
-                    </div>
-                  )
+              )}
 
-                  :
-                  (
-                    ""
-                  )
-              }
+              {discountType === "fixed" && couponType !== "free_gift" && (
+                <div>
+                  <Label>Fixed Value</Label>
+                  <Input
+                    type="number"
+                    value={discountValue}
+                    onChange={(e) => setDiscountValue(e.target.value)}
+                    min={1}
+                  />
+                </div>
+              )}
+
+              {couponType === "free_gift" && (
+                <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
+                  <Label className="text-blue-800 font-semibold mb-2 block">
+                    🎁 Select Gift Products (Multiple Allowed)
+                  </Label>
+                  <Select
+                    isMulti
+                    options={products.map((p: any) => ({
+                      value: p._id,
+                      label: p.name,
+                    }))}
+                    value={giftProducts}
+                    onChange={(selected: any) =>
+                      setGiftProducts(selected || [])
+                    }
+                    placeholder="Search and select gift products..."
+                    isClearable
+                  />
+                  {giftProducts.length > 0 && (
+                    <p className="text-blue-600 text-sm mt-2">
+                      {giftProducts.length} gift product(s) selected
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {couponType === "buy_x_get_y" && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <Label>Buy X *</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={buyQuantity}
+                      onChange={(e) => setBuyQuantity(Number(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Get Y *</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={getQuantity}
+                      onChange={(e) => setGetQuantity(Number(e.target.value))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>select product</Label>
+
+                    <Select
+                      isMulti
+                      options={products.map((p) => ({
+                        value: p._id,
+                        label: p.name,
+                      }))}
+                      value={freeProducts}
+                      onChange={(selected) => setFreeProducts(selected as any || [])}
+                      placeholder="Search Products..."
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="minPurchase">Min Purchase Amount</Label>
                   <Input
                     id="minPurchase"
-
                     type="number"
                     value={minPurchaseAmount}
                     onChange={(e) => setMinPurchaseAmount(e.target.value)}
@@ -453,111 +521,65 @@ export default function CouponFormPage() {
                 </div>
               </div>
 
-
-
-
-
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="apply">Applies To*</Label>
+                  <Label htmlFor="apply">Applies To *</Label>
                   <select
                     id="apply"
                     value={apply}
-                    onChange={(e) =>
-                      setApplyCoupon(e.target.value)
-                    }
+                    onChange={(e) => setApplyCoupon(e.target.value)}
                     className="mt-1 w-full border rounded-md p-2"
                   >
-                    <option value="allproducts">
-                      All Products
-                    </option>
-
-                    <option value="specificproducts">
-                      Specific Products
-                    </option>
-
-                    <option value="specificsubcategory">
-                      Specific SubCategory
-                    </option>
+                    <option value="allproducts">All Products</option>
+                    <option value="specificproducts">Specific Products</option>
+                    <option value="specificsubcategory">Specific SubCategory</option>
+                    <option value="Excludeproduct">Exclude Selected Products</option>
+                    <option value="Excludecategories">Exclude Selected SubCategories</option>
                   </select>
                 </div>
 
+                {(apply === "specificproducts" || apply === "Excludeproduct") && (
+                  <div>
+                    <Label>
+                      {apply === "Excludeproduct" ? "Exclude Products" : "Select Products"}
+                    </Label>
+                    <Select
+                      isMulti
+                      options={products.map((product: any) => ({
+                        value: product._id,
+                        label: product.name,
+                      }))}
+                      value={selectedProducts}
+                      onChange={(selected: any) =>
+                        setSelectedProducts(selected as any)
+                      }
+                      placeholder="Search Products..."
+                    />
+                  </div>
+                )}
 
-
-                {apply ===
-                  "specificproducts" && (
-                    <div>
-                      <Label>
-                        Select Products
-                      </Label>
-
-                      <Select
-                        isMulti
-                        options={products.map(
-                          (product: any) => ({
-                            value:
-                              product._id,
-                            label:
-                              product.name,
-                          })
-                        )}
-                        value={
-                          selectedProducts
-                        }
-                        onChange={(
-                          selected: any
-                        ) =>
-                          setSelectedProducts(
-                            selected as any
-                          )
-                        }
-                        placeholder="Search Products..."
-                      />
-                    </div>
-                  )}
-
-
-                {apply ===
-                  "specificsubcategory" && (
-                    <div>
-                      <Label>
-                        Select SubCategory
-                      </Label>
-
-
-                      <Select
-                        isMulti
-                        options={subCategories.map(
-                          (
-                            subcategory: any
-                          ) => ({
-                            value:
-                              subcategory._id,
-
-                            label:
-                              subcategory.name,
-                          })
-                        )}
-                        value={
-                          selectedSubCategories
-                        }
-                        onChange={(
-                          selected: any
-                        ) =>
-                          setSelectedSubCategories(
-                            selected || []
-                          )
-                        }
-                        placeholder="Search SubCategory..."
-                      />
-
-                    </div>
-
-                  )}
+                {(apply === "specificsubcategory" || apply === "Excludecategories") && (
+                  <div>
+                    <Label>
+                      {apply === "Excludecategories"
+                        ? "Exclude SubCategories"
+                        : "Select SubCategory"}
+                    </Label>
+                    <Select
+                      isMulti
+                      options={subCategories.map((subcategory: any) => ({
+                        value: subcategory._id,
+                        label: subcategory.name,
+                      }))}
+                      value={selectedSubCategories}
+                      onChange={(selected: any) =>
+                        setSelectedSubCategories(selected || [])
+                      }
+                      placeholder="Search SubCategory..."
+                    />
+                  </div>
+                )}
               </div>
-
-
-
             </CardContent>
           </Card>
         </div>
@@ -576,22 +598,21 @@ export default function CouponFormPage() {
                   onCheckedChange={(val) => setStatus(val)}
                 />
               </div>
+              <div className="flex gap-3 mt-3">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isEditMode ? "Update Coupon" : "Create Coupon"}
+                </Button>
+                <Link to={`${basePath}/coupons`} className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
-
-          <div className="flex gap-3">
-            <Button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              {isEditMode ? "Update Coupon" : "Create Coupon"}
-            </Button>
-            <Link to={`${basePath}/coupons`} className="flex-1">
-              <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </Link>
-          </div>
         </div>
       </form>
     </div>

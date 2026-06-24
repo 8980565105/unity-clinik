@@ -22,8 +22,7 @@ export default function Login() {
 
     if (loginUser.fulfilled.match(result)) {
       toast.success("Logged in successfully!");
-
-      // const userRole = result.payload.user.role;
+      console.log("LOGIN SUCCESS");
       navigate("/");
     } else {
       const message =

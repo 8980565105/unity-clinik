@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/store";
+import { RootState } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1480,8 +1480,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
-
   if (sType === "Result Section") {
     return (
       <div className="space-y-4">
@@ -1669,6 +1667,7 @@ export default function ProductFormPage() {
   const [categoryId, setCategoryId] = useState<string[]>([]);
   const [images, setImages] = useState("");
   const [status, setStatus] = useState(true);
+  const [order, setOrder] = useState("");
   const [variants, setVariants] = useState([
     {
       brand_id: "", type_id: "", price: "", stock_quantity: "0",
@@ -1701,6 +1700,9 @@ export default function ProductFormPage() {
         if (res.payload) {
           const p = res.payload.data || res.payload;
           setName(p.name || "");
+          setOrder(
+            p.order?.toString() || ""
+          );
           setDescription(p.description || "");
           setSteps(p.steps || "");
           const catIds = Array.isArray(p.category_id) ? p.category_id.map((cat: any) => cat?._id || cat) : [];
@@ -1855,7 +1857,6 @@ export default function ProductFormPage() {
                 };
               }
 
-
               if (type === "Result Section") {
                 return {
                   ...section,
@@ -1946,7 +1947,6 @@ export default function ProductFormPage() {
       } else {
         firstStep.variants[packOneIdx] = { ...firstStep.variants[packOneIdx], ...packOneData };
       }
-
       return updatedSections;
     });
   }, [variants]);
@@ -2012,9 +2012,7 @@ export default function ProductFormPage() {
 
     for (let i = 0; i < variants.length; i++) {
       const v = variants[i] as any;
-      if (!v.brand_id || !v.price || !v.barcode || !v.ProductWidth || !v.ProductWeight ||
-        !v.offerprice || !v.ProductHeight || !v.ProductLength || !v.CountryOrigin ||
-        !v.Marketed || !v.Manufactured || !v.stock_quantity || !v.sku) {
+      if (!v.brand_id || !v.type_id || !v.price || !v.offerprice || !v.ProductLength || !v.CountryOrigin || !v.Manufactured || !v.stock_quantity) {
         return toast.error(`All fields are required for variant ${i + 1}`);
       }
     }
@@ -2047,7 +2045,7 @@ export default function ProductFormPage() {
     });
 
     const payload = {
-      name, description, steps, category_id: categoryId, images,
+      name, description, steps, category_id: categoryId, images, order: Number(order),
       status: status ? "active" : "inactive", variants, sections: cleanSections,
     };
 
@@ -2078,227 +2076,243 @@ export default function ProductFormPage() {
             <h1 className="text-3xl font-bold text-gray-900">{isEditMode ? "Edit Product" : "Add New Product"}</h1>
             <p className="text-gray-500 mt-1">{isEditMode ? "Update product details." : "Create a new product."}</p>
           </div>
-          {isEditMode && (
-
-            <>
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  onClick={handleSubmit}
-                >
-                  Update Product
-                </Button>
-
-                <Button type="button" onClick={handleDuplicate} disabled={duplicating} className="flex items-center gap-2">
-                  <Copy className="h-4 w-4" />
-                  {duplicating ? "Duplicating..." : "Duplicate Product"}
-                </Button>
-              </div>
-            </>
-
-          )}
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card className="shadow-md border border-gray-200">
-          <CardHeader><CardTitle className="text-lg font-semibold">Product Info</CardTitle></CardHeader>
-          <CardContent className="space-y-5">
-            <div>
-
-              <Label>Product Name *</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+      <form onSubmit={handleSubmit} className="flex gap-4">
+        <div className="space-y-6 w-[75%]">
+          <Card className="shadow-md border border-gray-200">
+            <CardHeader><CardTitle className="text-lg font-semibold">Product Info</CardTitle></CardHeader>
+            <CardContent className="space-y-5">
               <div>
-                <Label>Description</Label>
-                <TiptapEditor value={description} onChange={(val: string) => setDescription(val)} />
-              </div>
-              <div>
-                <Label>How To Use Steps</Label>
-                <TiptapEditor value={steps} onChange={(val: string) => setSteps(val)} />
-              </div>
-            </div>
-            <div>
-              <Label>SubCategory *</Label>
-              <div className="border rounded-md p-3 min-h-[50px]">
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {categoryId.map((cid) => {
-                    const category = (subCategories as any[]).find((c) => c._id === cid);
-                    return (
-                      <div key={cid} className="bg-green-600 text-white px-3 py-1 rounded-md flex items-center gap-2 text-sm">
-                        {category?.name}
-                        <button type="button" onClick={() => setCategoryId(categoryId.filter((c) => c !== cid))}>×</button>
-                      </div>
-                    );
-                  })}
-                </div>
-                <select className="w-full bg-transparent border rounded-md p-2" value=""
-                  onChange={(e) => { const selectedId = e.target.value; if (selectedId && !categoryId.includes(selectedId)) setCategoryId([...categoryId, selectedId]); }}>
-                  <option value="">Select SubCategory</option>
-                  {(subCategories as any[]).filter((cat) => cat.parent_id).filter((cat) => !categoryId.includes(cat._id)).map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
-                </select>
-              </div>
-            </div>
-            <div>
-              <Label>Product Images</Label>
-              <ImageUpload value={images} onChange={(val: any) => { const image = typeof val === "string" ? val : Array.isArray(val) ? val[0] : ""; setImages(image); }} multiple={false} />
-            </div>
-            <div className="flex items-center justify-between mt-2">
-              <Label htmlFor="status">Active</Label>
-              <Switch id="status" checked={status} onCheckedChange={setStatus} />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="shadow-md border border-gray-200">
-          <CardHeader className="flex justify-between items-center">
-            <CardTitle className="text-lg font-semibold">Variants</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {variants.map((v: any, idx) => (
-              <div key={idx} className="p-4 border rounded space-y-3 relative">
+                <Label>Product Name *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <CardTitle className="text-lg font-semibold">Variant</CardTitle>
+                  <Label>Description</Label>
+                  <TiptapEditor value={description} onChange={(val: string) => setDescription(val)} />
                 </div>
-                <div className="col-span-2 flex items-center justify-between mt-2">
-                  <Label htmlFor={`variant-status-${idx}`}>Status</Label>
-                  <Switch id={`variant-status-${idx}`} checked={v.status === "active"} onCheckedChange={(checked) => handleVariantChange(idx, "status", checked ? "active" : "inactive")} />
+                <div>
+                  <Label>How To Use Steps</Label>
+                  <TiptapEditor value={steps} onChange={(val: string) => setSteps(val)} />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label>Brand *</Label>
-                    <Select value={v.brand_id} onValueChange={(val) => handleVariantChange(idx, "brand_id", val)}>
-                      <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
-                      <SelectContent>{(brands as any[]).map((b) => <SelectItem key={b._id} value={b._id}>{b.name}</SelectItem>)}</SelectContent>
-                    </Select>
+              </div>
+              <div>
+                <Label>SubCategory *</Label>
+                <div className="border rounded-md p-3 min-h-[50px]">
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {categoryId.map((cid) => {
+                      const category = (subCategories as any[]).find((c) => c._id === cid);
+                      return (
+                        <div key={cid} className="bg-green-600 text-white px-3 py-1 rounded-md flex items-center gap-2 text-sm">
+                          {category?.name}
+                          <button type="button" onClick={() => setCategoryId(categoryId.filter((c) => c !== cid))}>×</button>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <Label>Type</Label>
-                    <Select value={v.type_id} onValueChange={(val) => handleVariantChange(idx, "type_id", val)}>
-                      <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                      <SelectContent>{(types as any[]).map((t) => <SelectItem key={t._id} value={t._id}>{t.name}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div><Label>Price *</Label><Input type="number" value={v.price} onChange={(e) => handleVariantChange(idx, "price", e.target.value)} /></div>
-                  <div><Label>Stock *</Label><Input type="number" value={v.stock_quantity} min={0} onChange={(e) => handleVariantChange(idx, "stock_quantity", e.target.value)} /></div>
-                  <div><Label>SKU *</Label><Input value={v.sku} onChange={(e) => handleVariantChange(idx, "sku", e.target.value)} /></div>
-                  <div><Label>Offer Price *</Label><Input type="number" value={v.offerprice} onChange={(e) => handleVariantChange(idx, "offerprice", e.target.value)} /></div>
-                  <div><Label>Bar Code *</Label><Input value={v.barcode} onChange={(e) => handleVariantChange(idx, "barcode", e.target.value)} /></div>
-                  <div><Label>Manufactured By *</Label><Input value={v.Manufactured} onChange={(e) => handleVariantChange(idx, "Manufactured", e.target.value)} /></div>
-                  <div><Label>Marketed By *</Label><Input value={v.Marketed} onChange={(e) => handleVariantChange(idx, "Marketed", e.target.value)} /></div>
-                  <div><Label>Country Origin *</Label><Input value={v.CountryOrigin} onChange={(e) => handleVariantChange(idx, "CountryOrigin", e.target.value)} /></div>
-                  <div><Label>Product Length (cms) *</Label><Input type="number" value={v.ProductLength} onChange={(e) => handleVariantChange(idx, "ProductLength", e.target.value)} /></div>
-                  <div><Label>Product Width (cms) *</Label><Input type="number" value={v.ProductWidth} onChange={(e) => handleVariantChange(idx, "ProductWidth", e.target.value)} /></div>
-                  <div><Label>Product Height (cms) *</Label><Input type="number" value={v.ProductHeight} onChange={(e) => handleVariantChange(idx, "ProductHeight", e.target.value)} /></div>
-                  <div><Label>Product Weight (Kg) *</Label><Input type="number" value={v.ProductWeight} onChange={(e) => handleVariantChange(idx, "ProductWeight", e.target.value)} /></div>
+                  <select className="w-full bg-transparent border rounded-md p-2" value=""
+                    onChange={(e) => { const selectedId = e.target.value; if (selectedId && !categoryId.includes(selectedId)) setCategoryId([...categoryId, selectedId]); }}>
+                    <option value="">Select SubCategory</option>
+                    {(subCategories as any[]).filter((cat) => cat.parent_id).filter((cat) => !categoryId.includes(cat._id)).map((c) => <option key={c._id} value={c._id}>{c.name}</option>)}
+                  </select>
                 </div>
+              </div>
+              <div>
+                <Label>Product Images</Label>
+                <ImageUpload value={images} onChange={(val: any) => { const image = typeof val === "string" ? val : Array.isArray(val) ? val[0] : ""; setImages(image); }} multiple={false} />
+              </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-wrap gap-6 mt-4 col-span-2">
-                    <div className="flex items-center gap-2"><Label>Featured</Label><Switch checked={v.is_featured} onCheckedChange={(val) => handleVariantChange(idx, "is_featured", val)} /></div>
-                    <div className="flex items-center gap-2"><Label>Best Seller</Label><Switch checked={v.is_best_seller} onCheckedChange={(val) => handleVariantChange(idx, "is_best_seller", val)} /></div>
-                    <div className="flex items-center gap-2"><Label>Trending</Label><Switch checked={v.is_trending} onCheckedChange={(val) => handleVariantChange(idx, "is_trending", val)} /></div>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md border border-gray-200">
+            <CardHeader className="flex justify-between items-center">
+              <CardTitle className="text-lg font-semibold">Variants</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {variants.map((v: any, idx) => (
+                <div key={idx} className="p-4 border rounded space-y-3 relative">
+                  <div>
+                    <CardTitle className="text-lg font-semibold">Variant</CardTitle>
                   </div>
-                  <div className="col-span-2">
-                    <Label>Variant Images</Label>
-                    <DraggableImageList
-                      images={v.images || []}
-                      onChange={(imgs: string[]) => handleVariantChange(idx, "images", imgs)}
-                      onAddMore={(newUrls: string[]) => { const current = v.images || []; handleVariantChange(idx, "images", [...current, ...newUrls]); }}
-                      apiUrlImage={import.meta.env.VITE_API_URL_IMAGE}
+                  <div className="col-span-2 flex items-center justify-between mt-2">
+                    <Label htmlFor={`variant-status-${idx}`}>Status</Label>
+                    <Switch id={`variant-status-${idx}`} checked={v.status === "active"} onCheckedChange={(checked) => handleVariantChange(idx, "status", checked ? "active" : "inactive")} />
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label>Brand *</Label>
+                      <Select value={v.brand_id} onValueChange={(val) => handleVariantChange(idx, "brand_id", val)}>
+                        <SelectTrigger><SelectValue placeholder="Select brand" /></SelectTrigger>
+                        <SelectContent>{(brands as any[]).map((b) => <SelectItem key={b._id} value={b._id}>{b.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Type</Label>
+                      <Select value={v.type_id} onValueChange={(val) => handleVariantChange(idx, "type_id", val)}>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                        <SelectContent>{(types as any[]).map((t) => <SelectItem key={t._id} value={t._id}>{t.name}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div><Label>Price *</Label><Input type="number" value={v.price} onChange={(e) => handleVariantChange(idx, "price", e.target.value)} /></div>
+                    <div><Label>Stock *</Label><Input type="number" value={v.stock_quantity} min={0} onChange={(e) => handleVariantChange(idx, "stock_quantity", e.target.value)} /></div>
+                    <div><Label>SKU *</Label><Input value={v.sku} onChange={(e) => handleVariantChange(idx, "sku", e.target.value)} /></div>
+                    <div><Label>Offer Price *</Label><Input type="number" value={v.offerprice} onChange={(e) => handleVariantChange(idx, "offerprice", e.target.value)} /></div>
+                    <div><Label>Bar Code *</Label><Input value={v.barcode} onChange={(e) => handleVariantChange(idx, "barcode", e.target.value)} /></div>
+                    <div><Label>Manufactured By *</Label><Input value={v.Manufactured} onChange={(e) => handleVariantChange(idx, "Manufactured", e.target.value)} /></div>
+                    <div><Label>Marketed By *</Label><Input value={v.Marketed} onChange={(e) => handleVariantChange(idx, "Marketed", e.target.value)} /></div>
+                    <div><Label>Country Origin *</Label><Input value={v.CountryOrigin} onChange={(e) => handleVariantChange(idx, "CountryOrigin", e.target.value)} /></div>
+                    <div><Label>Product Length (cms) *</Label><Input type="number" value={v.ProductLength} onChange={(e) => handleVariantChange(idx, "ProductLength", e.target.value)} /></div>
+                    <div><Label>Product Width (cms) *</Label><Input type="number" value={v.ProductWidth} onChange={(e) => handleVariantChange(idx, "ProductWidth", e.target.value)} /></div>
+                    <div><Label>Product Height (cms) *</Label><Input type="number" value={v.ProductHeight} onChange={(e) => handleVariantChange(idx, "ProductHeight", e.target.value)} /></div>
+                    <div><Label>Product Weight (Kg) *</Label><Input type="number" value={v.ProductWeight} onChange={(e) => handleVariantChange(idx, "ProductWeight", e.target.value)} /></div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-wrap gap-6 mt-4 col-span-2">
+                      <div className="flex items-center gap-2"><Label>Featured</Label><Switch checked={v.is_featured} onCheckedChange={(val) => handleVariantChange(idx, "is_featured", val)} /></div>
+                      <div className="flex items-center gap-2"><Label>Best Seller</Label><Switch checked={v.is_best_seller} onCheckedChange={(val) => handleVariantChange(idx, "is_best_seller", val)} /></div>
+                      <div className="flex items-center gap-2"><Label>Trending</Label><Switch checked={v.is_trending} onCheckedChange={(val) => handleVariantChange(idx, "is_trending", val)} /></div>
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Variant Images</Label>
+                      <DraggableImageList
+                        images={v.images || []}
+                        onChange={(imgs: string[]) => handleVariantChange(idx, "images", imgs)}
+                        onAddMore={(newUrls: string[]) => { const current = v.images || []; handleVariantChange(idx, "images", [...current, ...newUrls]); }}
+                        apiUrlImage={import.meta.env.VITE_API_URL_IMAGE}
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Label>Variant Labels</Label>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {(productLabels as any[]).map((label) => (
+                          <label key={label._id} className="inline-flex items-center gap-2 cursor-pointer">
+
+                            <input
+                              type="checkbox"
+                              checked={v.labels?.[0] === label._id}
+                              onChange={() => {
+                                handleVariantChange(idx, "labels", [label._id]);
+                              }}
+                              className="form-checkbox h-4 w-4 text-blue-600"
+                            />
+                            <span>{label.name}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md border border-gray-200">
+            <CardHeader className="flex flex-col justify-center items-center">
+              <CardTitle className="text-lg font-semibold">Page Section Builder</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {sections.length === 0 && (
+                <div className="text-center py-8 text-gray-400 text-sm">
+                  No sections yet. Click "Add Section" to get started.
+                </div>
+              )}
+
+              {sections.map((section, idx) => (
+                <div key={`${section.type}-${idx}`}>
+                  <div
+                    draggable
+                    onDragStart={(e) => { sectionDrag.onDragStart(idx); e.dataTransfer.effectAllowed = "move"; }}
+                    onDragOver={(e) => sectionDrag.onDragOver(e, idx)}
+                    onDrop={(e) => sectionDrag.onDrop(e, idx)}
+                    onDragLeave={sectionDrag.onDragLeave}
+                    onDragEnd={sectionDrag.onDragEnd}
+                    className={`p-4 border rounded-lg space-y-4 transition-all ${sectionDrag.dragOver === idx ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors" title="Drag to reorder section">
+                          <GripVertical className="w-4 h-4" />
+                        </span>
+                        <h3 className="font-semibold text-gray-800">{section.type} {idx + 1}</h3>
+                      </div>
+                      <Button type="button" variant="destructive" size="sm" onClick={() => removeSection(idx)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <SectionRenderer
+                      section={section}
+                      idx={idx}
+                      setSections={setSections}
+                      products={products as any[]}
+                      id={id}
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Label>Variant Labels</Label>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {(productLabels as any[]).map((label) => (
-                        <label key={label._id} className="inline-flex items-center gap-2 cursor-pointer">
 
-                          <input
-                            type="checkbox"
-                            checked={v.labels?.[0] === label._id}
-                            onChange={() => {
-                              handleVariantChange(idx, "labels", [label._id]);
-                            }}
-                            className="form-checkbox h-4 w-4 text-blue-600"
-                          />
-                          <span>{label.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-md border border-gray-200">
-          <CardHeader className="flex flex-col justify-center items-center">
-            <CardTitle className="text-lg font-semibold">Page Section Builder</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {sections.length === 0 && (
-              <div className="text-center py-8 text-gray-400 text-sm">
-                No sections yet. Click "Add Section" to get started.
-              </div>
-            )}
-
-            {sections.map((section, idx) => (
-              <div key={`${section.type}-${idx}`}>
-                <div
-                  draggable
-                  onDragStart={(e) => { sectionDrag.onDragStart(idx); e.dataTransfer.effectAllowed = "move"; }}
-                  onDragOver={(e) => sectionDrag.onDragOver(e, idx)}
-                  onDrop={(e) => sectionDrag.onDrop(e, idx)}
-                  onDragLeave={sectionDrag.onDragLeave}
-                  onDragEnd={sectionDrag.onDragEnd}
-                  className={`p-4 border rounded-lg space-y-4 transition-all ${sectionDrag.dragOver === idx ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                      <span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors" title="Drag to reorder section">
-                        <GripVertical className="w-4 h-4" />
-                      </span>
-                      <h3 className="font-semibold text-gray-800">{section.type} {idx + 1}</h3>
-                    </div>
-                    <Button type="button" variant="destructive" size="sm" onClick={() => removeSection(idx)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  <SectionRenderer
-                    section={section}
-                    idx={idx}
-                    setSections={setSections}
-                    products={products as any[]}
-                    id={id}
+                  <InsertBetweenSectionButton
+                    insertAfterIdx={idx}
+                    onInsert={(type: string) => addSection(type, idx)}
                   />
                 </div>
+              ))}
 
-                <InsertBetweenSectionButton
-                  insertAfterIdx={idx}
-                  onInsert={(type: string) => addSection(type, idx)}
+              <AddFirstSectionButton onAdd={(type: string) => addSection(type, -1)} />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="w-[25%]">
+          <Card className="sticky top-5 flex flex-col gap-3">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold">Status</CardTitle>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between mt-2">
+                <Label htmlFor="status">Active</Label>
+                <Switch id="status" checked={status} onCheckedChange={setStatus} />
+              </div>
+              <div className="space-y-2">
+                <Label>Order</Label>
+                <Input
+                  value={order}
+                  type="number"
+                  placeholder="Enter order"
+                  onChange={(e) =>
+                    setOrder(e.target.value)
+                  }
                 />
               </div>
-            ))}
+              
+              <div className="flex">
+                <Button type="submit" className="flex-1">
+                  {isEditMode ? "Update Product" : "Create Product"}
+                </Button>
+                <Button onClick={() => navigate(`${basePath}/products`)}
+                  variant="outline"
+                  className="w-full">Cancel</Button>
+              </div>
 
-            <AddFirstSectionButton onAdd={(type: string) => addSection(type, -1)} />
-          </CardContent>
-        </Card>
+              {isEditMode && (
+                <>
+                  <div className="flex gap-3">
+                    <Button type="button" onClick={handleDuplicate} disabled={duplicating} className="flex items-center gap-2 !w-full">
+                      <Copy className="h-4 w-4" />
+                      {duplicating ? "Duplicating..." : "Duplicate Product"}
+                    </Button>
+                  </div>
+                </>
 
-        <div className="flex gap-3">
-          <Button type="submit" className="flex-1">
-            {isEditMode ? "Update Product" : "Create Product"}
-          </Button>
-          <Link to={`${basePath}/products`} className="flex-1">
-            <Button type="button" variant="outline" className="w-full">Cancel</Button>
-          </Link>
+              )}
+            </CardContent>
+          </Card>
         </div>
-
       </form>
-    </div>
+    </div >
   );
 }
 

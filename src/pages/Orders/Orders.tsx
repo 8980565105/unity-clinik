@@ -8,12 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { toast } from "sonner";
-import { Trash2, Download, Search, ChevronDown, ChevronUp, X, Package, Truck, CheckCircle } from "lucide-react";
+import { Trash2, Download, Search, X, Package, Truck, CheckCircle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import {
   fetchOrders,
-  getOrderById,
   deleteOrder,
   bulkDeleteOrders,
   confirmOrder,
@@ -72,7 +71,7 @@ const STATUS_COLOR: Record<string, string> = {
   refunded: "bg-gray-100 text-gray-600",
 };
 
-const COURIERS = ["Delhivery", "Blue Dart", "DTDC", "Shiprocket", "Custom"];
+const COURIERS = ["Delhivery", "Blue Dart", "DTDC", "Shiprocket", "ithink", "Custom"];
 
 const StatusBadge = ({ status }: { status: string }) => (
   <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${STATUS_COLOR[status] || "bg-gray-100 text-gray-600"}`}>
@@ -534,10 +533,6 @@ export default function Orders() {
 
                               {renderActionButtons(order)}
 
-                              {/* <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => toggleExpand(order._id)}>
-                                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                              </Button> */}
-
                               <ConfirmDialog title="Delete Order" description={`Delete order "${order.order_number}"?`} confirmText="Delete" onConfirm={() => handleDelete(order._id)} danger>
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:bg-red-50">
                                   <Trash2 className="h-4 w-4" />
@@ -557,7 +552,6 @@ export default function Orders() {
                                     <tr className="text-xs text-gray-500 border-b bg-gray-100">
                                       <th className="px-3 py-2 text-left">Product</th>
                                       <th className="px-3 py-2 text-left">Sku</th>
-                                      {/* <th className="px-3 py-2 text-left">Variant</th> */}
                                       <th className="px-3 py-2 text-center">Qty</th>
                                       <th className="px-3 py-2 text-right">Price</th>
                                       <th className="px-3 py-2 text-right">Subtotal</th>
@@ -568,9 +562,6 @@ export default function Orders() {
                                       <tr key={item._id} className="hover:bg-white">
                                         <td className="px-3 py-2 font-medium">{item.product?.name || "Product"}</td>
                                         <td className="px-3 py-2">{item.variant?.sku}</td>
-                                        {/* <td className="px-3 py-2 text-gray-500">
-                                          {item.variant ? `${item.variant.color?.[0]?.name || "-"} / ${item.variant.size?.[0]?.name || "-"}` : "-"}
-                                        </td> */}
                                         <td className="px-3 py-2 text-center">{item.quantity}</td>
                                         <td className="px-3 py-2 text-right">₹{item.price_at_order?.toFixed(2)}</td>
                                         <td className="px-3 py-2 text-right font-semibold">₹{(item.price_at_order * item.quantity)?.toFixed(2)}</td>
