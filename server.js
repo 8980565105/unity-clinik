@@ -1,7 +1,6 @@
 const dotenv = require("dotenv");
 const express = require("express");
 const connectDB = require("./src/config/db");
-// const { limiter, authLimiter } = require("./src/middlewares/rateLimiter");
 const cors = require("cors");
 const { errorHandler } = require("./src/middlewares/errorMiddleware");
 const authRoutes = require("./src/routes/authRoutes");

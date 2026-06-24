@@ -44,6 +44,11 @@ const productSchema = new mongoose.Schema(
       default: "active",
     },
 
+    order: {
+      type: Number,
+      default: null,
+    },
+
     sections: [
       {
         type: {

@@ -59,12 +59,14 @@ const userSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: true,
+      required: false,
+      default: null,
     },
 
     password: {
       type: String,
-      required: true,
+      required: false,
+      default: null,
     },
 
     role: {
@@ -84,6 +86,12 @@ const userSchema = new mongoose.Schema(
       ref: "Store",
       default: null,
       index: true,
+    },
+
+    authProvider: {
+      type: String,
+      enum: ["email", "phone", "google"],
+      default: "email",
     },
 
     mobile_number: {

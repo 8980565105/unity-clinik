@@ -13,9 +13,10 @@ const {
 const {
   authMiddleware,
   authorizeMinRole,
+  optionalAuthMiddleware,
 } = require("../middlewares/authMiddleware");
 
-router.get("/public", getCoupons);
+router.get("/public", optionalAuthMiddleware, getCoupons);
 router.use(authMiddleware);
 
 router.get("/", getCoupons);

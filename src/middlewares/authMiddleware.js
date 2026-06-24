@@ -61,9 +61,31 @@ const checkStoreOwnership = async (req, res, next) => {
   return sendResponse(res, false, null, "Forbidden: Insufficient role");
 };
 
+const optionalAuthMiddleware = (req, res, next) => {
+  try {
+    const token =
+      req.headers.authorization?.split(" ")[1] || req.cookies?.token;
+
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    const jwt = require("jsonwebtoken");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = { ...decoded, _id: decoded.id || decoded._id };
+    next();
+  } catch (err) {
+    req.user = null;
+    next();
+  }
+};
+
 module.exports = {
   authMiddleware,
   authorizeRoles,
   authorizeMinRole,
   checkStoreOwnership,
+  optionalAuthMiddleware,
 };

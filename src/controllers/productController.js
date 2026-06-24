@@ -187,14 +187,6 @@ const buildPipeline = ({
               },
             },
           },
-          // {
-          //   $lookup: {
-          //     from: "labels",
-          //     localField: "labels",
-          //     foreignField: "_id",
-          //     as: "labelsInfo",
-          //   },
-          // },
           {
             $lookup: {
               from: "productlabels",
@@ -247,7 +239,12 @@ const buildPipeline = ({
       ? [{ $match: { "variants.0": { $exists: true } } }]
       : []),
 
-    { $sort: { createdAt: -1 } },
+    {
+      $sort: {
+        order: 1,
+        createdAt: -1,
+      },
+    },
   ];
 
   if (!download) {
@@ -546,7 +543,7 @@ const createProduct = async (req, res) => {
       steps,
       category_id,
       status,
-      // discount_id,
+      order,
       variants,
       sections,
     } = req.body;
@@ -561,6 +558,7 @@ const createProduct = async (req, res) => {
 
     const product = new Product({
       name,
+      order: Number(order) || 999,
       slug: slugify(name, {
         lower: true,
         strict: true,
@@ -568,7 +566,6 @@ const createProduct = async (req, res) => {
       description,
       steps,
       category_id: Array.isArray(category_id) ? category_id : [category_id],
-      // discount_id: discount_id || null,
       status: status || "active",
       images: productImages,
       sections: normalizeSections(
@@ -639,7 +636,7 @@ const updateProduct = async (req, res) => {
     product.name = productData.name || product.name;
 
     product.description = productData.description || "";
-
+    product.order = Number(productData.order) || "";
     product.steps = productData.steps || "";
 
     product.category_id = Array.isArray(productData.category_id)

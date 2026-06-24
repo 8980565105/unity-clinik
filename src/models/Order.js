@@ -9,6 +9,8 @@ const orderSchema = new mongoose.Schema(
     },
     total_price: { type: Number, required: true },
 
+    is_gift: { type: Boolean, default: false },
+
     shipping_charge: {
       type: Number,
       default: 0,

@@ -5,6 +5,10 @@ const {
   register,
   forgotPassword,
   resetPassword,
+  sendMobileOtpHandler,
+  verifyMobileOtpHandler,
+  mobileOtpLogin,
+  googleLogin,
 } = require("../controllers/authController");
 const { authMiddleware } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/upload");
@@ -18,6 +22,10 @@ router.post(
 router.post("/login", login);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
+router.post("/send-mobile-otp", sendMobileOtpHandler);
+router.post("/verify-mobile-otp", verifyMobileOtpHandler);
+router.post("/mobile-otp-login", mobileOtpLogin);
+router.post("/google-login", googleLogin);
 router.get("/me", authMiddleware, async (req, res) => {
   const { sendResponse } = require("../utils/response");
   const User = require("../models/User");

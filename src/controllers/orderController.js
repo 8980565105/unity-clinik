@@ -514,6 +514,42 @@ const createOrder = async (req, res) => {
       total_price,
     } = req.body;
 
+    if (coupon_id) {
+      const Coupon = require("../models/Coupon");
+      const coupon = await Coupon.findById(coupon_id);
+
+      if (coupon && coupon.coupon_type === "first_order") {
+        const previousOrders = await Order.countDocuments({
+          user_id: user_id,
+          status: { $nin: ["cancelled"] },
+        });
+
+        if (previousOrders > 0) {
+          return sendResponse(
+            res,
+            false,
+            null,
+            "This coupon is only valid on your first order!",
+          );
+        }
+
+        const alreadyUsed = await Order.findOne({
+          user_id: user_id,
+          coupon_id: coupon._id,
+          status: { $nin: ["cancelled"] },
+        });
+
+        if (alreadyUsed) {
+          return sendResponse(
+            res,
+            false,
+            null,
+            "You have already used this coupon!",
+          );
+        }
+      }
+    }
+
     const items = safeArray(req.body.items);
     if (!items.length) {
       return sendResponse(res, false, null, "No items provided");
@@ -523,6 +559,18 @@ const createOrder = async (req, res) => {
     const orderItems = [];
 
     for (const item of items) {
+      if (item.is_gift === true) {
+        orderItems.push({
+          order_id: null,
+          product_id: item.product_id,
+          variant_id: null,
+          quantity: item.quantity || 1,
+          price_at_order: 0,
+          is_gift: true,
+        });
+        continue; 
+      }
+
       const variant = await ProductVariant.findById(item.variant_id).populate(
         "product_id",
       );
@@ -585,7 +633,6 @@ const createOrder = async (req, res) => {
       transaction_id: transaction_id || "",
 
       status: "pending",
-
     });
 
     pushHistory(order, "pending", "customer", "Order placed");
@@ -1254,8 +1301,7 @@ const updateTracking = async (req, res) => {
         ) {
           order.courier.tracking_url = tracking_url;
         }
-      } catch (_) {
-      }
+      } catch (_) {}
     }
 
     order.status = "in_transit";
@@ -1548,7 +1594,7 @@ const updateOrderStatus = async (req, res) => {
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { status },
-       { returnDocument: "after" },
+      { returnDocument: "after" },
     );
     if (!order) return sendResponse(res, false, null, "Order not found");
     sendResponse(res, true, order, "Order status updated successfully");

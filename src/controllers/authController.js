@@ -5,45 +5,15 @@ const Store = require("../models/Store");
 const nodemailer = require("nodemailer");
 const escapeHtml = require("escape-html");
 const { sendResponse } = require("../utils/response");
+const {
+  sendMobileOtp,
+  createMobileOtp,
+  verifyMobileOtp,
+} = require("../services/smsService");
+const { OAuth2Client } = require("google-auth-library");
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const otpStore = {};
-
-const createTransporter = () => {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return null;
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-  });
-};
-
-const sendOtpEmail = async (toEmail, otp, storeName = "MyApp") => {
-  const transporter = createTransporter();
-  if (!transporter)
-    throw new Error("SMTP not configured. Set SMTP_USER and SMTP_PASS in .env");
-
-  const safeStoreName = escapeHtml(storeName);
-  const safeOtp = escapeHtml(otp);
-
-  await transporter.sendMail({
-    from: `"${safeStoreName}" <${process.env.SMTP_USER}>`,
-    to: toEmail,
-    subject: `Password Reset OTP — ${safeStoreName}`,
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #eee;border-radius:8px;">
-        <h2 style="color:#333;">${safeStoreName}</h2>
-        <p style="color:#555;">Your OTP for password reset:</p>
-        <div style="font-size:40px;font-weight:bold;letter-spacing:10px;color:#e91e8c;margin:24px 0;text-align:center;">${safeOtp}</div>
-        <p style="color:#888;font-size:13px;">Expires in <strong>10 minutes</strong>. Do not share it.</p>
-        <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
-        <p style="color:#aaa;font-size:12px;">If you did not request this, ignore this email.</p>
-      </div>`,
-  });
-};
 
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
@@ -60,9 +30,8 @@ const cleanDomain = (raw) => {
   try {
     const withProto = raw.startsWith("http") ? raw : `http://${raw}`;
     const parsed = new URL(withProto);
-    if (parsed.hostname === "localhost") {
+    if (parsed.hostname === "localhost")
       return `localhost:${parsed.port || "3000"}`;
-    }
     return parsed.host
       .replace(/^www\./i, "")
       .toLowerCase()
@@ -76,31 +45,54 @@ const cleanDomain = (raw) => {
   }
 };
 
-const findUserForOtp = async (email, rawDomain) => {
-  const domain = cleanDomain(rawDomain);
-  const adminOrOwner = await User.findOne({
-    email,
-    role: "admin",
+const createTransporter = () => {
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  if (!user || !pass) return null;
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST || "smtp.gmail.com",
+    port: parseInt(process.env.SMTP_PORT) || 587,
+    secure: false,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: false },
   });
+};
+
+const sendOtpEmail = async (toEmail, otp, storeName = "MyApp") => {
+  const transporter = createTransporter();
+  if (!transporter) throw new Error("SMTP not configured");
+  const safeStoreName = escapeHtml(storeName);
+  const safeOtp = escapeHtml(otp);
+  await transporter.sendMail({
+    from: `"${safeStoreName}" <${process.env.SMTP_USER}>`,
+    to: toEmail,
+    subject: `Password Reset OTP — ${safeStoreName}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #eee;border-radius:8px;">
+      <h2>${safeStoreName}</h2>
+      <p>Your OTP for password reset:</p>
+      <div style="font-size:40px;font-weight:bold;letter-spacing:10px;color:#e91e8c;margin:24px 0;text-align:center;">${safeOtp}</div>
+      <p style="color:#888;font-size:13px;">Expires in <strong>10 minutes</strong>. Do not share it.</p>
+    </div>`,
+  });
+};
+
+const findUserForOtp = async (email, rawDomain) => {
+  const adminOrOwner = await User.findOne({ email, role: "admin" });
   if (adminOrOwner) {
-    const otpKey = `${email}__${adminOrOwner.storeId?.toString() || "global"}`;
     return {
       user: adminOrOwner,
       storeName: process.env.STORE_NAME || "MyApp",
-      otpKey,
+      otpKey: `${email}__${adminOrOwner.storeId?.toString() || "global"}`,
     };
   }
-
   const regularUser = await User.findOne({ email, role: "user" });
   if (regularUser) {
-    const otpKey = `${email}__${regularUser.storeId?.toString() || "global"}`;
     return {
       user: regularUser,
       storeName: process.env.STORE_NAME || "MyApp",
-      otpKey,
+      otpKey: `${email}__${regularUser.storeId?.toString() || "global"}`,
     };
   }
-
   return { user: null, storeName: null, otpKey: null };
 };
 
@@ -111,7 +103,6 @@ const login = async (req, res) => {
       return sendResponse(res, false, null, "Email and password are required");
 
     let user = null;
-
     if (rawDomain) {
       const domain = cleanDomain(rawDomain);
       const store = await Store.findOne({ domain });
@@ -121,14 +112,18 @@ const login = async (req, res) => {
         );
       }
     }
-
-    if (!user) {
-      user = await User.findOne({ email }).populate("storeId");
-    }
-
+    if (!user) user = await User.findOne({ email }).populate("storeId");
     if (!user) return sendResponse(res, false, null, "Invalid credentials");
     if (!user.is_active)
       return sendResponse(res, false, null, "Account inactive");
+
+    if (user.authProvider && user.authProvider !== "email") {
+      const providerMsg =
+        user.authProvider === "google"
+          ? "This account uses Google login. Please sign in with Google."
+          : "This account uses Phone OTP login. Please use Phone login.";
+      return sendResponse(res, false, null, providerMsg);
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return sendResponse(res, false, null, "Invalid credentials");
@@ -136,7 +131,6 @@ const login = async (req, res) => {
     const token = generateToken(user);
     const userObj = user.toObject();
     delete userObj.password;
-
     return sendResponse(
       res,
       true,
@@ -160,6 +154,7 @@ const register = async (req, res) => {
       gender,
       date_of_birth,
       address,
+      authProvider = "email",
       storeName,
       storeEmail,
       storegstno,
@@ -171,13 +166,12 @@ const register = async (req, res) => {
       storeAddress,
     } = req.body;
 
-    if (!name || !email || !password)
-      return sendResponse(
-        res,
-        false,
-        null,
-        "Name, email and password are required",
-      );
+    if (!name) return sendResponse(res, false, null, "Name are required");
+
+    if (authProvider === "email" && !email)
+      return sendResponse(res, false, null, "Email is required");
+    if (authProvider === "phone" && !mobile_number)
+      return sendResponse(res, false, null, "Mobile number is required");
 
     const parseIfString = (val) => {
       if (!val) return null;
@@ -236,13 +230,13 @@ const register = async (req, res) => {
         date_of_birth: date_of_birth || null,
         address: cleanAddress,
         profile_picture,
+        authProvider: "email",
       });
 
       const token = generateToken(user);
       const userObj = user.toObject();
       delete userObj.password;
       userObj.storeId = store;
-
       return sendResponse(
         res,
         true,
@@ -250,20 +244,32 @@ const register = async (req, res) => {
         "Admin registered successfully",
       );
     }
-    const alreadyUser = await User.findOne({ email });
 
-    if (alreadyUser) {
-      return sendResponse(
-        res,
-        false,
-        null,
-        "Email already registered. Please login.",
-      );
+    if (authProvider === "email") {
+      const alreadyUser = await User.findOne({ email });
+      if (alreadyUser)
+        return sendResponse(
+          res,
+          false,
+          null,
+          "Email already registered. Please login.",
+        );
+    }
+
+    if (authProvider === "phone") {
+      const alreadyPhone = await User.findOne({ mobile_number });
+      if (alreadyPhone)
+        return sendResponse(
+          res,
+          false,
+          null,
+          "Mobile number already registered. Please login.",
+        );
     }
 
     const user = await User.create({
       name,
-      email,
+      email: email || null,
       password,
       role,
       mobile_number: mobile_number || null,
@@ -271,7 +277,9 @@ const register = async (req, res) => {
       date_of_birth: date_of_birth || null,
       address: cleanAddress,
       profile_picture,
+      authProvider,
     });
+
     const token = generateToken(user);
     const userObj = user.toObject();
     delete userObj.password;
@@ -304,9 +312,7 @@ const forgotPassword = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Email is required" });
-
     const { user, storeName, otpKey } = await findUserForOtp(email, rawDomain);
-
     if (!user || !otpKey) {
       return res.status(200).json({
         success: true,
@@ -314,12 +320,9 @@ const forgotPassword = async (req, res) => {
         message: "If this email exists, an OTP has been sent.",
       });
     }
-
     const otp = generateOtp();
     otpStore[otpKey] = { otp, expiresAt: Date.now() + 10 * 60 * 1000 };
-
     await sendOtpEmail(email, otp, storeName);
-
     return res.status(200).json({
       success: true,
       data: null,
@@ -337,28 +340,22 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword, domain: rawDomain } = req.body;
-
     if (!email || !otp || !newPassword)
       return res.status(400).json({
         success: false,
         message: "Email, OTP and new password are required",
       });
-
     const { user, otpKey } = await findUserForOtp(email, rawDomain);
-
     if (!user || !otpKey)
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
-
     const record = otpStore[otpKey];
-
     if (!record)
       return res.status(400).json({
         success: false,
         message: "No OTP found. Please request a new one.",
       });
-
     if (Date.now() > record.expiresAt) {
       delete otpStore[otpKey];
       return res.status(400).json({
@@ -366,23 +363,18 @@ const resetPassword = async (req, res) => {
         message: "OTP expired. Please request a new one.",
       });
     }
-
-    if (!otp || record.otp !== String(otp).trim())
+    if (record.otp !== String(otp).trim())
       return res
         .status(400)
         .json({ success: false, message: "Invalid OTP. Please try again." });
-
     const userDoc = await User.findById(user._id);
     userDoc.password = newPassword;
     await userDoc.save();
-
     delete otpStore[otpKey];
-
     const freshUser = await User.findById(user._id)
       .select("-password")
       .populate("storeId");
     const token = generateToken(freshUser);
-
     return res.status(200).json({
       success: true,
       data: { token, user: freshUser.toObject() },
@@ -397,10 +389,151 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const sendMobileOtpHandler = async (req, res) => {
+  try {
+    const { mobile_number } = req.body;
+    if (!mobile_number)
+      return sendResponse(res, false, null, "Mobile number is required");
+    const { otp } = createMobileOtp(mobile_number);
+    await sendMobileOtp(mobile_number, otp);
+    return sendResponse(res, true, null, "OTP sent to your mobile number");
+  } catch (err) {
+    return sendResponse(res, false, null, err.message || "Failed to send OTP");
+  }
+};
+
+const verifyMobileOtpHandler = async (req, res) => {
+  try {
+    const { mobile_number, otp } = req.body;
+    if (!mobile_number || !otp)
+      return sendResponse(
+        res,
+        false,
+        null,
+        "Mobile number and OTP are required",
+      );
+    const result = verifyMobileOtp(mobile_number, otp);
+    if (!result.success) return sendResponse(res, false, null, result.message);
+    return sendResponse(
+      res,
+      true,
+      { verified: true },
+      "Mobile verified successfully",
+    );
+  } catch (err) {
+    return sendResponse(res, false, null, err.message);
+  }
+};
+
+const mobileOtpLogin = async (req, res) => {
+  try {
+    const { mobile_number, otp } = req.body;
+    if (!mobile_number || !otp)
+      return sendResponse(res, false, null, "Mobile and OTP required");
+
+    const result = verifyMobileOtp(mobile_number, otp);
+    if (!result.success) return sendResponse(res, false, null, result.message);
+
+    let user = await User.findOne({ mobile_number }).populate("storeId");
+
+    if (!user) {
+      user = await User.create({
+        name: `User${mobile_number.slice(-4)}`,
+        mobile_number,
+        email: null,
+        password: `phone_${mobile_number}_${Date.now()}`,
+        role: "user",
+        is_active: true,
+        authProvider: "phone",
+      });
+      user = await User.findById(user._id).populate("storeId");
+    } else {
+      if (user.authProvider && user.authProvider !== "phone") {
+        const providerMsg =
+          user.authProvider === "google"
+            ? "This account uses Google login. Please sign in with Google."
+            : "This account uses Email/Password login. Please use Email login.";
+        return sendResponse(res, false, null, providerMsg);
+      }
+    }
+
+    if (!user.is_active)
+      return sendResponse(res, false, null, "Account is inactive");
+
+    const token = generateToken(user);
+    const userObj = user.toObject();
+    delete userObj.password;
+    return sendResponse(
+      res,
+      true,
+      { token, user: userObj },
+      "Login successful",
+    );
+  } catch (err) {
+    return sendResponse(res, false, null, err.message);
+  }
+};
+
+const googleLogin = async (req, res) => {
+  try {
+    const { credential, domain: rawDomain } = req.body;
+    if (!credential)
+      return sendResponse(res, false, null, "Google credential is required");
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, name, picture, sub: googleId } = payload;
+
+    let user = await User.findOne({ email }).populate("storeId");
+
+    if (!user) {
+      user = await User.create({
+        name,
+        email,
+        password: `google_${googleId}_${Date.now()}`,
+        role: "user",
+        profile_picture: picture,
+        is_active: true,
+        authProvider: "google",
+      });
+      user = await User.findById(user._id).populate("storeId");
+    } else {
+      if (user.authProvider && user.authProvider !== "google") {
+        const providerMsg =
+          user.authProvider === "phone"
+            ? "This account uses Phone OTP login. Please use Phone login."
+            : "This account uses Email/Password login. Please use Email login.";
+        return sendResponse(res, false, null, providerMsg);
+      }
+    }
+
+    if (!user.is_active)
+      return sendResponse(res, false, null, "Account is inactive");
+
+    const token = generateToken(user);
+    const userObj = user.toObject();
+    delete userObj.password;
+    return sendResponse(
+      res,
+      true,
+      { token, user: userObj },
+      "Google login successful",
+    );
+  } catch (err) {
+    return sendResponse(res, false, null, err.message || "Google login failed");
+  }
+};
+
 module.exports = {
   login,
   register,
-  // registerStoreOwner,
   forgotPassword,
   resetPassword,
+  sendMobileOtpHandler,
+  verifyMobileOtpHandler,
+  mobileOtpLogin,
+  googleLogin,
 };

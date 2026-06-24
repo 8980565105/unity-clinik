@@ -10,6 +10,34 @@ const couponSchema = new mongoose.Schema(
       enum: ["percentage", "fixed", "freeshiping"],
       required: true,
     },
+    coupon_type: {
+      type: String,
+      enum: ["normal", "first_order", "free_gift", "referral", "buy_x_get_y"],
+      default: "normal",
+    },
+
+    gift_product_ids: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Product",
+      },
+    ],
+    buy_x_get_y: {
+      buy_quantity: {
+        type: Number,
+        default: 0,
+      },
+      get_quantity: {
+        type: Number,
+        default: 0,
+      },
+      free_products: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Product",
+        },
+      ],
+    },
     discount_value: { type: Number, default: 0 },
     min_purchase_amount: { type: Number, default: 0 },
     max_discount_amount: { type: Number, default: null },
@@ -25,7 +53,13 @@ const couponSchema = new mongoose.Schema(
 
     apply_type: {
       type: String,
-      enum: ["allproducts", "specificproducts", "specificsubcategory"],
+      enum: [
+        "allproducts",
+        "specificproducts",
+        "specificsubcategory",
+        "Excludeproduct",
+        "Excludecategories",
+      ],
       default: "allproducts",
     },
 
