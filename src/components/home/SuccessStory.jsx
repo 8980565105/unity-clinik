@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSlides } from "../../features/slides/slideThunk";
@@ -119,6 +119,7 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
 export default function SuccessStorySection() {
   const dispatch = useDispatch();
   const location = useLocation();
+  const containerRef = useRef(null);
 
   const [playingId, setPlayingId] = useState(null);
 
@@ -139,6 +140,87 @@ export default function SuccessStorySection() {
 
   const slidesList = sectionData?.successStorySlides || [];
 
+  const tripleSlidesList = useMemo(() => {
+    if (!slidesList.length) return [];
+    return [...slidesList, ...slidesList, ...slidesList];
+  }, [slidesList]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !slidesList.length) return;
+
+    const initScroll = () => {
+      const W = container.scrollWidth / 3;
+      container.scrollLeft = W;
+    };
+
+    initScroll();
+    const timer = setTimeout(initScroll, 50);
+
+    const handleScroll = () => {
+      const W = container.scrollWidth / 3;
+      if (W <= 0) return;
+
+      if (container.scrollLeft >= 2 * W) {
+        const prevBehavior = container.style.scrollBehavior;
+        container.style.scrollBehavior = "auto";
+        container.scrollLeft -= W;
+        container.style.scrollBehavior = prevBehavior;
+      } else if (container.scrollLeft < W) {
+        const prevBehavior = container.style.scrollBehavior;
+        container.style.scrollBehavior = "auto";
+        container.scrollLeft += W;
+        container.style.scrollBehavior = prevBehavior;
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", initScroll);
+
+    let isDown = false;
+    let startX;
+    let scrollLeftVal;
+
+    const handleMouseDown = (e) => {
+      isDown = true;
+      startX = e.pageX - container.offsetLeft;
+      scrollLeftVal = container.scrollLeft;
+      container.style.scrollBehavior = "auto";
+    };
+
+    const handleMouseLeave = () => {
+      isDown = false;
+    };
+
+    const handleMouseUp = () => {
+      isDown = false;
+    };
+
+    const handleMouseMove = (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      container.scrollLeft = scrollLeftVal - walk;
+    };
+
+    container.addEventListener("mousedown", handleMouseDown);
+    container.addEventListener("mouseleave", handleMouseLeave);
+    container.addEventListener("mouseup", handleMouseUp);
+    container.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      clearTimeout(timer);
+      container.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", initScroll);
+
+      container.removeEventListener("mousedown", handleMouseDown);
+      container.removeEventListener("mouseleave", handleMouseLeave);
+      container.removeEventListener("mouseup", handleMouseUp);
+      container.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [slidesList.length]);
+
   if (!sectionData) return null;
 
   if (!shouldShow) return null;
@@ -150,18 +232,25 @@ export default function SuccessStorySection() {
       <Heading title={"Our Success Stories"} />
 
       <Row>
-        <div className="flex gap-5 overflow-x-auto px-2 py-2">
-          {slidesList.map((slide) => (
-            <StoryCard
-              key={slide._id}
-              slide={slide}
-              isPlaying={playingId === slide._id}
-              onToggle={() =>
-                setPlayingId(playingId === slide._id ? null : slide._id)
-              }
-              onVideoEnd={() => setPlayingId(null)}
-            />
-          ))}
+        <div
+          ref={containerRef}
+          className="flex gap-5 overflow-x-auto px-2 py-2 cursor-grab active:cursor-grabbing select-none"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
+          {tripleSlidesList.map((slide, idx) => {
+            const cardId = `${slide._id}-${idx}`;
+            return (
+              <StoryCard
+                key={cardId}
+                slide={slide}
+                isPlaying={playingId === cardId}
+                onToggle={() =>
+                  setPlayingId(playingId === cardId ? null : cardId)
+                }
+                onVideoEnd={() => setPlayingId(null)}
+              />
+            );
+          })}
         </div>
       </Row>
     </Section>

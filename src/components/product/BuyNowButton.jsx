@@ -8,12 +8,16 @@ import {
 import toast from "react-hot-toast";
 import Button from "../ui/Button";
 import { useState } from "react";
+import useProtectedLink from "../../hooks/useProtectedLink";
+import LoginForm from "../../pages/Login";
+import ForgetForm from "../../pages/ForgetForm";
+import RegistrationForm from "../../pages/RegistrationForm";
 
 export default function BuyNowButton({
   product,
   activeVariantState,
   selectedPackState,
-  setShowLoginPopup,
+
   className = "",
 }) {
   const dispatch = useDispatch();
@@ -21,115 +25,92 @@ export default function BuyNowButton({
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
   const [loading, setLoading] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const openProtectedLink = useProtectedLink(setIsLoginOpen, token);
+  const [isForgetOpen, setIsForgetOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
 
-  // const handleBuyNow = async () => {
-  //   // if (!token) {
-  //   //   setShowLoginPopup(true);
-  //   //   return;
-  //   // }
+  const handleBuyNow = () => {
+    if (!token) {
+      setIsLoginOpen(true);
+      return;
+    }
 
-  //   if (activeVariantState?.stock_quantity === 0) {
-  //     toast.error("This product is out of stock!");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   try {
-  //     let cartId = cart?._id || localStorage.getItem("cart_id");
-  //     if (!cartId) {
-  //       const user = JSON.parse(localStorage.getItem("user") || "{}");
-  //       if (!user?._id) {
-  //         toast.error("User session expired. Please login again.");
-  //         setShowLoginPopup(true);
-  //         return;
-  //       }
-  //       const newCart = await dispatch(
-  //         createCart({ user_id: user._id }),
-  //       ).unwrap();
-  //       cartId = newCart._id;
-  //     }
-
-  //     await dispatch(
-  //       addToCart({
-  //         cart_id: cartId,
-  //         product_id: product._id,
-  //         variant_id: activeVariantState._id,
-  //         quantity: 1,
-  //         pack_of: Number(selectedPackState?.badge || 1),
-  //         price: Number(selectedPackState?.offerprice || 0),
-  //         original_price: Number(selectedPackState?.price || 0),
-  //       }),
-  //     ).unwrap();
-
-  //     await dispatch(fetchCart(cartId));
-  //      toast.success("cart update successfully");
-  //     navigate("/cart");
-  //   } catch (err) {
-  //     toast.error(
-  //       typeof err === "string"
-  //         ? err
-  //         : err?.message || "Failed. Please try again.",
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  const handleBuyNow = async () => {
     if (activeVariantState?.stock_quantity === 0) {
       toast.error("This product is out of stock!");
       return;
     }
 
-    setLoading(true);
-
-    try {
-      let cartId = cart?._id || localStorage.getItem("cart_id");
-
-      if (!cartId) {
-        const newCart = await dispatch(createCart()).unwrap();
-
-        cartId = newCart._id;
-
-        if (cartId) {
-          localStorage.setItem("cart_id", cartId);
-        }
-      }
-
-      await dispatch(
-        addToCart({
-          cart_id: cartId,
-          product_id: product._id,
-          variant_id: activeVariantState._id,
+    navigate("/checkout", {
+      state: {
+        buyNow: true,
+        item: {
+          product_id: product,
+          variant_id: activeVariantState,
           quantity: 1,
           pack_of: Number(selectedPackState?.badge || 1),
           price: Number(selectedPackState?.offerprice || 0),
           original_price: Number(selectedPackState?.price || 0),
-        }),
-      ).unwrap();
+        },
+      },
+    });
+  }
 
-      await dispatch(fetchCart());
 
-      toast.success("Cart updated successfully");
-      navigate("/cart");
-    } catch (err) {
-      toast.error(
-        typeof err === "string"
-          ? err
-          : err?.message || "Failed. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
   return (
-    <Button
-      onClick={handleBuyNow}
-      variant="common"
-      disabled={loading}
-      className={`!w-full !text-[22px] flex items-center justify-center gap-[10px] !py-[10px] ${className}`}
-    >
-      {loading ? "Processing..." : "Buy Now"}
-    </Button>
+    <>
+      <Button
+        onClick={handleBuyNow}
+        variant="common"
+        disabled={loading}
+        className={`!w-full !text-[22px] flex items-center justify-center gap-[10px] !py-[10px] ${className}`}
+      >
+        {loading ? "Processing..." : "Buy Now"}
+      </Button>
+
+      {isLoginOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
+            <LoginForm
+              onClose={() => setIsLoginOpen(false)}
+              onSwitchRegister={() => {
+                setIsLoginOpen(false);
+                setIsRegisterOpen(true);
+              }}
+              onSwitchForget={() => {
+                setIsLoginOpen(false);
+                setIsForgetOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {isRegisterOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
+            <RegistrationForm
+              onClose={() => setIsRegisterOpen(false)}
+              onSwitch={() => {
+                setIsRegisterOpen(false);
+                setIsLoginOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+      {isForgetOpen && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
+            <ForgetForm
+              onClose={() => setIsForgetOpen(false)}
+              onSwitch={() => {
+                setIsForgetOpen(false);
+                setIsLoginOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

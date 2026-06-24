@@ -85,7 +85,7 @@ const Bestsellers = ({ setShowLoginPopup, productLabels }) => {
     if (!trackRef.current || cardWidth === 0) return;
     const step = getStep(cardWidth);
     trackRef.current.style.transition = withAnimation
-      ? "transform 300ms cubic-bezier(0.4,0,0.2,1)"
+      ? "transform 500ms cubic-bezier(0.25, 1, 0.5, 1)"
       : "none";
     trackRef.current.style.transform = `translateX(-${newIndex * step}px)`;
   };
@@ -104,7 +104,7 @@ const Bestsellers = ({ setShowLoginPopup, productLabels }) => {
         slideTo(reset, false);
       }
       isAnimating.current = false;
-    }, 310);
+    }, 510);
   };
 
   const handlePrev = () => {
@@ -121,7 +121,7 @@ const Bestsellers = ({ setShowLoginPopup, productLabels }) => {
         slideTo(reset, false);
       }
       isAnimating.current = false;
-    }, 310);
+    }, 510);
   };
 
   if (total === 0) return null;

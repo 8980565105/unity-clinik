@@ -29,7 +29,18 @@ const Wishlist = ({ product }) => {
   const [addingToCart, setAddingToCart] = useState(null);
 
   const increment = (index) =>
-    setQuantities((prev) => prev.map((q, i) => (i === index ? q + 1 : q)));
+    setQuantities((prev) =>
+      prev.map((q, i) => {
+        if (i === index) {
+          if (q >= 20) {
+            toast.error("Maximum 20 quantity allowed per item");
+            return q;
+          }
+          return q + 1;
+        }
+        return q;
+      })
+    );
 
   const decrement = (index) =>
     setQuantities((prev) =>
@@ -95,7 +106,7 @@ const Wishlist = ({ product }) => {
 
     try {
       let cart_id = localStorage.getItem("cart_id");
-
+     toast.success("cart update sucessfully!")
       if (!cart_id || cart_id === "undefined" || cart_id === "null") {
         try {
           const cartResult = await dispatch(
@@ -258,7 +269,11 @@ const Wishlist = ({ product }) => {
                         <Minus size={14} />
                       </button>
                       <span>{quantities[index]}</span>
-                      <button onClick={() => increment(index)}>
+                      <button
+                        onClick={() => increment(index)}
+                        disabled={quantities[index] >= 20}
+                        className="disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
                         <Plus size={14} />
                       </button>
                     </div>
@@ -369,8 +384,9 @@ const Wishlist = ({ product }) => {
                 </button>
                 <span>{quantities[index]}</span>
                 <button
-                  className="bg-color-100 rounded-[2px] flex items-center justify-center p-[2px] text-white"
+                  className="bg-color-100 rounded-[2px] flex items-center justify-center p-[2px] text-white disabled:opacity-30 disabled:cursor-not-allowed"
                   onClick={() => increment(index)}
+                  disabled={quantities[index] >= 20}
                 >
                   <Plus size={12} />
                 </button>

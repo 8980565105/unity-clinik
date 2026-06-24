@@ -116,6 +116,10 @@ export default function CartItem() {
     const cart_id = localStorage.getItem("cart_id");
     if (!cart_id) return;
     const newQuantity = item.quantity + 1;
+    if (newQuantity > 20) {
+      toast.error("Maximum 20 quantity allowed per item");
+      return;
+    }
     toast.success("cart updated Successfully!");
     dispatch(updateLocalQuantity({ item_id: item._id, quantity: newQuantity }));
     dispatch(
@@ -257,7 +261,8 @@ export default function CartItem() {
                       </span>
                       <button
                         onClick={() => handleIncrease(item)}
-                        className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                        disabled={item.quantity >= 20}
+                        className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                       >
                         <Plus size={12} />
                       </button>

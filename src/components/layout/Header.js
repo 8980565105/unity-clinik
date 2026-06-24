@@ -503,7 +503,6 @@ const Header = () => {
             <ul className="flex gap-[24px] xl:gap-[32px] text-base font-normal">
               {navItems.map((item, i) => (
                 <li
-                  // key={i}
                   key={`nav-${item.path}-${i}`}
                   className="relative"
                   onMouseEnter={
@@ -916,7 +915,7 @@ const Header = () => {
           </div>
 
           <div className="flex justify-center items-center gap-2">
-            <button className="" onClick={openWhatsApp} className="lg:hidden">
+            <button onClick={openWhatsApp} className="lg:hidden">
               <svg
                 stroke="currentColor"
                 fill="currentColor"
@@ -933,8 +932,8 @@ const Header = () => {
 
             <SearchBar products={products} onNavigate={navigate} />
 
-            {/* <button
-              onClick={() => navigate("/wishlist")}
+            <button
+              onClick={() => openProtectedLink("/wishlist")}
               aria-label="wishlist"
               className="relative text-black hidden md:block"
             >
@@ -949,7 +948,7 @@ const Header = () => {
                   {wishlistCount}
                 </span>
               )}
-            </button> */}
+            </button>
             <button
               onClick={() => openProtectedLink("/account-details")}
               aria-label="account"
@@ -963,7 +962,7 @@ const Header = () => {
                 isCartActive ? "text-primary" : "text-black"
               }`}
               aria-label="add to cart"
-              onClick={() => navigate("/cart")}
+              onClick={() => openProtectedLink("/cart")}
             >
               <FontAwesomeIcon icon={faCartShopping} className="" size={22} />
 
@@ -1271,9 +1270,6 @@ const Header = () => {
                 >
                   {item.icon}
                   <span>{item.name}</span>
-                  {/* <span className="ml-auto">
-                    <ChevronRight className="w-4 h-4" />
-                  </span> */}
                 </NavLink>
               );
             })}
@@ -1296,7 +1292,7 @@ const Header = () => {
               </div>
               <div className="py-4 px-4 cursor-pointer light-color">
                 <button
-                  onClick={() => navigate("/wishlist")}
+                  onClick={() => openProtectedLink("/wishlist")}
                   className="flex items-center gap-[15px]"
                 >
                   <FontAwesomeIcon icon={farHeart} /> Wishlist

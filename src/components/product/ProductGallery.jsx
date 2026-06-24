@@ -8,14 +8,8 @@ import {
   ChevronLeft,
 } from "lucide-react";
 
-import Lightbox from "yet-another-react-lightbox";
-
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
-import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
-
-import "yet-another-react-lightbox/styles.css";
-import "yet-another-react-lightbox/plugins/thumbnails.css";
 import { createPortal } from "react-dom";
+import NavBtn from "../ui/Navbtn";
 
 const THUMB_SIZE = 80;
 const THUMB_GAP = 8;
@@ -183,11 +177,10 @@ export default function ProductGallery({
             onClick={handleUp}
             disabled={!canUp}
             className={`flex items-center justify-center mb-2 p-1 transition-colors z-10
-            ${
-              canUp
+            ${canUp
                 ? "text-gray-500 hover:text-[#005BAA] cursor-pointer"
                 : "text-gray-300 cursor-not-allowed"
-            }`}
+              }`}
           >
             <ChevronUp size={20} />
           </button>
@@ -213,11 +206,10 @@ export default function ProductGallery({
                     flexShrink: 0,
                   }}
                   className={`rounded-xl border-2 overflow-hidden cursor-pointer transition-colors
-                  ${
-                    currentImage === img
+                  ${currentImage === img
                       ? "border-[#005BAA]"
                       : "border-transparent hover:border-[#005BAA]"
-                  }`}
+                    }`}
                 >
                   <img
                     src={img}
@@ -234,11 +226,10 @@ export default function ProductGallery({
             onClick={handleDown}
             disabled={!canDown}
             className={`flex items-center justify-center mt-2 p-1 transition-colors z-10
-            ${
-              canDown
+            ${canDown
                 ? "text-gray-500 hover:text-[#005BAA] cursor-pointer"
                 : "text-gray-300 cursor-not-allowed"
-            }`}
+              }`}
           >
             <ChevronDown size={20} />
           </button>
@@ -286,11 +277,10 @@ export default function ProductGallery({
                 key={color.id}
                 onClick={() => setSelectedColor(color.id)}
                 className={`w-[24px] h-[24px] rounded-full border-2 transition-all cursor-pointer
-                ${
-                  selectedColor === color.id
+                ${selectedColor === color.id
                     ? "border-black scale-110"
                     : "border-gray-300 hover:border-gray-500"
-                }`}
+                  }`}
                 style={{ backgroundColor: color.code }}
                 title={color.name}
               />
@@ -397,23 +387,8 @@ export default function ProductGallery({
                 ✕
               </button>
             </div>
-
-            <button
-              onClick={handlePrevImage}
-              className="absolute left-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
-      w-14 h-14 rounded-full bg-white text-3xl"
-            >
-              <ChevronLeft size={20} />
-            </button>
-
-            <button
-              onClick={handleNextImage}
-              className="absolute right-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
-      w-14 h-14 rounded-full bg-white text-3xl"
-            >
-              <ChevronRight size={20} />
-            </button>
-
+            <NavBtn direction="left" onClick={handlePrevImage} variant="primary" className="absolute left-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
+      w-14 h-14 rounded-full text-3xl"/>
             <img
               src={currentImage}
               alt=""
@@ -421,50 +396,66 @@ export default function ProductGallery({
                 transform: `scale(${zoomLevel})`,
                 transition: "0.3s ease",
               }}
-              className="max-h-[85vh] max-w-[80vw] object-contain rounded-3xl"
+              className="max-h-[80vh] max-w-[80vw] object-contain rounded-3xl"
             />
+            <NavBtn direction="right" onClick={handleNextImage} variant="primary" className="absolute right-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
+      w-14 h-14 rounded-full text-3xl" />
+
 
             <div
               className="
-      absolute
-      bottom-5
-      left-1/2
-      -translate-x-1/2
+    absolute
+    bottom-5
+    left-1/2
+    -translate-x-1/2
+    w-[90vw]
+    max-w-[600px]
+    overflow-x-auto
+    no-scrollbar
+  "
+            >
+              <div
+                className="
       flex
       gap-3
       bg-white/10
       backdrop-blur-md
       p-3
       rounded-xl
-      "
-            >
-              {fullImageUrls.map((img, index) => (
-                <div
-                  key={index}
-                  onClick={() => {
-                    setCurrentIndex(index);
-                    setCurrentImage(img);
-                  }}
-                  className={`
-            w-[70px]
-            h-[70px]
-            rounded-lg
-            overflow-hidden
-            cursor-pointer
-            border-2
-            ${
-              currentIndex === index ? "border-[#005BAA]" : "border-transparent"
-            }
-          `}
-                >
-                  <img
-                    src={img}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
+      w-max
+    "
+              >
+                {fullImageUrls.map((img, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      setCurrentIndex(index);
+                      setCurrentImage(img);
+                    }}
+                    className={`
+          min-w-[70px]
+          w-[70px]
+          h-[70px]
+          rounded-lg
+          cursor-pointer
+          border-2
+          flex-shrink-0
+          ${currentIndex === index
+                        ? "border-[#005BAA]"
+                        : "border-transparent"
+                      }
+        `}
+                  >
+                    <img
+                      src={img}
+                      alt=""
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
+
           </div>,
           document.body,
         )}

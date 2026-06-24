@@ -154,6 +154,10 @@ export default function ProductCard({
     const cartId = cart?._id || localStorage.getItem("cart_id");
     if (!cartId) return;
     const newQty = cartItem.quantity + 1;
+    if (newQty > 20) {
+      toast.error("Maximum 20 quantity allowed per item");
+      return;
+    }
     toast.success("Cart updated successfully!");
     dispatch(updateLocalQuantity({ item_id: cartItem._id, quantity: newQty }));
     dispatch(
@@ -290,12 +294,12 @@ export default function ProductCard({
                   e.preventDefault();
                   e.stopPropagation();
                 }}
-                className="mt-3 w-full border border-primary rounded-full flex items-center justify-between overflow-hidden"
+                className="mt-3 w-full border border-primary rounded-[12px] flex items-center justify-between overflow-hidden"
               >
                 <button
                   onClick={handleDecrease}
                   aria-label="quntity"
-                  className="flex-1 text-primary py-2 px-2 transition text-xl font-bold border-r border-primary"
+                  className="flex-1 text-primary py-1 px-2 md:py-2 transition text-xl font-bold border-r border-primary"
                 >
                   −
                 </button>
@@ -305,7 +309,8 @@ export default function ProductCard({
                 <button
                   aria-label="quntity"
                   onClick={handleIncrease}
-                  className="flex-1 text-primary py-2 px-2 border-l border-primary transition text-xl font-bold"
+                  disabled={cartQuantity >= 20}
+                  className="flex-1 text-primary py-1 md:py-2 px-2 border-l border-primary transition text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   +
                 </button>

@@ -4,6 +4,7 @@ import {
   Plus,
   X,
   Phone,
+  Minus,
   ShoppingBag,
   Star,
 } from "lucide-react";
@@ -314,16 +315,108 @@ function SelectedAddressCard({ address }) {
   );
 }
 
-function ReviewOrder({ items }) {
+
+function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
   const [popupItem, setPopupItem] = useState(null);
+  const [giftProducts, setGiftProducts] = useState([]);
+  const [buyXGetYProducts, setBuyXGetYProducts] = useState([]);
+
+  useEffect(() => {
+    if (!giftItem) {
+      setGiftProducts([]);
+      return;
+    }
+    let ids = [];
+    if (giftItem.product_ids?.length > 0) {
+      ids = giftItem.product_ids;
+    } else if (giftItem.gift_product_ids?.length > 0) {
+      ids = giftItem.gift_product_ids;
+    } else if (giftItem.products?.length > 0) {
+      ids = giftItem.products;
+    } else if (giftItem.product_id) {
+      ids = [giftItem.product_id];
+    } else if (giftItem.gift_product_id) {
+      ids = [giftItem.gift_product_id];
+    }
+
+    if (ids.length === 0) {
+      setGiftProducts([]);
+      return;
+    }
+    const fetchAllGiftProducts = async () => {
+      const results = await Promise.all(
+        ids.map(async (pid) => {
+          if (typeof pid === "object" && pid?.name) {
+            console.log("✅ Already populated:", pid.name);
+            return pid;
+          }
+
+          const id = typeof pid === "object" ? pid._id : pid;
+
+          try {
+            const res = await api.get(`/products/${id}`);
+            const product = res.data?.data?.product || res.data?.data || null;
+            return product;
+          } catch (err) {
+            return null;
+          }
+        })
+      );
+
+      const filtered = results.filter(Boolean);
+      setGiftProducts(filtered);
+    };
+
+    fetchAllGiftProducts();
+  }, [giftItem]);
+
+  useEffect(() => {
+    if (!giftItem || giftItem.type !== "buy_x_get_y") {
+      setBuyXGetYProducts([]);
+      return;
+    }
+    const fetchAll = async () => {
+      const results = await Promise.all(
+        (giftItem.items || []).map(async (gi) => {
+          const pid =
+            typeof gi.product_id === "object"
+              ? gi.product_id._id
+              : gi.product_id;
+
+
+          const cartItem = items.find(
+            (it) =>
+              String(it.product_id?._id || it.product_id) === String(pid)
+          );
+          if (cartItem?.product_id?.name) {
+            return { ...gi, productData: cartItem.product_id };
+          }
+          try {
+            const res = await api.get(`/products/${pid}`);
+            return {
+              ...gi,
+              productData:
+                res.data?.data?.product || res.data?.data || null,
+            };
+          } catch {
+            return { ...gi, productData: null };
+          }
+        })
+      );
+      setBuyXGetYProducts(results);
+    };
+    fetchAll();
+  }, [giftItem, items]);
 
   if (!items || items.length === 0) return null;
 
   const getDiscountedPrice = (item) => {
     const originalPrice = Number(
-      item?.original_price || item?.variant_id?.price || 0,
+      item?.original_price || item?.variant_id?.price || 0
     );
-    const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
+    const offerPrice = Number(
+      item?.price || item?.variant_id?.offerprice || 0
+    );
     if (offerPrice > 0 && offerPrice < originalPrice)
       return { originalPrice, discountedPrice: offerPrice };
     const discount = item?.product_id?.discount_id?.value || 0;
@@ -355,12 +448,14 @@ function ReviewOrder({ items }) {
 
         <div className="divide-y divide-gray-200">
           {items.map((item, index) => {
-            const { originalPrice, discountedPrice } = getDiscountedPrice(item);
-            const qty = item.quantity || 1;
+            const key = item._id || item.product_id?._id;
+            const qty = quantities[key] || 1;
+            const { originalPrice, discountedPrice } =
+              getDiscountedPrice(item);
             const imgSrc =
               item.variant_id?.images?.length > 0
-                ? getImageUrl(item.variant_id.images[0])
-                : getImageUrl(item.product_id?.images?.[0]);
+                ? getImageUrl(item.product_id?.images)
+                : getImageUrl(item.variant_id.images[0]);
 
             return (
               <div
@@ -401,16 +496,139 @@ function ReviewOrder({ items }) {
                   </div>
                 </div>
 
-                <div className="flex-shrink-0 text-right">
-                  <span className="inline-block bg-gray-100 text-gray-700 text-[12px] font-semibold px-3 py-1 rounded-lg">
-                    QTY: {qty}
-                  </span>
+                <div className="flex-shrink-0">
+                  <div className="inline-flex items-center border border-gray-200 rounded-[8px] overflow-hidden bg-gray-50">
+                    <button
+                      onClick={() => onDecrease(item)}
+                      disabled={qty <= 1}
+                      className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-[34px] h-[34px] flex items-center justify-center text-[14px] font-semibold text-gray-900 border-x border-gray-200 bg-white">
+                      {qty}
+                    </span>
+                    <button
+                      onClick={() => onIncrease(item)}
+                      disabled={qty >= 20}
+                      className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+
+      {giftItem && giftProducts.length > 0 && (
+        <div className="bg-white rounded-2xl border border-yellow-200 shadow-sm mb-6 overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-yellow-100 bg-yellow-50">
+            <span className="text-lg">🎁</span>
+            <span className="text-[15px] font-semibold text-yellow-800">
+              Free Gift{giftProducts.length > 1 ? "s" : ""} Added!
+              {giftProducts.length > 1 && (
+                <span className="ml-2 text-[12px] font-normal text-yellow-600">
+                  ({giftProducts.length} items)
+                </span>
+              )}
+            </span>
+          </div>
+
+          {giftProducts.map((giftProduct, idx) => (
+            <div
+              key={giftProduct._id || idx}
+              className={`flex gap-4 px-5 py-4 items-start ${idx < giftProducts.length - 1
+                ? "border-b border-yellow-100"
+                : ""
+                }`}
+            >
+              <div className="w-[80px] h-[80px] overflow-hidden bg-gray-50 rounded-xl flex-shrink-0">
+                <img
+                  src={getImageUrl(giftProduct?.images)}
+                  alt={giftProduct?.name}
+                  className="w-full h-full object-contain p-1"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className="text-[16px] font-semibold text-gray-800 leading-tight mb-1">
+                  {giftProduct?.name}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[15px] font-bold text-green-600">
+                    FREE
+                  </span>
+                  {giftProduct?.price > 0 && (
+                    <span className="text-[13px] text-gray-400 line-through">
+                      ₹{Number(giftProduct.price).toLocaleString("en-IN")}
+                    </span>
+                  )}
+                </div>
+                <span className="inline-block mt-2 text-[11px] font-semibold text-yellow-700 bg-yellow-100 border border-yellow-200 px-2 py-0.5 rounded-full">
+                  🎁 Gift with coupon
+                </span>
+              </div>
+
+              <div className="flex-shrink-0">
+                <span className="inline-block bg-green-100 text-green-700 text-[12px] font-semibold px-3 py-1 rounded-lg">
+                  QTY: 1
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {giftItem?.type === "buy_x_get_y" && buyXGetYProducts.length > 0 && (
+        <div className="bg-white rounded-2xl border border-green-200 shadow-sm mb-6 overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-green-100 bg-green-50">
+            <span className="text-lg">🎉</span>
+            <span className="text-[15px] font-semibold text-green-800">
+              You get {giftItem.getQty} item(s) FREE!
+            </span>
+          </div>
+          {buyXGetYProducts.map((gi, idx) => (
+            <div
+              key={idx}
+              className="flex gap-4 px-5 py-4 items-start border-b border-gray-50 last:border-0"
+            >
+              <div className="w-[80px] h-[80px] overflow-hidden bg-gray-50 rounded-xl flex-shrink-0">
+                <img
+                  src={getImageUrl(gi.productData?.images)}
+                  alt={gi.productData?.name}
+                  className="w-full h-full object-contain p-1"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[16px] font-semibold text-gray-800 leading-tight mb-1">
+                  {gi.productData?.name || "Free Item"}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[15px] font-bold text-green-600">
+                    FREE
+                  </span>
+                  {gi.original_price > 0 && (
+                    <span className="text-[13px] text-gray-400 line-through">
+                      ₹{Number(gi.original_price).toLocaleString("en-IN")}
+                    </span>
+                  )}
+                </div>
+                <span className="inline-block mt-2 text-[11px] font-semibold text-green-700 bg-green-100 border border-green-200 px-2 py-0.5 rounded-full">
+                  🎉 Buy X Get Y Free
+                </span>
+              </div>
+              <div className="flex-shrink-0">
+                <span className="inline-block bg-green-100 text-green-700 text-[12px] font-semibold px-3 py-1 rounded-lg">
+                  QTY: {gi.quantity}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {popupItem && (
         <ProductPopup item={popupItem} onClose={() => setPopupItem(null)} />
@@ -423,8 +641,13 @@ export default function CheckoutForm({
   formData,
   setFormData,
   setShowLoginPopup,
+  items,
+  quantities,
+  onIncrease,
+  onDecrease,
+  giftItem,
 }) {
-  const { items = [] } = useSelector((state) => state.cart);
+
   const { user } = useSelector((state) => state.auth);
   const [addresses, setAddresses] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -491,7 +714,12 @@ export default function CheckoutForm({
 
   return (
     <div className="flex-1">
-      <ReviewOrder items={items} />
+      <ReviewOrder
+        items={items}
+        quantities={quantities}
+        onIncrease={onIncrease}
+        onDecrease={onDecrease}
+        giftItem={giftItem} />
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">

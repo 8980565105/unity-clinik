@@ -149,7 +149,7 @@ lg:w-[485px]
         />
       )}
 
-      <div className="relative z-20 flex-1 flex flex-col">
+      <div className="relative z-0 flex-1 flex flex-col">
         <h3 className="text-white text-[22px] font-extrabold mb-2 pr-12">
           {item.name}
         </h3>
@@ -872,7 +872,7 @@ export function SectionRenderer({ section, productLabels }) {
                     />
 
                     <div
-                      className="absolute top-0 bottom-0 z-30"
+                      className="absolute top-0 bottom-0 z-0"
                       style={{
                         left: `${position}%`,
                         transform: "translateX(-50%)",
@@ -893,10 +893,10 @@ export function SectionRenderer({ section, productLabels }) {
                       />
                     </div>
 
-                    <div className="absolute bottom-5 left-5 z-40 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                    <div className="absolute bottom-5 left-5 z-0 bg-black/80 text-white px-4 py-2 rounded-md text-xs font-bold tracking-wider">
                       BEFORE
                     </div>
-                    <div className="absolute bottom-5 right-5 z-40 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
+                    <div className="absolute bottom-5 right-5 z-0 bg-white/90 text-black px-4 py-2 rounded-md text-xs font-bold tracking-wider">
                       AFTER
                     </div>
                   </div>

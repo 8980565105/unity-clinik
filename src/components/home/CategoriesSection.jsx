@@ -62,7 +62,7 @@ const CategoriesSection = () => {
   const slideTo = (newIndex, withAnimation = true) => {
     if (!trackRef.current) return;
     trackRef.current.style.transition = withAnimation
-      ? `transform 300ms cubic-bezier(0.4,0,0.2,1)`
+      ? `transform 500ms cubic-bezier(0.25, 1, 0.5, 1)`
       : "none";
     trackRef.current.style.transform = `translateX(-${newIndex * STEP}px)`;
   };
@@ -80,7 +80,7 @@ const CategoriesSection = () => {
         slideTo(resetTo, false);
       }
       isAnimating.current = false;
-    }, 300);
+    }, 510);
   };
 
   const handlePrev = () => {
@@ -96,7 +96,7 @@ const CategoriesSection = () => {
         slideTo(resetTo, false);
       }
       isAnimating.current = false;
-    }, 310);
+    }, 510);
   };
 
   if (total === 0) return null;

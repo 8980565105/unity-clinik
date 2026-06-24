@@ -11,6 +11,7 @@ import { HelmetProvider } from "react-helmet-async";
 import Loding from "./components/loding/loding";
 import { fetchCart } from "./features/cart/cartThunk";
 import { Toaster } from "react-hot-toast";
+import HonestReportPage from "./pages/Honest-ReportPage";
 
 const Home = lazy(() => import("./pages/Home"));
 const Allproducts = lazy(() => import("./pages/Allproducts"));
@@ -158,6 +159,7 @@ const RouterWrapper = () => {
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/term-Service" element={<TermService />} />
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/honest-report" element={<HonestReportPage />} />
           <Route
             path="/payment/phonepe/callback"
             element={<PhonePeCallback />}

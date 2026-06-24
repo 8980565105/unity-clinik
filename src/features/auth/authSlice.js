@@ -8,7 +8,6 @@ import {
   resetPassword,
 } from "./authThunk";
 import { uploadProfilePicture, toFullImageUrl } from "../user/userThunk";
-// import { clearGuestCookie } from "../../utils/guestId";
 
 function safeParse(item) {
   try {
@@ -47,7 +46,6 @@ const authSlice = createSlice({
       localStorage.removeItem("token");
       localStorage.removeItem("cart_id");
       localStorage.removeItem("user");
-      // clearGuestCookie();
     },
     clearPasswordResetState: (state) => {
       state.otpLoading = false;
@@ -60,7 +58,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // ── Login ────────────────────────────────────────────────────────
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -81,7 +78,6 @@ const authSlice = createSlice({
         state.error = action.payload || "Login failed";
       })
 
-      // ── Register ─────────────────────────────────────────────────────
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -102,7 +98,6 @@ const authSlice = createSlice({
         state.error = action.payload || "Registration failed";
       })
 
-      // ── Fetch Profile ─────────────────────────────────────────────────
       .addCase(fetchOwnProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -121,7 +116,6 @@ const authSlice = createSlice({
         state.error = action.payload || "Failed to fetch profile";
       })
 
-      // ── Update Profile ────────────────────────────────────────────────
       .addCase(updateOwnProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -156,7 +150,6 @@ const authSlice = createSlice({
         state.otpError = action.payload || "Failed to send OTP";
       })
 
-      // ── Reset Password ────────────────────────────────────────────────
       .addCase(resetPassword.pending, (state) => {
         state.resetLoading = true;
         state.resetSuccess = false;
@@ -167,7 +160,6 @@ const authSlice = createSlice({
         state.resetSuccess = true;
         state.resetError = null;
 
-        // ✅ CRITICAL: Store token and user after password reset
         console.log(
           "✅ Reset Password Success - Full Payload:",
           action.payload,
@@ -197,7 +189,6 @@ const authSlice = createSlice({
         console.error("❌ Reset Password Failed:", action.payload);
       })
 
-      // ── Upload Profile Picture ────────────────────────────────────────
       .addCase(uploadProfilePicture.fulfilled, (state, action) => {
         if (state.user && action.payload?.profile_picture) {
           state.user = {

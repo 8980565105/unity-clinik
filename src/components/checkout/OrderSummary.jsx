@@ -17,12 +17,13 @@ export default function OrderSummary({
   couponDiscount,
   partialCodAdvance,
   settingsLoaded,
+  isBuyNowMode,
 }) {
   const { items = [], loading } = useSelector((state) => state.cart);
 
   const isPartialCod = selectedPayment === "partial_cod";
 
-  if (loading)
+  if (loading && !isBuyNowMode)
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
         <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
@@ -30,12 +31,11 @@ export default function OrderSummary({
       </div>
     );
 
-  if (!items.length)
-    return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-        <p className="text-gray-500 text-sm">Your cart is empty.</p>
-      </div>
-    );
+  if (!items.length && !isBuyNowMode) return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
+      <p className="text-gray-500 text-sm">Your cart is empty.</p>
+    </div>
+  );
 
   const renderShipping = () => {
     if (shipping === 0) {
@@ -69,12 +69,12 @@ export default function OrderSummary({
     },
     ...(partialCodAdvance > 0
       ? [
-          {
-            value: "partial_cod",
-            label: "Partial COD",
-            subLabel: `₹${partialCodAdvance} NOW | REMAINING ON DELIVERY`,
-          },
-        ]
+        {
+          value: "partial_cod",
+          label: "Partial COD",
+          subLabel: `₹${partialCodAdvance} NOW | REMAINING ON DELIVERY`,
+        },
+      ]
       : []),
   ];
 
@@ -137,27 +137,29 @@ export default function OrderSummary({
             {renderShipping()}
           </div>
 
-          <div className="border-t border-gray-100 my-1" />
 
           {isPartialCod && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-1.5 text-sm">
-              <p className="font-bold text-amber-800">Partial COD Breakdown</p>
-              <div className="flex justify-between text-amber-700">
-                <span>Pay Now (Online):</span>
-                <span className="font-semibold">
-                  ₹{partialCodAdvance.toLocaleString("en-IN")}
-                </span>
+            <>
+              <div className="border-t border-gray-100 my-1" />
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-1.5 text-sm">
+                <p className="font-bold text-amber-800">Partial COD Breakdown</p>
+                <div className="flex justify-between text-amber-700">
+                  <span>Pay Now (Online):</span>
+                  <span className="font-semibold">
+                    ₹{partialCodAdvance.toLocaleString("en-IN")}
+                  </span>
+                </div>
+                <div className="flex justify-between text-amber-700">
+                  <span>Pay on Delivery:</span>
+                  <span className="font-semibold">
+                    ₹
+                    {Math.round(total - partialCodAdvance).toLocaleString(
+                      "en-IN",
+                    )}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-amber-700">
-                <span>Pay on Delivery:</span>
-                <span className="font-semibold">
-                  ₹
-                  {Math.round(total - partialCodAdvance).toLocaleString(
-                    "en-IN",
-                  )}
-                </span>
-              </div>
-            </div>
+            </>
           )}
 
           <div className="border-t border-gray-100 my-1" />
@@ -185,11 +187,10 @@ export default function OrderSummary({
             return (
               <label
                 key={value}
-                className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  isSelected
-                    ? "border-primary bg-blue-50/90"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
+                className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected
+                  ? "border-primary bg-blue-50/90"
+                  : "border-gray-200 bg-white hover:border-gray-300"
+                  }`}
               >
                 <input
                   type="radio"

@@ -3,10 +3,10 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     fontFamily: {
-      sans: ["Roboto", "sans-serif"], // default font = Roboto
+      sans: ["Roboto", "sans-serif"], 
     },
     fontSize: {
-      base: "16px", // default base font-size = 16px
+      base: "16px", 
     },
     extend: {
       screens: {
@@ -17,7 +17,6 @@ module.exports = {
         primary: "var(--primary-color)",
         secondary: "var(--secondary-color)",
 
-        // #005c99
       },
     },
   },

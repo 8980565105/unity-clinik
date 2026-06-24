@@ -27,7 +27,7 @@ export default function NotFound() {
 
             <p className="text-gray-600 text-sm md:text-base mb-6 max-w-md leading-relaxed">
               Seems like we've lost our way in the medical maze. Stay tuned as
-              we navigate back to the right path.
+              we navigate back to the home.
             </p>
 
             <Button variant="common" onClick={() => Navigate("/")}>

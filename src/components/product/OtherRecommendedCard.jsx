@@ -95,6 +95,10 @@ export default function OtherRecommendedCard({
     if (!cartId) return;
 
     const newQty = cartItem.quantity + 1;
+    if (newQty > 20) {
+      toast.error("Maximum 20 quantity allowed per item");
+      return;
+    }
     toast.success("Cart updated successfully!");
 
     dispatch(
@@ -320,8 +324,9 @@ export default function OtherRecommendedCard({
                     </span>
 
                     <Button
-                      className="flex-1  text-primary border-l !rounded-[0px]  border-primary transition text-xl font-bold"
+                      className="flex-1  text-primary border-l !rounded-[0px] border-primary transition text-xl font-bold disabled:opacity-30 disabled:cursor-not-allowed"
                       onClick={handleIncrease}
+                      disabled={quantity >= 20}
                     >
                       +
                     </Button>

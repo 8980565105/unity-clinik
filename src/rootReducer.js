@@ -18,7 +18,6 @@ import paymentReducer from "./features/payments/paymentSlice";
 import contactReducer from "./features/contact/contactSlice";
 import reviewsReducer from "./features/reivews/reviewsSlice";
 import addressReducer from "./features/address/addressSlice";
-import offersReducer from "./features/offers/offersSlice";
 import faqsReducer from "./features/faqs/faqsSlice";
 import storeReducer from "./features/store/storeSlice";
 import settingReducer from "./features/setting/settingSlice";
@@ -50,7 +49,6 @@ export const rootReducer = {
   payments: paymentReducer,
   reviews: reviewsReducer,
   address: addressReducer,
-  offers: offersReducer,
   faqs: faqsReducer,
   store: storeReducer,
   settings: settingReducer,

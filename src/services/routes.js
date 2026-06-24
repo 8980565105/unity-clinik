@@ -6,6 +6,10 @@ export const ROUTES = {
     logout: "/auth/logout",
     forgotPassword: "/auth/forgot-password",
     resetPassword: "/auth/reset-password",
+    googleLogin: "/auth/google-login",
+    sendMobileOtp: "/auth/send-mobile-otp",
+    verifyMobileOtp: "/auth/verify-mobile-otp",
+    mobileOtpLogin: "/auth/mobile-otp-login",
   },
   upload: {
     image: "/uploads/image",

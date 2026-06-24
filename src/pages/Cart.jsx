@@ -39,6 +39,7 @@ export default function Cart() {
       setDrawerOpen(true);
     }
   }, [location.state]);
+
   useEffect(() => {
     dispatch(fetchCart());
   }, [dispatch]);
@@ -68,11 +69,6 @@ export default function Cart() {
   const remaining = Math.max(0, freeThreshold - subtotal);
   const progressPercent = Math.min(100, (subtotal / freeThreshold) * 100);
   const isFree = subtotal >= freeThreshold;
-
-  useEffect(() => {
-    if (!items.length) return;
-    dispatch(fetchCoupons({ status: "active" }));
-  }, [dispatch, items.length]);
 
   const applyCouponByCode = (code) => {
     const trimmed = code?.trim().toUpperCase();
@@ -218,84 +214,12 @@ export default function Cart() {
           </div>
 
           <div className="space-y-4 sticky top-[100px] self-start">
-            {items.length > 0 && (
-              <div className="bg-white rounded-[12px] border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-[18px] py-[14px] border-b border-gray-100">
-                  <span className="text-[15px] font-bold text-gray-900">
-                    Offers & Benefits
-                  </span>
-                </div>
 
-                {appliedCoupon ? (
-                  <div className="border border-dashed border-green-400 rounded-[10px] mx-[12px] my-[12px] px-[14px] py-[12px] flex items-center justify-between bg-green-50">
-                    <div>
-                      <p className="text-[13px] font-bold text-gray-900">
-                        '{appliedCoupon.code}' applied
-                      </p>
-                      <p className="text-[12px] text-green-600 font-medium mt-[2px]">
-                        ₹{couponDiscountAmount.toLocaleString("en-IN")} coupon
-                        savings
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleRemoveCoupon}
-                      className="text-[13px] font-bold text-red-500 border border-red-300 rounded-[6px] px-[14px] py-[6px] hover:bg-red-50 transition-colors ml-[12px] whitespace-nowrap"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setDrawerOpen(true)}
-                    className="w-full flex items-center justify-between px-[18px] py-[14px] hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-center gap-[12px]">
-                      <div className="w-[38px] h-[38px] rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                        <Tag size={18} className="text-green-600" />
-                      </div>
-                      <span className="text-[14px] font-medium text-gray-800">
-                        Apply Coupon
-                      </span>
-                    </div>
-                    <ChevronRight size={18} className="text-gray-400" />
-                  </button>
-                )}
-
-                {appliedCoupon && (
-                  <button
-                    onClick={() => setDrawerOpen(true)}
-                    className="w-full text-center text-[12px] text-[#1a5fb4] font-medium py-[10px] border-t border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    Change / View all coupons
-                  </button>
-                )}
-              </div>
-            )}
 
             <CartSummary appliedCoupon={appliedCoupon} />
           </div>
         </Row>
       </Section>
-
-      <CouponDrawer
-        isOpen={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        appliedCoupon={appliedCoupon}
-        setAppliedCoupon={setAppliedCoupon}
-        cartCouponCode={cartCouponCode}
-        setCartCouponCode={setCartCouponCode}
-        couponMsg={couponMsg}
-        setCouponMsg={setCouponMsg}
-        onApplyCartCoupon={handleApplyCartCoupon}
-        onSelectCoupon={handleSelectCoupon}
-        subtotal={subtotal}
-        autoApplyCode={autoApplyCode}
-        onAutoApplyDone={() => {
-          setAutoApplyCode(null);
-          navigate(location.pathname, { replace: true, state: {} });
-        }}
-      />
-
       {items.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-[50] bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="w-[90%] lg:max-w-[1440px] mx-auto flex items-center justify-between py-3 px-2 hidden lg:flex">
@@ -350,7 +274,7 @@ export default function Cart() {
             <Button
               variant="common"
               onClick={() => navigate("/checkout")}
-              className="!px-2 !py-3 !text-[15px] !font-bold flex text-nowrap items-center gap-1 uppercase tracking-wide rounded-[0px]"
+              className="!px-2 !py-3 !text-[15px] !rounded-[0px] !font-bold flex text-nowrap items-center gap-1 uppercase tracking-wide"
             >
               CHECKOUT ORDER
               <ChevronRight size={18} />

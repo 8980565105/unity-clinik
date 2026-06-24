@@ -16,9 +16,12 @@ export default function CouponDrawer({
   subtotal,
   autoApplyCode,
   onAutoApplyDone,
+  userOrderCount,
+  checkoutQuantities,
 }) {
   const { coupons = [] } = useSelector((state) => state.coupons);
   const { items = [] } = useSelector((state) => state.cart);
+  const { user } = useSelector((state) => state.auth);
   const [expandedCoupon, setExpandedCoupon] = useState(null);
   const drawerRef = useRef(null);
 
@@ -40,24 +43,33 @@ export default function CouponDrawer({
   }, [isOpen]);
   useEffect(() => {
     if (!isOpen || !autoApplyCode) return;
-    if (!coupons.length) return; // wait until coupons loaded
-
+    if (!coupons.length) return;
     const match = coupons.find((c) => c.code === autoApplyCode);
     if (match) {
       onSelectCoupon(match.code);
     }
-    // either matched or not, clear the auto-apply flag so it doesn't re-run
     onAutoApplyDone?.();
   }, [isOpen, autoApplyCode, coupons]);
 
+
   const filteredCoupons = coupons.filter((coupon) => {
+    const isFirstOrderOnly =
+      coupon.coupon_type === "first_order" ||
+      coupon.coupon_type === "referral";
+
+    if (isFirstOrderOnly) {
+      if (!user?._id) return false;
+      if (userOrderCount === null) return false;
+      if (userOrderCount > 0) return false;
+    }
+
     if (coupon.apply_type === "allproducts") return true;
     if (coupon.apply_type === "specificproducts") {
       return items.some((item) =>
         coupon.products?.some(
           (product) =>
-            String(product?._id || product) === String(item?.product_id?._id),
-        ),
+            String(product?._id || product) === String(item?.product_id?._id)
+        )
       );
     }
     if (coupon.apply_type === "specificsubcategory") {
@@ -65,20 +77,52 @@ export default function CouponDrawer({
         const product = item?.product_id;
         const productSubCategoryId = String(
           product?.category_id?._id ||
-            product?.category_id ||
-            product?.parent_id?._id ||
-            product?.parent_id ||
-            product?.subcategory_id?._id ||
-            product?.subcategory_id ||
-            product?.subcategory?._id ||
-            product?.subcategory ||
-            "",
+          product?.category_id ||
+          product?.parent_id?._id ||
+          product?.parent_id ||
+          product?.subcategory_id?._id ||
+          product?.subcategory_id ||
+          product?.subcategory?._id ||
+          product?.subcategory ||
+          ""
         );
         return coupon.subcategories?.some(
-          (sub) => String(sub?._id || sub) === productSubCategoryId,
+          (sub) => String(sub?._id || sub) === productSubCategoryId
         );
       });
     }
+
+    if (coupon.apply_type === "Excludeproduct") {
+      return items.some((item) => {
+        const isExcluded = coupon.products?.some(
+          (product) =>
+            String(product?._id || product) === String(item?.product_id?._id)
+        );
+        return !isExcluded;
+      });
+    }
+
+    if (coupon.apply_type === "Excludecategories") {
+      return items.some((item) => {
+        const product = item?.product_id;
+        const productSubCategoryId = String(
+          product?.category_id?._id ||
+          product?.category_id ||
+          product?.parent_id?._id ||
+          product?.parent_id ||
+          product?.subcategory_id?._id ||
+          product?.subcategory_id ||
+          product?.subcategory?._id ||
+          product?.subcategory ||
+          ""
+        );
+        const isExcluded = coupon.subcategories?.some(
+          (sub) => String(sub?._id || sub) === productSubCategoryId
+        );
+        return !isExcluded;
+      });
+    }
+
     return false;
   });
 
@@ -117,7 +161,6 @@ export default function CouponDrawer({
           </button>
         </div>
 
-        {/* Input */}
         <div className="px-[20px] py-[16px] border-b border-gray-100">
           <div className="flex gap-[8px]">
             <input
@@ -140,9 +183,8 @@ export default function CouponDrawer({
 
           {couponMsg?.text && (
             <p
-              className={`text-[12px] font-medium mt-[8px] ${
-                couponMsg.type === "success" ? "text-green-600" : "text-red-500"
-              }`}
+              className={`text-[12px] font-medium mt-[8px] ${couponMsg.type === "success" ? "text-green-600" : "text-red-500"
+                }`}
             >
               {couponMsg.text}
             </p>
@@ -160,21 +202,49 @@ export default function CouponDrawer({
                 const isApplied = appliedCoupon?.code === coupon.code;
                 const isExpanded = expandedCoupon === coupon._id;
 
+
+                const buyQty = coupon?.buy_x_get_y?.buy_quantity || 0;
+
+                const eligibleQty = items.reduce((total, item) => {
+
+                  const isMatched = coupon.products?.some(
+                    (p) =>
+                      String(p?._id || p) ===
+                      String(item?.product_id?._id)
+                  );
+
+                  if (!isMatched) return total;
+
+
+                  const key =
+                    item._id || item.product_id?._id;
+
+                  const actualQty =
+                    checkoutQuantities[key] ||
+                    item.quantity ||
+                    1;
+
+                  return total + actualQty;
+                }, 0);
+
+                const canApplyBuyXGetY =
+                  coupon.coupon_type !== "buy_x_get_y"
+                    ? true
+                    : eligibleQty >= buyQty;
+
                 return (
                   <div
                     key={coupon._id}
-                    className={`border rounded-[10px] overflow-hidden transition-all ${
-                      isApplied
-                        ? "border-green-400 bg-green-50"
-                        : "border-gray-200 bg-white"
-                    }`}
+                    className={`border rounded-[10px] overflow-hidden transition-all ${isApplied
+                      ? "border-green-400 bg-green-50"
+                      : "border-gray-200 bg-white"
+                      }`}
                   >
                     <div className="flex items-center justify-between px-[14px] py-[12px]">
                       <div className="flex items-center gap-[10px]">
                         <div
-                          className={`w-[34px] h-[34px] rounded-[8px] flex items-center justify-center ${
-                            isApplied ? "bg-green-100" : "bg-gray-100"
-                          }`}
+                          className={`w-[34px] h-[34px] rounded-[8px] flex items-center justify-center ${isApplied ? "bg-green-100" : "bg-gray-100"
+                            }`}
                         >
                           <Tag
                             size={15}
@@ -210,10 +280,22 @@ export default function CouponDrawer({
                         </button>
                       ) : (
                         <button
+                          disabled={!canApplyBuyXGetY}
                           onClick={() => {
                             onSelectCoupon(coupon.code);
                           }}
-                          className="text-[13px] font-bold text-white bg-[#1a5fb4] rounded-[6px] px-[16px] py-[6px] hover:bg-[#174fa0] transition-colors"
+                          className={`
+    text-[13px]
+    font-bold
+    rounded-[6px]
+    px-[16px]
+    py-[6px]
+
+    ${canApplyBuyXGetY
+                              ? "text-white bg-[#1a5fb4]"
+                              : "text-gray-400 bg-gray-200 cursor-not-allowed"
+                            }
+  `}
                         >
                           Apply
                         </button>
@@ -240,11 +322,6 @@ export default function CouponDrawer({
                         </button>
                         {isExpanded && (
                           <p className="text-[11px] text-gray-400 mt-[4px] leading-[1.5]">
-                            {/* Valid on eligible products only. Cannot be combined
-                            with other offers.
-                            {coupon.min_order_amount
-                              ? ` Minimum order: ₹${coupon.min_order_amount}.`
-                              : ""} */}
                             {coupon.description}
                           </p>
                         )}

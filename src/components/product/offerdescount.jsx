@@ -8,22 +8,28 @@ import spacialoffer from "../../assets/abc1.png";
 const getProductSubCategoryId = (product) =>
   String(
     product?.category_id?._id ||
-      product?.category_id ||
-      product?.parent_id?._id ||
-      product?.parent_id ||
-      product?.subcategory_id?._id ||
-      product?.subcategory_id ||
-      product?.subcategory?._id ||
-      product?.subcategory ||
-      "",
+    product?.category_id ||
+    product?.parent_id?._id ||
+    product?.parent_id ||
+    product?.subcategory_id?._id ||
+    product?.subcategory_id ||
+    product?.subcategory?._id ||
+    product?.subcategory ||
+    "",
   );
 
-export const filterCouponsForProduct = (coupons, product) => {
+export const filterCouponsForProduct = (coupons, product, userOrderCount = null, userId = null) => {
   if (!product) return [];
   const subCatId = getProductSubCategoryId(product);
 
   return (coupons || []).filter((coupon) => {
     if (coupon.status !== "active") return false;
+
+    if (coupon.coupon_type === "first_order") {
+      if (!userId) return false;
+      if (userOrderCount === null) return false;
+      if (userOrderCount > 0) return false;
+    }
 
     if (coupon.apply_type === "allproducts") return true;
 
@@ -66,15 +72,35 @@ export default function Offer({ product, price = 0, onApplyOffer }) {
   const navigate = useNavigate();
   const [applyingCode, setApplyingCode] = useState(null);
   const { coupons = [] } = useSelector((state) => state.coupons);
+  const { user } = useSelector((state) => state.auth);
+
+  const [userOrderCount, setUserOrderCount] = useState(null);
 
   useEffect(() => {
     dispatch(fetchCoupons({ status: "active" }));
   }, [dispatch]);
+  
+  useEffect(() => {
+    if (!user?._id) { setUserOrderCount(0); return; }
+    const fetchCount = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL}/orders/public?limit=1`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = await res.json();
+        setUserOrderCount(data?.data?.total ?? 0);
+      } catch { setUserOrderCount(0); }
+    };
+    fetchCount();
+  }, [user?._id]);
 
-  const applicableCoupons = filterCouponsForProduct(coupons, product)
+  const applicableCoupons = filterCouponsForProduct(coupons, product, userOrderCount, user?._id)
     .map((c) => ({ ...c, discount: calcCouponDiscount(c, price) }))
     .filter((c) => c.discount > 0)
     .sort((a, b) => b.discount - a.discount);
+
 
   if (applicableCoupons.length === 0 || !price) return null;
 
@@ -109,7 +135,7 @@ export default function Offer({ product, price = 0, onApplyOffer }) {
             alt="offer"
             className="h-[50px] w-auto object-contain"
           />
-          <span className="font-semibold text-nowrap text-[13px] md:text-[18px] ">
+          <span className="font-semibold text-nowrap text-[10px] md:text-[18px] ">
             {open
               ? "Apply offers for maximum savings"
               : `Buy at ₹${bestPrice.toLocaleString("en-IN")}`}

@@ -80,7 +80,7 @@ export default function Product() {
           <Breadcrumb />
         </Row>
         <Row className="grid grid-cols-1 lg:grid-cols-[48%_52%] gap-[5px] md:gap-[40px] items-start">
-          <div className="lg:sticky lg:top-[100px] self-start h-fit z-[9999]">
+          <div className="lg:sticky lg:top-[100px] self-start h-fit z-[1]">
             <ProductGallery
               product={product}
               activeVariant={selectedVariant}
@@ -178,10 +178,10 @@ export default function Product() {
               <Button
                 variant="common"
                 onClick={async () => {
-                  if (addedToCart) {
-                    navigate("/cart");
-                    return;
-                  }
+                  // if (addedToCart) {
+                  //   navigate("/cart");
+                  //   return;
+                  // }
                   await handleAddToCartFn?.();
                   setAddedToCart(true);
                 }}
@@ -190,10 +190,8 @@ export default function Product() {
               >
                 <Handbag size={22} />
                 {addingToCart
-                  ? "Adding..."
-                  : addedToCart
-                    ? "Go to Cart"
-                    : "Add To Cart"}
+                  ? "Adding..."        
+                : "Add To Cart"}
               </Button>
             </div>
           </div>

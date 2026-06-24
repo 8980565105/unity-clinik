@@ -15,6 +15,8 @@ import { getImageUrl } from "../utils/helper";
 import Offer from "./offerdescount";
 import BuyNowButton from "./BuyNowButton";
 
+import Sharelink from "./Sharelink";
+
 const LS_KEY = "product_step_selections";
 const saveStepSelection = (stepIndex, slug) => {
   if (!slug || slug.trim() === "") return;
@@ -22,7 +24,7 @@ const saveStepSelection = (stepIndex, slug) => {
     const existing = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
     existing[`step_${stepIndex}`] = slug.trim();
     localStorage.setItem(LS_KEY, JSON.stringify(existing));
-  } catch (_) {}
+  } catch (_) { }
 };
 
 const getStepSelectedSlug = (stepIndex) => {
@@ -168,7 +170,7 @@ export default function ProductInfo({
         variantsForColor[0];
       setActiveVariantState(firstAvailable);
       setSelectedVariant(firstAvailable);
-      setActiveVariant?.(firstAvailable); // ← ADD KARO
+      setActiveVariant?.(firstAvailable); 
     }
   }, [selectedColor, product?.variants, setSelectedVariant]);
 
@@ -222,10 +224,10 @@ export default function ProductInfo({
       discountPercent:
         selectedPackState?.price > 0
           ? Math.round(
-              ((selectedPackState.price - selectedPackState.offerprice) /
-                selectedPackState.price) *
-                100,
-            )
+            ((selectedPackState.price - selectedPackState.offerprice) /
+              selectedPackState.price) *
+            100,
+          )
           : 0,
     });
   }, [selectedPackState, activeVariantState]);
@@ -343,11 +345,10 @@ export default function ProductInfo({
                       <button
                         className={`px-3 py-2 rounded-[8px]
                         border font-semibold text-[16px] transition-all duration-300
-                        ${
-                          isSelected
+                        ${isSelected
                             ? "bg-primary text-white border-primary"
                             : "bg-white text-primary border-primary hover:bg-primary hover:text-white"
-                        }`}
+                          }`}
                       >
                         {variant.title}
                       </button>
@@ -437,11 +438,10 @@ export default function ProductInfo({
             rounded-xl
             overflow-hidden
             transition-all duration-300
-            ${
-              isSelected
-                ? "bg-primary border-primary text-white"
-                : "bg-white border-primary text-black"
-            }
+            ${isSelected
+                            ? "bg-primary border-primary text-white"
+                            : "bg-white border-primary text-black"
+                          }
           `}
                       >
                         <div className="w-full h-[110px] flex-shrink-0 flex items-center justify-center">
@@ -483,15 +483,16 @@ export default function ProductInfo({
                 Size : Pack of {selectedPackState?.badge || 1}
               </h3>
               <div className="">
-                <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2">
+
                   {(step?.variants || []).map((variant, variantIdx) => {
                     const savePercentage =
                       variant.price > 0
                         ? (
-                            ((variant.price - variant.offerprice) /
-                              variant.price) *
-                            100
-                          ).toFixed(1)
+                          ((variant.price - variant.offerprice) /
+                            variant.price) *
+                          100
+                        ).toFixed(1)
                         : 0;
                     const isPackSelected =
                       String(selectedPackState?.badge) ===
@@ -509,13 +510,12 @@ export default function ProductInfo({
                           setSelectedPackState(pack);
                           setSelectedPack?.(pack);
                         }}
-                        className={`w-[120px] md:w-[180px] rounded-[10px] bg-[#F8F8F8] border overflow-hidden
+                        className={`w-full rounded-[10px] bg-[#F8F8F8] border overflow-hidden
                         transition-all duration-300 cursor-pointer hover:shadow-lg
-                        ${
-                          isPackSelected
+                        ${isPackSelected
                             ? "border-[#18A84B] border-2"
                             : "border-[#D6D6D6]"
-                        }`}
+                          }`}
                       >
                         <div
                           className={`h-[30px]  flex items-center justify-center text-white font-bold text-[14px]
@@ -590,7 +590,7 @@ export default function ProductInfo({
         </div>
       </div>
 
-      <div className="flex items-center gap-[15px] text-14 sec-text-color my-[5px]">
+      <div className="flex items-center justify-between text-14 sec-text-color my-[5px]">
         <span className="flex items-center gap-[5px] border border-[#CECDCD] text-black px-2 py-[3px] rounded-[2px] font-18 font-medium">
           {reviewData.average}{" "}
           <Star size={14} fill="currentColor" className="text-yellow-500" />
@@ -598,6 +598,9 @@ export default function ProductInfo({
             ({reviewData.total}) Ratings
           </p>
         </span>
+        <div>
+          <Sharelink product={product} />
+        </div>
       </div>
       <Offer
         product={product}
@@ -629,10 +632,6 @@ export default function ProductInfo({
             variant="common"
             className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px] hidden lg:flex"
             onClick={async () => {
-              if (isAddedToCart) {
-                navigate("/cart");
-                return;
-              }
               await handleAddToCart();
             }}
             aria-label="add to cart"
@@ -642,9 +641,7 @@ export default function ProductInfo({
               <Handbag size={22} />
               {addingToCartstate
                 ? "Adding..."
-                : isAddedToCart
-                  ? "Go to Cart"
-                  : "Add To Cart"}
+                : "Add To Cart"}
             </span>
           </Button>
         </div>
