@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useCallback, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -180,28 +179,71 @@ const buildSectionData = (type: string) => {
   }
 };
 
-
-function DraggableImageList({ images, onChange, onAddMore, apiUrlImage = "" }: any) {
+export function DraggableImageList({ images, onChange, onAddMore, apiUrlImage = "" }: any) {
   const dragIdx = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const isDraggingImage = useRef(false);
 
-  const handleDragStart = (e: any, idx: number) => { dragIdx.current = idx; e.dataTransfer.effectAllowed = "move"; };
-  const handleDragOver = (e: any, idx: number) => { e.preventDefault(); setDragOver(idx); };
+  const handleDragStart = (e: any, idx: number) => {
+    isDraggingImage.current = true;
+    dragIdx.current = idx;
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: any, idx: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOver(idx);
+  };
+
   const handleDrop = (e: any, dropIdx: number) => {
     e.preventDefault();
-    if (dragIdx.current === null || dragIdx.current === dropIdx) { setDragOver(null); return; }
+    e.stopPropagation();
+
+    if (!isDraggingImage.current) return;
+    if (dragIdx.current === null || dragIdx.current === dropIdx) {
+      setDragOver(null); return;
+    }
     const updated = [...images];
     const [moved] = updated.splice(dragIdx.current, 1);
     updated.splice(dropIdx, 0, moved);
     onChange(updated);
     dragIdx.current = null;
+    isDraggingImage.current = false;
     setDragOver(null);
   };
-  const removeImg = (idx: number) => { const u = [...images]; u.splice(idx, 1); onChange(u); };
+
+  const handleDragEnd = () => {
+    isDraggingImage.current = false;
+    dragIdx.current = null;
+    setDragOver(null);
+  };
+
+  const removeImg = (idx: number) => {
+    const u = [...images];
+    u.splice(idx, 1);
+    onChange(u);
+  };
+
+  const handleAddImages = (urls: any) => {
+    let newUrls: string[] = [];
+    if (Array.isArray(urls)) {
+      newUrls = urls.filter(Boolean);
+    } else if (typeof urls === "string" && urls) {
+      newUrls = [urls];
+    }
+    if (newUrls.length > 0) {
+      onAddMore(newUrls);
+    }
+  };
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap gap-3">
+      <div
+        className="flex flex-wrap gap-3"
+        onDragOver={(e) => e.stopPropagation()}
+        onDrop={(e) => e.stopPropagation()}
+      >
         {images.map((img: string, idx: number) => {
           const src = img.startsWith("http") ? img : `${apiUrlImage}${img}`;
           return (
@@ -212,26 +254,46 @@ function DraggableImageList({ images, onChange, onAddMore, apiUrlImage = "" }: a
               onDragOver={(e) => handleDragOver(e, idx)}
               onDrop={(e) => handleDrop(e, idx)}
               onDragLeave={() => setDragOver(null)}
-              className={`relative group cursor-grab active:cursor-grabbing rounded-lg border-2 transition-all ${dragOver === idx ? "border-blue-500 scale-105" : "border-gray-200"}`}
+              onDragEnd={handleDragEnd} // ✅ Add this
+              className={`relative group cursor-grab active:cursor-grabbing rounded-lg border-2 transition-all ${dragOver === idx ? "border-blue-500 scale-105" : "border-gray-200"
+                }`}
               style={{ width: 110, height: 110 }}
             >
-              <img src={src} alt={`img-${idx}`} className="w-full h-full object-cover rounded-lg select-none" draggable={false} />
-              <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs rounded px-1">{idx + 1}</div>
+              <img
+                src={src}
+                alt={`img-${idx}`}
+                className="w-full h-full object-cover rounded-lg select-none"
+                draggable={false}
+              />
+              <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs rounded px-1">
+                {idx + 1}
+              </div>
               <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-black/20 rounded-lg transition-opacity">
                 <GripVertical className="text-white w-5 h-5" />
               </div>
-              <button type="button" onClick={() => removeImg(idx)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10">×</button>
+              <button
+                type="button"
+                onClick={() => removeImg(idx)}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
+              >
+                ×
+              </button>
             </div>
           );
         })}
+
         <div className="w-[110px] h-[110px]">
-          <ImageUpload value={[]} onChange={(urls: any) => { const arr = Array.isArray(urls) ? urls : [urls]; onAddMore(arr.filter(Boolean)); }} multiple />
+          <ImageUpload
+            value={[]}
+            onChange={handleAddImages}
+            multiple
+            size={110}
+          />
         </div>
       </div>
     </div>
   );
 }
-
 
 function useDragList(list: any[], setList: any) {
   const dragIdx = useRef<number | null>(null);
@@ -699,7 +761,10 @@ const SectionRenderer = React.memo(function SectionRenderer({
                           </div>
                           <div>
                             <Label>Slug</Label>
-                            <Input value={variant.slug || ""} placeholder="auto-generated-slug" onChange={(e) => handleSlugManualEdit(stepIdx, variantIdx, e.target.value)} />
+                            <Input value={variant.slug || ""} placeholder="auto-generated-slug"
+                              onChange={(e) => handleSlugManualEdit(stepIdx, variantIdx, e.target.value)}
+                              readOnly
+                            />
                             {variant.slug && <p className="text-xs text-gray-400 mt-1">/products/<span className="text-blue-500">{variant.slug}</span></p>}
                           </div>
                           {step.display_type !== "Text" && (
@@ -1003,18 +1068,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Title</Label><Input value={item.title || ""} placeholder="Enter Title" onChange={(e) => updateSectionItem(itemIdx, "title", e.target.value)} /></div>
               <div><Label>Description</Label><Input value={item.description || ""} placeholder="Enter Description" onChange={(e) => updateSectionItem(itemIdx, "description", e.target.value)} /></div>
-              {/* <div>
-                <Label>Image</Label>
-
-                <ImageUpload value={item.image || ""}
-                  onChange={(val: any) => {
-                    const image = typeof val === "string"
-                      ? val : Array.isArray(val) ? val[0] : "";
-                    updateSectionItem(itemIdx, "image", image);
-                  }}
-                  multiple={false} />
-
-              </div> */}
 
               <div>
                 <Label className="font-semibold text-gray-700">
@@ -2010,10 +2063,24 @@ export default function ProductFormPage() {
     if (categoryId.length === 0) return toast.error("Category is required");
     if (variants.length === 0) return toast.error("Add at least one variant");
 
+  
     for (let i = 0; i < variants.length; i++) {
       const v = variants[i] as any;
-      if (!v.brand_id || !v.type_id || !v.price || !v.offerprice || !v.ProductLength || !v.CountryOrigin || !v.Manufactured || !v.stock_quantity) {
-        return toast.error(`All fields are required for variant ${i + 1}`);
+
+      if (!v.brand_id) {
+        return toast.error(`Brand field is required.`);
+      }
+
+      if (!v.type_id) {
+        return toast.error(`Type field is required.`);
+      }
+
+      if (!v.price) {
+        return toast.error(`Price field is required.`);
+      }
+
+      if (!v.stock_quantity) {
+        return toast.error(`Stock Quantity field is required.`);
       }
     }
 
@@ -2151,7 +2218,7 @@ export default function ProductFormPage() {
                       </Select>
                     </div>
                     <div>
-                      <Label>Type</Label>
+                      <Label>Type *</Label>
                       <Select value={v.type_id} onValueChange={(val) => handleVariantChange(idx, "type_id", val)}>
                         <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                         <SelectContent>{(types as any[]).map((t) => <SelectItem key={t._id} value={t._id}>{t.name}</SelectItem>)}</SelectContent>
@@ -2159,16 +2226,16 @@ export default function ProductFormPage() {
                     </div>
                     <div><Label>Price *</Label><Input type="number" value={v.price} onChange={(e) => handleVariantChange(idx, "price", e.target.value)} /></div>
                     <div><Label>Stock *</Label><Input type="number" value={v.stock_quantity} min={0} onChange={(e) => handleVariantChange(idx, "stock_quantity", e.target.value)} /></div>
-                    <div><Label>SKU *</Label><Input value={v.sku} onChange={(e) => handleVariantChange(idx, "sku", e.target.value)} /></div>
-                    <div><Label>Offer Price *</Label><Input type="number" value={v.offerprice} onChange={(e) => handleVariantChange(idx, "offerprice", e.target.value)} /></div>
-                    <div><Label>Bar Code *</Label><Input value={v.barcode} onChange={(e) => handleVariantChange(idx, "barcode", e.target.value)} /></div>
-                    <div><Label>Manufactured By *</Label><Input value={v.Manufactured} onChange={(e) => handleVariantChange(idx, "Manufactured", e.target.value)} /></div>
-                    <div><Label>Marketed By *</Label><Input value={v.Marketed} onChange={(e) => handleVariantChange(idx, "Marketed", e.target.value)} /></div>
-                    <div><Label>Country Origin *</Label><Input value={v.CountryOrigin} onChange={(e) => handleVariantChange(idx, "CountryOrigin", e.target.value)} /></div>
-                    <div><Label>Product Length (cms) *</Label><Input type="number" value={v.ProductLength} onChange={(e) => handleVariantChange(idx, "ProductLength", e.target.value)} /></div>
-                    <div><Label>Product Width (cms) *</Label><Input type="number" value={v.ProductWidth} onChange={(e) => handleVariantChange(idx, "ProductWidth", e.target.value)} /></div>
-                    <div><Label>Product Height (cms) *</Label><Input type="number" value={v.ProductHeight} onChange={(e) => handleVariantChange(idx, "ProductHeight", e.target.value)} /></div>
-                    <div><Label>Product Weight (Kg) *</Label><Input type="number" value={v.ProductWeight} onChange={(e) => handleVariantChange(idx, "ProductWeight", e.target.value)} /></div>
+                    <div><Label>SKU </Label><Input value={v.sku} onChange={(e) => handleVariantChange(idx, "sku", e.target.value)} /></div>
+                    <div><Label>Offer Price </Label><Input type="number" value={v.offerprice} onChange={(e) => handleVariantChange(idx, "offerprice", e.target.value)} /></div>
+                    <div><Label>Bar Code </Label><Input value={v.barcode} onChange={(e) => handleVariantChange(idx, "barcode", e.target.value)} /></div>
+                    <div><Label>Manufactured By </Label><Input value={v.Manufactured} onChange={(e) => handleVariantChange(idx, "Manufactured", e.target.value)} /></div>
+                    <div><Label>Marketed By </Label><Input value={v.Marketed} onChange={(e) => handleVariantChange(idx, "Marketed", e.target.value)} /></div>
+                    <div><Label>Country Origin </Label><Input value={v.CountryOrigin} onChange={(e) => handleVariantChange(idx, "CountryOrigin", e.target.value)} /></div>
+                    <div><Label>Product Length (cms) </Label><Input type="number" value={v.ProductLength} onChange={(e) => handleVariantChange(idx, "ProductLength", e.target.value)} /></div>
+                    <div><Label>Product Width (cms) </Label><Input type="number" value={v.ProductWidth} onChange={(e) => handleVariantChange(idx, "ProductWidth", e.target.value)} /></div>
+                    <div><Label>Product Height (cms) </Label><Input type="number" value={v.ProductHeight} onChange={(e) => handleVariantChange(idx, "ProductHeight", e.target.value)} /></div>
+                    <div><Label>Product Weight (Kg) </Label><Input type="number" value={v.ProductWeight} onChange={(e) => handleVariantChange(idx, "ProductWeight", e.target.value)} /></div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -2179,12 +2246,19 @@ export default function ProductFormPage() {
                     </div>
                     <div className="col-span-2">
                       <Label>Variant Images</Label>
+                      
+
                       <DraggableImageList
                         images={v.images || []}
                         onChange={(imgs: string[]) => handleVariantChange(idx, "images", imgs)}
-                        onAddMore={(newUrls: string[]) => { const current = v.images || []; handleVariantChange(idx, "images", [...current, ...newUrls]); }}
+                        onAddMore={(newUrls: string[]) => {
+                          const current = v.images || [];
+                          // newUrls already filtered in DraggableImageList
+                          handleVariantChange(idx, "images", [...current, ...newUrls]);
+                        }}
                         apiUrlImage={import.meta.env.VITE_API_URL_IMAGE}
                       />
+
                     </div>
                     <div className="col-span-2">
                       <Label>Variant Labels</Label>
@@ -2287,7 +2361,7 @@ export default function ProductFormPage() {
                   }
                 />
               </div>
-              
+
               <div className="flex">
                 <Button type="submit" className="flex-1">
                   {isEditMode ? "Update Product" : "Create Product"}

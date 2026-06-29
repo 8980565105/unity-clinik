@@ -20,8 +20,8 @@ import { ImageUpload } from "@/components/ui/ImageUpload";
 
 export default function NavbarFormPage() {
   const dispatch = useDispatch<AppDispatch>();
-    const basePath = useBasePath();
-  
+  const basePath = useBasePath();
+
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = Boolean(id);
@@ -165,7 +165,7 @@ export default function NavbarFormPage() {
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="status">Active</Label>
                 <Switch
@@ -174,22 +174,23 @@ export default function NavbarFormPage() {
                   onCheckedChange={setStatus}
                 />
               </div>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isEditMode ? "Update Navbar" : "Create Navbar"}
+                </Button>
+                <Link to={`${basePath}/navbar`} className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
 
-          <div className="flex gap-3">
-            <Button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              {isEditMode ? "Update Navbar Item" : "Create Navbar Item"}
-            </Button>
-            <Link to={`${basePath}/navbar`} className="flex-1">
-              <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </Link>
-          </div>
+
         </div>
       </form>
     </div>

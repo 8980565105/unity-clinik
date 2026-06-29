@@ -236,28 +236,29 @@ export default function UserFormPage() {
         </div>
 
         <div className="space-y-6">
-          <Card className=" top-6 shadow-md border border-gray-200">
+          <Card className="sticky top-5 shadow-md border border-gray-200">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="status">Active</Label>
                 <Switch id="status" checked={status} onCheckedChange={setStatus} />
               </div>
+              <div className="flex gap-3">
+                <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {isEditMode ? "Update User" : "Create User"}
+                </Button>
+                <Link to={`${basePath}/users`} className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
 
-          <div className="flex gap-3">
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-              {isEditMode ? "Update User" : "Create User"}
-            </Button>
-            <Link to={`${basePath}/users`} className="flex-1">
-              <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </Link>
-          </div>
+
         </div>
       </form>
     </div>

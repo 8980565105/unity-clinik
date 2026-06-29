@@ -29,7 +29,7 @@ export default function CategoriesPage() {
       return;
     }
 
-    dispatch(fetchUsers({ limit: 1000 }))
+    dispatch(fetchUsers({ limit: 10 }))
       .unwrap()
       .then((payload: any) => {
         console.log("USERS PAYLOAD:", payload);
@@ -50,7 +50,6 @@ export default function CategoriesPage() {
           if (id) map[id] = name;
         });
 
-        console.log("CREATORS MAP:", map);
         setCreatorsMap(map);
         setLoaded(true);
       })
@@ -69,7 +68,7 @@ export default function CategoriesPage() {
       render: (item: any) =>
         item.image_url ? (
           <img
-            src={`${import.meta.env.VITE_API_URL_IMAGE}${item.image_url}`}
+            src={`${item.image_url}`}
             alt={item.name}
             className="h-10 w-10 rounded-md object-cover border"
           />
@@ -78,23 +77,11 @@ export default function CategoriesPage() {
             —
           </div>
         ),
-     
+
     },
     { key: "name", label: "Name", },
-    ...(isAdmin
-      ? [
-        {
-          key: "createdBy",
-          label: "Created By",
-          render: (item: any) => (
-            <span className="text-sm text-gray-700">
-              {getCreatorName(item.createdBy)}
-            </span>
-          ),
-          // width: "w-48",
-        },
-      ]
-      : []),
+    { key: "order", label: "Order", },
+
   ];
 
   if (!loaded) {
@@ -115,15 +102,44 @@ export default function CategoriesPage() {
       filters={[
         { label: "Active", value: "active" },
         { label: "Inactive", value: "inactive" },
+        { label: "Ascending Order", value: "asc" },
+        { label: "Descending Order", value: "desc" },
+
       ]}
+
       fetchData={async ({ page, limit, search, status }) => {
         try {
+
+          let apiStatus = status;
+          let sort: "asc" | "desc" | undefined;
+
+          if (status === "asc") {
+            apiStatus = undefined;
+            sort = "asc";
+          }
+
+          if (status === "desc") {
+            apiStatus = undefined;
+            sort = "desc";
+          }
+
           const res = await dispatch(
-            fetchCategories({ page, limit, search, status })
+            fetchCategories({
+              page,
+              limit,
+              search,
+              status: apiStatus as any,
+              sort,
+            })
           ).unwrap();
-          return { data: res.categories, total: res.total };
+
+          return {
+            data: res.categories,
+            total: res.total,
+          };
+
         } catch (err: any) {
-          throw new Error(err || "Failed to load categories");
+          throw new Error(err);
         }
       }}
       deleteItem={async (id) => {

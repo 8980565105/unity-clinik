@@ -12,11 +12,12 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@radix-ui/react-switch";
+// import { Switch } from "@radix-ui/react-switch";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { TiptapEditor } from "@/components/ui/TiptapEditor";
 import { ImageUpload } from "@/components/ui/ImageUpload";
+import { Switch } from "@/components/ui/switch";
 export default function ResultFrom() {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
@@ -199,11 +200,11 @@ export default function ResultFrom() {
                     </Card>
                 </div>
                 <div className="space-y-6">
-                    <Card className="shadow-md border border-gray-200">
+                    <Card className="sticky top-5 shadow-md border border-gray-200">
                         <CardHeader>
                             <CardTitle className="text-lg font-semibold">Status</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="status">Active</Label>
                                 <Switch
@@ -212,21 +213,22 @@ export default function ResultFrom() {
                                     onCheckedChange={(val) => setStatus(val)}
                                 />
                             </div>
+                            <div className="flex gap-3">
+                                <Button
+                                    type="submit"
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                >
+                                    {isEditMode ? "Update Result" : "Create Result"}
+                                </Button>
+                                <Link to={`${basePath}/results`} className="flex-1">
+                                    <Button type="button" variant="outline" className="w-full">
+                                        Cancel
+                                    </Button>
+                                </Link>
+                            </div>
                         </CardContent>
                     </Card>
-                    <div className="flex gap-3">
-                        <Button
-                            type="submit"
-                            className="flex-1 bg-blue-600 hover:bg-blue-700"
-                        >
-                            {isEditMode ? "Update Result" : "Create Result"}
-                        </Button>
-                        <Link to={`${basePath}/results`} className="flex-1">
-                            <Button type="button" variant="outline" className="w-full">
-                                Cancel
-                            </Button>
-                        </Link>
-                    </div>
+
                 </div>
             </form>
         </div>

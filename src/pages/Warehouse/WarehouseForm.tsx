@@ -124,7 +124,7 @@ export default function WarehouseFormPage() {
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="status">Active</Label>
                 <Switch
@@ -133,10 +133,7 @@ export default function WarehouseFormPage() {
                   onCheckedChange={(val) => setStatus(val)}
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-3">
+               <div className="flex gap-3">
             <Button
               type="submit"
               className="flex-1 bg-blue-600 hover:bg-blue-700"
@@ -149,6 +146,10 @@ export default function WarehouseFormPage() {
               </Button>
             </Link>
           </div>
+            </CardContent>
+          </Card>
+
+         
         </div>
       </form>
     </div>

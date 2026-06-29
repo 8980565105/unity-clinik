@@ -535,7 +535,7 @@ export default function PageFormPage() {
                   onCheckedChange={(val) => setStatus(val ? "active" : "inactive")}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label>Order</Label>
                 <Input
                   type="number"
@@ -544,20 +544,21 @@ export default function PageFormPage() {
                     setOrder(e.target.value === "" ? "" : Number(e.target.value))
                   }
                 />
+              </div> */}
+              <div className="flex gap-3 sticky top-[250px]">
+                <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {isEditMode ? "Update Page" : "Create Page"}
+                </Button>
+                <Link to={`${basePath}/pages`} className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex gap-3 sticky top-[250px]">
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-              {isEditMode ? "Update Page" : "Create Page"}
-            </Button>
-            <Link to={`${basePath}/pages`} className="flex-1">
-              <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </Link>
-          </div>
+
         </div>
       </form>
     </div>

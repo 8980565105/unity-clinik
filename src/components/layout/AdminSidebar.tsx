@@ -65,6 +65,7 @@ const adminSections = [
     label: "Promotions",
     items: [
       { title: "Coupons", url: "/coupons", icon: Ticket },
+      { title: "Popup Settings", url: "/popup", icon: Ticket },
     ],
   },
   {
@@ -75,6 +76,7 @@ const adminSections = [
       { title: "Warehouse", url: "/warehouse", icon: Warehouse },
     ],
   },
+
   {
     label: "Customers",
     items: [
@@ -87,9 +89,10 @@ const adminSections = [
   {
     label: "sapret page",
     items: [
-      // { title: "Faqs", url: "/faqs", icon: Layers },
       { title: "Aboout", url: "/about", icon: Layers },
       { title: "Result", url: "/results", icon: Layers },
+      { title: "books consaltantions", url: "/bookConsoltantion", icon: Layers },
+      { title: "consaltantions", url: "/consoltantion", icon: Layers },
       { title: "sliders", url: "/slider", icon: Columns },
     ]
   },
@@ -141,10 +144,10 @@ export function AdminSidebar() {
     ].join(" ");
   };
 
-  
+
   const sections = adminSections;
   const panelLabel = "Admin Dashboard";
- 
+
   return (
     <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">

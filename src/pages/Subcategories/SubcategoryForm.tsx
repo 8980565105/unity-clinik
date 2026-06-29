@@ -43,6 +43,8 @@ export default function SubCategoryFormPage() {
   const [parentId, setParentId] = useState<string>("");
   const [status, setStatus] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [order, setOrder] = useState<number | "">("");
+
 
   useEffect(() => {
     dispatch(fetchCategories({ page: 1, limit: 100 }));
@@ -62,6 +64,7 @@ export default function SubCategoryFormPage() {
           );
           setStatus(cat.status === "active");
           setImageUrl(cat.image_url || null);
+          setOrder(cat.order ?? "");
         }
       });
     }
@@ -81,6 +84,7 @@ export default function SubCategoryFormPage() {
       parent_id: parentId,
       status: status ? "active" : "inactive",
       image: imageUrl,
+       order: Number(order),
     };
 
     try {
@@ -189,11 +193,7 @@ export default function SubCategoryFormPage() {
                     )}
                   </SelectContent>
                 </Select>
-                {/* {!parentId && (
-                  <p className="text-xs text-red-500 mt-1">
-                    Parent category is required
-                  </p>
-                )} */}
+
               </div>
 
               <div>
@@ -210,13 +210,12 @@ export default function SubCategoryFormPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-6">
           <Card className="sticky top-6 shadow-md border border-gray-200">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="status">Active</Label>
                 <Switch
@@ -225,23 +224,36 @@ export default function SubCategoryFormPage() {
                   onCheckedChange={(val) => setStatus(val)}
                 />
               </div>
+
+              <div>
+                <Label>Order *</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="Eg. 1"
+                  value={order}
+                  onChange={(e) =>
+                    setOrder(e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  disabled={!parentId}
+                >
+                  {isEditMode ? "Update SubCategory" : "Create SubCategory"}
+                </Button>
+                <Link to={`${basePath}/subcategories`} className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
-
-          <div className="flex gap-3">
-            <Button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-              disabled={!parentId} // ✅ disable submit if no parent selected
-            >
-              {isEditMode ? "Update SubCategory" : "Create SubCategory"}
-            </Button>
-            <Link to={`${basePath}/subcategories`} className="flex-1">
-              <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </Link>
-          </div>
         </div>
       </form>
     </div>

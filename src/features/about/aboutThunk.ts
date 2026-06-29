@@ -10,27 +10,20 @@ export const fetchAboutPage = createAsyncThunk(
 
       return res.data.data;
     } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.message || "Server error"
-      );
+      return rejectWithValue(err.response?.data?.message || "Server error");
     }
-  }
+  },
 );
 
 export const updateAboutPage = createAsyncThunk(
   "aboutpage/updateAboutPage",
   async (payload: any, { rejectWithValue }) => {
     try {
-      const res = await api.put(
-        "/aboutpage",
-        payload
-      );
+      const res = await api.put("/aboutpage", payload);
 
       return res.data.data;
     } catch (err: any) {
-      return rejectWithValue(
-        err.response?.data?.message || "Server error"
-      );
+      return rejectWithValue(err.response?.data?.message || "Server error");
     }
-  }
+  },
 );

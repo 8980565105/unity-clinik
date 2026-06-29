@@ -54,6 +54,10 @@ import SliderPage from "./pages/slider/slider";
 import SlideFormPage from "./pages/slider/sliderFrom";
 import SystemSettings from "./pages/systemseting/systemsetingFrom";
 import AboutPageFrom from "./pages/aboutpage/aboutpageform";
+import Popup from "./pages/popup/popup";
+import PopupFrom from "./pages/popup/poupform";
+import BookConsoltantion from "./pages/bookconsaltantions/book";
+import ConsultationPageForm from "./pages/bookconsaltantions/consaltantionPageFrom";
 
 
 const queryClient = new QueryClient();
@@ -130,6 +134,16 @@ const App = () => (
               <Route path="slider/add" element={<SlideFormPage />} />
               <Route path="slider/:id/edit" element={<SlideFormPage />} />
 
+              <Route path="popup" element={<Popup />} />
+              <Route path="popup/add" element={<PopupFrom />} />
+              <Route path="popup/:id/edit" element={<PopupFrom />} />
+
+
+
+
+              <Route path="bookConsoltantion" element={<BookConsoltantion />} />
+              <Route path="consoltantion" element={<ConsultationPageForm />} />
+
               <Route path="navbar" element={<Navbar />} />
               <Route path="navbar/add" element={<NavbarFormPage />} />
               <Route path="navbar/:id/edit" element={<NavbarFormPage />} />
@@ -144,6 +158,7 @@ const App = () => (
               <Route path="store-owners/add" element={<StoreOwnerFormPage />} />
               <Route path="store-owners/:id/edit" element={<StoreOwnerFormPage />} />
               <Route path="system_settings" element={<SystemSettings />} />
+
             </Route>
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -2,7 +2,32 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/services/api";
 import { ROUTES } from "@/services/routes";
 
-// Fetch products with pagination/search
+// export const fetchProducts = createAsyncThunk(
+//   "products/fetchProducts",
+//   async (
+//     params: {
+//       page?: number;
+//       limit?: number;
+//       search?: string;
+//       isDownload?: boolean;
+//       status?: "active" | "inactive";
+//       sort?: "asc" | "desc";
+//     } = {},
+//     { rejectWithValue },
+//   ) => {
+//     try {
+//       const { isDownload = false, ...query } = params;
+//       const res = await api.get(ROUTES.products.getAll, {
+//         params: { ...query, isDownload },
+//       });
+//       if (res.data.success) return res.data.data;
+//       return rejectWithValue(res.data.message || "Failed to fetch products");
+//     } catch (err: any) {
+//       return rejectWithValue(err.response?.data?.message || "Server Error");
+//     }
+//   },
+// );
+
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (
@@ -12,23 +37,30 @@ export const fetchProducts = createAsyncThunk(
       search?: string;
       isDownload?: boolean;
       status?: "active" | "inactive";
+      sort?: "asc" | "desc";
     } = {},
     { rejectWithValue },
   ) => {
     try {
       const { isDownload = false, ...query } = params;
+
       const res = await api.get(ROUTES.products.getAll, {
-        params: { ...query, isDownload },
+        params: {
+          ...query,
+          isDownload,
+        },
       });
-      if (res.data.success) return res.data.data;
-      return rejectWithValue(res.data.message || "Failed to fetch products");
+
+      if (res.data.success) {
+        return res.data.data;
+      }
+
+      return rejectWithValue(res.data.message);
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  },
+  }
 );
-
-// Get product by ID
 export const getProductById = createAsyncThunk(
   "products/getProductById",
   async (id: string, { rejectWithValue }) => {
@@ -42,7 +74,6 @@ export const getProductById = createAsyncThunk(
   },
 );
 
-// Create product
 export const createProduct = createAsyncThunk(
   "products/createProduct",
   async (data: any, { rejectWithValue }) => {

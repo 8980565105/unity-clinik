@@ -25,6 +25,9 @@ import faqsReducer from "./features/faqs/faqsSlice";
 import slidesReducer from "./features/slider/sliderSlice";
 import SystemSettingsReducer from "./features/systemsetting/systemsettingSlice";
 import aboutpageReducer from "./features/about/aboutSlice";
+import popupReducer from "./features/popup/PopupSlice";
+import consultationpageReducer from "./features/consoltantion/consoltantionSlice";
+import bookconsaltansReducer from "./features/bookconsoltantion/bookconsoltSlice";
 
 export const rootReducer = {
   auth: authReducer,
@@ -54,4 +57,7 @@ export const rootReducer = {
   slider: slidesReducer,
   systemseting: SystemSettingsReducer,
   aboutpage: aboutpageReducer,
+  popup: popupReducer,
+  consultationpage: consultationpageReducer,
+  bookconsaltans: bookconsaltansReducer,
 };

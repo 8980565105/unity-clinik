@@ -134,7 +134,8 @@ interface VideoUploadProps {
 
 export function VideoUpload({ value, uploading, onChange, onUploadingChange }: VideoUploadProps) {
     const inputRef = useRef<HTMLInputElement>(null);
-    const MAX_MB = 10;
+    const [isDragging, setIsDragging] = useState(false);
+    const MAX_MB = 15;
     const handleFile = async (file: File) => {
         if (!file.type.startsWith("video/")) {
             toast.error("Only video files are allowed");
@@ -155,7 +156,10 @@ export function VideoUpload({ value, uploading, onChange, onUploadingChange }: V
                 headers: { "Content-Type": "multipart/form-data" },
             });
 
-            const url = res.data?.data?.url ?? null;
+            const resData = res.data?.data;
+            const url = Array.isArray(resData)
+                ? (resData[0]?.url ?? resData[0]?.image_url ?? null)
+                : (resData?.url ?? resData?.image_url ?? resData?.video_url ?? null);
 
             if (url) {
                 onChange(url);
@@ -170,6 +174,42 @@ export function VideoUpload({ value, uploading, onChange, onUploadingChange }: V
         }
     };
 
+    const handleDragEnter = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = "copy";
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+
+        const file = Array.from(e.dataTransfer.files).find(f =>
+            f.type.startsWith("video/")
+        );
+
+        if (!file) {
+            toast.error("Please drop a video file");
+            return;
+        }
+
+        handleFile(file);
+    };
+
     return (
         <div className="mt-1">
             <input
@@ -179,52 +219,76 @@ export function VideoUpload({ value, uploading, onChange, onUploadingChange }: V
                 className="hidden"
                 onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }}
             />
+
             {value ? (
                 <div className="relative w-48 rounded-lg overflow-hidden border border-gray-200 bg-black">
-                    <video src={value} className="w-full h-32 object-cover" controls={false} muted playsInline />
+                    <video
+                        src={value.startsWith("http") ? value : `${import.meta.env.VITE_API_URL_IMAGE}${value}`}
+                        className="w-full h-32 object-cover"
+                        controls={false}
+                        muted
+                        playsInline
+                    />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                         <Video className="text-white h-8 w-8" />
                     </div>
                     <button
                         type="button"
                         onClick={() => onChange(null)}
-                        className="absolute top-1 right-1 bg-red-500 rounded-full p-0.5 text-white"
+                        className="absolute top-1 right-1 bg-red-500 rounded-full p-0.5 text-white hover:bg-red-600"
                     >
                         <X className="h-3 w-3" />
                     </button>
                     <button
                         type="button"
                         onClick={() => inputRef.current?.click()}
-                        className="absolute bottom-1 right-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded"
+                        className="absolute bottom-1 right-1 bg-blue-500 text-white text-xs px-2 py-0.5 rounded hover:bg-blue-600"
                     >
                         Change
                     </button>
                 </div>
             ) : (
-                <button
-                    type="button"
-                    onClick={() => inputRef.current?.click()}
-                    disabled={uploading}
-                    className="flex flex-col items-center justify-center w-48 h-32 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                <div
+                    onClick={() => !uploading && inputRef.current?.click()}
+                    onDragEnter={handleDragEnter}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`
+            flex flex-col items-center justify-center w-48 h-32 
+            border-2 border-dashed rounded-lg cursor-pointer
+            transition-all duration-200
+            ${isDragging
+                            ? "border-blue-500 bg-blue-50 scale-[1.02]"
+                            : uploading
+                                ? "border-gray-300 bg-gray-50 cursor-not-allowed opacity-60"
+                                : "border-gray-300 hover:border-blue-400 hover:bg-blue-50"
+                        }
+          `}
                 >
                     {uploading ? (
                         <>
                             <Loader2 className="h-7 w-7 text-blue-500 animate-spin mb-1" />
                             <span className="text-xs text-gray-500">Uploading...</span>
                         </>
+                    ) : isDragging ? (
+                        <>
+                            <Video className="h-7 w-7 text-blue-500 mb-1" />
+                            <span className="text-xs text-blue-500 font-medium">Drop Video Here</span>
+                        </>
                     ) : (
                         <>
                             <Upload className="h-7 w-7 text-gray-400 mb-1" />
                             <span className="text-xs text-gray-500 font-medium">Upload Video</span>
-                            <span className="text-xs text-gray-400">Max 10MB</span>
+                            <span className="text-xs text-gray-400">Click or Drop</span>
+                            <span className="text-xs text-gray-400">Max 15MB</span>
                         </>
                     )}
-                </button>
+                </div>
             )}
         </div>
     );
 }
-
 
 interface PageMultiSelectProps {
     selectedSlugs: string[];
@@ -705,17 +769,9 @@ export default function SlideFormPage() {
                                             <CardTitle className="text-base font-semibold text-gray-700">
                                                 Story {index + 1}
                                             </CardTitle>
-                                            {successStorySlides.length > 1 && (
-                                                // <button
-                                                //     type="button"
-                                                //     onClick={() => removeSlideItem(setSuccessStorySlides, index)}
-                                                //     className="text-red-500 hover:text-red-700 text-sm font-medium"
-                                                // >
-                                                //     ✕ Remove
-                                                // </button>
-                                                <Button type="button" variant="destructive" size="sm" onClick={() => removeSlideItem(setSuccessStorySlides, index)}>
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                            {successStorySlides.length > 1 && (<Button type="button" variant="destructive" size="sm" onClick={() => removeSlideItem(setSuccessStorySlides, index)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
                                             )}
                                         </div>
                                     </CardHeader>
@@ -791,7 +847,7 @@ export default function SlideFormPage() {
 
                                         <div>
                                             <Label className="font-semibold text-gray-700">
-                                                Video <span className="text-gray-400 font-normal text-xs">(Max 10MB)</span>
+                                                Video <span className="text-gray-400 font-normal text-xs">(Max 15MB)</span>
                                             </Label>
 
                                             <VideoUpload
@@ -816,16 +872,6 @@ export default function SlideFormPage() {
                         </div>
                     )}
 
-                    <div className="flex gap-3">
-                        <Button type="submit" disabled={submitLoading} className="flex-1">
-                            {submitLoading
-                                ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Saving...</span>
-                                : isEditMode ? "Update Slider" : "Create Slider"}
-                        </Button>
-                        <Link to={`${basePath}/slider`} className="flex-1">
-                            <Button type="button" variant="outline" className="w-full">Cancel</Button>
-                        </Link>
-                    </div>
                 </div>
 
                 <div className="space-y-6">
@@ -833,15 +879,13 @@ export default function SlideFormPage() {
                         <CardHeader>
                             <CardTitle className="text-lg font-semibold">Status</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label htmlFor="status" className="cursor-pointer font-medium">
                                     {status ? "Active" : "Inactive"}
                                 </Label>
                                 <Switch id="status" checked={status} onCheckedChange={setStatus} />
                             </div>
-
-
                             {showOnPages.length > 0 && (
                                 <div className="mt-3 pt-3 border-t">
                                     <p className="text-xs text-gray-500 font-medium mb-1">Showing on:</p>
@@ -852,6 +896,17 @@ export default function SlideFormPage() {
                                     </div>
                                 </div>
                             )}
+
+                            <div className="flex gap-3">
+                                <Button type="submit" disabled={submitLoading} className="flex-1">
+                                    {submitLoading
+                                        ? <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Saving...</span>
+                                        : isEditMode ? "Update Slider" : "Create Slider"}
+                                </Button>
+                                <Link to={`${basePath}/slider`} className="flex-1">
+                                    <Button type="button" variant="outline" className="w-full">Cancel</Button>
+                                </Link>
+                            </div>
 
                         </CardContent>
                     </Card>

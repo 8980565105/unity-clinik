@@ -1,10 +1,7 @@
-//D:\mycara\admin-panal\src\features\categories\categoriesThunk.ts
-
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
-// Fetch categories with pagination and search
 export const fetchCategories = createAsyncThunk(
   "categories/fetchCategories",
   async (
@@ -14,11 +11,11 @@ export const fetchCategories = createAsyncThunk(
       search?: string;
       isDownload?: boolean;
       status?: "active" | "inactive";
+      sort?: "asc" | "desc";
     } = {},
     { rejectWithValue },
   ) => {
     try {
-      // Default isDownload to false
       const { isDownload = false, ...query } = params;
 
       const res = await api.get(ROUTES.categories.getAll, {
@@ -33,7 +30,6 @@ export const fetchCategories = createAsyncThunk(
   },
 );
 
-// Get category by ID
 export const getCategoryById = createAsyncThunk(
   "categories/getCategoryById",
   async (id: string, { rejectWithValue }) => {
@@ -47,7 +43,6 @@ export const getCategoryById = createAsyncThunk(
   },
 );
 
-// Create category
 export const createCategory = createAsyncThunk(
   "categories/createCategory",
   async (data: any, { rejectWithValue }) => {
@@ -61,7 +56,6 @@ export const createCategory = createAsyncThunk(
   },
 );
 
-// Update category
 export const updateCategory = createAsyncThunk(
   "categories/updateCategory",
   async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
@@ -75,7 +69,6 @@ export const updateCategory = createAsyncThunk(
   },
 );
 
-// ✅ Update category status
 export const updateCategoryStatus = createAsyncThunk(
   "categories/updateCategoryStatus",
   async (
@@ -92,7 +85,6 @@ export const updateCategoryStatus = createAsyncThunk(
   },
 );
 
-// Delete category
 export const deleteCategory = createAsyncThunk(
   "categories/deleteCategory",
   async (id: string, { rejectWithValue }) => {
@@ -106,7 +98,6 @@ export const deleteCategory = createAsyncThunk(
   },
 );
 
-// Bulk delete categories
 export const bulkDeleteCategories = createAsyncThunk(
   "categories/bulkDeleteCategories",
   async (ids: string[], { rejectWithValue }) => {

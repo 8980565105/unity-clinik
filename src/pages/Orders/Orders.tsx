@@ -551,6 +551,7 @@ export default function Orders() {
                                   <thead>
                                     <tr className="text-xs text-gray-500 border-b bg-gray-100">
                                       <th className="px-3 py-2 text-left">Product</th>
+                                      <th className="px-3 py-2 text-left">type</th>
                                       <th className="px-3 py-2 text-left">Sku</th>
                                       <th className="px-3 py-2 text-center">Qty</th>
                                       <th className="px-3 py-2 text-right">Price</th>
@@ -561,6 +562,17 @@ export default function Orders() {
                                     {order.items?.map((item: any) => (
                                       <tr key={item._id} className="hover:bg-white">
                                         <td className="px-3 py-2 font-medium">{item.product?.name || "Product"}</td>
+                                        <td className="px-3 py-2">
+                                          {item.is_gift ? (
+                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-700">
+                                              🎁 Gift
+                                            </span>
+                                          ) : (
+                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                                              Paid
+                                            </span>
+                                          )}
+                                        </td>
                                         <td className="px-3 py-2">{item.variant?.sku}</td>
                                         <td className="px-3 py-2 text-center">{item.quantity}</td>
                                         <td className="px-3 py-2 text-right">₹{item.price_at_order?.toFixed(2)}</td>

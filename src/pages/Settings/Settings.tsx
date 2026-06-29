@@ -229,7 +229,7 @@ export default function Settings() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>Profile Picture</Label>
-                  <ImageUpload value={profilePic} onChange={(v) => setProfilePic(v as string | null)}  className="w-10 h-10 "/>
+                  <ImageUpload value={profilePic} onChange={(v) => setProfilePic(v as string | null)} className="w-10 h-10 " />
                 </div>
                 <div className="space-y-2">
                   <Label>Full Name</Label>
@@ -319,10 +319,6 @@ export default function Settings() {
                   <Label>Secondary Color</Label>
                   <Input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} />
                 </div>
-                {/* <div className="space-y-2">
-                  <Label>Button Color</Label>
-                  <Input type="color" value={buttonColor} onChange={(e) => setButtonColor(e.target.value)} />
-                </div> */}
               </div>
               <div className="space-y-2">
                 <Label>Font Family</Label>

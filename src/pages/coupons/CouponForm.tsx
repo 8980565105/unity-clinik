@@ -63,6 +63,7 @@ export default function CouponFormPage() {
   const [selectedProducts, setSelectedProducts] = useState<any[]>([]);
   const [freeProducts, setFreeProducts] = useState<any[]>([]);
   const [selectedSubCategories, setSelectedSubCategories] = useState<any[]>([]);
+  const [usedCount, setUsedCount] = useState(0);
 
   useEffect(() => {
     loadProducts();
@@ -101,7 +102,8 @@ export default function CouponFormPage() {
           setCouponType(coupon.coupon_type || "normal");
           setBuyQuantity(Number(coupon.buy_x_get_y?.buy_quantity));
           setGetQuantity(Number(coupon.buy_x_get_y?.get_quantity));
-
+          setUsageLimit(String(coupon.usage_limit || 0));
+          setUsedCount(Number(coupon.used_count || 0));
           if (coupon.gift_product_ids && coupon.gift_product_ids.length > 0) {
             setGiftProducts(
               coupon.gift_product_ids.map((p: any) => ({
@@ -489,15 +491,35 @@ export default function CouponFormPage() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="usageLimit">Usage Limit</Label>
-                <Input
-                  id="usageLimit"
-                  type="number"
-                  value={usageLimit}
-                  onChange={(e) => setUsageLimit(e.target.value)}
-                  min={1}
-                />
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label>Total Usage Limit</Label>
+                  <Input
+                    type="number"
+                    value={usageLimit}
+                    onChange={(e) => setUsageLimit(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <Label>Used Count</Label>
+                  <Input
+                    value={usedCount}
+                    readOnly
+                    disabled
+                  />
+                </div>
+
+                <div>
+                  <Label>Remaining</Label>
+                  <Input
+                    value={
+                      Number(usageLimit || 0) - Number(usedCount || 0)
+                    }
+                    readOnly
+                    disabled
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -27,19 +27,18 @@ export default function subCategoriesPage() {
             className="h-10 w-10 rounded-md object-cover border"
           />
         ) : (
-          // <div className="h-10 w-10 bg-gray-100 rounded-md flex items-center justify-center text-gray-400 text-xs border border-dashed">
-          //   —
-          // </div>
+
           ""
         ),
-     
+
     },
-    { key: "name", label: "Name",  },
+    { key: "name", label: "Name", },
     {
       key: "parent_id",
       label: "Parent",
       render: (item: any) => item.parent_id?.name || "-",
     },
+    { key: "order", label: "Order", },
   ];
 
   return (
@@ -52,15 +51,44 @@ export default function subCategoriesPage() {
       filters={[
         { label: "Active", value: "active" },
         { label: "Inactive", value: "inactive" },
+        { label: "Ascending Order", value: "asc" },
+        { label: "Descending Order", value: "desc" },
+
       ]}
+
       fetchData={async ({ page, limit, search, status }) => {
         try {
+
+          let apiStatus = status;
+          let sort: "asc" | "desc" | undefined;
+
+          if (status === "asc") {
+            apiStatus = undefined;
+            sort = "asc";
+          }
+
+          if (status === "desc") {
+            apiStatus = undefined;
+            sort = "desc";
+          }
+
           const res = await dispatch(
-            fetchsubCategories({ page, limit, search, status })
+            fetchsubCategories({
+              page,
+              limit,
+              search,
+              status: apiStatus as any,
+              sort,
+            })
           ).unwrap();
-          return { data: res.categories, total: res.total };
+
+          return {
+            data: res.categories,
+            total: res.total,
+          };
+
         } catch (err: any) {
-          throw new Error(err || "Failed to load categories");
+          throw new Error(err);
         }
       }}
       deleteItem={async (id) => {

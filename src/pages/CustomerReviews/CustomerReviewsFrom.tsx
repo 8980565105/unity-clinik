@@ -303,17 +303,13 @@ export default function CustomerReviewsForm() {
                         <CardHeader>
                             <CardTitle className="text-lg font-semibold">Status</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <Label htmlFor="status">
                                         {isApproved ? "Approved" : "Pending"}
                                     </Label>
-                                    <p className="text-xs text-gray-400 mt-0.5">
-                                        {isApproved
-                                            ? "Review is visible on the product page."
-                                            : "Review is hidden until approved."}
-                                    </p>
+
                                 </div>
                                 <Switch
                                     id="status"
@@ -321,19 +317,20 @@ export default function CustomerReviewsForm() {
                                     onCheckedChange={(val) => setIsApproved(val)}
                                 />
                             </div>
+                            <div className="flex gap-3">
+                                <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                                    {isEditMode ? "Update Review" : "Create Review"}
+                                </Button>
+                                <Link to={`${basePath}/customer-reviews`} className="flex-1">
+                                    <Button type="button" variant="outline" className="w-full">
+                                        Cancel
+                                    </Button>
+                                </Link>
+                            </div>
                         </CardContent>
                     </Card>
 
-                    <div className="flex gap-3">
-                        <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                            {isEditMode ? "Update Review" : "Create Review"}
-                        </Button>
-                        <Link to={`${basePath}/customer-reviews`} className="flex-1">
-                            <Button type="button" variant="outline" className="w-full">
-                                Cancel
-                            </Button>
-                        </Link>
-                    </div>
+
                 </div>
             </form>
         </div>

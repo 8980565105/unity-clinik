@@ -139,7 +139,7 @@ export default function BrandFormPage() {
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Status</CardTitle>
             </CardHeader>
-            <CardContent>
+          <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="status">Active</Label>
                 <Switch
@@ -148,20 +148,20 @@ export default function BrandFormPage() {
                   onCheckedChange={(val) => setStatus(val)}
                 />
               </div>
+              <div className="flex gap-3">
+                <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                  {isEditMode ? "Update Brand" : "Create Brand"}
+                </Button>
+                <Link to={`${basePath}/brands`} className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-              {isEditMode ? "Update Brand" : "Create Brand"}
-            </Button>
-            <Link to={`${basePath}/brands`} className="flex-1">
-              <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </Link>
-          </div>
+
         </div>
       </form>
     </div>

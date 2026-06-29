@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft } from "lucide-react";
-
 import { toast } from "sonner";
 import {
   createCategory,
@@ -19,7 +18,6 @@ import {
 } from "@/features/categories/categoriesThunk";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { useBasePath } from "@/hooks/useBasePath";
-
 
 export default function CategoryFormPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -32,6 +30,7 @@ export default function CategoryFormPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState(true);
+  const [order, setOrder] = useState<number | "">("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   useEffect(() => {
     dispatch(fetchCategories({ page: 1, limit: 100 }));
@@ -46,6 +45,7 @@ export default function CategoryFormPage() {
           setDescription(cat.description || "");
           setStatus(cat.status === "active");
           setImageUrl(cat.image_url || null);
+          setOrder(cat.order ?? "");
         }
       });
     }
@@ -59,6 +59,7 @@ export default function CategoryFormPage() {
       description,
       status: status ? "active" : "inactive",
       image: imageUrl,
+      order: Number(order),
     };
 
     try {
@@ -158,7 +159,7 @@ export default function CategoryFormPage() {
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Status</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="status">Active</Label>
                 <Switch
@@ -167,22 +168,36 @@ export default function CategoryFormPage() {
                   onCheckedChange={(val) => setStatus(val)}
                 />
               </div>
+              <div>
+                <Label>Order *</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="Eg. 1"
+                  value={order}
+                  onChange={(e) =>
+                    setOrder(e.target.value === "" ? "" : Number(e.target.value))
+                  }
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isEditMode ? "Update Category" : "Create Category"}
+                </Button>
+                <Link to={`${basePath}/categories`} className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
+                    Cancel
+                  </Button>
+                </Link>
+              </div>
+
+
             </CardContent>
           </Card>
 
-          <div className="flex gap-3">
-            <Button
-              type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              {isEditMode ? "Update Category" : "Create Category"}
-            </Button>
-            <Link to={`${basePath}/categories`} className="flex-1">
-              <Button type="button" variant="outline" className="w-full">
-                Cancel
-              </Button>
-            </Link>
-          </div>
         </div>
       </form>
     </div>
