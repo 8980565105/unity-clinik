@@ -7,6 +7,7 @@ import Hero1 from "../components/home/hero1.jsx";
 import Section from "../components/ui/Section.jsx";
 import Loding from "../components/loding/loding.jsx";
 import { getImageUrl } from "../components/utils/helper.js";
+import { ConstaltationPopup } from "../components/popup/constaltantionpopup.jsx";
 
 const CategoriesSection = lazy(
   () => import("../components/home/CategoriesSection"),
@@ -51,7 +52,14 @@ const SuccessStorySection = lazy(
 const Home = () => {
   const dispatch = useDispatch();
   const [showLoginPopup, setShowLoginPopup] = useState(false);
+  // const [isConsultationPopupOpen, setIsConsultationPopupOpen] = useState(false);
+
+  const [isConsultationPopupOpen, setIsConsultationPopupOpen] = useState(false);
+  const [isHomeLoaded, setIsHomeLoaded] = useState(false);
+
   const { pages, slugLoading } = useSelector((state) => state.pages);
+  const { data: popupData } = useSelector((state) => state.popup);
+
   const homePage = pages?.find((page) => page.slug === "home");
   const { slides } = useSelector((state) => state.slides);
   const banner2 = slides.find((s) => s.section === "banner2");
@@ -65,8 +73,63 @@ const Home = () => {
   const mobileImg = bannerMobileImage ? getImageUrl(bannerMobileImage) : null;
 
   useEffect(() => {
+    if (!slugLoading) {
+      setIsHomeLoaded(true);
+    }
+  }, [slugLoading]);
+
+  useEffect(() => {
     dispatch(fetchPageBySlug("home"));
   }, [dispatch]);
+
+  useEffect(() => {
+    const hasSeen = localStorage.getItem("hasSeenConsultationPopup");
+
+    //   if (
+    //     isHomeLoaded &&
+    //     !hasSeen &&
+    //     popupData &&
+    //     popupData.status === "active" &&
+    //     popupData.type === "consultation"
+    //   ) {
+    //     const timer = setTimeout(() => {
+    //       setIsConsultationPopupOpen(true);
+    //     }, 3000);
+
+    //     return () => clearTimeout(timer);
+    //   }
+    const consultation = popupData?.consultation;
+
+    if (
+      isHomeLoaded &&
+      !hasSeen &&
+      consultation &&
+      consultation.status === "active"
+    ) {
+      const timer = setTimeout(() => {
+        setIsConsultationPopupOpen(true);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [popupData, isHomeLoaded]);
+
+  useEffect(() => {
+    if (isConsultationPopupOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, [isConsultationPopupOpen]);
+
+  const handleCloseConsultationPopup = () => {
+    localStorage.setItem("hasSeenConsultationPopup", "true");
+    setIsConsultationPopupOpen(false);
+  };
 
   return (
     <>
@@ -87,9 +150,7 @@ const Home = () => {
           <SuccessStorySection />
         </Suspense>
         <Suspense>
-          <Bestsellers
-          // setShowLoginPopup={setShowLoginPopup}
-          />
+          <Bestsellers />
         </Suspense>
 
         <Suspense>
@@ -149,6 +210,19 @@ const Home = () => {
           <FeatureSection />
         </Suspense>
       </div>
+
+      {isConsultationPopupOpen && (
+        // <ConstaltationPopup
+        //   isOpen={isConsultationPopupOpen}
+        //   onClose={handleCloseConsultationPopup}
+        //   data={popupData?.consultation}
+        // />
+        <ConstaltationPopup
+          isOpen={isConsultationPopupOpen}
+          onClose={handleCloseConsultationPopup}
+          data={popupData?.consultation?.consultation}
+        />
+      )}
 
       {showLoginPopup && (
         <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center px-4">

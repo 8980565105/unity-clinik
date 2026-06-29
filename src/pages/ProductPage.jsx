@@ -19,19 +19,16 @@ import ProductSections, {
   SectionRenderer,
 } from "../components/product/ProductSections";
 import Productreviews from "../components/product/productreviews";
-import { useNavigate } from "react-router-dom";
 import BuyNowButton from "../components/product/BuyNowButton";
 import Button from "../components/ui/Button";
 const CustomerAlsoViewed = lazy(
   () => import("../components/product/CustomerAlsoViewed"),
 );
-
 const SimilarProducts = lazy(
   () => import("../components/product/SimilarProducts"),
 );
 export default function Product() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { product, products, error } = useSelector((state) => state.products);
   const [selectedVariant, setSelectedVariant] = useState(null);
@@ -117,7 +114,7 @@ export default function Product() {
           setShowLoginPopup={setShowLoginPopup}
         />
       )}
-      
+
       <Suspense>
         <SimilarProducts product={product} products={products} />
       </Suspense>
@@ -178,10 +175,6 @@ export default function Product() {
               <Button
                 variant="common"
                 onClick={async () => {
-                  // if (addedToCart) {
-                  //   navigate("/cart");
-                  //   return;
-                  // }
                   await handleAddToCartFn?.();
                   setAddedToCart(true);
                 }}
@@ -190,8 +183,8 @@ export default function Product() {
               >
                 <Handbag size={22} />
                 {addingToCart
-                  ? "Adding..."        
-                : "Add To Cart"}
+                  ? "Adding..."
+                  : "Add To Cart"}
               </Button>
             </div>
           </div>

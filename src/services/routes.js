@@ -169,4 +169,11 @@ export const ROUTES = {
   aboutpage: {
     get: "/aboutpage/public",
   },
+  popup: {
+    getPublic: "/popup/public",
+  },
+  consultationPage: {
+    getPublic: "/consultationpage/public",
+  },
 };
+

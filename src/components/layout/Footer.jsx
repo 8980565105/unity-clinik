@@ -15,7 +15,7 @@ import discoverImg from "../../assets/discover.webp";
 import paypalImg from "../../assets/paypal.webp";
 import Row from "../ui/Row";
 import Section from "../ui/Section";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import mylogo from "../../assets/logo.webp";
 import { fetchFooter } from "../../features/footer/footerThunk";
 import { createEmails } from "../../features/emails/emailsThunk";
@@ -24,9 +24,9 @@ import { toast } from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 const getSocialIcon = (platform) => {
   const p = platform?.toLowerCase();
-  if (p?.includes("facebook")) return { icon: Facebook, color: "#1877F2" };
-  if (p?.includes("instagram")) return { icon: Instagram, color: "#E1306C" };
-  if (p?.includes("youtube")) return { icon: Youtube, color: "#FF0000" };
+  if (p?.includes("facebook")) return { icon: Facebook };
+  if (p?.includes("instagram")) return { icon: Instagram };
+  if (p?.includes("youtube")) return { icon: Youtube};
   if (p?.includes("twitter") || p?.includes("x"))
     return { icon: Twitter, color: "#1DA1F2" };
   return { icon: Facebook, color: "#555" };
@@ -34,6 +34,9 @@ const getSocialIcon = (platform) => {
 
 export default function Footer() {
   const dispatch = useDispatch();
+  const location = useLocation();
+  const isConsultationPage = location.pathname === "/consultation";
+
   const { footers = [], loading } = useSelector((state) => state.footer);
   const { info: storeInfo } = useSelector((state) => state.store);
   const socialLinks = storeInfo?.social_links || [];
@@ -238,18 +241,18 @@ export default function Footer() {
             </div>
           </Row>
         </Section>
-        <Section className="bg-primary !py-[0px] !md:py-[0px]">
+        <Section
+          className={`bg-primary !py-[0px] !md:py-[0px] ${isConsultationPage ? "!pb-[120px] md:!pb-0" : "!pb-0"}`}
+        >
           <Row className="flex justify-between items-center py-4">
             <div className="text-white">
               <span>©</span> <span>{copyright}</span>
             </div>
             <div className="flex gap-3 justify-end items-center">
               {socialLinks.map((link, index) => {
-                const { icon: IconComponent, color } = getSocialIcon(
-                  link.platform,
-                );
+                const { icon: IconComponent } = getSocialIcon(link.platform);
                 return (
-                  <Link key={index} to={link.url} target="_blank" >
+                  <Link key={index} to={link.url} target="_blank">
                     <IconComponent
                       size={30}
                       className="transition-transform hover:scale-110 text-white"

@@ -4,6 +4,8 @@ import { getImageUrl } from "../utils/helper";
 import Section from "../ui/Section";
 import Row from "../ui/Row";
 import Heading from "../ui/Heading";
+import Button from "../ui/Button";
+import { useNavigate } from "react-router-dom";
 const STEP = 249.75;
 function getCardTransform(slot) {
   return {
@@ -45,6 +47,7 @@ function getBgConfig(slot) {
 }
 
 export default function TopDoctorCarousel() {
+  const navigate = useNavigate();
   const { slides, loading } = useSelector((state) => state.slides);
   const topDoctorSection = slides.find((s) => s.section === "topDoctor");
   const doctors = topDoctorSection?.topDoctors || [];
@@ -144,6 +147,13 @@ export default function TopDoctorCarousel() {
               })}
             </div>
           </div>
+          <Button
+            variant="common"
+            className=""
+            onClick={() => navigate("/consultation")}
+          >
+            Book a Consultation
+          </Button>
         </div>
       </Section>
     </>

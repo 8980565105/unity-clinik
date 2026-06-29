@@ -160,7 +160,6 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
       onSaved(updated, updated.length - 1);
       onClose();
     } catch (err) {
-      console.log(err);
       toast.error("Failed to save address");
     } finally {
       setLoading(false);
@@ -315,7 +314,6 @@ function SelectedAddressCard({ address }) {
   );
 }
 
-
 function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
   const [popupItem, setPopupItem] = useState(null);
   const [giftProducts, setGiftProducts] = useState([]);
@@ -347,7 +345,6 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
       const results = await Promise.all(
         ids.map(async (pid) => {
           if (typeof pid === "object" && pid?.name) {
-            console.log("✅ Already populated:", pid.name);
             return pid;
           }
 
@@ -360,7 +357,7 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
           } catch (err) {
             return null;
           }
-        })
+        }),
       );
 
       const filtered = results.filter(Boolean);
@@ -383,10 +380,8 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
               ? gi.product_id._id
               : gi.product_id;
 
-
           const cartItem = items.find(
-            (it) =>
-              String(it.product_id?._id || it.product_id) === String(pid)
+            (it) => String(it.product_id?._id || it.product_id) === String(pid),
           );
           if (cartItem?.product_id?.name) {
             return { ...gi, productData: cartItem.product_id };
@@ -395,13 +390,12 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
             const res = await api.get(`/products/${pid}`);
             return {
               ...gi,
-              productData:
-                res.data?.data?.product || res.data?.data || null,
+              productData: res.data?.data?.product || res.data?.data || null,
             };
           } catch {
             return { ...gi, productData: null };
           }
-        })
+        }),
       );
       setBuyXGetYProducts(results);
     };
@@ -412,11 +406,9 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
 
   const getDiscountedPrice = (item) => {
     const originalPrice = Number(
-      item?.original_price || item?.variant_id?.price || 0
+      item?.original_price || item?.variant_id?.price || 0,
     );
-    const offerPrice = Number(
-      item?.price || item?.variant_id?.offerprice || 0
-    );
+    const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
     if (offerPrice > 0 && offerPrice < originalPrice)
       return { originalPrice, discountedPrice: offerPrice };
     const discount = item?.product_id?.discount_id?.value || 0;
@@ -450,8 +442,7 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
           {items.map((item, index) => {
             const key = item._id || item.product_id?._id;
             const qty = quantities[key] || 1;
-            const { originalPrice, discountedPrice } =
-              getDiscountedPrice(item);
+            const { originalPrice, discountedPrice } = getDiscountedPrice(item);
             const imgSrc =
               item.variant_id?.images?.length > 0
                 ? getImageUrl(item.product_id?.images)
@@ -475,15 +466,39 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
                   </div>
                 </button>
 
-                <div className="flex-1 min-w-0">
-                  <button
-                    onClick={() => setPopupItem(item)}
-                    className="text-left focus:outline-none"
-                  >
-                    <p className="text-[18px] font-semibold text-gray-800 leading-tight mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
-                      {item.product_id?.name}
-                    </p>
-                  </button>
+                <div className="w-full">
+                  <div className="flex flex-col md:flex-row justify-between">
+                    <button
+                      onClick={() => setPopupItem(item)}
+                      className="text-left focus:outline-none"
+                    >
+                      <p className="text-[18px] font-semibold text-gray-800 leading-tight mb-2 line-clamp-2 hover:text-primary transition-colors cursor-pointer">
+                        {item.product_id?.name}
+                      </p>
+                    </button>
+                    <div className="flex-shrink-0">
+                      <div className="inline-flex items-center border border-gray-200 rounded-[8px] overflow-hidden bg-gray-50">
+                        <button
+                          onClick={() => onDecrease(item)}
+                          disabled={qty <= 1}
+                          className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className="w-[34px] h-[34px] flex items-center justify-center text-[14px] font-semibold text-gray-900 border-x border-gray-200 bg-white">
+                          {qty}
+                        </span>
+                        <button
+                          onClick={() => onIncrease(item)}
+                          disabled={qty >= 20}
+                          className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <span>Pack of :{item.pack_of}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-[15px] font-bold text-gray-900">
                       ₹{Math.round(discountedPrice).toLocaleString("en-IN")}
@@ -493,28 +508,6 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
                         ₹{Math.round(originalPrice).toLocaleString("en-IN")}
                       </span>
                     )}
-                  </div>
-                </div>
-
-                <div className="flex-shrink-0">
-                  <div className="inline-flex items-center border border-gray-200 rounded-[8px] overflow-hidden bg-gray-50">
-                    <button
-                      onClick={() => onDecrease(item)}
-                      disabled={qty <= 1}
-                      className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Minus size={12} />
-                    </button>
-                    <span className="w-[34px] h-[34px] flex items-center justify-center text-[14px] font-semibold text-gray-900 border-x border-gray-200 bg-white">
-                      {qty}
-                    </span>
-                    <button
-                      onClick={() => onIncrease(item)}
-                      disabled={qty >= 20}
-                      className="w-[34px] h-[34px] flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                    >
-                      <Plus size={12} />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -540,10 +533,11 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
           {giftProducts.map((giftProduct, idx) => (
             <div
               key={giftProduct._id || idx}
-              className={`flex gap-4 px-5 py-4 items-start ${idx < giftProducts.length - 1
-                ? "border-b border-yellow-100"
-                : ""
-                }`}
+              className={`flex gap-4 px-5 py-4 items-start ${
+                idx < giftProducts.length - 1
+                  ? "border-b border-yellow-100"
+                  : ""
+              }`}
             >
               <div className="w-[80px] h-[80px] overflow-hidden bg-gray-50 rounded-xl flex-shrink-0">
                 <img
@@ -647,7 +641,6 @@ export default function CheckoutForm({
   onDecrease,
   giftItem,
 }) {
-
   const { user } = useSelector((state) => state.auth);
   const [addresses, setAddresses] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -719,7 +712,8 @@ export default function CheckoutForm({
         quantities={quantities}
         onIncrease={onIncrease}
         onDecrease={onDecrease}
-        giftItem={giftItem} />
+        giftItem={giftItem}
+      />
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-100">

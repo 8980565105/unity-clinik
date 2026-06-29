@@ -1,7 +1,9 @@
 import { FaPlay } from "react-icons/fa";
 import Button from "../components/ui/Button";
 import { X, Eye, EyeOff, Mail, Phone } from "lucide-react";
-import { loginUser } from "../features/auth/authThunk";
+import { loginUser, googleLoginUser } from "../features/auth/authThunk";
+import { mergeGuestCart, fetchCart } from "../features/cart/cartThunk";
+import { clearGuestCookie } from "../utils/guestId";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -56,7 +58,6 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
     return () => clearInterval(timerRef.current);
   }, []);
 
-
   useEffect(() => {
     const initGoogle = () => {
       if (window.google && googleBtnRef.current) {
@@ -96,6 +97,16 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
         const { token, user } = res.data.data;
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
+
+        try {
+          await dispatch(mergeGuestCart(user._id)).unwrap();
+        } catch (e) {
+          console.warn("Cart merge failed:", e);
+        }
+        clearGuestCookie();
+        localStorage.removeItem("cart_id");
+        await dispatch(fetchCart());
+
         dispatch({ type: "auth/loginUser/fulfilled", payload: res.data });
         toast.success("Google login successful!", { position: "top-center" });
         setTimeout(() => onClose(), 800);
@@ -126,16 +137,16 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
     } else {
       toast.error(
         res.payload?.message || res.payload || "Invalid email or password",
-        { position: "top-center" }
+        { position: "top-center" },
       );
     }
   };
 
-
-
   const handleSendMobileOtp = async () => {
     if (!mobileNumber || mobileNumber.length < 10) {
-      toast.error("Valid 10-digit mobile number enter करो", { position: "top-center" });
+      toast.error("Valid 10-digit mobile number enter करो", {
+        position: "top-center",
+      });
       return;
     }
     setMobileLoading(true);
@@ -145,7 +156,9 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
       startResendTimer();
       toast.success("OTP sent!", { position: "top-center" });
     } catch (err) {
-      toast.error(err.response?.data?.message || "OTP send failed", { position: "top-center" });
+      toast.error(err.response?.data?.message || "OTP send failed", {
+        position: "top-center",
+      });
     }
     setMobileLoading(false);
   };
@@ -170,10 +183,9 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
         setTimeout(() => onClose(), 800);
       }
     } catch (err) {
-      toast.error(
-        err.response?.data?.message || "Login failed",
-        { position: "top-center" }
-      );
+      toast.error(err.response?.data?.message || "Login failed", {
+        position: "top-center",
+      });
     }
     setMobileLoading(false);
   };
@@ -194,16 +206,31 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
         const { token, user } = res.data.data;
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
+
+        try {
+          await dispatch(mergeGuestCart(user._id)).unwrap();
+        } catch (e) {
+          console.warn("Cart merge failed:", e);
+        }
+        clearGuestCookie();
+        localStorage.removeItem("cart_id");
+        await dispatch(fetchCart());
+
         dispatch({ type: "auth/loginUser/fulfilled", payload: res.data });
         setMobileOtpVerified(true);
-        toast.success("OTP Verified & Login Successful! ✓", { position: "top-center" });
+        toast.success("OTP Verified & Login Successful! ✓", {
+          position: "top-center",
+        });
         setTimeout(() => onClose(), 800);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Invalid OTP", { position: "top-center" });
+      toast.error(err.response?.data?.message || "Invalid OTP", {
+        position: "top-center",
+      });
     }
     setMobileLoading(false);
   };
+
   const switchMode = (newMode) => {
     setMode(newMode);
     setMobileOtpSent(false);
@@ -251,10 +278,11 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
           <button
             type="button"
             onClick={() => switchMode("email")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${mode === "email"
-              ? "bg-color text-white"
-              : "text-gray-500 hover:bg-gray-50"
-              }`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${
+              mode === "email"
+                ? "bg-color text-white"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
           >
             <Mail size={15} />
             Email Login
@@ -262,10 +290,11 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
           <button
             type="button"
             onClick={() => switchMode("phone")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${mode === "phone"
-              ? "bg-color text-white"
-              : "text-gray-500 hover:bg-gray-50"
-              }`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${
+              mode === "phone"
+                ? "bg-color text-white"
+                : "text-gray-500 hover:bg-gray-50"
+            }`}
           >
             <Phone size={15} />
             Phone Login
@@ -331,7 +360,9 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
                 placeholder="10-digit Mobile Number"
                 value={mobileNumber}
                 onChange={(e) =>
-                  setMobileNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
+                  setMobileNumber(
+                    e.target.value.replace(/\D/g, "").slice(0, 10),
+                  )
                 }
                 maxLength={10}
                 className="input-common flex-1 border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2"
@@ -363,12 +394,15 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
                     placeholder="Enter 6-digit OTP"
                     value={mobileOtp}
                     onChange={(e) =>
-                      setMobileOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+                      setMobileOtp(
+                        e.target.value.replace(/\D/g, "").slice(0, 6),
+                      )
                     }
                     maxLength={6}
                     disabled={mobileOtpVerified}
-                    className={`input-common flex-1 border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2 tracking-widest text-center font-mono text-lg ${mobileOtpVerified ? "bg-green-50 border-green-300" : ""
-                      }`}
+                    className={`input-common flex-1 border light-border rounded-md px-5 py-3 focus:outline-none focus:ring-2 tracking-widest text-center font-mono text-lg ${
+                      mobileOtpVerified ? "bg-green-50 border-green-300" : ""
+                    }`}
                   />
                   {mobileOtpVerified ? (
                     <span className="flex items-center justify-center text-green-600 font-semibold text-sm px-3 bg-green-50 rounded-md border border-green-200 min-w-[90px]">
@@ -390,7 +424,9 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
                   {resendTimer > 0 ? (
                     <p className="text-xs text-gray-400">
                       Resend OTP in{" "}
-                      <span className="font-semibold text-gray-600">{resendTimer}s</span>
+                      <span className="font-semibold text-gray-600">
+                        {resendTimer}s
+                      </span>
                     </p>
                   ) : (
                     <button

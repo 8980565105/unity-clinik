@@ -8,6 +8,8 @@ import toast from "react-hot-toast";
 import HeaderLogo from "../assets/logo.webp";
 import LoginForm from "./Login";
 import api from "../services/api";
+import { mergeGuestCart, fetchCart } from "../features/cart/cartThunk";
+import { clearGuestCookie } from "../utils/guestId";
 
 const RegistrationForm = ({ onClose }) => {
   const dispatch = useDispatch();
@@ -71,6 +73,17 @@ const RegistrationForm = ({ onClose }) => {
         const { token, user } = res.data.data;
         localStorage.setItem("token", token);
         localStorage.setItem("user", JSON.stringify(user));
+
+        // ✅ આ 4 lines add કરો
+        try {
+          await dispatch(mergeGuestCart(user._id)).unwrap();
+        } catch (e) {
+          console.warn("Cart merge failed:", e);
+        }
+        clearGuestCookie();
+        localStorage.removeItem("cart_id");
+        await dispatch(fetchCart());
+
         dispatch({ type: "auth/loginUser/fulfilled", payload: res.data });
         toast.success("Google login successful!", { position: "top-center" });
         setTimeout(() => onClose(), 800);
@@ -124,7 +137,9 @@ const RegistrationForm = ({ onClose }) => {
         localStorage.setItem("user", JSON.stringify(user));
         dispatch({ type: "auth/loginUser/fulfilled", payload: res.data });
         setOtpVerified(true);
-        toast.success("OTP Verified & Login Successful! ✓", { position: "top-center" });
+        toast.success("OTP Verified & Login Successful! ✓", {
+          position: "top-center",
+        });
         setTimeout(() => onClose(), 800);
       }
     } catch (err) {
@@ -182,10 +197,9 @@ const RegistrationForm = ({ onClose }) => {
       });
       setTimeout(() => onClose(), 1000);
     } else {
-      toast.error(
-        res.payload?.message || "Registration failed. Try again.",
-        { position: "top-center" }
-      );
+      toast.error(res.payload?.message || "Registration failed. Try again.", {
+        position: "top-center",
+      });
     }
   };
 
@@ -234,10 +248,11 @@ const RegistrationForm = ({ onClose }) => {
             <button
               type="button"
               onClick={() => switchMode("email")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${mode === "email"
-                ? "bg-color text-white"
-                : "text-gray-500 hover:bg-gray-50"
-                }`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${
+                mode === "email"
+                  ? "bg-color text-white"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
             >
               <Mail size={15} />
               Email Register
@@ -245,10 +260,11 @@ const RegistrationForm = ({ onClose }) => {
             <button
               type="button"
               onClick={() => switchMode("phone")}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${mode === "phone"
-                ? "bg-color text-white"
-                : "text-gray-500 hover:bg-gray-50"
-                }`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium transition-all ${
+                mode === "phone"
+                  ? "bg-color text-white"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
             >
               <Phone size={15} />
               Phone Register
@@ -262,7 +278,10 @@ const RegistrationForm = ({ onClose }) => {
           </div>
 
           <div className="flex justify-center items-center">
-            <div ref={googleBtnRef} className="w-full text-center input-common !w-fit !p-0 flex justify-center" />
+            <div
+              ref={googleBtnRef}
+              className="w-full text-center input-common !w-fit !p-0 flex justify-center"
+            />
           </div>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>

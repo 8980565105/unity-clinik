@@ -290,7 +290,9 @@ const Header = () => {
   const { products } = useSelector((state) => state.products);
 
   const displayCategories =
-    !loading && categories?.length > 0 ? categories : STATIC_CATEGORIES;
+    !loading && categories?.length > 0
+      ? [...categories].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      : STATIC_CATEGORIES;
 
   const parentCategories = displayCategories.filter((cat) => !cat.parent_id);
 
@@ -479,7 +481,7 @@ const Header = () => {
   })();
 
   return (
-    <header className="w-full bg-secondary sticky top-0 z-50 shadow-[0_3px_15px_primary border-b border-gray-100 p-2">
+    <header className="w-full bg-secondary sticky top-0 z-40 shadow-[0_1px_10px_var(--primary-color)] border-b border-gray-100 p-2">
       <Row className="flex items-center justify-between gap-[10px]">
         <button
           className="custom-lg:hidden text-black transition-colors duration-300 border rounded-[3px] p-[5px]"
@@ -580,7 +582,8 @@ const Header = () => {
                                 </div>
                               </div>
                               <div className="flex flex-col p-3">
-                                {categories.map((cat) => (
+                                {/* {categories.map((cat) => ( */}
+                                {displayCategories.map((cat) => (
                                   <div
                                     key={cat._id}
                                     onClick={() => {
@@ -937,7 +940,6 @@ const Header = () => {
               aria-label="wishlist"
               className="relative text-black hidden md:block"
             >
-             
               {isWishlistActive ? (
                 <Heart size={22} className="text-primary fill-primary " />
               ) : (

@@ -16,8 +16,15 @@ export const fetchsubCategories = createAsyncThunk(
 
     try {
       const res = await api.get(ROUTES.subcategories.getAll);
+      // if (res.data.success) {
+      //   return { subcategories: res.data.data };
+      // }
       if (res.data.success) {
-        return { subcategories: res.data.data };
+        const subcategories = [...res.data.data].sort(
+          (a, b) => (a.order ?? 0) - (b.order ?? 0),
+        );
+
+        return { subcategories };
       }
       return rejectWithValue(
         res.data.message || "Failed to fetch subcategories",

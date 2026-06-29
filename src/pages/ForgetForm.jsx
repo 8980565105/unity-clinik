@@ -246,7 +246,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
 
   useEffect(() => {
     if (otpSent && step === 0) {
-      console.log("✅ OTP sent successfully!");
       toast.success("OTP sent! Check your email.", { position: "top-center" });
       setStep(1);
     }
@@ -261,8 +260,6 @@ const ForgetForm = ({ onClose, onSwitch }) => {
 
   useEffect(() => {
     if (resetSuccess) {
-      console.log("✅ Password reset successfully!");
-      console.log("Token:", token);
 
       toast.success("Password reset successfully! Logging you in...", {
         position: "top-center",

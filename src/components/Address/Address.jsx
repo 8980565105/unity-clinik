@@ -30,7 +30,6 @@ function Address() {
 
       setAddresses(res.data.data.user.addresses || []);
     } catch (err) {
-      console.log(err);
     }
   };
 
@@ -46,7 +45,6 @@ function Address() {
 
       fetchProfile();
     } catch (err) {
-      console.log(err);
       toast.error("Failed to save address");
     } finally {
       setLoading(false);

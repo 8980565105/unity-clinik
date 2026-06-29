@@ -69,7 +69,7 @@ export default function BuyNowButton({
       </Button>
 
       {isLoginOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
           <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
             <LoginForm
               onClose={() => setIsLoginOpen(false)}
@@ -86,7 +86,7 @@ export default function BuyNowButton({
         </div>
       )}
       {isRegisterOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
           <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
             <RegistrationForm
               onClose={() => setIsRegisterOpen(false)}
@@ -99,7 +99,7 @@ export default function BuyNowButton({
         </div>
       )}
       {isForgetOpen && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+        <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
           <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
             <ForgetForm
               onClose={() => setIsForgetOpen(false)}

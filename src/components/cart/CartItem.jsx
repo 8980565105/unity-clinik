@@ -235,7 +235,7 @@ export default function CartItem() {
                       <Trash2 size={20} />
                     </button>
                   </div>
-
+                  <span>Pack of :{item.pack_of}</span>
                   <div className="flex items-end justify-between mt-[14px]">
                     <div className="flex items-center gap-[8px]">
                       <span className="text-[17px] font-bold text-gray-900">

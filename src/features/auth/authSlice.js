@@ -160,15 +160,10 @@ const authSlice = createSlice({
         state.resetSuccess = true;
         state.resetError = null;
 
-        console.log(
-          "✅ Reset Password Success - Full Payload:",
-          action.payload,
-        );
+     
 
         const { token, user } = action.payload?.data || {};
 
-        console.log("✅ Extracted Token:", token);
-        console.log("✅ Extracted User:", user);
 
         if (token && user) {
           const normalized = normalizeUser(user);
@@ -176,10 +171,8 @@ const authSlice = createSlice({
           state.user = normalized;
           localStorage.setItem("token", token);
           localStorage.setItem("user", JSON.stringify(normalized));
-          console.log("✅ Token and user saved to state and localStorage");
         } else {
           console.error("❌ Token or user missing in reset password response!");
-          console.log("Response data:", action.payload?.data);
         }
       })
       .addCase(resetPassword.rejected, (state, action) => {

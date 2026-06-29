@@ -24,7 +24,9 @@ const categorySlice = createSlice({
       })
       .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload.categories || [];
+        state.items = [...(action.payload.categories || [])].sort(
+          (a, b) => (a.order ?? 0) - (b.order ?? 0),
+        );
       })
       .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;

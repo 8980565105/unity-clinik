@@ -2,7 +2,6 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
-// ─── Razorpay: Create Order ───────────────────────────────────────────────────
 export const createRazorpayOrder = createAsyncThunk(
   "payments/createRazorpayOrder",
   async (data, { rejectWithValue }) => {
@@ -15,7 +14,6 @@ export const createRazorpayOrder = createAsyncThunk(
   },
 );
 
-// ─── Razorpay: Verify Payment ─────────────────────────────────────────────────
 export const verifyRazorpayPayment = createAsyncThunk(
   "payments/verifyRazorpayPayment",
   async (data, { rejectWithValue }) => {
@@ -28,7 +26,6 @@ export const verifyRazorpayPayment = createAsyncThunk(
   },
 );
 
-// ─── Create Payment Record ────────────────────────────────────────────────────
 export const createPayment = createAsyncThunk(
   "payments/createPayment",
   async (paymentData, { rejectWithValue }) => {
@@ -59,24 +56,6 @@ export const createPayment = createAsyncThunk(
   },
 );
 
-// ─── PhonePe: Initiate Payment ────────────────────────────────────────────────
-// export const createPhonePeOrder = createAsyncThunk(
-//   "payments/createPhonePeOrder",
-//   async ({ amount, order_id, user_id, redirect_url }, { rejectWithValue }) => {
-//     try {
-//       const res = await api.post(createPhonePeOrder, {
-//         amount,
-//         order_id,
-//         user_id,
-//         redirect_url,
-//       });
-//       return res.data;
-//     } catch (err) {
-//       return rejectWithValue(err.response?.data?.message || err.message);
-//     }
-//   },
-// );
-
 export const createPhonePeOrder = createAsyncThunk(
   "payments/createPhonePeOrder",
   async ({ amount, order_id, user_id, redirect_url }, { rejectWithValue }) => {
@@ -102,6 +81,18 @@ export const verifyPhonePePayment = createAsyncThunk(
         merchantTransactionId,
         order_id,
       });
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  },
+);
+
+export const createConsultationBooking = createAsyncThunk(
+  "payments/createConsultationBooking",
+  async (bookingData, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/bookconsaltans", bookingData);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);

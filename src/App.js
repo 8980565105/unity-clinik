@@ -1,5 +1,11 @@
-import React, { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { lazy, Suspense, useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import "./App.css";
 import "./index.css";
 import Header from "./components/layout/Header";
@@ -12,6 +18,10 @@ import Loding from "./components/loding/loding";
 import { fetchCart } from "./features/cart/cartThunk";
 import { Toaster } from "react-hot-toast";
 import HonestReportPage from "./pages/Honest-ReportPage";
+import CouponSidebar from "./components/Coupon/CouponSidebar";
+import ConsultationPage from "./pages/Consultation";
+import Button from "./components/ui/Button";
+import { resolveGuestId } from "./utils/guestId";
 
 const Home = lazy(() => import("./pages/Home"));
 const Allproducts = lazy(() => import("./pages/Allproducts"));
@@ -36,6 +46,7 @@ const PhonePeCallback = lazy(
 );
 const ServerDown = lazy(() => import("./pages/Serverdownpage"));
 const NotFound = lazy(() => import("./pages/notfound"));
+const Consultation = lazy(() => import("./pages/Consultation"));
 
 const hexToRgba = (hex, opacity) => {
   if (!hex) return null;
@@ -81,13 +92,62 @@ const injectThemeColors = (theme) => {
 };
 
 const RouterWrapper = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [showConsultBtn, setShowConsultBtn] = useState(false);
   const { info: storeData, errorInfo } = useSelector((state) => state.store);
 
   useEffect(() => {
     dispatch(fetchStoreInfo());
-    dispatch(fetchCart());
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      dispatch(fetchCart());
+    } else {
+      resolveGuestId()
+        .then(() => dispatch(fetchCart()))
+        .catch(() => dispatch(fetchCart()));
+    }
   }, [dispatch]);
+
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      const heroHeight = window.innerHeight * 0.8;
+
+      const footer = document.querySelector("footer");
+
+      let footerVisible = false;
+
+      if (footer) {
+        const rect = footer.getBoundingClientRect();
+
+        footerVisible = rect.top <= window.innerHeight;
+      }
+
+      if (currentScrollY < heroHeight || footerVisible) {
+        setShowConsultBtn(false);
+      } else {
+        if (currentScrollY > lastScrollY) {
+          setShowConsultBtn(true);
+        }
+
+        if (currentScrollY < lastScrollY) {
+          setShowConsultBtn(false);
+        }
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", onScroll);
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const faviconUrl = storeData?.theme?.faviconUrl;
@@ -131,7 +191,7 @@ const RouterWrapper = () => {
       <Toaster position="top-center" reverseOrder={false} />
       <ScrollToTop />
       <Header />
-
+      <CouponSidebar />
       <Suspense
         fallback={
           <div className="min-h-[60vh] flex items-center justify-center">
@@ -159,6 +219,7 @@ const RouterWrapper = () => {
           <Route path="/refund-policy" element={<RefundPolicy />} />
           <Route path="/term-Service" element={<TermService />} />
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
+          <Route path="/consultation" element={<ConsultationPage />} />
           <Route path="/honest-report" element={<HonestReportPage />} />
           <Route
             path="/payment/phonepe/callback"
@@ -167,7 +228,44 @@ const RouterWrapper = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-      <div className="fixed bottom-[70px] md:bottom-[100px] right-[15px] z-50">
+
+      {/* {(location.pathname === "/" || location.pathname === "/home") && (
+        <div className="fixed bottom-0 z-[9999] w-full">
+          <div className="bg-primary flex justify-center items-center w-full py-1">
+            <Button
+              variant="common"
+              className="!py-2 !bg-white !text-primary !font-bold !w-fit"
+              onClick={() => navigate("/consultation")}
+            >
+              Book a Consultation
+            </Button>
+          </div>
+        </div>
+      )} */}
+
+      {(location.pathname === "/" || location.pathname === "/home") && (
+        <div
+          className={`fixed bottom-0 left-0 w-full z-[9999]
+      transition-all duration-300
+      ${
+        showConsultBtn
+          ? "translate-y-0 opacity-100"
+          : "translate-y-full opacity-0 pointer-events-none"
+      }`}
+        >
+          <div className="bg-primary flex justify-center items-center py-1">
+            <Button
+              variant="common"
+              className="!py-2 !bg-white !text-primary !font-bold !w-fit"
+              onClick={() => navigate("/consultation")}
+            >
+              Book a Consultation
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="fixed bottom-[70px] md:bottom-[100px] right-[15px] z-[1000]">
         <button
           className="bg-green-500 rounded-full p-3 whatsapp-pulse shadow-lg"
           onClick={openWhatsApp}

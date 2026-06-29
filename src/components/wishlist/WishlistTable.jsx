@@ -95,7 +95,6 @@ const Wishlist = ({ product }) => {
     const product_id = item?.product?._id;
     const variant_id = item?.variant?._id;
     const selectedQuantity = quantities[index] ?? 1;
-    console.log("Adding to cart with quantity:", selectedQuantity);
 
     if (!product_id || !variant_id) {
       toast("Product or variant not found!");
@@ -132,7 +131,6 @@ const Wishlist = ({ product }) => {
 
       if (selectedQuantity > 1) {
         const cartData = await dispatch(fetchCart(cart_id)).unwrap();
-        console.log("cart after add:", cartData);
 
         const cartItems = cartData?.items || [];
         const addedItem = cartItems.find(
@@ -141,7 +139,6 @@ const Wishlist = ({ product }) => {
             ci.variant_id?._id === variant_id,
         );
 
-        console.log("found cart item:", addedItem);
 
         if (addedItem && addedItem._id) {
           await dispatch(
@@ -151,7 +148,6 @@ const Wishlist = ({ product }) => {
               quantity: selectedQuantity,
             }),
           ).unwrap();
-          console.log("quantity updated to:", selectedQuantity);
         }
       }
 

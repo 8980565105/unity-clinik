@@ -44,8 +44,8 @@ export default function Checkout() {
       (baseItems || []).map((item) => [
         item._id || item.product_id?._id,
         item.quantity || 1,
-      ])
-    )
+      ]),
+    ),
   );
   const handleIncrease = (item) => {
     const key = item._id || item.product_id?._id;
@@ -82,7 +82,7 @@ export default function Checkout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const { coupons = [] } = useSelector((state) => state.coupons);
   const [autoApplyCode, setAutoApplyCode] = useState(
-    location.state?.autoApplyCoupon || null
+    location.state?.autoApplyCoupon || null,
   );
   const [userOrderCount, setUserOrderCount] = useState(null);
   const [giftItem, setGiftItem] = useState(null);
@@ -103,23 +103,27 @@ export default function Checkout() {
     dispatch(clearCart());
   };
 
-
   useEffect(() => {
     if (location.state?.openCouponDrawer) setDrawerOpen(true);
   }, [location.state]);
 
   useEffect(() => {
-    if (!user?._id) { setUserOrderCount(0); return; }
+    if (!user?._id) {
+      setUserOrderCount(0);
+      return;
+    }
     const fetchOrderCount = async () => {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
           `${process.env.REACT_APP_API_URL}/orders/public?limit=1`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const data = await res.json();
         setUserOrderCount(data?.data?.total ?? 0);
-      } catch { setUserOrderCount(0); }
+      } catch {
+        setUserOrderCount(0);
+      }
     };
     fetchOrderCount();
   }, [user?._id]);
@@ -136,25 +140,32 @@ export default function Checkout() {
     const trimmed = code?.trim().toUpperCase();
     const coupon = coupons.find((c) => c.code === trimmed);
     if (!coupon) {
-      setCouponMsg({ text: "Invalid coupon code. Please try again!", type: "error" });
+      setCouponMsg({
+        text: "Invalid coupon code. Please try again!",
+        type: "error",
+      });
       return;
     }
 
     const isFirstOrderOnly =
-      coupon.coupon_type === "first_order" ||
-      coupon.coupon_type === "referral";
+      coupon.coupon_type === "first_order" || coupon.coupon_type === "referral";
 
     if (isFirstOrderOnly) {
       if (!user?._id) {
-        setCouponMsg({ text: "Please login to use this coupon!", type: "error" });
+        setCouponMsg({
+          text: "Please login to use this coupon!",
+          type: "error",
+        });
         return;
       }
       if (userOrderCount > 0) {
-        setCouponMsg({ text: "This coupon is only valid on your first order!", type: "error" });
+        setCouponMsg({
+          text: "This coupon is only valid on your first order!",
+          type: "error",
+        });
         return;
       }
     }
-
 
     if (coupon.coupon_type === "buy_x_get_y") {
       const buyQty = coupon?.buy_x_get_y?.buy_quantity || 0;
@@ -166,7 +177,7 @@ export default function Checkout() {
         const actualQty = quantities[key] || item.quantity || 1;
         if (coupon.apply_type === "allproducts") return total + actualQty;
         const isMatched = coupon.products?.some(
-          (p) => String(p?._id || p) === String(item?.product_id?._id)
+          (p) => String(p?._id || p) === String(item?.product_id?._id),
         );
         if (!isMatched) return total;
         return total + actualQty;
@@ -213,7 +224,7 @@ export default function Checkout() {
         const isMatched =
           coupon.apply_type === "allproducts" ||
           coupon.products?.some(
-            (p) => String(p?._id || p) === String(item?.product_id?._id)
+            (p) => String(p?._id || p) === String(item?.product_id?._id),
           );
         if (!isMatched) continue;
 
@@ -227,7 +238,10 @@ export default function Checkout() {
           quantity: freeQty,
           price: 0,
           original_price:
-            item.price || item.variant_id?.offerprice || item.variant_id?.price || 0,
+            item.price ||
+            item.variant_id?.offerprice ||
+            item.variant_id?.price ||
+            0,
           is_gift: true,
           is_buy_x_get_y: true,
         });
@@ -237,7 +251,7 @@ export default function Checkout() {
       setGiftItem(
         freeItems.length > 0
           ? { type: "buy_x_get_y", items: freeItems, getQty }
-          : null
+          : null,
       );
       setAppliedCoupon(coupon);
       setCartCouponCode(coupon.code);
@@ -278,21 +292,27 @@ export default function Checkout() {
       return;
     }
 
-    if (coupon.apply_type === "Excludeproduct" || coupon.apply_type === "Excludecategories") {
+    if (
+      coupon.apply_type === "Excludeproduct" ||
+      coupon.apply_type === "Excludecategories"
+    ) {
       const hasNonExcludedItem = items.some((item) => {
         if (coupon.apply_type === "Excludeproduct") {
           return !coupon.products?.some(
-            (p) => String(p?._id || p) === String(item?.product_id?._id)
+            (p) => String(p?._id || p) === String(item?.product_id?._id),
           );
         }
         if (coupon.apply_type === "Excludecategories") {
           const product = item?.product_id;
           const subCatId = String(
-            product?.category_id?._id || product?.category_id ||
-            product?.subcategory_id?._id || product?.subcategory_id || ""
+            product?.category_id?._id ||
+              product?.category_id ||
+              product?.subcategory_id?._id ||
+              product?.subcategory_id ||
+              "",
           );
           return !coupon.subcategories?.some(
-            (sub) => String(sub?._id || sub) === subCatId
+            (sub) => String(sub?._id || sub) === subCatId,
           );
         }
         return true;
@@ -306,7 +326,6 @@ export default function Checkout() {
         return;
       }
     }
-
 
     setGiftItem(null);
     setAppliedCoupon(coupon);
@@ -329,9 +348,18 @@ export default function Checkout() {
     phone: "",
   });
 
-  useEffect(() => { dispatch(fetchPageBySlug("checkout")); dispatch(fetchSystemSettings()); }, [dispatch]);
-  useEffect(() => { if (!items.length) return; dispatch(fetchCoupons({ status: "active" })); }, [dispatch, items.length]);
-  useEffect(() => { const cart_id = localStorage.getItem("cart_id"); if (user && cart_id) dispatch(fetchCart(cart_id)); }, [dispatch, user]);
+  useEffect(() => {
+    dispatch(fetchPageBySlug("checkout"));
+    dispatch(fetchSystemSettings());
+  }, [dispatch]);
+  useEffect(() => {
+    if (!items.length) return;
+    dispatch(fetchCoupons({ status: "active" }));
+  }, [dispatch, items.length]);
+  useEffect(() => {
+    const cart_id = localStorage.getItem("cart_id");
+    if (user && cart_id) dispatch(fetchCart(cart_id));
+  }, [dispatch, user]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -339,7 +367,12 @@ export default function Checkout() {
     const phonePeOrderId = params.get("order_id");
     if (phonePeTxn && phonePeOrderId) {
       (async () => {
-        const verifyRes = await dispatch(verifyPhonePePayment({ transaction_id: phonePeTxn, order_id: phonePeOrderId }));
+        const verifyRes = await dispatch(
+          verifyPhonePePayment({
+            transaction_id: phonePeTxn,
+            order_id: phonePeOrderId,
+          }),
+        );
         if (verifyPhonePePayment.fulfilled.match(verifyRes)) {
           await clearCartItems();
           localStorage.removeItem("applied_coupon");
@@ -353,20 +386,30 @@ export default function Checkout() {
   }, []);
 
   const getDiscountedPrice = (item) => {
-    const originalPrice = Number(item?.original_price || item?.variant_id?.price || 0);
+    const originalPrice = Number(
+      item?.original_price || item?.variant_id?.price || 0,
+    );
     const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
-    if (offerPrice > 0 && offerPrice < originalPrice) return { originalPrice, discountedPrice: offerPrice };
+    if (offerPrice > 0 && offerPrice < originalPrice)
+      return { originalPrice, discountedPrice: offerPrice };
     const discount = item?.product_id?.discount_id?.value || 0;
-    const discountedPrice = discount > 0 ? originalPrice - (originalPrice * discount) / 100 : originalPrice;
+    const discountedPrice =
+      discount > 0
+        ? originalPrice - (originalPrice * discount) / 100
+        : originalPrice;
     return { originalPrice, discountedPrice };
   };
 
   const mrpTotal = checkoutItems.reduce(
-    (sum, item) => sum + getDiscountedPrice(item).originalPrice * (item.quantity || 1), 0
+    (sum, item) =>
+      sum + getDiscountedPrice(item).originalPrice * (item.quantity || 1),
+    0,
   );
 
   const offerPriceTotal = checkoutItems.reduce(
-    (sum, item) => sum + getDiscountedPrice(item).discountedPrice * (item.quantity || 1), 0
+    (sum, item) =>
+      sum + getDiscountedPrice(item).discountedPrice * (item.quantity || 1),
+    0,
   );
 
   const handleRemoveCoupon = () => {
@@ -378,25 +421,34 @@ export default function Checkout() {
 
   let couponDiscount = 0;
   if (appliedCoupon) {
-    couponDiscount = appliedCoupon.discount_type === "fixed"
-      ? appliedCoupon.discount_value
-      : (offerPriceTotal * appliedCoupon.discount_value) / 100;
+    couponDiscount =
+      appliedCoupon.discount_type === "fixed"
+        ? appliedCoupon.discount_value
+        : (offerPriceTotal * appliedCoupon.discount_value) / 100;
     if (appliedCoupon.max_discount_amount)
-      couponDiscount = Math.min(couponDiscount, appliedCoupon.max_discount_amount);
+      couponDiscount = Math.min(
+        couponDiscount,
+        appliedCoupon.max_discount_amount,
+      );
   }
 
   const subtotal = offerPriceTotal - couponDiscount;
 
   const getPaymentType = (method) => {
     switch (method) {
-      case "cod": case "partial_cod": return "cod";
-      default: return "prepaid";
+      case "cod":
+      case "partial_cod":
+        return "cod";
+      default:
+        return "prepaid";
     }
   };
 
   const settingsLoaded = !!settings;
   const paymentType = getPaymentType(selectedPayment);
-  const shipping = settingsLoaded ? calculateShipping(subtotal, paymentType, settings) : 0;
+  const shipping = settingsLoaded
+    ? calculateShipping(subtotal, paymentType, settings)
+    : 0;
   const total = Number((subtotal + shipping).toFixed(0));
   const partialCodAdvance = calculatePartialCodAdvance(total, settings);
   const isPartialCod = selectedPayment === "partial_cod";
@@ -415,12 +467,27 @@ export default function Checkout() {
   const itemDiscount = mrpTotal - offerPriceTotal;
 
   const validateForm = (userLS) => {
-    if (!userLS || !userLS._id) { setShowLoginPopup(true); return false; }
-    const requiredFields = { firstName: "First Name", address: "Address", state: "State", city: "City", pincode: "Pin Code" };
-    for (const [key, label] of Object.entries(requiredFields)) {
-      if (!formData[key] || formData[key].trim() === "") { toast(`Please enter ${label}`); return false; }
+    if (!userLS || !userLS._id) {
+      setShowLoginPopup(true);
+      return false;
     }
-    if (!selectedPayment) { toast("Select a payment method"); return false; }
+    const requiredFields = {
+      firstName: "First Name",
+      address: "Address",
+      state: "State",
+      city: "City",
+      pincode: "Pin Code",
+    };
+    for (const [key, label] of Object.entries(requiredFields)) {
+      if (!formData[key] || formData[key].trim() === "") {
+        toast(`Please enter ${label}`);
+        return false;
+      }
+    }
+    if (!selectedPayment) {
+      toast("Select a payment method");
+      return false;
+    }
     return true;
   };
 
@@ -431,7 +498,9 @@ export default function Checkout() {
       if (giftItem.type === "buy_x_get_y" && giftItem.items?.length > 0) {
         giftItems = giftItem.items.map((gi) => ({
           product_id:
-            typeof gi.product_id === "object" ? gi.product_id._id : gi.product_id,
+            typeof gi.product_id === "object"
+              ? gi.product_id._id
+              : gi.product_id,
           variant_id: gi.variant_id || null,
           quantity: gi.quantity,
           price: 0,
@@ -487,8 +556,7 @@ export default function Checkout() {
       toast("Order creation failed ❌");
       return null;
     }
-    const orderId =
-      orderAction.payload?.data?._id || orderAction.payload?._id;
+    const orderId = orderAction.payload?.data?._id || orderAction.payload?._id;
     if (!orderId) {
       toast("Order ID missing ❌");
       return null;
@@ -507,62 +575,110 @@ export default function Checkout() {
       document.body.appendChild(script);
     });
 
-  const handleRazorpayAmount = async (userLS, orderId, amount, paymentMethod = selectedPayment) => {
+  const handleRazorpayAmount = async (
+    userLS,
+    orderId,
+    amount,
+    paymentMethod = selectedPayment,
+  ) => {
     const loaded = await loadRazorpay();
-    if (!loaded) { toast.error("Failed to load Razorpay SDK"); return; }
-    const razorRes = await dispatch(createRazorpayOrder({ amount, order_id: orderId }));
-    if (!createRazorpayOrder.fulfilled.match(razorRes)) { toast(razorRes.payload || "Razorpay order failed"); return; }
+    if (!loaded) {
+      toast.error("Failed to load Razorpay SDK");
+      return;
+    }
+    const razorRes = await dispatch(
+      createRazorpayOrder({ amount, order_id: orderId }),
+    );
+    if (!createRazorpayOrder.fulfilled.match(razorRes)) {
+      toast(razorRes.payload || "Razorpay order failed");
+      return;
+    }
     const razorOrder = razorRes.payload;
-    if (!razorOrder) { toast("Razorpay initialization failed ❌"); return; }
+    if (!razorOrder) {
+      toast("Razorpay initialization failed ❌");
+      return;
+    }
     const options = {
       key: razorpayKey,
       amount: razorOrder.amount,
       currency: "INR",
       name: "ZYFolixo",
-      description: paymentMethod === "partial_cod" ? `Advance Payment ₹${amount}` : "Order Payment",
+      description:
+        paymentMethod === "partial_cod"
+          ? `Advance Payment ₹${amount}`
+          : "Order Payment",
       order_id: razorOrder.id,
       handler: async function (response) {
-        const verifyRes = await dispatch(verifyRazorpayPayment({
-          razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
-          razorpay_signature: response.razorpay_signature,
-          order_id: orderId,
-          user_id: userLS._id,
-        }));
-        if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) { toast("Payment verification failed ❌"); return; }
-        await dispatch(createPayment({
-          user_id: userLS._id,
-          order_id: orderId,
-          amount_paid: amount,
-          payment_method: paymentMethod,
-          status: paymentMethod === "partial_cod" ? "partial" : "completed",
-          transaction_id: response.razorpay_payment_id,
-        }));
+        const verifyRes = await dispatch(
+          verifyRazorpayPayment({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            order_id: orderId,
+            user_id: userLS._id,
+          }),
+        );
+        if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) {
+          toast("Payment verification failed ❌");
+          return;
+        }
+        await dispatch(
+          createPayment({
+            user_id: userLS._id,
+            order_id: orderId,
+            amount_paid: amount,
+            payment_method: paymentMethod,
+            status: paymentMethod === "partial_cod" ? "partial" : "completed",
+            transaction_id: response.razorpay_payment_id,
+          }),
+        );
         await clearCartItems();
         localStorage.removeItem("applied_coupon");
-        toast(paymentMethod === "partial_cod" ? `Advance ₹${amount} paid! Remaining ₹${Math.round(total - amount)} COD ✅` : "Payment Successful ✅");
+        toast(
+          paymentMethod === "partial_cod"
+            ? `Advance ₹${amount} paid! Remaining ₹${Math.round(total - amount)} COD ✅`
+            : "Payment Successful ✅",
+        );
         navigate("/ordercompleted");
       },
-      prefill: { name: `${formData.firstName} ${formData.lastName}`, email: formData.email || user?.email, contact: formData.phone || "" },
+      prefill: {
+        name: `${formData.firstName} ${formData.lastName}`,
+        email: formData.email || user?.email,
+        contact: formData.phone || "",
+      },
       theme: { color: "#1d4ed8" },
     };
     const rzp = new window.Razorpay(options);
-    rzp.on("payment.failed", (response) => { toast(`Payment failed: ${response.error.description} ❌`); });
+    rzp.on("payment.failed", (response) => {
+      toast(`Payment failed: ${response.error.description} ❌`);
+    });
     rzp.open();
   };
 
   const handleCOD = async (userLS, orderId) => {
     if (isPartialCod && partialCodAdvance > 0) {
-      await handleRazorpayAmount(userLS, orderId, partialCodAdvance, "partial_cod");
+      await handleRazorpayAmount(
+        userLS,
+        orderId,
+        partialCodAdvance,
+        "partial_cod",
+      );
       return;
     }
-    await dispatch(createPayment({
-      user_id: userLS._id,
-      order_id: orderId,
-      items: checkoutItems,
-      subtotal, shipping, coupon_discount: couponDiscount, total,
-      amount_paid: 0, payment_method: "cod", status: "pending",
-    }));
+    await dispatch(
+      createPayment({
+        user_id: userLS._id,
+        order_id: orderId,
+        items: checkoutItems,
+        subtotal,
+        shipping,
+        coupon_discount: couponDiscount,
+        total,
+        amount_paid: 0,
+        payment_method: "cod",
+        status: "pending",
+      }),
+    );
     await clearCartItems();
     localStorage.removeItem("applied_coupon");
     toast("Order placed successfully! 🎉");
@@ -570,18 +686,38 @@ export default function Checkout() {
   };
 
   const handlePhonePe = async (userLS, orderId) => {
-    const phonePeRes = await dispatch(createPhonePeOrder({
-      amount: total, order_id: orderId, user_id: userLS._id,
-      redirect_url: `${window.location.origin}/payment/phonepe/callback?order_id=${orderId}`,
-    }));
-    if (!createPhonePeOrder.fulfilled.match(phonePeRes)) { toast("PhonePe initialization failed ❌"); return; }
-    const paymentUrl = phonePeRes.payload?.data?.paymentUrl || phonePeRes.payload?.paymentUrl;
-    if (!paymentUrl) { toast("PhonePe payment URL missing ❌"); return; }
-    await dispatch(createPayment({
-      user_id: userLS._id, order_id: orderId, items: checkoutItems,
-      subtotal, shipping, coupon_discount: couponDiscount, total,
-      amount_paid: total, payment_method: "PhonePe", status: "pending",
-    }));
+    const phonePeRes = await dispatch(
+      createPhonePeOrder({
+        amount: total,
+        order_id: orderId,
+        user_id: userLS._id,
+        redirect_url: `${window.location.origin}/payment/phonepe/callback?order_id=${orderId}`,
+      }),
+    );
+    if (!createPhonePeOrder.fulfilled.match(phonePeRes)) {
+      toast("PhonePe initialization failed ❌");
+      return;
+    }
+    const paymentUrl =
+      phonePeRes.payload?.data?.paymentUrl || phonePeRes.payload?.paymentUrl;
+    if (!paymentUrl) {
+      toast("PhonePe payment URL missing ❌");
+      return;
+    }
+    await dispatch(
+      createPayment({
+        user_id: userLS._id,
+        order_id: orderId,
+        items: checkoutItems,
+        subtotal,
+        shipping,
+        coupon_discount: couponDiscount,
+        total,
+        amount_paid: total,
+        payment_method: "PhonePe",
+        status: "pending",
+      }),
+    );
     toast("Redirecting to PhonePe... 📱");
     window.location.href = paymentUrl;
   };
@@ -592,7 +728,8 @@ export default function Checkout() {
     const orderId = await createNewOrder(userLS);
     if (!orderId) return;
     if (selectedPayment === "PhonePe") await handlePhonePe(userLS, orderId);
-    else if (selectedPayment === "cod" || selectedPayment === "partial_cod") await handleCOD(userLS, orderId);
+    else if (selectedPayment === "cod" || selectedPayment === "partial_cod")
+      await handleCOD(userLS, orderId);
     else await handleRazorpayAmount(userLS, orderId, total, selectedPayment);
   };
 
@@ -600,10 +737,20 @@ export default function Checkout() {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="bg-white p-8 rounded-3xl shadow-sm text-center max-w-md w-full">
-          <img alt="Empty Cart" className="w-48 h-48 mx-auto mb-6 opacity-80" src={cart} />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
-          <p className="text-gray-500 mb-8 leading-relaxed">Looks like you haven't added anything to your cart yet.</p>
-          <Button variant="common" onClick={() => navigate("/allproducts")}>Start Shopping</Button>
+          <img
+            alt="Empty Cart"
+            className="w-48 h-48 mx-auto mb-6 opacity-80"
+            src={cart}
+          />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Your cart is empty
+          </h2>
+          <p className="text-gray-500 mb-8 leading-relaxed">
+            Looks like you haven't added anything to your cart yet.
+          </p>
+          <Button variant="common" onClick={() => navigate("/allproducts")}>
+            Start Shopping
+          </Button>
         </div>
       </div>
     );
@@ -625,7 +772,11 @@ export default function Checkout() {
                 <div className="p-4 flex items-center gap-3 bg-green-100 rounded-lg">
                   <Truck size={20} className="text-green-600" />
                   <span className="text-[14px] font-bold text-green-800">
-                    Get by {new Date(Date.now() + 3 * 86400000).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                    Get by{" "}
+                    {new Date(Date.now() + 3 * 86400000).toLocaleDateString(
+                      "en-IN",
+                      { day: "numeric", month: "short" },
+                    )}
                   </span>
                 </div>
               )}
@@ -645,40 +796,55 @@ export default function Checkout() {
               {items.length > 0 && (
                 <div className="bg-white rounded-[12px] border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-[18px] py-[14px] border-b border-gray-100">
-                    <span className="text-[15px] font-bold text-gray-900">Offers & Benefits</span>
+                    <span className="text-[15px] font-bold text-gray-900">
+                      Offers & Benefits
+                    </span>
                   </div>
                   {appliedCoupon ? (
                     <div className="border border-dashed border-green-400 rounded-[10px] mx-[12px] my-[12px] px-[14px] py-[12px] flex items-center justify-between bg-green-50">
                       <div>
-                        <p className="text-[13px] font-bold text-gray-900">'{appliedCoupon.code}' applied</p>
+                        <p className="text-[13px] font-bold text-gray-900">
+                          '{appliedCoupon.code}' applied
+                        </p>
                         {appliedCoupon.coupon_type === "free_gift" ? (
                           <p className="text-[12px] text-green-600 font-medium mt-[2px]">
                             🎁 Free gift for you!
                           </p>
                         ) : (
                           <p className="text-[12px] text-green-600 font-medium mt-[2px]">
-                            ₹{couponDiscountAmount.toLocaleString("en-IN")} coupon savings
+                            ₹{couponDiscountAmount.toLocaleString("en-IN")}{" "}
+                            coupon savings
                           </p>
                         )}
                       </div>
-                      <button onClick={handleRemoveCoupon}
-                        className="text-[13px] font-bold text-red-500 border border-red-300 rounded-[6px] px-[14px]py-[6px] hover:bg-red-50 transition-colors ml-[12px] whitespace-nowrap">
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="text-[13px] font-bold text-red-500 border border-red-300 rounded-[6px] px-[14px]py-[6px] hover:bg-red-50 transition-colors ml-[12px] whitespace-nowrap"
+                      >
                         Remove
                       </button>
                     </div>
                   ) : (
-                    <button onClick={() => setDrawerOpen(true)} className="w-full flex items-center justify-between px-[18px] py-[14px] hover:bg-gray-50 transition-colors">
+                    <button
+                      onClick={() => setDrawerOpen(true)}
+                      className="w-full flex items-center justify-between px-[18px] py-[14px] hover:bg-gray-50 transition-colors"
+                    >
                       <div className="flex items-center gap-[12px]">
                         <div className="w-[38px] h-[38px] rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
                           <Tag size={18} className="text-green-600" />
                         </div>
-                        <span className="text-[14px] font-medium text-gray-800">Apply Coupon</span>
+                        <span className="text-[14px] font-medium text-gray-800">
+                          Apply Coupon
+                        </span>
                       </div>
                       <ChevronRight size={18} className="text-gray-400" />
                     </button>
                   )}
                   {appliedCoupon && (
-                    <button onClick={() => setDrawerOpen(true)} className="w-full text-center text-[12px] text-[#1a5fb4] font-medium py-[10px] border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                    <button
+                      onClick={() => setDrawerOpen(true)}
+                      className="w-full text-center text-[12px] text-[#1a5fb4] font-medium py-[10px] border-t border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
                       Change / View all coupons
                     </button>
                   )}
@@ -708,46 +874,112 @@ export default function Checkout() {
           <div className="w-[90%] lg:max-w-[1440px] mx-auto flex items-center justify-between py-3 px-2 hidden md:flex">
             <div className="flex flex-col leading-tight">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[20px] font-extrabold text-gray-900">₹{Math.round(total).toLocaleString("en-IN")}</span>
-                {mrpTotal > total && <span className="text-[13px] text-gray-400 line-through">₹{Math.round(mrpTotal).toLocaleString("en-IN")}</span>}
+                <span className="text-[20px] font-extrabold text-gray-900">
+                  ₹{Math.round(total).toLocaleString("en-IN")}
+                </span>
+                {mrpTotal > total && (
+                  <span className="text-[13px] text-gray-400 line-through">
+                    ₹{Math.round(mrpTotal).toLocaleString("en-IN")}
+                  </span>
+                )}
               </div>
-              {totalSaved > 0 && <span className="text-[12px] font-semibold text-green-600">Total Savings ₹{Math.round(totalSaved).toLocaleString("en-IN")}</span>}
+              {totalSaved > 0 && (
+                <span className="text-[12px] font-semibold text-green-600">
+                  Total Savings ₹
+                  {Math.round(totalSaved).toLocaleString("en-IN")}
+                </span>
+              )}
             </div>
-            <Button onClick={handlePlaceOrder} disabled={paymentLoading || !settingsLoaded} variant="common"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-white font-bold text-[15px] disabled:opacity-60 shadow-md shadow-blue-200 whitespace-nowrap">
-              {paymentLoading ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />PROCESSING...</>) : !settingsLoaded ? "Loading..." : (<>PLACE ORDER <ArrowRight size={18} /></>)}
+            <Button
+              onClick={handlePlaceOrder}
+              disabled={paymentLoading || !settingsLoaded}
+              variant="common"
+              className="flex items-center gap-2 px-6 py-3.5 rounded-xl text-white font-bold text-[15px] disabled:opacity-60 shadow-md shadow-blue-200 whitespace-nowrap"
+            >
+              {paymentLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  PROCESSING...
+                </>
+              ) : !settingsLoaded ? (
+                "Loading..."
+              ) : (
+                <>
+                  PLACE ORDER <ArrowRight size={18} />
+                </>
+              )}
             </Button>
           </div>
 
           <div className="grid grid-cols-2 h-[60px] md:hidden">
             <div className="flex flex-col justify-center leading-tight ms-2">
               <div className="flex items-baseline gap-1.5">
-                <span className="text-[20px] font-extrabold text-gray-900">₹{Math.round(total).toLocaleString("en-IN")}</span>
-                {mrpTotal > total && <span className="text-[13px] text-gray-400 line-through">₹{Math.round(mrpTotal).toLocaleString("en-IN")}</span>}
+                <span className="text-[20px] font-extrabold text-gray-900">
+                  ₹{Math.round(total).toLocaleString("en-IN")}
+                </span>
+                {mrpTotal > total && (
+                  <span className="text-[13px] text-gray-400 line-through">
+                    ₹{Math.round(mrpTotal).toLocaleString("en-IN")}
+                  </span>
+                )}
               </div>
-              {totalSaved > 0 && <span className="text-[12px] font-semibold text-green-600">Total Savings ₹{Math.round(totalSaved).toLocaleString("en-IN")}</span>}
+              {totalSaved > 0 && (
+                <span className="text-[12px] font-semibold text-green-600">
+                  Total Savings ₹
+                  {Math.round(totalSaved).toLocaleString("en-IN")}
+                </span>
+              )}
             </div>
-            <Button onClick={handlePlaceOrder} disabled={paymentLoading || !settingsLoaded} variant="common"
-              className="flex items-center gap-2 px-6 !rounded-[0px] text-white font-bold text-[15px] disabled:opacity-60 shadow-md shadow-blue-200 whitespace-nowrap">
-              {paymentLoading ? (<><span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin" />PROCESSING...</>) : !settingsLoaded ? "Loading..." : (<>PLACE ORDER <ArrowRight size={18} /></>)}
+            <Button
+              onClick={handlePlaceOrder}
+              disabled={paymentLoading || !settingsLoaded}
+              variant="common"
+              className="flex items-center gap-2 px-6 !rounded-[0px] text-white font-bold text-[15px] disabled:opacity-60 shadow-md shadow-blue-200 whitespace-nowrap"
+            >
+              {paymentLoading ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent animate-spin" />
+                  PROCESSING...
+                </>
+              ) : !settingsLoaded ? (
+                "Loading..."
+              ) : (
+                <>
+                  PLACE ORDER <ArrowRight size={18} />
+                </>
+              )}
             </Button>
           </div>
         </div>
       </div>
       <CouponDrawer
-        isOpen={drawerOpen} onClose={() => setDrawerOpen(false)}
-        appliedCoupon={appliedCoupon} setAppliedCoupon={setAppliedCoupon}
-        cartCouponCode={cartCouponCode} setCartCouponCode={setCartCouponCode}
-        couponMsg={couponMsg} setCouponMsg={setCouponMsg}
-        onApplyCartCoupon={handleApplyCartCoupon} onSelectCoupon={handleSelectCoupon}
-        subtotal={subtotal} autoApplyCode={autoApplyCode} userOrderCount={userOrderCount}
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        appliedCoupon={appliedCoupon}
+        setAppliedCoupon={setAppliedCoupon}
+        cartCouponCode={cartCouponCode}
+        setCartCouponCode={setCartCouponCode}
+        couponMsg={couponMsg}
+        setCouponMsg={setCouponMsg}
+        onApplyCartCoupon={handleApplyCartCoupon}
+        onSelectCoupon={handleSelectCoupon}
+        subtotal={subtotal}
+        autoApplyCode={autoApplyCode}
+        userOrderCount={userOrderCount}
         checkoutQuantities={quantities}
-        onAutoApplyDone={() => { setAutoApplyCode(null); navigate(location.pathname, { replace: true, state: {} }); }}
+        onAutoApplyDone={() => {
+          setAutoApplyCode(null);
+          navigate(location.pathname, { replace: true, state: {} });
+        }}
       />
       {showLoginPopup && (
         <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center">
           <div className="bg-white max-w-md w-full rounded-lg">
-            <LoginForm onClose={() => setShowLoginPopup(false)} onSwitchRegister={() => { }} onSwitchForget={() => { }} />
+            <LoginForm
+              onClose={() => setShowLoginPopup(false)}
+              onSwitchRegister={() => {}}
+              onSwitchForget={() => {}}
+            />
           </div>
         </div>
       )}

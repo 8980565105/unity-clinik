@@ -27,6 +27,8 @@ import emailsReducer from "./features/emails/emailSlice";
 import slideReducer from "./features/slides/slideSlice";
 import SystemSettingsReducer from "./features/systemsetting/systemsettingSlice";
 import aboutReducer from "./features/about/aboutSlice";
+import popupReducer from "./features/popup/popupSlice";
+import consultationPageReducer from "./features/consaltantion/consaltantionSlice";
 
 export const rootReducer = {
   auth: authReducer,
@@ -58,4 +60,6 @@ export const rootReducer = {
   slides: slideReducer,
   systemseting: SystemSettingsReducer,
   about: aboutReducer,
+  popup: popupReducer,
+  consultationPage: consultationPageReducer,
 };

@@ -17,7 +17,6 @@ export default function Sharelink({ product }) {
                 toast.success("Product link copied!");
             }
         } catch (error) {
-            console.log("Share cancelled", error);
         }
     };
 

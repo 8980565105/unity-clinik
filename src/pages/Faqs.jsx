@@ -95,7 +95,6 @@
 //     dispatch(fetchFaqs());
 //     dispatch(getFaqBanner());
 
-//     console.log("BANNER:", banner);
 //   }, [dispatch]);
 
 //   return (
