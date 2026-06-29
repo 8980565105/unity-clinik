@@ -4,12 +4,12 @@ const { sendResponse } = require("../utils/response");
 
 const getAllsubCategories = async (req, res) => {
   try {
-   const subcategories = await SubCategory.find({
-  status: "active",
-})
-  .select("_id name slug image_url parent_id status")
-  .populate("parent_id", "_id name")
-  .sort({ createdAt: -1 });
+       const subcategories = await SubCategory.find({
+      status: "active",
+    })
+      .select("_id name slug image_url parent_id status order")
+      .populate("parent_id", "_id name")
+      .sort({ order: 1 });
 
     res.json({ success: true, data: subcategories });
   } catch (err) {
@@ -28,6 +28,7 @@ const getsubCategories = async (req, res) => {
       search = "",
       isDownload = "false",
       status,
+      sort,
     } = req.query;
     const download = isDownload.toLowerCase() === "true";
 
@@ -35,25 +36,50 @@ const getsubCategories = async (req, res) => {
     if (search) query.name = { $regex: search, $options: "i" };
     if (status && ["active", "inactive"].includes(status))
       query.status = status;
+    let sortOption = { createdAt: -1 };
+
+    if (sort === "asc") {
+      sortOption = { order: 1 };
+    }
+
+    if (sort === "desc") {
+      sortOption = { order: -1 };
+    }
 
     if (download) {
       const subcategories = await SubCategory.find(query)
-        .sort({ createdAt: -1 })
+        .sort(sortOption)
         .populate("parent_id", "name");
-      return sendResponse(res, true, { categories: subcategories }, "All subcategories retrieved for download");
+      return sendResponse(
+        res,
+        true,
+        { categories: subcategories },
+        "All subcategories retrieved for download",
+      );
     }
 
     page = parseInt(page);
     limit = parseInt(limit);
 
     const total = await SubCategory.countDocuments(query);
+    // const subcategories = await SubCategory.find(query)
+    //   .skip((page - 1) * limit)
+    //   .limit(limit)
+    //   .sort({ createdAt: -1 })
+    //   .populate("parent_id", "name");
+
     const subcategories = await SubCategory.find(query)
+      .sort(sortOption)
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ createdAt: -1 })
       .populate("parent_id", "name");
 
-    sendResponse(res, true, { categories: subcategories, total, page, pages: Math.ceil(total / limit) });
+    sendResponse(res, true, {
+      categories: subcategories,
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+    });
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
@@ -61,8 +87,12 @@ const getsubCategories = async (req, res) => {
 
 const getsubCategoryById = async (req, res) => {
   try {
-    const subcategory = await SubCategory.findById(req.params.id).populate("parent_id", "_id name");
-    if (!subcategory) return sendResponse(res, false, null, "SubCategory not found");
+    const subcategory = await SubCategory.findById(req.params.id).populate(
+      "parent_id",
+      "_id name",
+    );
+    if (!subcategory)
+      return sendResponse(res, false, null, "SubCategory not found");
     sendResponse(res, true, subcategory, "SubCategory retrieved successfully");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -73,13 +103,17 @@ const getsubCategoryById = async (req, res) => {
 // CREATE — storeId auto set
 // ═══════════════════════════════════════════════════════════════════
 const createsubCategory = async (req, res) => {
-  const { name, slug, parent_id, image, status, description } = req.body;
+  const { name, slug, parent_id, image, status, description, order } = req.body;
 
   if (!name)
-    return res.status(400).json({ success: false, message: "Name is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Name is required" });
 
   if (!parent_id)
-    return res.status(400).json({ success: false, message: "Parent category is required" });
+    return res
+      .status(400)
+      .json({ success: false, message: "Parent category is required" });
 
   const image_url = req.file ? `/uploads/${req.file.filename}` : image || null;
 
@@ -91,12 +125,18 @@ const createsubCategory = async (req, res) => {
     description: description || "",
     status: status || "active",
     createdBy: req.user._id,
+    order: order ?? 0,
   };
 
   try {
     const subcategory = new SubCategory(subcategoryData);
     const savedSubCategory = await subcategory.save();
-    sendResponse(res, true, savedSubCategory, "SubCategory created successfully");
+    sendResponse(
+      res,
+      true,
+      savedSubCategory,
+      "SubCategory created successfully",
+    );
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
@@ -118,13 +158,18 @@ const updatesubCategory = async (req, res) => {
     const updatedSubCategory = await SubCategory.findByIdAndUpdate(
       req.params.id,
       updateData,
-       { returnDocument: "after" },
+      { returnDocument: "after" },
     ).populate("parent_id", "_id name");
 
     if (!updatedSubCategory)
       return sendResponse(res, false, null, "SubCategory not found");
 
-    sendResponse(res, true, updatedSubCategory, "SubCategory updated successfully");
+    sendResponse(
+      res,
+      true,
+      updatedSubCategory,
+      "SubCategory updated successfully",
+    );
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
@@ -138,12 +183,20 @@ const updatesubCategoryStatus = async (req, res) => {
     if (!["active", "inactive"].includes(status))
       return sendResponse(res, false, null, "Invalid status value");
 
-    const subcategory = await SubCategory.findByIdAndUpdate(id, { status }, 
-    { returnDocument: "after" },
-  );
-    if (!subcategory) return sendResponse(res, false, null, "SubCategory not found");
+    const subcategory = await SubCategory.findByIdAndUpdate(
+      id,
+      { status },
+      { returnDocument: "after" },
+    );
+    if (!subcategory)
+      return sendResponse(res, false, null, "SubCategory not found");
 
-    sendResponse(res, true, subcategory, "SubCategory status updated successfully");
+    sendResponse(
+      res,
+      true,
+      subcategory,
+      "SubCategory status updated successfully",
+    );
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
@@ -151,7 +204,9 @@ const updatesubCategoryStatus = async (req, res) => {
 
 const deletesubCategory = async (req, res) => {
   try {
-    const deletedSubCategory = await SubCategory.findByIdAndDelete(req.params.id);
+    const deletedSubCategory = await SubCategory.findByIdAndDelete(
+      req.params.id,
+    );
     if (!deletedSubCategory)
       return sendResponse(res, false, null, "SubCategory not found");
     sendResponse(res, true, null, "SubCategory deleted successfully");
@@ -167,7 +222,12 @@ const bulkDeletesubCategories = async (req, res) => {
       return sendResponse(res, false, null, "No IDs provided");
 
     const result = await SubCategory.deleteMany({ _id: { $in: ids } });
-    sendResponse(res, true, { deletedCount: result.deletedCount }, "SubCategories deleted successfully");
+    sendResponse(
+      res,
+      true,
+      { deletedCount: result.deletedCount },
+      "SubCategories deleted successfully",
+    );
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }

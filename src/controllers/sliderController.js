@@ -190,7 +190,7 @@ const updateSlide = async (req, res) => {
     }
 
     const updated = await Slider.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
+     returnDocument: 'after',
     });
     sendResponse(res, true, updated, "Section updated successfully");
   } catch (err) {

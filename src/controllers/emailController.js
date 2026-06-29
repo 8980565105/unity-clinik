@@ -58,7 +58,7 @@ const updateEmails = async (req, res) => {
     const updated = await Email.findByIdAndUpdate(
       req.params.id,
       { email },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!updated) return sendResponse(res, false, null, "Email not found");
     sendResponse(res, true, updated, "Email updated successfully");

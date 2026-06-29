@@ -122,7 +122,6 @@ const createPhonePePayment = async (req, res) => {
 
     const amountInPaisa = Math.round(amount * 100);
 
-    // ✅ Simpler, reliable merchantTransactionId
     const merchantTransactionId = `MT${Date.now()}`;
 
     const payload = {
@@ -178,17 +177,10 @@ const createPhonePePayment = async (req, res) => {
       return sendResponse(res, false, null, "PhonePe payment URL missing");
     }
 
-    // ✅ Save merchantTransactionId to Order - findByIdAndUpdate with { new: true } to confirm save
     const updatedOrder = await Order.findByIdAndUpdate(
       order_id,
       { merchant_transaction_id: merchantTransactionId },
-      { new: true },
-    );
-
-    // ✅ Debug log - confirm it saved
-    console.log(
-      "Saved merchant_transaction_id:",
-      updatedOrder?.merchant_transaction_id,
+      {returnDocument: 'after' },
     );
 
     sendResponse(
@@ -466,7 +458,7 @@ const createPayment = async (req, res) => {
       discount_amount,
       coupon_id: coupon_id || null,
       status: status || "pending",
-      transaction_id: transaction_id || "", 
+      transaction_id: transaction_id || "",
     });
 
     const savedPayment = await payment.save();

@@ -94,7 +94,7 @@ const createType = async (req, res) => {
 const updateType = async (req, res) => {
   try {
     const updatedType = await Type.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: "after",
     });
     if (!updatedType) return sendResponse(res, false, null, "Type not found");
     sendResponse(res, true, updatedType, "Type updated successfully");

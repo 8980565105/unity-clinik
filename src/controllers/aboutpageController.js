@@ -72,7 +72,7 @@ const updateAboutPage = async (req, res) => {
     const doc = await AboutPage.findOneAndUpdate(
       {},
       { $set: updateData },
-      { new: true, upsert: true }
+      { returnDocument: "after", upsert: true },
     );
 
     sendResponse(res, true, doc, "About page updated successfully");

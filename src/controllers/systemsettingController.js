@@ -3,7 +3,6 @@ const User = require("../models/User");
 const { sendResponse } = require("../utils/response");
 
 const getStoreId = async (req) => {
-
   const userId = req.user?._id || req.user?.id;
   if (!userId) return null;
 
@@ -13,7 +12,6 @@ const getStoreId = async (req) => {
 
 const getUserSettings = async (req, res) => {
   try {
-
     let settings = await SystemSettingModel.findOne({});
     if (!settings) {
       settings = {
@@ -48,7 +46,6 @@ const getUserSettings = async (req, res) => {
 
 const updateUserSettings = async (req, res) => {
   try {
-
     const {
       razorpaykey,
       razorpaysecretkey,
@@ -214,7 +211,7 @@ const updateUserSettings = async (req, res) => {
       {},
       { $set: updateData },
       {
-        new: true,
+        returnDocument: "after",
         upsert: true,
         runValidators: true,
       },

@@ -181,11 +181,11 @@ const getOrders = async (req, res) => {
       const productArray = safeObjectIdArray(product);
       if (productArray.length > 0) itemMatch.product_id = { $in: productArray };
     }
-    if (color) {
-      const colorArray = safeObjectIdArray(color);
-      if (colorArray.length > 0)
-        itemMatch["variant_id.color_id"] = { $in: colorArray };
-    }
+    // if (color) {
+    //   const colorArray = safeObjectIdArray(color);
+    //   if (colorArray.length > 0)
+    //     itemMatch["variant_id.color_id"] = { $in: colorArray };
+    // }
     if (size) {
       const sizeArray = safeObjectIdArray(size);
       if (sizeArray.length > 0)
@@ -344,6 +344,7 @@ const getOrders = async (req, res) => {
     sendResponse(res, false, null, err.message);
   }
 };
+
 const getPublicUserOrders = async (req, res) => {
   try {
     const userId = req.user?._id;
@@ -568,7 +569,7 @@ const createOrder = async (req, res) => {
           price_at_order: 0,
           is_gift: true,
         });
-        continue; 
+        continue;
       }
 
       const variant = await ProductVariant.findById(item.variant_id).populate(
@@ -637,6 +638,16 @@ const createOrder = async (req, res) => {
 
     pushHistory(order, "pending", "customer", "Order placed");
     const savedOrder = await order.save();
+
+    if (coupon_id) {
+      const Coupon = require("../models/Coupon");
+
+      await Coupon.findByIdAndUpdate(coupon_id, {
+        $inc: {
+          used_count: 1,
+        },
+      });
+    }
 
     orderItems.forEach((oi) => (oi.order_id = savedOrder._id));
     await OrderItem.insertMany(orderItems);

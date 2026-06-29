@@ -5,8 +5,8 @@ const { sendResponse } = require("../utils/response");
 const getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find({ status: "active" })
-      .select("_id name slug image_url parent_id status storeId")
-      .sort({ createdAt: -1 });
+      .select("_id name slug image_url parent_id status  order")
+      .sort({ order: 1 });
 
     res.json({ success: true, data: categories });
   } catch (err) {
@@ -22,7 +22,9 @@ const getCategories = async (req, res) => {
       search = "",
       isDownload = "false",
       status,
+      sort,
     } = req.query;
+
     const download = isDownload.toLowerCase() === "true";
 
     const query = {};
@@ -30,11 +32,9 @@ const getCategories = async (req, res) => {
     if (status && ["active", "inactive"].includes(status))
       query.status = status;
 
-  
-
     if (download) {
       const categories = await Category.find(query)
-        .sort({ createdAt: -1 })
+        .sort(sortOption)
         .populate("parent_id", "name");
       return sendResponse(
         res,
@@ -48,10 +48,30 @@ const getCategories = async (req, res) => {
     limit = parseInt(limit);
 
     const total = await Category.countDocuments(query);
+
+    let sortOption = { createdAt: -1 };
+
+    if (sort === "asc") {
+      sortOption = {
+        order: 1,
+      };
+    }
+
+    if (sort === "desc") {
+      sortOption = {
+        order: -1,
+      };
+    }
+
+    // const categories = await Category.find(query)
+    //   .skip((page - 1) * limit)
+    //   .limit(limit)
+    //   .sort({ createdAt: -1 });
+
     const categories = await Category.find(query)
+      .sort(sortOption)
       .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+      .limit(limit);
 
     sendResponse(res, true, {
       categories,
@@ -75,7 +95,7 @@ const getCategoryById = async (req, res) => {
 };
 
 const createCategory = async (req, res) => {
-  const { name, slug, image, status, description } = req.body;
+  const { name, slug, image, status, description, order } = req.body;
 
   if (!name)
     return res
@@ -84,7 +104,6 @@ const createCategory = async (req, res) => {
 
   const image_url = req.file ? `/uploads/${req.file.filename}` : image || null;
 
-
   const categoryData = {
     name,
     slug: slug || slugify(name, { lower: true, strict: true }),
@@ -92,6 +111,7 @@ const createCategory = async (req, res) => {
     description: description || "",
     status: status || "active",
     createdBy: req.user._id,
+    order,
   };
 
   try {
@@ -139,7 +159,6 @@ const updateCategoryStatus = async (req, res) => {
       id,
       { status },
       { returnDocument: "after" },
-      
     );
     if (!category) return sendResponse(res, false, null, "Category not found");
 

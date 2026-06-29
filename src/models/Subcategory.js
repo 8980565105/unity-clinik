@@ -8,7 +8,10 @@ const subcategorySchema = new mongoose.Schema(
     description: { type: String, default: "" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
     image_url: { type: String, default: null },
-
+    order: {
+      type: Number,
+      default: 0,
+    },
     parent_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
