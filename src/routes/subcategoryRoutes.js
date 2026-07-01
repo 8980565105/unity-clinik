@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const {
@@ -10,6 +9,7 @@ const {
   bulkDeletesubCategories,
   getAllsubCategories,
   updatesubCategoryStatus,
+  reorderSubCategories,
 } = require("../controllers/subcategoryController");
 
 const {
@@ -17,8 +17,8 @@ const {
   authorizeMinRole,
 } = require("../middlewares/authMiddleware");
 const {
-  injectPublicStoreFilter, 
-  injectOwnershipFilter, 
+  injectPublicStoreFilter,
+  injectOwnershipFilter,
 } = require("../middlewares/ownershipFilter");
 const upload = require("../middlewares/upload");
 
@@ -26,29 +26,22 @@ router.get("/public", injectPublicStoreFilter, getAllsubCategories);
 router.use(authMiddleware);
 router.get("/", injectOwnershipFilter, getsubCategories);
 router.get("/all", injectPublicStoreFilter, getAllsubCategories);
-router.get("/:id", authorizeMinRole("store_owner"), getsubCategoryById);
+router.put("/reorder/bulk", authorizeMinRole("admin"), reorderSubCategories);
+router.get("/:id", authorizeMinRole("admin"), getsubCategoryById);
 router.post(
   "/",
-  authorizeMinRole("store_owner"),
+  authorizeMinRole("admin"),
   upload.single("image"),
   createsubCategory,
 );
 router.put(
   "/:id",
-  authorizeMinRole("store_owner"),
+  authorizeMinRole("admin"),
   upload.single("image"),
   updatesubCategory,
 );
-router.put(
-  "/:id/status",
-  authorizeMinRole("store_owner"),
-  updatesubCategoryStatus,
-);
-router.delete("/:id", authorizeMinRole("store_owner"), deletesubCategory);
-router.post(
-  "/bulk-delete",
-  authorizeMinRole("store_owner"),
-  bulkDeletesubCategories,
-);
+router.put("/:id/status", authorizeMinRole("admin"), updatesubCategoryStatus);
+router.delete("/:id", authorizeMinRole("admin"), deletesubCategory);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeletesubCategories);
 
 module.exports = router;

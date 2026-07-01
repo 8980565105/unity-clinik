@@ -10,6 +10,7 @@ const {
   deleteProduct,
   bulkDeleteProducts,
   updateProductStatus,
+  reorderProducts,
 } = require("../controllers/productController");
 const {
   authMiddleware,
@@ -22,21 +23,22 @@ router.get("/public", getPublicProducts);
 router.get("/public/:id", getPublicProductById);
 router.use(authMiddleware);
 router.get("/", getProducts);
-router.get("/:id", authorizeMinRole("store_owner"), getProductById);
+router.put("/reorder/bulk", authorizeMinRole("admin"), reorderProducts);
+router.get("/:id", authorizeMinRole("admin"), getProductById);
 router.post(
   "/",
-  authorizeMinRole("store_owner"),
-   upload.single("image"),
+  authorizeMinRole("admin"),
+  upload.single("image"),
   createProduct,
 );
 router.put(
   "/:id",
-  authorizeMinRole("store_owner"),
-   upload.single("image"),
+  authorizeMinRole("admin"),
+  upload.single("image"),
   updateProduct,
 );
-router.put("/:id/status", authorizeMinRole("store_owner"), updateProductStatus);
-router.delete("/:id", authorizeMinRole("store_owner"), deleteProduct);
-router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteProducts);
+router.put("/:id/status", authorizeMinRole("admin"), updateProductStatus);
+router.delete("/:id", authorizeMinRole("admin"), deleteProduct);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteProducts);
 
 module.exports = router;

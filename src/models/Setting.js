@@ -20,6 +20,7 @@ const settingSchema = new mongoose.Schema(
 
     site_name: { type: String },
     logo_url: { type: String },
+    hoverlogoUrl: { type: String },
     favicon_url: { type: String },
     primary_color: { type: String },
     secondary_color: { type: String },

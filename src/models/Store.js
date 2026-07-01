@@ -15,7 +15,6 @@ const storeSchema = new mongoose.Schema(
     phone: { type: String },
     gst_number: { type: String },
 
-   
     logo: { type: String },
     banner: { type: String },
     description: { type: String },
@@ -25,6 +24,7 @@ const storeSchema = new mongoose.Schema(
       secondaryColor: { type: String, default: "#ffffff" },
       faviconUrl: { type: String },
       logoUrl: { type: String },
+      hoverlogoUrl: { type: String },
       fontFamily: { type: String, default: "Roboto" },
       footerText: { type: String },
       copyrightText: { type: String },
@@ -52,7 +52,6 @@ storeSchema.pre("save", function (next) {
   if (this.isModified("name")) {
     this.slug = slugify(this.name, { lower: true, strict: true });
   }
-  
 });
 
 module.exports = mongoose.model("Store", storeSchema);

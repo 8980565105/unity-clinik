@@ -8,6 +8,7 @@ const {
   deleteCoupon,
   bulkDeleteCoupons,
   updateCouponStatus,
+  applyCoupon,
 } = require("../controllers/couponController");
 
 const {
@@ -22,6 +23,8 @@ router.use(authMiddleware);
 router.get("/", getCoupons);
 router.get("/:id", authorizeMinRole("admin"), getCouponById);
 router.post("/", authorizeMinRole("admin"), createCoupon);
+router.post("/apply", authMiddleware, applyCoupon);
+
 router.put("/:id", authorizeMinRole("admin"), updateCoupon);
 router.put("/:id/status", authorizeMinRole("admin"), updateCouponStatus);
 router.delete("/:id", authorizeMinRole("admin"), deleteCoupon);

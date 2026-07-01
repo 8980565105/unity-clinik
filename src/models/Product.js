@@ -8,7 +8,12 @@ const productSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
+    tag: {
+      type: String,
+      // required: true,
+      // trim: true,
+      default: "",
+    },
     description: {
       type: String,
       default: "",
@@ -29,7 +34,7 @@ const productSchema = new mongoose.Schema(
 
     images: {
       type: String,
-      default: "",
+      required: true,
     },
 
     slug: {
@@ -42,6 +47,10 @@ const productSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive"],
       default: "active",
+    },
+    ishidden: {
+      type: Boolean,
+      default: false,
     },
 
     order: {

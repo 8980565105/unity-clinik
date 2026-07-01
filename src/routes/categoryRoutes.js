@@ -1,4 +1,3 @@
-
 const express = require("express");
 const router = express.Router();
 const {
@@ -7,12 +6,16 @@ const {
   createCategory,
   updateCategory,
   deleteCategory,
+  reorderCategories,
   bulkDeleteCategories,
   getAllCategories,
   updateCategoryStatus,
 } = require("../controllers/categoryController");
 
-const { authMiddleware, authorizeMinRole } = require("../middlewares/authMiddleware");
+const {
+  authMiddleware,
+  authorizeMinRole,
+} = require("../middlewares/authMiddleware");
 
 const upload = require("../middlewares/upload");
 
@@ -20,6 +23,7 @@ router.get("/public", getAllCategories);
 router.use(authMiddleware);
 router.get("/", getCategories);
 router.get("/all", getAllCategories);
+router.put("/reorder/bulk", authorizeMinRole("admin"), reorderCategories);
 router.get("/:id", authorizeMinRole("admin"), getCategoryById);
 router.post(
   "/",

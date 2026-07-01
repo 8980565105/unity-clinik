@@ -263,9 +263,7 @@ const getPublicProducts = async (req, res) => {
       isDownload = "false",
       categories,
       brands,
-
       types,
-
       minPrice,
       maxPrice,
     } = req.query;
@@ -539,10 +537,12 @@ const createProduct = async (req, res) => {
   try {
     const {
       name,
+      tag,
       description,
       steps,
       category_id,
       status,
+      ishidden,
       order,
       variants,
       sections,
@@ -558,7 +558,8 @@ const createProduct = async (req, res) => {
 
     const product = new Product({
       name,
-      order: Number(order) || 999,
+      tag,
+      order: Number(order) || 0,
       slug: slugify(name, {
         lower: true,
         strict: true,
@@ -567,6 +568,7 @@ const createProduct = async (req, res) => {
       steps,
       category_id: Array.isArray(category_id) ? category_id : [category_id],
       status: status || "active",
+      ishidden,
       images: productImages,
       sections: normalizeSections(
         typeof sections === "string" ? JSON.parse(sections) : sections,
@@ -634,7 +636,7 @@ const updateProduct = async (req, res) => {
     }
 
     product.name = productData.name || product.name;
-
+    product.tag = productData.tag || product.tag;
     product.description = productData.description || "";
     product.order = Number(productData.order) || "";
     product.steps = productData.steps || "";
@@ -644,7 +646,7 @@ const updateProduct = async (req, res) => {
       : [productData.category_id];
 
     product.status = productData.status || product.status;
-
+    product.ishidden = productData.ishidden ?? product.ishidden;
     if (req.file) {
       product.images = `/uploads/${req.file.filename}`;
     } else if (productData.images) {
@@ -798,6 +800,28 @@ const duplicateProduct = async (req, res) => {
   }
 };
 
+const reorderProducts = async (req, res) => {
+  try {
+    const { items } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0)
+      return sendResponse(res, false, null, "No items provided");
+
+    const bulkOps = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item._id },
+        update: { $set: { order: item.order } },
+      },
+    }));
+
+    await Product.bulkWrite(bulkOps);
+
+    sendResponse(res, true, null, "Order updated successfully");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
 module.exports = {
   getPublicProducts,
   getPublicProductById,
@@ -809,4 +833,5 @@ module.exports = {
   bulkDeleteProducts,
   updateProductStatus,
   duplicateProduct,
+  reorderProducts,
 };

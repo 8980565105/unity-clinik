@@ -142,7 +142,7 @@ const updateNavbarStatus = async (req, res) => {
     const navbar = await Navbar.findByIdAndUpdate(
       id,
       { status },
-       { returnDocument: "after" },
+      { returnDocument: "after" },
     );
     if (!navbar) return sendResponse(res, false, null, "Navbar not found");
 
@@ -181,6 +181,28 @@ const bulkDeleteNavbars = async (req, res) => {
   }
 };
 
+const reorderNavbars = async (req, res) => {
+  try {
+    const { items } = req.body;
+
+    if (!Array.isArray(items) || items.length === 0)
+      return sendResponse(res, false, null, "No items provided");
+
+    const bulkOps = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item._id },
+        update: { $set: { order: item.order } },
+      },
+    }));
+
+    await Navbar.bulkWrite(bulkOps);
+
+    sendResponse(res, true, null, "Order updated successfully");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
 module.exports = {
   getNavbars,
   getPublicNavbars,
@@ -190,4 +212,5 @@ module.exports = {
   deleteNavbar,
   bulkDeleteNavbars,
   updateNavbarStatus,
+  reorderNavbars,
 };

@@ -197,11 +197,38 @@ const bulkDeleteCategories = async (req, res) => {
   }
 };
 
+
+
+
+const reorderCategories = async (req, res) => {
+  try {
+    const { items } = req.body; 
+    // items = [{ _id: "abc", order: 0 }, { _id: "xyz", order: 1 }, ...]
+
+    if (!Array.isArray(items) || items.length === 0)
+      return sendResponse(res, false, null, "No items provided");
+
+    const bulkOps = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item._id },
+        update: { $set: { order: item.order } },
+      },
+    }));
+
+    await Category.bulkWrite(bulkOps);
+
+    sendResponse(res, true, null, "Order updated successfully");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
 module.exports = {
   getCategories,
   getCategoryById,
   createCategory,
   updateCategory,
+  reorderCategories,
   deleteCategory,
   bulkDeleteCategories,
   getAllCategories,

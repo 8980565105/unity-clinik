@@ -15,11 +15,12 @@ const orderItemSchema = new mongoose.Schema(
     variant_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ProductVariant",
-      default: null, 
+      default: null,
     },
     quantity: { type: Number, required: true },
     price_at_order: { type: Number, required: true },
-    is_gift: { type: Boolean, default: false }, 
+    is_gift: { type: Boolean, default: false },
+    is_consultation_gift: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

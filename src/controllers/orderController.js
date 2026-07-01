@@ -5,6 +5,7 @@ const OrderItem = require("../models/OrderItem");
 const Packing = require("../models/paking");
 const ProductVariant = require("../models/ProductVariant");
 const Product = require("../models/Product");
+const Bookconsaltion = require("../models/Bookconsaltans");
 const { sendResponse } = require("../utils/response");
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
@@ -52,9 +53,7 @@ const safeObjectIdArray = (val) => {
     .filter((id) => mongoose.Types.ObjectId.isValid(id))
     .map((id) => new mongoose.Types.ObjectId(id));
 };
-
 const safeArray = (val) => (Array.isArray(val) ? val : []);
-
 const getCustomerInfo = (order) => {
   const email = order.user_id?.email || null;
   const name =
@@ -63,11 +62,9 @@ const getCustomerInfo = (order) => {
     "Customer";
   return { email, name };
 };
-
 const pushHistory = (order, status, changedBy = "admin", note = "") => {
   order.status_history.push({ status, changed_by: changedBy, note });
 };
-
 const getTrackingUrl = (partner, awb) => {
   const safeAwb = safeString(awb);
   const urls = {
@@ -78,7 +75,6 @@ const getTrackingUrl = (partner, awb) => {
   };
   return urls[safeString(partner)] || "";
 };
-
 const isDiscountValid = (discount) => {
   const now = new Date();
   return (
@@ -109,15 +105,12 @@ const getOrders = async (req, res) => {
       minPrice,
       maxPrice,
     } = req.query;
-
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
     if (isNaN(page) || page < 1) page = 1;
     if (isNaN(limit) || limit < 1) limit = 10;
-
     const download = safeString(isDownload).toLowerCase() === "true";
     const role = req.user?.role;
-
     if (role === "store_user") {
       return sendResponse(
         res,
@@ -126,11 +119,8 @@ const getOrders = async (req, res) => {
         "Forbidden: Use /orders/public instead",
       );
     }
-
     const safeSearch = safeString(search);
-
     const orderMatch = {};
-
     const validStatuses = [
       "pending",
       "processing",
@@ -148,14 +138,12 @@ const getOrders = async (req, res) => {
     if (safeStatus && validStatuses.includes(safeStatus)) {
       orderMatch.status = safeStatus;
     }
-
     if (user && role === "admin") {
       const userArray = safeObjectIdArray(user);
       if (userArray.length > 0) {
         orderMatch.user_id = { $in: userArray };
       }
     }
-
     if (startDate || endDate) {
       orderMatch.createdAt = {};
       if (startDate) {
@@ -167,7 +155,6 @@ const getOrders = async (req, res) => {
         if (!isNaN(d.getTime())) orderMatch.createdAt.$lte = d;
       }
     }
-
     if (minPrice || maxPrice) {
       orderMatch.total_price = {};
       const min = Number(minPrice);
@@ -175,23 +162,16 @@ const getOrders = async (req, res) => {
       if (minPrice && !isNaN(min)) orderMatch.total_price.$gte = min;
       if (maxPrice && !isNaN(max)) orderMatch.total_price.$lte = max;
     }
-
     const itemMatch = {};
     if (product) {
       const productArray = safeObjectIdArray(product);
       if (productArray.length > 0) itemMatch.product_id = { $in: productArray };
     }
-    // if (color) {
-    //   const colorArray = safeObjectIdArray(color);
-    //   if (colorArray.length > 0)
-    //     itemMatch["variant_id.color_id"] = { $in: colorArray };
-    // }
     if (size) {
       const sizeArray = safeObjectIdArray(size);
       if (sizeArray.length > 0)
         itemMatch["variant_id.size_id"] = { $in: sizeArray };
     }
-
     if (role === "store_owner") {
       const ownerProducts = await Product.find(
         { createdBy: req.user._id },
@@ -223,7 +203,6 @@ const getOrders = async (req, res) => {
       }
       orderMatch._id = { $in: ownerOrderIds };
     }
-
     const searchStage = safeSearch
       ? [
           {
@@ -243,10 +222,8 @@ const getOrders = async (req, res) => {
           },
         ]
       : [];
-
     const pipeline = [
       { $match: orderMatch },
-
       {
         $lookup: {
           from: "users",
@@ -256,9 +233,7 @@ const getOrders = async (req, res) => {
         },
       },
       { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
-
       ...searchStage,
-
       {
         $lookup: {
           from: "orderitems",
@@ -306,16 +281,12 @@ const getOrders = async (req, res) => {
           ],
         },
       },
-
       { $sort: { createdAt: -1 } },
     ];
-
     if (!download) {
       pipeline.push({ $skip: (page - 1) * limit }, { $limit: limit });
     }
-
     const orders = await Order.aggregate(pipeline);
-
     const countPipeline = [
       { $match: orderMatch },
       {
@@ -330,10 +301,8 @@ const getOrders = async (req, res) => {
       ...searchStage,
       { $count: "total" },
     ];
-
     const totalCountAgg = await Order.aggregate(countPipeline);
     const total = totalCountAgg[0]?.total || 0;
-
     sendResponse(res, true, {
       orders,
       total,
@@ -351,19 +320,15 @@ const getPublicUserOrders = async (req, res) => {
     if (!userId) {
       return sendResponse(res, false, null, "Unauthorized");
     }
-
     let { page = 1, limit = 5, search = "" } = req.query;
     page = parseInt(page, 10);
     limit = parseInt(limit, 10);
     if (isNaN(page) || page < 1) page = 1;
     if (isNaN(limit) || limit < 1) limit = 5;
-
     const safeSearch = safeString(search);
-
     const orderMatch = {
       user_id: new mongoose.Types.ObjectId(userId),
     };
-
     if (safeSearch) {
       orderMatch.$and = [
         { user_id: new mongoose.Types.ObjectId(userId) },
@@ -376,7 +341,6 @@ const getPublicUserOrders = async (req, res) => {
       ];
       delete orderMatch.user_id;
     }
-
     const pipeline = [
       { $match: orderMatch },
       {
@@ -429,15 +393,12 @@ const getPublicUserOrders = async (req, res) => {
       { $skip: (page - 1) * limit },
       { $limit: limit },
     ];
-
     const orders = await Order.aggregate(pipeline);
-
     const totalCountAgg = await Order.aggregate([
       { $match: orderMatch },
       { $count: "total" },
     ]);
     const total = totalCountAgg[0]?.total || 0;
-
     sendResponse(res, true, {
       orders,
       total,
@@ -497,11 +458,11 @@ const getOrderById = async (req, res) => {
     sendResponse(res, false, null, err.message);
   }
 };
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // 3. CREATE ORDER
 // ═══════════════════════════════════════════════════════════════════════════════
 const createOrder = async (req, res) => {
+  let consultationGiftBooking = null;
   try {
     const {
       user_id,
@@ -514,12 +475,57 @@ const createOrder = async (req, res) => {
       subtotal = 0,
       total_price,
     } = req.body;
-
+    const items = safeArray(req.body.items);
+    if (!items.length) {
+      return sendResponse(res, false, null, "No items provided");
+    }
+    let calculatedProductTotal = 0;
+    const orderItems = [];
+    let couponDoc = null;
     if (coupon_id) {
       const Coupon = require("../models/Coupon");
-      const coupon = await Coupon.findById(coupon_id);
+      couponDoc = await Coupon.findById(coupon_id);
 
-      if (coupon && coupon.coupon_type === "first_order") {
+      if (!couponDoc) {
+        return sendResponse(res, false, null, "Invalid coupon");
+      }
+
+      if (couponDoc.status !== "active") {
+        return sendResponse(res, false, null, "Coupon is not active");
+      }
+
+      const now = new Date();
+      if (couponDoc.start_date && now < couponDoc.start_date) {
+        return sendResponse(res, false, null, "Coupon is not started yet");
+      }
+      if (couponDoc.end_date && now > couponDoc.end_date) {
+        return sendResponse(res, false, null, "Coupon has expired");
+      }
+
+      if (
+        couponDoc.usage_limit !== null &&
+        couponDoc.used_count >= couponDoc.usage_limit
+      ) {
+        return sendResponse(res, false, null, "Coupon usage limit reached");
+      }
+
+      if (couponDoc.userusage_limit !== null) {
+        const userEntry = (couponDoc.user_usage || []).find(
+          (u) => u.user_id.toString() === user_id.toString(),
+        );
+        const userUsedCount = userEntry ? userEntry.count : 0;
+
+        if (userUsedCount >= couponDoc.userusage_limit) {
+          return sendResponse(
+            res,
+            false,
+            null,
+            "You have already used this coupon maximum times",
+          );
+        }
+      }
+
+      if (couponDoc.coupon_type === "first_order") {
         const previousOrders = await Order.countDocuments({
           user_id: user_id,
           status: { $nin: ["cancelled"] },
@@ -536,7 +542,7 @@ const createOrder = async (req, res) => {
 
         const alreadyUsed = await Order.findOne({
           user_id: user_id,
-          coupon_id: coupon._id,
+          coupon_id: couponDoc._id,
           status: { $nin: ["cancelled"] },
         });
 
@@ -550,15 +556,6 @@ const createOrder = async (req, res) => {
         }
       }
     }
-
-    const items = safeArray(req.body.items);
-    if (!items.length) {
-      return sendResponse(res, false, null, "No items provided");
-    }
-
-    let calculatedProductTotal = 0;
-    const orderItems = [];
-
     for (const item of items) {
       if (item.is_gift === true) {
         orderItems.push({
@@ -571,7 +568,6 @@ const createOrder = async (req, res) => {
         });
         continue;
       }
-
       const variant = await ProductVariant.findById(item.variant_id).populate(
         "product_id",
       );
@@ -583,7 +579,6 @@ const createOrder = async (req, res) => {
           null,
           `Not enough stock for ${variant.sku}`,
         );
-
       let price = variant.price;
       const discount_id = variant.product_id.discount_id;
       if (discount_id) {
@@ -595,11 +590,9 @@ const createOrder = async (req, res) => {
           if (price < 0) price = 0;
         }
       }
-
       calculatedProductTotal += price * item.quantity;
       variant.stock_quantity -= item.quantity;
       await variant.save();
-
       orderItems.push({
         order_id: null,
         product_id: variant.product_id._id,
@@ -608,50 +601,80 @@ const createOrder = async (req, res) => {
         price_at_order: price,
       });
     }
+    if (user_id) {
+      consultationGiftBooking = await Bookconsaltion.findOneAndUpdate(
+        {
+          user_id,
+          slot_status: "confirmed",
+          is_redeemed: false,
+          product_id: { $ne: null },
+        },
+        { $set: { is_redeemed: true } },
+        { sort: { createdAt: 1 }, returnDocument: "after" },
+      );
+      if (consultationGiftBooking) {
+        orderItems.push({
+          order_id: null,
+          product_id: consultationGiftBooking.product_id,
+          variant_id: null,
+          quantity: 1,
+          price_at_order: 0,
+          is_gift: true,
+          is_consultation_gift: true,
+        });
+      }
+    }
     const finalTotal =
       Number(subtotal || calculatedProductTotal) + Number(shipping_charge || 0);
 
     const order = new Order({
       user_id,
-
       subtotal: Number(subtotal) || calculatedProductTotal,
-
       shipping_charge: Number(shipping_charge) || 0,
-
       coupon_discount: Number(coupon_discount) || 0,
-
       total_price: Number(total_price) || finalTotal,
-
       coupon_id: coupon_id || null,
-
       shippingAddress,
-
       payment_method,
-
       payment_status:
         payment_method === "Online" && transaction_id ? "paid" : "pending",
-
       transaction_id: transaction_id || "",
-
       status: "pending",
     });
-
     pushHistory(order, "pending", "customer", "Order placed");
     const savedOrder = await order.save();
 
-    if (coupon_id) {
-      const Coupon = require("../models/Coupon");
-
-      await Coupon.findByIdAndUpdate(coupon_id, {
-        $inc: {
-          used_count: 1,
-        },
-      });
+    if (consultationGiftBooking) {
+      consultationGiftBooking.redeemed_order_id = savedOrder._id;
+      await consultationGiftBooking.save();
     }
-
+    if (coupon_id && couponDoc) {
+      const Coupon = require("../models/Coupon");
+      const userEntry = (couponDoc.user_usage || []).find(
+        (u) => u.user_id.toString() === user_id.toString(),
+      );
+      if (userEntry) {
+        await Coupon.updateOne(
+          { _id: coupon_id, "user_usage.user_id": user_id },
+          {
+            $inc: {
+              used_count: 1,
+              "user_usage.$.count": 1,
+            },
+          },
+        );
+      } else {
+        await Coupon.updateOne(
+          { _id: coupon_id },
+          {
+            $inc: { used_count: 1 },
+            $push: { user_usage: { user_id: user_id, count: 1 } },
+          },
+        );
+      }
+    }
     orderItems.forEach((oi) => (oi.order_id = savedOrder._id));
     await OrderItem.insertMany(orderItems);
-
     const populatedForEmail = await Order.findById(savedOrder._id).populate(
       "user_id",
       "name email",
@@ -663,6 +686,12 @@ const createOrder = async (req, res) => {
     sendAdminNewOrder(populatedForEmail || savedOrder, placedName, placedEmail);
     sendResponse(res, true, savedOrder, "Order created successfully");
   } catch (err) {
+    if (consultationGiftBooking) {
+      await Bookconsaltion.findByIdAndUpdate(consultationGiftBooking._id, {
+        is_redeemed: false,
+        redeemed_order_id: null,
+      });
+    }
     sendResponse(res, false, null, err.message);
   }
 };
@@ -684,12 +713,10 @@ const confirmOrder = async (req, res) => {
         null,
         `Order is already '${order.status}'`,
       );
-
     const items = await OrderItem.find({ order_id: order._id }).populate(
       "product_id",
       "name sku weight",
     );
-
     const packingItems = items.map((item) => ({
       product_id: item.product_id?._id,
       name: item.product_id?.name || "Product",
@@ -698,12 +725,10 @@ const confirmOrder = async (req, res) => {
       price: item.price_at_order,
       weight: item.product_id?.weight || 0,
     }));
-
     const totalWeight = packingItems.reduce(
       (sum, i) => sum + i.weight * i.quantity,
       0,
     );
-
     const packing = new Packing({
       order_id: order._id,
       order_number: order.order_number,
@@ -721,9 +746,7 @@ const confirmOrder = async (req, res) => {
       cod_amount: order.payment_method === "COD" ? order.total_price : 0,
       packed_by: req.user?.name || "admin",
     });
-
     await packing.save();
-
     order.status = "processing";
     order.packing_id = packing._id;
     if (req.body.admin_note) order.admin_note = req.body.admin_note;
@@ -734,17 +757,14 @@ const confirmOrder = async (req, res) => {
       req.body.admin_note || "",
     );
     await order.save();
-
     const { email, name } = getCustomerInfo(order);
     sendOrderConfirmed(order, email, name);
     sendAdminOrderConfirmed(order, name, email);
-
     sendResponse(res, true, { order, packing }, "Order confirmed");
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
 };
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // 5. CANCEL ORDER
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -755,14 +775,12 @@ const cancelOrder = async (req, res) => {
       "name email",
     );
     if (!order) return sendResponse(res, false, null, "Order not found");
-
     if (
       req.user?.role === "store_user" &&
       order.user_id?._id?.toString() !== req.user._id.toString()
     ) {
       return sendResponse(res, false, null, "Forbidden: Not your order");
     }
-
     if (["cancelled", "completed", "refunded"].includes(order.status)) {
       return sendResponse(
         res,
@@ -771,7 +789,6 @@ const cancelOrder = async (req, res) => {
         `Cannot cancel order with status '${order.status}'`,
       );
     }
-
     const { reason = "Cancelled by customer" } = req.body;
     order.status = "cancelled";
     order.cancel_reason = safeString(reason);
@@ -782,7 +799,6 @@ const cancelOrder = async (req, res) => {
       safeString(reason),
     );
     await order.save();
-
     const items = await OrderItem.find({ order_id: order._id });
     for (const item of items) {
       const variant = await ProductVariant.findById(item.variant_id);
@@ -791,17 +807,14 @@ const cancelOrder = async (req, res) => {
         await variant.save();
       }
     }
-
     const { email, name } = getCustomerInfo(order);
     sendOrderCancelled(order, email, name);
     sendAdminOrderCancelled(order, name, email);
-
     sendResponse(res, true, order, "Order cancelled");
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
 };
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // 6. PACK ORDER
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -819,7 +832,6 @@ const packOrder = async (req, res) => {
         null,
         "Order must be in processing state to pack",
       );
-
     const warehouse_name = safeString(req.body.warehouse_name);
     order.status = "packed";
     pushHistory(
@@ -829,7 +841,6 @@ const packOrder = async (req, res) => {
       `Packed at ${warehouse_name || "warehouse"}`,
     );
     await order.save();
-
     if (order.packing_id) {
       await Packing.findByIdAndUpdate(order.packing_id, {
         status: "packed",
@@ -837,15 +848,12 @@ const packOrder = async (req, res) => {
         packed_at: new Date(),
       });
     }
-
     const packing = order.packing_id
       ? await Packing.findById(order.packing_id)
       : null;
-
     const { email, name } = getCustomerInfo(order);
     sendOrderPacked(order, email, name);
     sendAdminOrderPacked(order, name, email);
-
     sendResponse(res, true, { order, packing }, "Order packed");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -1194,7 +1202,6 @@ const generatePackingSlip = async (req, res) => {
     if (!res.headersSent) sendResponse(res, false, null, err.message);
   }
 };
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // 8. ASSIGN COURIER
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1206,17 +1213,14 @@ const assignCourier = async (req, res) => {
       "name email",
     );
     if (!order) return sendResponse(res, false, null, "Order not found");
-
     const partner = safeString(req.body.partner);
     let awb_number = safeString(req.body.awb_number);
     let tracking_url = "";
     let label_url = null;
-
     if (partner === "ithink") {
       const orderItems = await OrderItem.find({ order_id: order._id })
         .populate("product_id", "name")
         .populate("variant_id", "sku");
-
       const result = await syncOrderToIthink({ order, orderItems });
       awb_number = result.awb_number;
       tracking_url = result.tracking_url;
@@ -1227,7 +1231,6 @@ const assignCourier = async (req, res) => {
       }
       tracking_url = getTrackingUrl(partner, awb_number);
     }
-
     order.courier = {
       partner,
       name: safeString(req.body.courier_name) || partner,
@@ -1237,7 +1240,6 @@ const assignCourier = async (req, res) => {
         ? new Date(req.body.pickup_date)
         : undefined,
     };
-
     order.status = "ready_to_ship";
     pushHistory(
       order,
@@ -1246,11 +1248,9 @@ const assignCourier = async (req, res) => {
       `Courier: ${partner}, AWB: ${awb_number}`,
     );
     await order.save();
-
     const { email, name } = getCustomerInfo(order);
     sendCourierAssigned(order, email, name);
     sendAdminCourierAssigned(order, name, email);
-
     sendResponse(res, true, order, "Courier assigned");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -1273,16 +1273,13 @@ const shipOrder = async (req, res) => {
         null,
         "Order must be packed or ready_to_ship",
       );
-
     order.status = "shipped";
     if (order.courier) order.courier.dispatched_at = new Date();
     pushHistory(order, "shipped", req.user?.name || "admin", "Order shipped");
     await order.save();
-
     const { email, name } = getCustomerInfo(order);
     sendOrderShipped(order, email, name);
     sendAdminOrderShipped(order, name, email);
-
     sendResponse(res, true, order, "Order shipped");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -1299,10 +1296,8 @@ const updateTracking = async (req, res) => {
       "name email",
     );
     if (!order) return sendResponse(res, false, null, "Order not found");
-
     const tracking_url = safeString(req.body.tracking_url);
     const note = safeString(req.body.note);
-
     if (tracking_url) {
       try {
         const parsed = new URL(tracking_url);
@@ -1314,7 +1309,6 @@ const updateTracking = async (req, res) => {
         }
       } catch (_) {}
     }
-
     order.status = "in_transit";
     pushHistory(
       order,
@@ -1323,11 +1317,9 @@ const updateTracking = async (req, res) => {
       note || "Tracking updated",
     );
     await order.save();
-
     const { email, name } = getCustomerInfo(order);
     sendTrackingUpdated(order, email, name);
     sendAdminTrackingUpdated(order, name, email);
-
     sendResponse(res, true, order, "Tracking updated");
   } catch (err) {
     sendResponse(res, false, null, err.message);

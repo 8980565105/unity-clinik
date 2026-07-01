@@ -28,6 +28,10 @@ const productVariantSchema = new mongoose.Schema(
     offerprice: { type: Number, required: false },
     description: { type: String, default: "" },
     images: [{ type: String }],
+    videos: {
+      type: [String],
+      default: [],
+    },
     labels: [{ type: mongoose.Schema.Types.ObjectId, ref: "ProductLabel" }],
     status: {
       type: String,

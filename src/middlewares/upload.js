@@ -15,7 +15,7 @@ if (!fs.existsSync(uploadPath)) {
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  const allowedImages = ["image/jpeg", "image/png", "image/webp"];
+  const allowedImages = ["image/jpeg", "image/png", "image/webp", "image/avif"];
   const allowedVideos = [
     "video/mp4",
     "video/webm",
@@ -126,21 +126,7 @@ const upload = {
 
 module.exports = upload;
 
-
-
-
-
-
-
-
-
-
-// aaa cloudnary mata uplod karvu hoy tyare 
-
-
-
-
-
+// aaa cloudnary mata uplod karvu hoy tyare
 
 // const multer = require("multer");
 // const cloudinary = require("../config/cloudinary");

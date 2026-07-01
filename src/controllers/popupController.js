@@ -424,7 +424,7 @@ const updatePopup = async (req, res) => {
     const updatedPopup = await Popup.findByIdAndUpdate(
       req.params.id,
       updateData,
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
 
     sendResponse(res, true, updatedPopup, "Popup updated successfully");

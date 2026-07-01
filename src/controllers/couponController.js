@@ -116,7 +116,7 @@ const getCouponById = async (req, res) => {
       .populate("subcategories", "name")
       .populate("gift_product_ids", "name _id images price")
       .populate("buy_x_get_y.free_products", "name _id images price");
-      
+
     if (!coupon) return sendResponse(res, false, null, "Coupon not found");
     sendResponse(res, true, coupon, "Coupon retrieved successfully");
   } catch (err) {
@@ -276,6 +276,80 @@ const bulkDeleteCoupons = async (req, res) => {
   }
 };
 
+const applyCoupon = async (req, res) => {
+  try {
+    const { code } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return sendResponse(res, false, null, "Please login to apply coupon");
+    }
+
+    const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+    if (!coupon) {
+      return sendResponse(res, false, null, "Invalid coupon code");
+    }
+
+    if (coupon.status !== "active") {
+      return sendResponse(res, false, null, "Coupon is not active");
+    }
+
+    const now = new Date();
+    if (coupon.start_date && now < coupon.start_date) {
+      return sendResponse(res, false, null, "Coupon is not started yet");
+    }
+    if (coupon.end_date && now > coupon.end_date) {
+      return sendResponse(res, false, null, "Coupon has expired");
+    }
+
+    if (
+      coupon.usage_limit !== null &&
+      coupon.used_count >= coupon.usage_limit
+    ) {
+      return sendResponse(res, false, null, "Coupon usage limit reached");
+    }
+
+    if (coupon.userusage_limit !== null) {
+      const userEntry = coupon.user_usage.find(
+        (u) => u.user_id.toString() === userId.toString(),
+      );
+      const userUsedCount = userEntry ? userEntry.count : 0;
+
+      if (userUsedCount >= coupon.userusage_limit) {
+        return sendResponse(
+          res,
+          false,
+          null,
+          "You have already used this coupon maximum times",
+        );
+      }
+    }
+
+    sendResponse(res, true, coupon, "Coupon is valid");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+const markCouponUsed = async (couponId, userId) => {
+  const coupon = await Coupon.findById(couponId);
+  if (!coupon) return;
+
+  coupon.used_count += 1;
+
+  const userEntry = coupon.user_usage.find(
+    (u) => u.user_id.toString() === userId.toString(),
+  );
+
+  if (userEntry) {
+    userEntry.count += 1;
+  } else {
+    coupon.user_usage.push({ user_id: userId, count: 1 });
+  }
+
+  await coupon.save();
+};
+
 module.exports = {
   getCoupons,
   getCouponById,
@@ -284,4 +358,6 @@ module.exports = {
   deleteCoupon,
   bulkDeleteCoupons,
   updateCouponStatus,
+  applyCoupon,
+  markCouponUsed,
 };

@@ -4,7 +4,7 @@ const { sendResponse } = require("../utils/response");
 
 const getAllsubCategories = async (req, res) => {
   try {
-       const subcategories = await SubCategory.find({
+    const subcategories = await SubCategory.find({
       status: "active",
     })
       .select("_id name slug image_url parent_id status order")
@@ -233,10 +233,34 @@ const bulkDeletesubCategories = async (req, res) => {
   }
 };
 
+const reorderSubCategories = async (req, res) => {
+  try {
+    const { items } = req.body;
+    // items = [{ _id: "abc", order: 0 }, { _id: "xyz", order: 1 }, ...]
+
+    if (!Array.isArray(items) || items.length === 0)
+      return sendResponse(res, false, null, "No items provided");
+
+    const bulkOps = items.map((item) => ({
+      updateOne: {
+        filter: { _id: item._id },
+        update: { $set: { order: item.order } },
+      },
+    }));
+
+    await SubCategory.bulkWrite(bulkOps);
+
+    sendResponse(res, true, null, "Order updated successfully");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
 module.exports = {
   getsubCategories,
   getsubCategoryById,
   createsubCategory,
+  reorderSubCategories,
   updatesubCategory,
   deletesubCategory,
   bulkDeletesubCategories,

@@ -43,6 +43,14 @@ const couponSchema = new mongoose.Schema(
     max_discount_amount: { type: Number, default: null },
     usage_limit: { type: Number, default: null },
     used_count: { type: Number, default: 0 },
+
+    userusage_limit: { type: Number, default: 0 },
+    user_usage: [
+      {
+        user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        count: { type: Number, default: 0 },
+      },
+    ],
     start_date: { type: Date, required: false },
     end_date: { type: Date, required: false },
     status: {
