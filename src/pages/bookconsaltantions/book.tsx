@@ -1,8 +1,7 @@
-
 import { GenericTable } from "@/components/ui/adminTable";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store";
-import { deleteBooking, fetchBookings } from "@/features/bookconsoltantion/bookconsoltThunk";
+import { bulkDeleteBookings, deleteBooking, fetchBookings } from "@/features/bookconsoltantion/bookconsoltThunk";
 
 export default function BookConsoltantion() {
     const dispatch = useDispatch<AppDispatch>();
@@ -11,32 +10,27 @@ export default function BookConsoltantion() {
         {
             key: "phone",
             label: "Phone",
-            width: "w-40",
         },
         {
-            key: "transaction_id",
-            label: "Transaction ID",
-            width: "w-48",
-            render: (item: any) => item.transaction_id || "-",
+            key: "name",
+            label: "name",
+            render: (item: any) => item.name || "-",
         },
         {
-            key: "product_id",
-            label: "Product",
-            width: "w-56",
+            key: "message",
+            label: "message",
             render: (item: any) =>
-                item.product_id?.name || item.product_title || "-",
+                item.message || "-",
         },
         {
             key: "amount",
             label: "Amount",
-            width: "w-28",
             render: (item: any) =>
                 item.amount ? `₹${item.amount}` : "-",
         },
         {
             key: "type",
             label: "Type",
-            width: "w-32",
             render: (item: any) => (
                 <span
                     className={`px-3 py-1 rounded-full text-xs font-semibold ${item.type === "voice call"
@@ -49,17 +43,12 @@ export default function BookConsoltantion() {
             ),
         },
         {
-            key: "createdAt",
-            label: "Booked On",
-            width: "w-40",
-            render: (item: any) =>
-                item.createdAt
-                    ? new Date(item.createdAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                    })
-                    : "-",
+            key: "slot_time",
+            label: "Slot Time",
+        },
+        {
+            key: "slot_date",
+            label: " Slot Date",
         },
     ];
 
@@ -86,6 +75,13 @@ export default function BookConsoltantion() {
                     await dispatch(deleteBooking(id)).unwrap();
                 } catch (err: any) {
                     throw new Error(err || "Failed to delete booking");
+                }
+            }}
+            bulkDeleteItems={async (ids) => {
+                try {
+                    await dispatch(bulkDeleteBookings(ids)).unwrap();
+                } catch (err: any) {
+                    throw new Error(err || "Failed to delete bookings");
                 }
             }}
         />

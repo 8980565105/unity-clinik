@@ -113,3 +113,16 @@ export const bulkDeleteNavbarItems = createAsyncThunk(
     }
   },
 );
+
+export const reorderNavbarItems = createAsyncThunk(
+  "navbar/reorderNavbarItems",
+  async (items: { _id: string; order: number }[], { rejectWithValue }) => {
+    try {
+      const res = await api.put(ROUTES.navbar.reorder, { items });
+      if (res.data.success) return items;
+      return rejectWithValue(res.data.message || "Failed to reorder");
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);

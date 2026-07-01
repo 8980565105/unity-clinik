@@ -6,11 +6,13 @@ import {
   deletesubCategory,
   bulkDeletesubCategories,
   updatesubCategoryStatus,
+  reorderSubCategories,
 } from "./subcategoriesThunk";
 
 interface subCategory {
   _id: string;
   name: string;
+  order: number;
   slug: string;
   parent_id?: string | { _id: string; name: string };
   image_url: string;
@@ -91,6 +93,13 @@ const subcategoriesSlice = createSlice({
           (c) => !action.payload.includes(c._id),
         );
         state.total -= action.payload.length;
+      })
+      .addCase(reorderSubCategories.fulfilled, (state, action) => {
+        action.payload.forEach((item) => {
+          const cat = state.categories.find((c) => c._id === item._id);
+          if (cat) cat.order = item.order;
+        });
+        state.categories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       });
   },
 });

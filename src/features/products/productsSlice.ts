@@ -5,6 +5,7 @@ import {
   deleteProduct,
   duplicateProduct,
   fetchProducts,
+  reorderProducts,
   updateProduct,
   updateProductStatus,
 } from "./productsThunk";
@@ -35,6 +36,7 @@ interface ProductVariant {
 interface Product {
   _id: string;
   name: string;
+  order: number;
   slug: string;
   description?: string;
   steps?: string;
@@ -42,6 +44,7 @@ interface Product {
   labels: { _id: string; name: string }[] | string[];
   images: string[];
   status: string;
+
   variants?: ProductVariant[];
   createdAt: string;
   updatedAt: string;
@@ -128,6 +131,13 @@ const productSlice = createSlice({
       .addCase(duplicateProduct.rejected, (state, action) => {
         state.duplicating = false;
         state.error = action.payload as string;
+      })
+      .addCase(reorderProducts.fulfilled, (state, action) => {
+        action.payload.forEach((item) => {
+          const product = state.products.find((p) => p._id === item._id);
+          if (product) product.order = item.order;
+        });
+        state.products.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       });
   },
 });

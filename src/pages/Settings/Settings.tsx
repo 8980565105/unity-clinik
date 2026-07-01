@@ -41,6 +41,7 @@ export default function Settings() {
   const [contactCountry, setContactCountry] = useState("");
   const [contactPostal, setContactPostal] = useState("");
   const [logo, setLogo] = useState<string | null>(null);
+  const [hoverlogo, sethoverlogo] = useState<string | null>(null);
   const [favicon, setFavicon] = useState<string | null>(null);
   const [primaryColor, setPrimaryColor] = useState("#000000");
   const [secondaryColor, setSecondaryColor] = useState("#ffffff");
@@ -94,6 +95,7 @@ export default function Settings() {
         }
         if (s.theme) {
           setLogo(s.theme.logoUrl || null);
+          sethoverlogo(s.theme.hoverlogoUrl || null);
           setFavicon(s.theme.faviconUrl || null);
           setPrimaryColor(s.theme.primaryColor || "#000000");
           setSecondaryColor(s.theme.secondaryColor || "#ffffff");
@@ -139,6 +141,7 @@ export default function Settings() {
     const res = await dispatch(updateMyStore({
       theme: {
         logoUrl: logo,
+        hoverlogoUrl: hoverlogo,
         faviconUrl: favicon,
         primaryColor,
         secondaryColor,
@@ -300,10 +303,14 @@ export default function Settings() {
           <Card>
             <CardHeader><CardTitle>Theme Settings</CardTitle></CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Logo</Label>
                   <ImageUpload value={logo} onChange={(v) => setLogo(v as string | null)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>hover Logo</Label>
+                  <ImageUpload value={hoverlogo} onChange={(v) => sethoverlogo(v as string | null)} />
                 </div>
                 <div className="space-y-2">
                   <Label>Favicon</Label>

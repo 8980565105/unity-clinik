@@ -1,4 +1,3 @@
-
 import { createSlice } from "@reduxjs/toolkit";
 import {
   fetchCategories,
@@ -7,10 +6,12 @@ import {
   deleteCategory,
   bulkDeleteCategories,
   updateCategoryStatus,
+  reorderCategories,
 } from "./categoriesThunk";
 
 interface Category {
   _id: string;
+  order: number;
   name: string;
   slug: string;
   parent_id?: string | { _id: string; name: string };
@@ -88,6 +89,13 @@ const categoriesSlice = createSlice({
           (c) => !action.payload.includes(c._id),
         );
         state.total -= action.payload.length;
+      })
+      .addCase(reorderCategories.fulfilled, (state, action) => {
+        action.payload.forEach((item) => {
+          const cat = state.categories.find((c) => c._id === item._id);
+          if (cat) cat.order = item.order;
+        });
+        state.categories.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       });
   },
 });

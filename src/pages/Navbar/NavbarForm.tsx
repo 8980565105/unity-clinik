@@ -55,7 +55,6 @@ export default function NavbarFormPage() {
     const payload = {
       label,
       url,
-      order,
       icon,
       status: status ? "active" : "inactive",
     };
@@ -144,7 +143,7 @@ export default function NavbarFormPage() {
                   />
                 </div>
               </div>
-              <div>
+              {/* <div>
                 <Label htmlFor="order">Order</Label>
                 <Input
                   id="order"
@@ -155,7 +154,7 @@ export default function NavbarFormPage() {
                     setOrder(val === "" ? "" : Number(val));
                   }}
                 />
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         </div>

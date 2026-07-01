@@ -43,7 +43,7 @@ export default function SubCategoryFormPage() {
   const [parentId, setParentId] = useState<string>("");
   const [status, setStatus] = useState(true);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [order, setOrder] = useState<number | "">("");
+  // const [order, setOrder] = useState<number | "">("");
 
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function SubCategoryFormPage() {
           );
           setStatus(cat.status === "active");
           setImageUrl(cat.image_url || null);
-          setOrder(cat.order ?? "");
+          // setOrder(cat.order ?? "");
         }
       });
     }
@@ -84,7 +84,7 @@ export default function SubCategoryFormPage() {
       parent_id: parentId,
       status: status ? "active" : "inactive",
       image: imageUrl,
-       order: Number(order),
+      //  order: Number(order),
     };
 
     try {
@@ -225,7 +225,7 @@ export default function SubCategoryFormPage() {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <Label>Order *</Label>
                 <Input
                   type="number"
@@ -236,7 +236,7 @@ export default function SubCategoryFormPage() {
                     setOrder(e.target.value === "" ? "" : Number(e.target.value))
                   }
                 />
-              </div>
+              </div> */}
 
               <div className="flex gap-3">
                 <Button

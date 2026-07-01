@@ -562,10 +562,21 @@ export default function Orders() {
                                     {order.items?.map((item: any) => (
                                       <tr key={item._id} className="hover:bg-white">
                                         <td className="px-3 py-2 font-medium">{item.product?.name || "Product"}</td>
-                                        <td className="px-3 py-2">
+                                        {/* <td className="px-3 py-2">
                                           {item.is_gift ? (
                                             <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-700">
                                               🎁 Gift
+                                            </span>
+                                          ) : (
+                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                                              Paid
+                                            </span>
+                                          )}
+                                        </td> */}
+                                        <td className="px-3 py-2">
+                                          {item.is_gift ? (
+                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-700">
+                                              {item.is_consultation_gift ? "🎁 Consultation Gift" : "🎁 Gift"}
                                             </span>
                                           ) : (
                                             <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">

@@ -295,6 +295,190 @@ export function DraggableImageList({ images, onChange, onAddMore, apiUrlImage = 
   );
 }
 
+// export function DraggableVideoList({ videos, onChange, apiUrlImage = "" }: any) {
+//   const dragIdx = useRef<number | null>(null);
+//   const [dragOver, setDragOver] = useState<number | null>(null);
+//   const [uploading, setUploading] = useState(false);
+
+//   const handleDragStart = (e: any, idx: number) => {
+//     dragIdx.current = idx;
+//     e.dataTransfer.effectAllowed = "move";
+//   };
+
+//   const handleDragOver = (e: any, idx: number) => {
+//     e.preventDefault();
+//     setDragOver(idx);
+//   };
+
+//   const handleDrop = (e: any, dropIdx: number) => {
+//     e.preventDefault();
+//     if (dragIdx.current === null || dragIdx.current === dropIdx) { setDragOver(null); return; }
+//     const updated = [...videos];
+//     const [moved] = updated.splice(dragIdx.current, 1);
+//     updated.splice(dropIdx, 0, moved);
+//     onChange(updated);
+//     dragIdx.current = null;
+//     setDragOver(null);
+//   };
+
+//   const removeVideo = (idx: number) => {
+//     const u = [...videos];
+//     u.splice(idx, 1);
+//     onChange(u);
+//   };
+
+//   const addVideo = (url: string) => {
+//     if (!url) return;
+//     onChange([...(videos || []), url]);
+//   };
+
+//   return (
+//     <div className="space-y-3">
+//       <div className="flex flex-wrap gap-3">
+//         {(videos || []).map((vid: string, idx: number) => {
+//           const src = vid.startsWith("http") ? vid : `${apiUrlImage}${vid}`;
+//           return (
+//             <div
+//               key={idx}
+//               draggable
+//               onDragStart={(e) => handleDragStart(e, idx)}
+//               onDragOver={(e) => handleDragOver(e, idx)}
+//               onDrop={(e) => handleDrop(e, idx)}
+//               onDragLeave={() => setDragOver(null)}
+//               onDragEnd={() => { dragIdx.current = null; setDragOver(null); }}
+//               className={`relative group cursor-grab active:cursor-grabbing rounded-lg border-2 transition-all ${dragOver === idx ? "border-blue-500 scale-105" : "border-gray-200"}`}
+//               style={{ width: 140, height: 110 }}
+//             >
+//               <video
+//                 src={src}
+//                 className="w-full h-full object-cover rounded-lg"
+//                 muted
+//               />
+//               <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs rounded px-1">
+//                 {idx + 1}
+//               </div>
+//               <button
+//                 type="button"
+//                 onClick={() => removeVideo(idx)}
+//                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
+//               >
+//                 ×
+//               </button>
+//             </div>
+//           );
+//         })}
+//       </div>
+
+//       <div style={{ width: 200 }}>
+//         <VideoUpload
+//           value={null}
+//           uploading={uploading}
+//           onChange={(url: string) => {
+//             addVideo(url);
+//           }}
+//           onUploadingChange={(loading: boolean) => setUploading(loading)}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+export function DraggableVideoList({ videos, onChange, apiUrlImage = "", multiple = true }: any) {
+  const dragIdx = useRef<number | null>(null);
+  const [dragOver, setDragOver] = useState<number | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleDragStart = (e: any, idx: number) => {
+    dragIdx.current = idx;
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: any, idx: number) => {
+    e.preventDefault();
+    setDragOver(idx);
+  };
+
+  const handleDrop = (e: any, dropIdx: number) => {
+    e.preventDefault();
+    if (dragIdx.current === null || dragIdx.current === dropIdx) { setDragOver(null); return; }
+    const updated = [...videos];
+    const [moved] = updated.splice(dragIdx.current, 1);
+    updated.splice(dropIdx, 0, moved);
+    onChange(updated);
+    dragIdx.current = null;
+    setDragOver(null);
+  };
+
+  const removeVideo = (idx: number) => {
+    const u = [...videos];
+    u.splice(idx, 1);
+    onChange(u);
+  };
+
+  const addVideo = (url: string) => {
+    if (!url) return;
+    if (!multiple) {
+      // single mode: always replace with the new one
+      onChange([url]);
+      return;
+    }
+    onChange([...(videos || []), url]);
+  };
+
+  const reachedLimit = !multiple && (videos || []).length >= 1;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-3">
+        {(videos || []).map((vid: string, idx: number) => {
+          const src = vid.startsWith("http") ? vid : `${apiUrlImage}${vid}`;
+          return (
+            <div
+              key={idx}
+              draggable={multiple}
+              onDragStart={(e) => handleDragStart(e, idx)}
+              onDragOver={(e) => handleDragOver(e, idx)}
+              onDrop={(e) => handleDrop(e, idx)}
+              onDragLeave={() => setDragOver(null)}
+              onDragEnd={() => { dragIdx.current = null; setDragOver(null); }}
+              className={`relative group cursor-grab active:cursor-grabbing rounded-lg border-2 transition-all ${dragOver === idx ? "border-blue-500 scale-105" : "border-gray-200"}`}
+              style={{ width: 140, height: 110 }}
+            >
+              <video
+                src={src}
+                className="w-full h-full object-cover rounded-lg"
+                muted
+              />
+              <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs rounded px-1">
+                {idx + 1}
+              </div>
+              <button
+                type="button"
+                onClick={() => removeVideo(idx)}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
+              >
+                ×
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {!reachedLimit && (
+        <div style={{ width: 200 }}>
+          <VideoUpload
+            value={null}
+            uploading={uploading}
+            onChange={(url: string) => {
+              addVideo(url);
+            }}
+            onUploadingChange={(loading: boolean) => setUploading(loading)}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function useDragList(list: any[], setList: any) {
   const dragIdx = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
@@ -686,10 +870,8 @@ const SectionRenderer = React.memo(function SectionRenderer({
       return u;
     });
   }, [setSections, idx]);
-
   const sType = section.type;
   const data = section.data;
-
   if (sType === "Multi Step Selection") {
     return (
       <div className="space-y-4">
@@ -756,7 +938,7 @@ const SectionRenderer = React.memo(function SectionRenderer({
                             <Label>Select Product</Label>
                             <Select value={variant.product_id || ""} onValueChange={(val) => updateVariantField(stepIdx, variantIdx, "product_id", val)}>
                               <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
-                              <SelectContent>{(products || []).filter((p: any) => p._id !== id).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
+                              <SelectContent>{(products || []).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div>
@@ -786,7 +968,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (["Root Cause Section", "How Does It Do It Section", "Benefits Section", "Ingredients Section", "Treatment Kit Section"].includes(sType)) {
     return (
       <div className="space-y-4">
@@ -820,7 +1001,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Treatment Journey Section") {
     return (
       <div className="space-y-4">
@@ -858,7 +1038,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "use and Others points") {
     return (
       <div className="space-y-4">
@@ -888,7 +1067,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Image Banner Section") {
     return (
       <div className="space-y-4">
@@ -924,7 +1102,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Why Choose Unity Hair") {
     return (
       <div className="space-y-4">
@@ -972,7 +1149,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Before & After") {
     return (
       <div className="space-y-4">
@@ -1010,7 +1186,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "FAQ 1" || sType === "FAQ 2") {
     return (
       <div className="space-y-4">
@@ -1044,7 +1219,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Solution By Stage Section") {
     return (
       <div className="space-y-4">
@@ -1086,7 +1260,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
                 />
               </div>
 
-
               <div>
                 <Label>Select Product</Label>
                 <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
@@ -1100,7 +1273,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Product Recommendation Section") {
     return (
       <div className="space-y-4">
@@ -1137,7 +1309,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Product Attribute Section") {
     return (
       <div className="space-y-4">
@@ -1287,7 +1458,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "Daily Usage Section") {
     return (
       <div className="space-y-4">
@@ -1381,7 +1551,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
       </div>
     );
   }
-
   if (sType === "How to use") {
     return (
       <div className="space-y-4">
@@ -1715,12 +1884,19 @@ export default function ProductFormPage() {
   const { products, duplicating } = useSelector((state: RootState) => state.products);
   const { labels: productLabels } = useSelector((state: RootState) => state.productLabels);
   const [name, setName] = useState("");
+  const [tag, settag] = useState("");
   const [description, setDescription] = useState("");
   const [steps, setSteps] = useState("");
   const [categoryId, setCategoryId] = useState<string[]>([]);
   const [images, setImages] = useState("");
   const [status, setStatus] = useState(true);
+  const [isHidden, setIsHidden] = useState(false);
+
   const [order, setOrder] = useState("");
+
+  const [createdId, setCreatedId] = useState<string | undefined>(id);
+  const effectiveEditMode = Boolean(createdId);
+
   const [variants, setVariants] = useState([
     {
       brand_id: "", type_id: "", price: "", stock_quantity: "0",
@@ -1729,6 +1905,7 @@ export default function ProductFormPage() {
       Marketed: "", barcode: "", images: [] as string[], labels: [] as string[],
       status: "active", is_featured: false, is_best_seller: false, is_trending: false,
       description: "", steps: "",
+      videos: [] as string[],
     },
   ]);
   const [sections, setSections] = useState<any[]>([]);
@@ -1753,6 +1930,7 @@ export default function ProductFormPage() {
         if (res.payload) {
           const p = res.payload.data || res.payload;
           setName(p.name || "");
+          settag(p.tag || "");
           setOrder(
             p.order?.toString() || ""
           );
@@ -1762,6 +1940,7 @@ export default function ProductFormPage() {
           setCategoryId(catIds);
           setImages(p.images || "");
           setStatus(p.status === "active");
+          setIsHidden(p.ishidden || false);
           if (Array.isArray(p.variants) && p.variants.length > 0) {
             setVariants(p.variants.map((v: any) => ({
               _id: v._id,
@@ -1787,6 +1966,7 @@ export default function ProductFormPage() {
               is_trending: !!v.is_trending,
               steps: v.steps || "",
               description: v.description || "",
+              videos: Array.isArray(v.videos) ? v.videos : [],
             })));
           }
 
@@ -2063,7 +2243,6 @@ export default function ProductFormPage() {
     if (categoryId.length === 0) return toast.error("Category is required");
     if (variants.length === 0) return toast.error("Add at least one variant");
 
-  
     for (let i = 0; i < variants.length; i++) {
       const v = variants[i] as any;
 
@@ -2112,20 +2291,62 @@ export default function ProductFormPage() {
     });
 
     const payload = {
-      name, description, steps, category_id: categoryId, images, order: Number(order),
-      status: status ? "active" : "inactive", variants, sections: cleanSections,
+      name, tag, description, steps, category_id: categoryId, images,
+      // order: Number(order),
+      status: status ? "active" : "inactive", ishidden: isHidden, variants, sections: cleanSections,
     };
 
     try {
       let result;
-      if (isEditMode && id) result = await dispatch(updateProduct({ id, data: payload }) as any);
-      else result = await dispatch(createProduct(payload) as any);
-
-      if (createProduct.fulfilled.match(result) || updateProduct.fulfilled.match(result)) {
-        toast.success(isEditMode ? "Product updated successfully!" : "Product created successfully!");
-        navigate(`${basePath}/products`);
+      if (effectiveEditMode && createdId) {
+        result = await dispatch(updateProduct({ id: createdId, data: payload }) as any);
       } else {
-        toast.error((result.payload) || "Something went wrong");
+        result = await dispatch(createProduct(payload) as any);
+      }
+      if (createProduct.fulfilled.match(result) || updateProduct.fulfilled.match(result)) {
+        if (!effectiveEditMode) {
+          const payloadData = result.payload?.data || result.payload;
+          const newProduct = payloadData?.product || payloadData;
+          const newVariants = payloadData?.variants || [];
+
+          if (newProduct?._id) setCreatedId(newProduct._id);
+
+          if (Array.isArray(newVariants) && newVariants.length > 0) {
+            setVariants(newVariants.map((v: any) => ({
+              _id: v._id,
+              brand_id: v.brand_id?._id || v.brand_id || "",
+              type_id: v.type_id?._id || v.type_id || "",
+              price: v.price ?? "",
+              stock_quantity: v.stock_quantity ?? "0",
+              sku: v.sku || "",
+              offerprice: v.offerprice ?? "",
+              ProductWeight: v.ProductWeight ?? "",
+              ProductHeight: v.ProductHeight ?? "",
+              ProductWidth: v.ProductWidth ?? "",
+              ProductLength: v.ProductLength ?? "",
+              CountryOrigin: v.CountryOrigin || "",
+              Manufactured: v.Manufactured || "",
+              Marketed: v.Marketed || "",
+              barcode: v.barcode || "",
+              status: v.status || "active",
+              images: v.images || [],
+              labels: Array.isArray(v.labels) ? v.labels : [],
+              is_featured: !!v.is_featured,
+              is_best_seller: !!v.is_best_seller,
+              is_trending: !!v.is_trending,
+              steps: v.steps || "",
+              description: v.description || "",
+              videos: Array.isArray(v.videos) ? v.videos : [],
+            })));
+          }
+          dispatch(fetchProducts({ page: 1, limit: 100, status: "active" }) as any);
+
+          toast.success("Product created successfully! Now you can add page sections.");
+          navigate(`${basePath}/products`)
+        } else {
+          toast.success("Product updated successfully!");
+          navigate(`${basePath}/products`);
+        }
       }
     } catch (err) {
       toast.error("Server Error");
@@ -2151,10 +2372,15 @@ export default function ProductFormPage() {
           <Card className="shadow-md border border-gray-200">
             <CardHeader><CardTitle className="text-lg font-semibold">Product Info</CardTitle></CardHeader>
             <CardContent className="space-y-5">
-              <div>
-
-                <Label>Product Name *</Label>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <div className="grid grid-cols-2 gap-3 ">
+                <div>
+                  <Label>Product Name *</Label>
+                  <Input value={name} onChange={(e) => setName(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Product tag </Label>
+                  <Input value={tag} onChange={(e) => settag(e.target.value)} />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -2246,20 +2472,34 @@ export default function ProductFormPage() {
                     </div>
                     <div className="col-span-2">
                       <Label>Variant Images</Label>
-                      
-
                       <DraggableImageList
                         images={v.images || []}
                         onChange={(imgs: string[]) => handleVariantChange(idx, "images", imgs)}
                         onAddMore={(newUrls: string[]) => {
                           const current = v.images || [];
-                          // newUrls already filtered in DraggableImageList
                           handleVariantChange(idx, "images", [...current, ...newUrls]);
                         }}
                         apiUrlImage={import.meta.env.VITE_API_URL_IMAGE}
                       />
-
                     </div>
+
+
+
+
+                    <div className="col-span-2 mt-4">
+                      <Label className="font-semibold text-gray-700">
+                        Videos <span className="text-gray-400 font-normal text-xs">(Max 15MB)</span>
+                      </Label>
+                      <DraggableVideoList
+                        videos={v.videos || []}
+                        onChange={(vids: string[]) => handleVariantChange(idx, "videos", vids)}
+                        apiUrlImage={import.meta.env.VITE_API_URL_IMAGE}
+                        multiple={true}
+                      />
+                    </div>
+
+
+
                     <div className="col-span-2">
                       <Label>Variant Labels</Label>
                       <div className="flex flex-wrap gap-2 mt-1">
@@ -2285,60 +2525,74 @@ export default function ProductFormPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-md border border-gray-200">
-            <CardHeader className="flex flex-col justify-center items-center">
-              <CardTitle className="text-lg font-semibold">Page Section Builder</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {sections.length === 0 && (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  No sections yet. Click "Add Section" to get started.
-                </div>
-              )}
+          {!createdId ? (
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                onClick={() => {
+                  toast.error("Please create the product first before adding page sections.");
+                }}
+              >
+                Add to product Page Section Builder
+              </Button>
+            </div>
+          ) : (
+            <Card className="shadow-md border border-gray-200">
+              <CardHeader className="flex flex-col justify-center items-center">
+                <CardTitle className="text-lg font-semibold">Page Section Builder</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {sections.length === 0 && (
+                  <div className="text-center py-8 text-gray-400 text-sm">
+                    No sections yet. Click "Add Section" to get started.
+                  </div>
+                )}
 
-              {sections.map((section, idx) => (
-                <div key={`${section.type}-${idx}`}>
-                  <div
-                    draggable
-                    onDragStart={(e) => { sectionDrag.onDragStart(idx); e.dataTransfer.effectAllowed = "move"; }}
-                    onDragOver={(e) => sectionDrag.onDragOver(e, idx)}
-                    onDrop={(e) => sectionDrag.onDrop(e, idx)}
-                    onDragLeave={sectionDrag.onDragLeave}
-                    onDragEnd={sectionDrag.onDragEnd}
-                    className={`p-4 border rounded-lg space-y-4 transition-all ${sectionDrag.dragOver === idx ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-3">
-                        <span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors" title="Drag to reorder section">
-                          <GripVertical className="w-4 h-4" />
-                        </span>
-                        <h3 className="font-semibold text-gray-800">{section.type} {idx + 1}</h3>
+                {sections.map((section, idx) => (
+                  <div key={`${section.type}-${idx}`}>
+                    <div
+                      draggable
+                      onDragStart={(e) => { sectionDrag.onDragStart(idx); e.dataTransfer.effectAllowed = "move"; }}
+                      onDragOver={(e) => sectionDrag.onDragOver(e, idx)}
+                      onDrop={(e) => sectionDrag.onDrop(e, idx)}
+                      onDragLeave={sectionDrag.onDragLeave}
+                      onDragEnd={sectionDrag.onDragEnd}
+                      className={`p-4 border rounded-lg space-y-4 transition-all ${sectionDrag.dragOver === idx ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          <span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors" title="Drag to reorder section">
+                            <GripVertical className="w-4 h-4" />
+                          </span>
+                          <h3 className="font-semibold text-gray-800">{section.type} {idx + 1}</h3>
+                        </div>
+                        <Button type="button" variant="destructive" size="sm" onClick={() => removeSection(idx)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button type="button" variant="destructive" size="sm" onClick={() => removeSection(idx)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+
+                      <SectionRenderer
+                        section={section}
+                        idx={idx}
+                        setSections={setSections}
+                        products={products as any[]}
+                        id={createdId}
+                      />
                     </div>
 
-                    <SectionRenderer
-                      section={section}
-                      idx={idx}
-                      setSections={setSections}
-                      products={products as any[]}
-                      id={id}
+                    <InsertBetweenSectionButton
+                      insertAfterIdx={idx}
+                      onInsert={(type: string) => addSection(type, idx)}
                     />
                   </div>
+                ))}
 
-                  <InsertBetweenSectionButton
-                    insertAfterIdx={idx}
-                    onInsert={(type: string) => addSection(type, idx)}
-                  />
-                </div>
-              ))}
-
-              <AddFirstSectionButton onAdd={(type: string) => addSection(type, -1)} />
-            </CardContent>
-          </Card>
+                <AddFirstSectionButton onAdd={(type: string) => addSection(type, -1)} />
+              </CardContent>
+            </Card>
+          )}
         </div>
+
         <div className="w-[25%]">
           <Card className="sticky top-5 flex flex-col gap-3">
             <CardHeader>
@@ -2350,21 +2604,30 @@ export default function ProductFormPage() {
                 <Label htmlFor="status">Active</Label>
                 <Switch id="status" checked={status} onCheckedChange={setStatus} />
               </div>
-              <div className="space-y-2">
+              <div className="flex items-center justify-between mt-2">
+                <Label htmlFor="ishidden">Is Hidden</Label>
+                <Switch
+                  id="ishidden"
+                  checked={isHidden}
+                  onCheckedChange={setIsHidden}
+                />
+              </div>
+              {/* <div className="space-y-2">
                 <Label>Order</Label>
                 <Input
                   value={order}
+                  min={0}
                   type="number"
                   placeholder="Enter order"
                   onChange={(e) =>
                     setOrder(e.target.value)
                   }
                 />
-              </div>
+              </div> */}
 
               <div className="flex">
                 <Button type="submit" className="flex-1">
-                  {isEditMode ? "Update Product" : "Create Product"}
+                  {effectiveEditMode ? "Update Product" : "Create Product"}
                 </Button>
                 <Button onClick={() => navigate(`${basePath}/products`)}
                   variant="outline"

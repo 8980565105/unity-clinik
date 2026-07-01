@@ -110,3 +110,16 @@ export const bulkDeleteCategories = createAsyncThunk(
     }
   },
 );
+
+export const reorderCategories = createAsyncThunk(
+  "categories/reorderCategories",
+  async (items: { _id: string; order: number }[], { rejectWithValue }) => {
+    try {
+      const res = await api.put(ROUTES.categories.reorder, { items });
+      if (res.data.success) return items;
+      return rejectWithValue(res.data.message || "Failed to reorder");
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);

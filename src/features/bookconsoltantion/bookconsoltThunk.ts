@@ -37,3 +37,18 @@ export const deleteBooking = createAsyncThunk(
     }
   },
 );
+
+export const bulkDeleteBookings = createAsyncThunk(
+  "bookconsaltans/bulkDelete",
+  async (ids: string[], { rejectWithValue }) => {
+    try {
+      const res = await api.post(ROUTES.bookconsaltans.bulkDelete, { ids });
+      if (res.data.success) return ids;
+      return rejectWithValue(res.data.message || "Failed to delete bookings");
+    } catch (err: any) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to delete bookings",
+      );
+    }
+  },
+);

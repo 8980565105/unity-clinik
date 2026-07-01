@@ -52,6 +52,7 @@ export default function CouponFormPage() {
   const [minPurchaseAmount, setMinPurchaseAmount] = useState<string>("0");
   const [maxDiscountAmount, setMaxDiscountAmount] = useState<string>("");
   const [usageLimit, setUsageLimit] = useState<string>("1");
+  const [userusageLimit, setuserUsageLimit] = useState<string>("1");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [status, setStatus] = useState(true);
@@ -103,6 +104,7 @@ export default function CouponFormPage() {
           setBuyQuantity(Number(coupon.buy_x_get_y?.buy_quantity));
           setGetQuantity(Number(coupon.buy_x_get_y?.get_quantity));
           setUsageLimit(String(coupon.usage_limit || 0));
+          setuserUsageLimit(String(coupon.userusage_limit || 0));
           setUsedCount(Number(coupon.used_count || 0));
           if (coupon.gift_product_ids && coupon.gift_product_ids.length > 0) {
             setGiftProducts(
@@ -182,6 +184,8 @@ export default function CouponFormPage() {
       return toast.error("Please enter or generate a coupon code");
     if (!usageLimit || Number(usageLimit) < 1)
       return toast.error("Please enter a valid usage limit");
+    if (!userusageLimit || Number(userusageLimit) < 1)
+      return toast.error("Please enter a valid user usage limit");
     if (!startDate) return toast.error("Please select a start date & time");
     if (!endDate) return toast.error("Please select an end date & time");
     if (new Date(endDate) < new Date(startDate))
@@ -200,6 +204,7 @@ export default function CouponFormPage() {
       min_purchase_amount: Number(minPurchaseAmount),
       max_discount_amount: maxDiscountAmount ? Number(maxDiscountAmount) : null,
       usage_limit: Number(usageLimit),
+      userusage_limit: Number(userusageLimit),
       start_date: startDate ? new Date(startDate).toISOString() : null,
       end_date: endDate ? new Date(endDate).toISOString() : null,
       status: status ? "active" : "inactive",
@@ -520,6 +525,15 @@ export default function CouponFormPage() {
                     disabled
                   />
                 </div>
+              </div>
+
+              <div>
+                <Label>User Use Limit</Label>
+                <Input
+                  type="number"
+                  value={userusageLimit}
+                  onChange={(e) => setuserUsageLimit(e.target.value)}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

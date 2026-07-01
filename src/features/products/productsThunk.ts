@@ -2,32 +2,6 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/services/api";
 import { ROUTES } from "@/services/routes";
 
-// export const fetchProducts = createAsyncThunk(
-//   "products/fetchProducts",
-//   async (
-//     params: {
-//       page?: number;
-//       limit?: number;
-//       search?: string;
-//       isDownload?: boolean;
-//       status?: "active" | "inactive";
-//       sort?: "asc" | "desc";
-//     } = {},
-//     { rejectWithValue },
-//   ) => {
-//     try {
-//       const { isDownload = false, ...query } = params;
-//       const res = await api.get(ROUTES.products.getAll, {
-//         params: { ...query, isDownload },
-//       });
-//       if (res.data.success) return res.data.data;
-//       return rejectWithValue(res.data.message || "Failed to fetch products");
-//     } catch (err: any) {
-//       return rejectWithValue(err.response?.data?.message || "Server Error");
-//     }
-//   },
-// );
-
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
   async (
@@ -59,7 +33,7 @@ export const fetchProducts = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );
 export const getProductById = createAsyncThunk(
   "products/getProductById",
@@ -206,6 +180,19 @@ export const duplicateProduct = createAsyncThunk(
       return rejectWithValue(
         createRes.data.message || "Failed to duplicate product",
       );
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);
+
+export const reorderProducts = createAsyncThunk(
+  "products/reorderProducts",
+  async (items: { _id: string; order: number }[], { rejectWithValue }) => {
+    try {
+      const res = await api.put(ROUTES.products.reorder, { items });
+      if (res.data.success) return items;
+      return rejectWithValue(res.data.message || "Failed to reorder");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
