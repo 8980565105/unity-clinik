@@ -280,6 +280,7 @@ const Header = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [showHoverLogo, setShowHoverLogo] = useState(false);
 
   const { items: categories, loading } = useSelector(
     (state) => state.categories,
@@ -341,6 +342,7 @@ const Header = () => {
     setMegaMenuPage(1);
     setMobileMenuPage(1);
   };
+
   useEffect(() => {
     dispatch(fetchProducts());
     dispatch(fetchNavbar({ status: "active" }));
@@ -432,6 +434,26 @@ const Header = () => {
     return `${BASE}${logoPath}`;
   })();
 
+  const dynamicHoverLogoUrl = (() => {
+    const hoverPath = storeInfo?.theme?.hoverlogoUrl;
+    if (!hoverPath) return null;
+    if (hoverPath.startsWith("http")) return hoverPath;
+    return `${BASE}${hoverPath}`;
+  })();
+
+  useEffect(() => {
+    if (!dynamicLogoUrl || !dynamicHoverLogoUrl) {
+      setShowHoverLogo(false);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setShowHoverLogo((prev) => !prev);
+    }, 1900);
+
+    return () => clearInterval(interval);
+  }, [dynamicLogoUrl, dynamicHoverLogoUrl]);
+
   const openWhatsApp = () => {
     const phone = "919327148908";
 
@@ -491,12 +513,40 @@ const Header = () => {
         </button>
 
         <div className="flex items-center">
-          <Link to="/">
-            <img
-              src={dynamicLogoUrl || HeaderLogo}
-              alt="Logo"
-              className="h-auto w-[120px] md:w-[150px] lg:w-[200px]"
-            />
+          <Link
+            to="/"
+            className="relative block overflow-hidden h-auto w-[120px] md:w-[150px] lg:w-[200px]"
+          >
+            {dynamicLogoUrl && dynamicHoverLogoUrl ? (
+              <>
+                <img
+                  src={dynamicLogoUrl}
+                  alt="Logo"
+                  className={`w-full h-full transition-transform duration-700 ease-in-out ${
+                    showHoverLogo ? "-translate-y-full" : "translate-y-0"
+                  }`}
+                />
+                <img
+                  src={dynamicHoverLogoUrl}
+                  alt="Logo Hover"
+                  className={`absolute top-full left-0 w-full h-full object-contain transition-transform duration-700 ease-in-out ${
+                    showHoverLogo ? "-translate-y-full" : "translate-y-0"
+                  }`}
+                />
+              </>
+            ) : dynamicHoverLogoUrl ? (
+              <img
+                src={dynamicHoverLogoUrl}
+                alt="Logo"
+                className="w-full h-auto"
+              />
+            ) : (
+              <img
+                src={dynamicLogoUrl || HeaderLogo}
+                alt="Logo"
+                className="w-full h-auto"
+              />
+            )}
           </Link>
         </div>
 

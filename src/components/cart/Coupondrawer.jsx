@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { X, Tag, ChevronDown, ChevronUp } from "lucide-react";
-
 export default function CouponDrawer({
   isOpen,
   onClose,
@@ -18,9 +17,9 @@ export default function CouponDrawer({
   onAutoApplyDone,
   userOrderCount,
   checkoutQuantities,
+  items = [],
 }) {
   const { coupons = [] } = useSelector((state) => state.coupons);
-  const { items = [] } = useSelector((state) => state.cart);
   const { user } = useSelector((state) => state.auth);
   const [expandedCoupon, setExpandedCoupon] = useState(null);
   const drawerRef = useRef(null);
@@ -51,11 +50,9 @@ export default function CouponDrawer({
     onAutoApplyDone?.();
   }, [isOpen, autoApplyCode, coupons]);
 
-
   const filteredCoupons = coupons.filter((coupon) => {
     const isFirstOrderOnly =
-      coupon.coupon_type === "first_order" ||
-      coupon.coupon_type === "referral";
+      coupon.coupon_type === "first_order" || coupon.coupon_type === "referral";
 
     if (isFirstOrderOnly) {
       if (!user?._id) return false;
@@ -68,8 +65,8 @@ export default function CouponDrawer({
       return items.some((item) =>
         coupon.products?.some(
           (product) =>
-            String(product?._id || product) === String(item?.product_id?._id)
-        )
+            String(product?._id || product) === String(item?.product_id?._id),
+        ),
       );
     }
     if (coupon.apply_type === "specificsubcategory") {
@@ -77,17 +74,17 @@ export default function CouponDrawer({
         const product = item?.product_id;
         const productSubCategoryId = String(
           product?.category_id?._id ||
-          product?.category_id ||
-          product?.parent_id?._id ||
-          product?.parent_id ||
-          product?.subcategory_id?._id ||
-          product?.subcategory_id ||
-          product?.subcategory?._id ||
-          product?.subcategory ||
-          ""
+            product?.category_id ||
+            product?.parent_id?._id ||
+            product?.parent_id ||
+            product?.subcategory_id?._id ||
+            product?.subcategory_id ||
+            product?.subcategory?._id ||
+            product?.subcategory ||
+            "",
         );
         return coupon.subcategories?.some(
-          (sub) => String(sub?._id || sub) === productSubCategoryId
+          (sub) => String(sub?._id || sub) === productSubCategoryId,
         );
       });
     }
@@ -96,7 +93,7 @@ export default function CouponDrawer({
       return items.some((item) => {
         const isExcluded = coupon.products?.some(
           (product) =>
-            String(product?._id || product) === String(item?.product_id?._id)
+            String(product?._id || product) === String(item?.product_id?._id),
         );
         return !isExcluded;
       });
@@ -107,17 +104,17 @@ export default function CouponDrawer({
         const product = item?.product_id;
         const productSubCategoryId = String(
           product?.category_id?._id ||
-          product?.category_id ||
-          product?.parent_id?._id ||
-          product?.parent_id ||
-          product?.subcategory_id?._id ||
-          product?.subcategory_id ||
-          product?.subcategory?._id ||
-          product?.subcategory ||
-          ""
+            product?.category_id ||
+            product?.parent_id?._id ||
+            product?.parent_id ||
+            product?.subcategory_id?._id ||
+            product?.subcategory_id ||
+            product?.subcategory?._id ||
+            product?.subcategory ||
+            "",
         );
         const isExcluded = coupon.subcategories?.some(
-          (sub) => String(sub?._id || sub) === productSubCategoryId
+          (sub) => String(sub?._id || sub) === productSubCategoryId,
         );
         return !isExcluded;
       });
@@ -125,9 +122,7 @@ export default function CouponDrawer({
 
     return false;
   });
-
   if (!isOpen) return null;
-
   return (
     <>
       <div className="fixed inset-0 bg-black/40 z-[998] transition-opacity" />
@@ -160,7 +155,6 @@ export default function CouponDrawer({
             <X size={18} />
           </button>
         </div>
-
         <div className="px-[20px] py-[16px] border-b border-gray-100">
           <div className="flex gap-[8px]">
             <input
@@ -180,17 +174,16 @@ export default function CouponDrawer({
               APPLY
             </button>
           </div>
-
           {couponMsg?.text && (
             <p
-              className={`text-[12px] font-medium mt-[8px] ${couponMsg.type === "success" ? "text-green-600" : "text-red-500"
-                }`}
+              className={`text-[12px] font-medium mt-[8px] ${
+                couponMsg.type === "success" ? "text-green-600" : "text-red-500"
+              }`}
             >
               {couponMsg.text}
             </p>
           )}
         </div>
-
         <div className="flex-1 overflow-y-auto px-[20px] py-[14px]">
           {filteredCoupons.length === 0 ? (
             <p className="text-center text-[13px] text-gray-400 py-[40px]">
@@ -201,29 +194,16 @@ export default function CouponDrawer({
               {filteredCoupons.map((coupon) => {
                 const isApplied = appliedCoupon?.code === coupon.code;
                 const isExpanded = expandedCoupon === coupon._id;
-
-
                 const buyQty = coupon?.buy_x_get_y?.buy_quantity || 0;
-
                 const eligibleQty = items.reduce((total, item) => {
-
                   const isMatched = coupon.products?.some(
                     (p) =>
-                      String(p?._id || p) ===
-                      String(item?.product_id?._id)
+                      String(p?._id || p) === String(item?.product_id?._id),
                   );
-
                   if (!isMatched) return total;
-
-
-                  const key =
-                    item._id || item.product_id?._id;
-
+                  const key = item._id || item.product_id?._id;
                   const actualQty =
-                    checkoutQuantities[key] ||
-                    item.quantity ||
-                    1;
-
+                    checkoutQuantities[key] || item.quantity || 1;
                   return total + actualQty;
                 }, 0);
 
@@ -231,20 +211,21 @@ export default function CouponDrawer({
                   coupon.coupon_type !== "buy_x_get_y"
                     ? true
                     : eligibleQty >= buyQty;
-
                 return (
                   <div
                     key={coupon._id}
-                    className={`border rounded-[10px] overflow-hidden transition-all ${isApplied
-                      ? "border-green-400 bg-green-50"
-                      : "border-gray-200 bg-white"
-                      }`}
+                    className={`border rounded-[10px] overflow-hidden transition-all ${
+                      isApplied
+                        ? "border-green-400 bg-green-50"
+                        : "border-gray-200 bg-white"
+                    }`}
                   >
                     <div className="flex items-center justify-between px-[14px] py-[12px]">
                       <div className="flex items-center gap-[10px]">
                         <div
-                          className={`w-[34px] h-[34px] rounded-[8px] flex items-center justify-center ${isApplied ? "bg-green-100" : "bg-gray-100"
-                            }`}
+                          className={`w-[34px] h-[34px] rounded-[8px] flex items-center justify-center ${
+                            isApplied ? "bg-green-100" : "bg-gray-100"
+                          }`}
                         >
                           <Tag
                             size={15}
@@ -266,7 +247,6 @@ export default function CouponDrawer({
                           </span>
                         </div>
                       </div>
-
                       {isApplied ? (
                         <button
                           onClick={() => {
@@ -290,11 +270,11 @@ export default function CouponDrawer({
     rounded-[6px]
     px-[16px]
     py-[6px]
-
-    ${canApplyBuyXGetY
-                              ? "text-white bg-[#1a5fb4]"
-                              : "text-gray-400 bg-gray-200 cursor-not-allowed"
-                            }
+    ${
+      canApplyBuyXGetY
+        ? "text-white bg-[#1a5fb4]"
+        : "text-gray-400 bg-gray-200 cursor-not-allowed"
+    }
   `}
                         >
                           Apply

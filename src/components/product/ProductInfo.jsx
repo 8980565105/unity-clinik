@@ -14,41 +14,15 @@ import toast from "react-hot-toast";
 import { getImageUrl } from "../utils/helper";
 import Offer from "./offerdescount";
 import BuyNowButton from "./BuyNowButton";
-
 import Sharelink from "./Sharelink";
 
-const LS_KEY = "product_step_selections";
-const saveStepSelection = (stepIndex, slug) => {
-  if (!slug || slug.trim() === "") return;
-  try {
-    const existing = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-    existing[`step_${stepIndex}`] = slug.trim();
-    localStorage.setItem(LS_KEY, JSON.stringify(existing));
-  } catch (_) { }
-};
-
-const getStepSelectedSlug = (stepIndex) => {
-  try {
-    const existing = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-    return existing[`step_${stepIndex}`] || "";
-  } catch (_) {
-    return "";
-  }
-};
-
-const isVariantSelectedForStep = (variant, stepIndex, currentProductId) => {
-  const variantSlug = variant.slug?.trim();
-
-  if (variantSlug && variantSlug !== "") {
-    const savedSlug = getStepSelectedSlug(stepIndex);
-    return savedSlug === variantSlug;
-  }
-
+const isVariantSelected = (variant, currentProductId) => {
   const pid =
     typeof variant.product_id === "object"
       ? variant.product_id?._id
       : variant.product_id;
   if (!pid || pid === "" || pid === "none" || pid === null) return false;
+  if (!currentProductId) return false;
   return String(pid) === String(currentProductId);
 };
 
@@ -61,30 +35,6 @@ const getVariantLink = (variant) => {
     return `/products/${pid}`;
   }
   return "#";
-};
-
-const autoSaveCurrentProductSlug = (product) => {
-  if (!product?.slug) return;
-  const currentSlug = product.slug;
-
-  const steps =
-    product?.sections?.find((s) => s.type === "Multi Step Selection")?.data
-      ?.steps || [];
-
-  let nonPackStepIndex = 0;
-  for (let i = 0; i < steps.length; i++) {
-    const step = steps[i];
-    if (step.display_type === "Pack") continue;
-
-    const matchedVariant = (step.variants || []).find(
-      (v) => v.slug?.trim() === currentSlug,
-    );
-    if (matchedVariant) {
-      saveStepSelection(nonPackStepIndex, currentSlug);
-      break;
-    }
-    nonPackStepIndex++;
-  }
 };
 
 export default function ProductInfo({
@@ -103,18 +53,8 @@ export default function ProductInfo({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const currentProductId = product?._id;
-
-  const [selectionTick, setSelectionTick] = useState(0);
   const actionButtonsRef = useRef(null);
-  useEffect(() => {
-    if (product) {
-      autoSaveCurrentProductSlug(product);
-      setSelectionTick((t) => t + 1);
-    }
-  }, [product?._id]);
-
   const [selectedPackState, setSelectedPackState] = useState(null);
   const { token } = useSelector((state) => state.auth);
   const cart = useSelector((state) => state.cart.cart);
@@ -170,7 +110,7 @@ export default function ProductInfo({
         variantsForColor[0];
       setActiveVariantState(firstAvailable);
       setSelectedVariant(firstAvailable);
-      setActiveVariant?.(firstAvailable); 
+      setActiveVariant?.(firstAvailable);
     }
   }, [selectedColor, product?.variants, setSelectedVariant]);
 
@@ -205,8 +145,8 @@ export default function ProductInfo({
       originalPrice;
     let discountPercent = 0;
     if (originalPrice > offerPrice) {
-      discountPercent = Math.round(
-        ((originalPrice - offerPrice) / originalPrice) * 100,
+      discountPercent = Number(
+        (((originalPrice - offerPrice) / originalPrice) * 100).toFixed(2),
       );
     }
     return { originalPrice, offerPrice, discountPercent };
@@ -224,21 +164,13 @@ export default function ProductInfo({
       discountPercent:
         selectedPackState?.price > 0
           ? Math.round(
-            ((selectedPackState.price - selectedPackState.offerprice) /
-              selectedPackState.price) *
-            100,
-          )
+              ((selectedPackState.price - selectedPackState.offerprice) /
+                selectedPackState.price) *
+                100,
+            )
           : 0,
     });
   }, [selectedPackState, activeVariantState]);
-
-  const handleVariantClick = (variant, nonPackStepIndex) => {
-    const slug = variant.slug?.trim();
-    if (slug && slug !== "") {
-      saveStepSelection(nonPackStepIndex, slug);
-      setSelectionTick((t) => t + 1);
-    }
-  };
 
   const handleAddToCart = async () => {
     if (activeVariantState?.stock_quantity === 0) {
@@ -305,15 +237,22 @@ export default function ProductInfo({
           (step) => step?.status === true || step?.status === undefined,
         ),
       );
+    const displayOrder = {
+      "Text with img": 1,
+      Text: 2,
+      "Upgrade Product": 3,
+      Pack: 4,
+    };
 
-    let nonPackStepIndex = 0;
+    const sortedSteps = [...allSteps].sort((a, b) => {
+      return (
+        (displayOrder[a.display_type] || 999) -
+        (displayOrder[b.display_type] || 999)
+      );
+    });
 
-    return allSteps.map((step, stepIdx) => {
+    return sortedSteps.map((step, stepIdx) => {
       const uiType = step?.display_type || "Text";
-      const isPack = uiType === "Pack";
-
-      const currentNonPackIndex = isPack ? -1 : nonPackStepIndex;
-      if (!isPack) nonPackStepIndex++;
 
       return (
         <div key={stepIdx} className="mb-8">
@@ -329,26 +268,20 @@ export default function ProductInfo({
               <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
                 {(step?.variants || []).map((variant, variantIdx) => {
                   const link = getVariantLink(variant);
-                  const isSelected = isVariantSelectedForStep(
+                  const isSelected = isVariantSelected(
                     variant,
-                    currentNonPackIndex,
                     currentProductId,
                   );
                   return (
-                    <Link
-                      key={variantIdx}
-                      to={link}
-                      onClick={() =>
-                        handleVariantClick(variant, currentNonPackIndex)
-                      }
-                    >
+                    <Link key={variantIdx} to={link}>
                       <button
                         className={`px-3 py-2 rounded-[8px]
                         border font-semibold text-[16px] transition-all duration-300
-                        ${isSelected
+                        ${
+                          isSelected
                             ? "bg-primary text-white border-primary"
                             : "bg-white text-primary border-primary hover:bg-primary hover:text-white"
-                          }`}
+                        }`}
                       >
                         {variant.title}
                       </button>
@@ -364,20 +297,12 @@ export default function ProductInfo({
               <div className="flex gap-x-3 gap-y-2 flex-wrap pb-2">
                 {(step?.variants || []).map((variant, variantIdx) => {
                   const link = getVariantLink(variant);
-                  const isSelected = isVariantSelectedForStep(
+                  const isSelected = isVariantSelected(
                     variant,
-                    currentNonPackIndex,
                     currentProductId,
                   );
                   return (
-                    <Link
-                      key={variantIdx}
-                      to={link}
-                      className="flex-shrink-0"
-                      onClick={() =>
-                        handleVariantClick(variant, currentNonPackIndex)
-                      }
-                    >
+                    <Link key={variantIdx} to={link} className="flex-shrink-0">
                       <div className="w-[105px] text-center cursor-pointer">
                         <div
                           className={`rounded-[14px] border p-[6px]
@@ -413,21 +338,13 @@ export default function ProductInfo({
               <div className="flex gap-x-3 gap-y-2 flex-wrap items-stretch pb-2 justify-start">
                 {(step?.variants || []).map((variant, variantIdx) => {
                   const link = getVariantLink(variant);
-                  const isSelected = isVariantSelectedForStep(
+                  const isSelected = isVariantSelected(
                     variant,
-                    currentNonPackIndex,
                     currentProductId,
                   );
 
                   return (
-                    <Link
-                      key={variantIdx}
-                      to={link}
-                      className="flex-shrink-0"
-                      onClick={() =>
-                        handleVariantClick(variant, currentNonPackIndex)
-                      }
-                    >
+                    <Link key={variantIdx} to={link} className="flex-shrink-0">
                       <div
                         className={`
             flex flex-col
@@ -438,10 +355,11 @@ export default function ProductInfo({
             rounded-xl
             overflow-hidden
             transition-all duration-300
-            ${isSelected
-                            ? "bg-primary border-primary text-white"
-                            : "bg-white border-primary text-black"
-                          }
+            ${
+              isSelected
+                ? "bg-primary border-primary text-white"
+                : "bg-white border-primary text-black"
+            }
           `}
                       >
                         <div className="w-full h-[110px] flex-shrink-0 flex items-center justify-center">
@@ -484,15 +402,14 @@ export default function ProductInfo({
               </h3>
               <div className="">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pb-2">
-
                   {(step?.variants || []).map((variant, variantIdx) => {
                     const savePercentage =
                       variant.price > 0
                         ? (
-                          ((variant.price - variant.offerprice) /
-                            variant.price) *
-                          100
-                        ).toFixed(1)
+                            ((variant.price - variant.offerprice) /
+                              variant.price) *
+                            100
+                          ).toFixed(2)
                         : 0;
                     const isPackSelected =
                       String(selectedPackState?.badge) ===
@@ -512,10 +429,11 @@ export default function ProductInfo({
                         }}
                         className={`w-full rounded-[10px] bg-[#F8F8F8] border overflow-hidden
                         transition-all duration-300 cursor-pointer hover:shadow-lg
-                        ${isPackSelected
+                        ${
+                          isPackSelected
                             ? "border-[#18A84B] border-2"
                             : "border-[#D6D6D6]"
-                          }`}
+                        }`}
                       >
                         <div
                           className={`h-[30px]  flex items-center justify-center text-white font-bold text-[14px]
@@ -562,11 +480,7 @@ export default function ProductInfo({
 
   return (
     <div>
-
-      <p className="text-theme pt-[20px] md:pt-0">
-        No Side Effects <span className="text-[#BCBCBC]"> | </span> Clinically
-        Tested
-      </p>
+      <p className="text-theme pt-[20px] md:pt-0">{product.tag}</p>
 
       <p className="text-[24px] pb-[12px] lowercase capitalize font-bold">
         {product.name}
@@ -605,15 +519,12 @@ export default function ProductInfo({
       <Offer
         product={product}
         price={priceData.offerPrice}
-        onApplyOffer={(coupon) =>
-          handleAddToCart({
-            autoApplyCoupon: coupon.code,
-            openCouponDrawer: true,
-          })
-        }
+        activeVariantState={activeVariantState}
+        selectedPackState={selectedPackState}
+        setShowLoginPopup={setShowLoginPopup}
       />
       <div className="mt-[15px] space-y-[28px]">
-        <div key={selectionTick}>{renderSteps()}</div>
+        <div key={currentProductId}>{renderSteps()}</div>
 
         <div
           ref={actionButtonsRef}
@@ -639,9 +550,7 @@ export default function ProductInfo({
           >
             <span className="flex items-center gap-[10px]">
               <Handbag size={22} />
-              {addingToCartstate
-                ? "Adding..."
-                : "Add To Cart"}
+              {addingToCartstate ? "Adding..." : "Add To Cart"}
             </span>
           </Button>
         </div>

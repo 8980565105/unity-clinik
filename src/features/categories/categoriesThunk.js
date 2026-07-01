@@ -4,16 +4,7 @@ import { ROUTES } from "../../services/routes";
 
 export const fetchCategories = createAsyncThunk(
   "categories/fetchCategories",
-  async (_params = {}, { rejectWithValue, getState }) => {
-    const { categories } = getState();
-    if (
-      Array.isArray(categories.items) &&
-      categories.items.length > 0 &&
-      !categories.error
-    ) {
-      return { categories: categories.items };
-    }
-
+  async (_params = {}, { rejectWithValue }) => {
     try {
       const res = await api.get(ROUTES.categories.getAll);
       if (res.data.success) {

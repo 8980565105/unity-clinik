@@ -99,3 +99,45 @@ export const createConsultationBooking = createAsyncThunk(
     }
   },
 );
+
+// ---- Save/confirm a booking's date+time slot ----
+// (duplicate removed — only ONE definition now)
+export const updateBookingSlot = createAsyncThunk(
+  "payments/updateBookingSlot",
+  async (
+    { booking_id, slot_date, slot_time, slot_duration },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await api.patch(`/bookconsaltans/${booking_id}/slot`, {
+        slot_date,
+        slot_time,
+        slot_duration,
+      });
+      // backend sendResponse(res, 200, true, "...", booking)
+      return res.data.data ?? res.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to save slot",
+      );
+    }
+  },
+);
+
+// ---- NEW: fetch already-booked times for a given date + consultation type ----
+export const fetchBookedSlots = createAsyncThunk(
+  "payments/fetchBookedSlots",
+  async ({ date, type }, { rejectWithValue }) => {
+    try {
+      const res = await api.get(`/bookconsaltans/slots`, {
+        params: { date, type },
+      });
+      // backend sendResponse(res, 200, true, "...", { date, type, bookedTimes })
+      return res.data.data ?? res.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch booked slots",
+      );
+    }
+  },
+);

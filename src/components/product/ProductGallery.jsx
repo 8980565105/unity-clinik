@@ -1,3 +1,470 @@
+// import { useEffect, useMemo, useState, useRef } from "react";
+// import Slider from "react-slick";
+// import { getImageUrl } from "../utils/helper";
+// import {
+//   ChevronUp,
+//   ChevronDown,
+//   ChevronRight,
+//   ChevronLeft,
+// } from "lucide-react";
+
+// import { createPortal } from "react-dom";
+// import NavBtn from "../ui/Navbtn";
+
+// const THUMB_SIZE = 80;
+// const THUMB_GAP = 8;
+// const THUMB_STEP = THUMB_SIZE + THUMB_GAP;
+// const VISIBLE_THUMBS = 4;
+// const VIEWPORT_H = VISIBLE_THUMBS * THUMB_STEP - THUMB_GAP;
+
+// export default function ProductGallery({
+//   product,
+//   activeVariant,
+//   selectedColor,
+//   setSelectedColor,
+// }) {
+//   const [currentImage, setCurrentImage] = useState(null);
+//   const [zoomStyle, setZoomStyle] = useState({ display: "none" });
+//   const [showZoom, setShowZoom] = useState(false);
+//   const [thumbIndex, setThumbIndex] = useState(0);
+//   const imgRef = useRef(null);
+//   const [isFullscreen, setIsFullscreen] = useState(false);
+//   const [zoomLevel, setZoomLevel] = useState(1);
+//   const [currentIndex, setCurrentIndex] = useState(0);
+//   const variants = product?.variants || [];
+
+//   const colorOptions = useMemo(() => {
+//     const seen = new Map();
+//     variants.forEach((v) => {
+//       if (v.color_id?._id) {
+//         seen.set(v.color_id._id, {
+//           id: v.color_id._id,
+//           name: v.color_id.name,
+//           code: v.color_id.code,
+//         });
+//       }
+//     });
+//     return Array.from(seen.values());
+//   }, [variants]);
+
+//   const fullImageUrls = useMemo(() => {
+//     if (
+//       Array.isArray(activeVariant?.images) &&
+//       activeVariant.images.length > 0
+//     ) {
+//       return activeVariant.images.map((img) => getImageUrl(img));
+//     }
+//     const firstVariant = product?.variants?.[0];
+//     if (Array.isArray(firstVariant?.images) && firstVariant.images.length > 0) {
+//       return firstVariant.images.map((img) => getImageUrl(img));
+//     }
+//     if (product?.images) return [getImageUrl(product.images)];
+//     return [];
+//   }, [activeVariant, product]);
+
+//   useEffect(() => {
+//     if (fullImageUrls.length > 0) {
+//       setCurrentImage(fullImageUrls[0]);
+//       setThumbIndex(0);
+//       setThumbIndex(0);
+//       setCurrentIndex(0);
+//     } else {
+//       setCurrentImage(null);
+//       setThumbIndex(0);
+//     }
+//   }, [activeVariant?._id]);
+
+//   const maxIndex = Math.max(0, fullImageUrls.length - VISIBLE_THUMBS);
+//   const canUp = thumbIndex > 0;
+//   const canDown = thumbIndex < maxIndex;
+
+//   const handleUp = (e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     setThumbIndex((i) => Math.max(0, i - 1));
+//   };
+
+//   const handleDown = (e) => {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     setThumbIndex((i) => Math.min(maxIndex, i + 1));
+//   };
+
+//   const handleMouseMove = (e) => {
+//     if (window.innerWidth < 1024) return;
+//     const rect = imgRef.current.getBoundingClientRect();
+//     const x = ((e.clientX - rect.left) / rect.width) * 100;
+//     const y = ((e.clientY - rect.top) / rect.height) * 100;
+//     setZoomStyle({
+//       display: "block",
+//       backgroundImage: `url(${currentImage})`,
+//       backgroundPosition: `${x}% ${y}%`,
+//       backgroundSize: "250%",
+//       backgroundRepeat: "no-repeat",
+//     });
+//   };
+
+//   const handleMouseEnter = () => {
+//     if (window.innerWidth >= 1024) setShowZoom(true);
+//   };
+
+//   const handleMouseLeave = () => {
+//     setShowZoom(false);
+//     setZoomStyle({ display: "none" });
+//   };
+
+//   const handlePrevImage = () => {
+//     const newIndex =
+//       currentIndex === 0 ? fullImageUrls.length - 1 : currentIndex - 1;
+
+//     setCurrentIndex(newIndex);
+//     setCurrentImage(fullImageUrls[newIndex]);
+//   };
+
+//   const handleNextImage = () => {
+//     const newIndex =
+//       currentIndex === fullImageUrls.length - 1 ? 0 : currentIndex + 1;
+
+//     setCurrentIndex(newIndex);
+//     setCurrentImage(fullImageUrls[newIndex]);
+//   };
+
+//   useEffect(() => {
+//     if (isFullscreen) {
+//       document.body.style.overflow = "hidden";
+//     } else {
+//       document.body.style.overflow = "auto";
+//     }
+
+//     return () => {
+//       document.body.style.overflow = "auto";
+//     };
+//   }, [isFullscreen]);
+
+//   const sliderSettings = {
+//     dots: false,
+//     infinite: true,
+//     speed: 500,
+//     slidesToShow: 1,
+//     slidesToScroll: 1,
+//     arrows: false,
+
+//     beforeChange: (_, next) => {
+//       setCurrentIndex(next);
+//     },
+
+//     appendDots: (dots) => (
+//       <div className="w-full relative">
+//         <ul className="absolute left-1/2 transform -translate-x-1/2 flex justify-center rounded-full">
+//           {dots}
+//         </ul>
+//       </div>
+//     ),
+//     customPaging: () => (
+//       <div className="w-[10px] h-[10px] rounded-full border border-[#D2AF9F] transition-all duration-300"></div>
+//     ),
+//   };
+
+//   return (
+//     <>
+//       <div className="flex flex-col md:flex-row gap-[30px] h-auto">
+//         <div
+//           className="hidden md:flex md:flex-col items-center"
+//           style={{ width: `${THUMB_SIZE}px` }}
+//         >
+//           <button
+//             type="button"
+//             onClick={handleUp}
+//             disabled={!canUp}
+//             className={`flex items-center justify-center mb-2 p-1 transition-colors z-10
+//             ${canUp
+//                 ? "text-gray-500 hover:text-[#005BAA] cursor-pointer"
+//                 : "text-gray-300 cursor-not-allowed"
+//               }`}
+//           >
+//             <ChevronUp size={20} />
+//           </button>
+
+//           <div
+//             className="overflow-hidden"
+//             style={{ height: `${VIEWPORT_H}px`, width: `${THUMB_SIZE}px` }}
+//           >
+//             <div
+//               className="flex flex-col transition-transform duration-300 ease-in-out"
+//               style={{
+//                 gap: `${THUMB_GAP}px`,
+//                 transform: `translateY(-${thumbIndex * THUMB_STEP}px)`,
+//               }}
+//             >
+//               {fullImageUrls.map((img, index) => (
+//                 <div
+//                   key={index}
+//                   onClick={() => setCurrentImage(img)}
+//                   style={{
+//                     width: `${THUMB_SIZE}px`,
+//                     height: `${THUMB_SIZE}px`,
+//                     flexShrink: 0,
+//                   }}
+//                   className={`rounded-xl border-2 overflow-hidden cursor-pointer transition-colors
+//                   ${currentImage === img
+//                       ? "border-[#005BAA]"
+//                       : "border-transparent hover:border-[#005BAA]"
+//                     }`}
+//                 >
+//                   <img
+//                     src={img}
+//                     alt={`Thumbnail ${index}`}
+//                     className="w-full h-full object-fill"
+//                   />
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+
+//           <button
+//             type="button"
+//             onClick={handleDown}
+//             disabled={!canDown}
+//             className={`flex items-center justify-center mt-2 p-1 transition-colors z-10
+//             ${canDown
+//                 ? "text-gray-500 hover:text-[#005BAA] cursor-pointer"
+//                 : "text-gray-300 cursor-not-allowed"
+//               }`}
+//           >
+//             <ChevronDown size={20} />
+//           </button>
+//         </div>
+
+//         <div className="hidden md:block flex-1 relative">
+//           {currentImage ? (
+//             <div className="relative">
+//               <img
+//                 ref={imgRef}
+//                 key={currentImage}
+//                 src={currentImage}
+//                 alt="Main product"
+//                 className="w-full h-auto rounded-[10px] object-contain transition-all duration-300 ease-in-out cursor-crosshair"
+//                 onMouseMove={handleMouseMove}
+//                 onMouseEnter={handleMouseEnter}
+//                 onMouseLeave={handleMouseLeave}
+//                 onClick={() => {
+//                   setIsFullscreen(true);
+//                   setZoomLevel(1);
+//                 }}
+//               />
+//               {showZoom && (
+//                 <div
+//                   className="absolute top-0 rounded-[10px] border border-gray-200 shadow-xl pointer-events-none z-50 bg-white"
+//                   style={{
+//                     left: "calc(100% + 16px)",
+//                     width: "450px",
+//                     height: "450px",
+//                     zIndex: 999999999,
+//                     ...zoomStyle,
+//                   }}
+//                 />
+//               )}
+//             </div>
+//           ) : (
+//             <div className="w-full h-[500px] rounded-[10px] bg-gray-100 flex items-center justify-center text-gray-400">
+//               No Image Available
+//             </div>
+//           )}
+
+//           <div className="flex gap-[8px] mt-[30px] justify-center">
+//             {colorOptions.map((color) => (
+//               <span
+//                 key={color.id}
+//                 onClick={() => setSelectedColor(color.id)}
+//                 className={`w-[24px] h-[24px] rounded-full border-2 transition-all cursor-pointer
+//                 ${selectedColor === color.id
+//                     ? "border-black scale-110"
+//                     : "border-gray-300 hover:border-gray-500"
+//                   }`}
+//                 style={{ backgroundColor: color.code }}
+//                 title={color.name}
+//               />
+//             ))}
+//           </div>
+//         </div>
+
+//         <div className="block md:hidden w-full rounded-[10px]">
+//           {fullImageUrls.length > 0 ? (
+//             <div className="relative">
+//               <Slider {...sliderSettings}>
+//                 {fullImageUrls.map((img, index) => (
+//                   <div key={index}>
+//                     <img
+//                       src={img}
+//                       alt={`Slide ${index}`}
+//                       onClick={() => {
+//                         setCurrentIndex(index);
+//                         setCurrentImage(img);
+//                         setIsFullscreen(true);
+//                         setZoomLevel(1);
+//                       }}
+//                       className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
+//                     />
+//                   </div>
+//                 ))}
+//               </Slider>
+
+//               <div
+//                 className="
+
+//   flex justify-center
+//   items-center
+//   gap-1
+//   z-10
+//   "
+//               >
+//                 {fullImageUrls.map((_, index) => {
+//                   const isActive = index === currentIndex;
+
+//                   return isActive ? (
+//                     <div
+//                       key={index}
+//                       className="
+//         bg-[#0C387E]
+//         text-white
+//         px-3
+//         h-6
+//         rounded-full
+//         text-[11px]
+//         font-semibold
+//         flex
+//         items-center
+//         justify-center
+//         "
+//                     >
+//                       {currentIndex + 1}/{fullImageUrls.length}
+//                     </div>
+//                   ) : (
+//                     <div
+//                       key={index}
+//                       className="
+//         w-2
+//         h-2
+//         rounded-full
+//         bg-[#D9E2F0]
+//         "
+//                     />
+//                   );
+//                 })}
+//               </div>
+//             </div>
+//           ) : (
+//             <div className="w-full h-[300px] bg-gray-100 flex items-center justify-center text-gray-400">
+//               No Image Available
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {isFullscreen &&
+//         typeof document !== "undefined" &&
+//         createPortal(
+//           <div className="fixed inset-0 bg-black z-[9999999] flex items-center justify-center">
+//             <div className="absolute top-5 right-5 flex gap-3 z-20">
+//               <button
+//                 onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 5))}
+//                 className="w-12 h-12 bg-white rounded-full text-2xl font-bold"
+//               >
+//                 +
+//               </button>
+
+//               <button
+//                 onClick={() => setZoomLevel((z) => Math.max(z - 0.5, 1))}
+//                 className="w-12 h-12 bg-white rounded-full text-2xl font-bold"
+//               >
+//                 -
+//               </button>
+
+//               <button
+//                 onClick={() => setIsFullscreen(false)}
+//                 className="w-12 h-12 bg-white rounded-full text-2xl"
+//               >
+//                 ✕
+//               </button>
+//             </div>
+//             <NavBtn direction="left" onClick={handlePrevImage} variant="primary" className="absolute left-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
+//       w-14 h-14 rounded-full text-3xl"/>
+//             <img
+//               src={currentImage}
+//               alt=""
+//               style={{
+//                 transform: `scale(${zoomLevel})`,
+//                 transition: "0.3s ease",
+//               }}
+//               className="max-h-[80vh] max-w-[80vw] object-contain rounded-3xl"
+//             />
+//             <NavBtn direction="right" onClick={handleNextImage} variant="primary" className="absolute right-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
+//       w-14 h-14 rounded-full text-3xl" />
+
+
+//             <div
+//               className="
+//     absolute
+//     bottom-5
+//     left-1/2
+//     -translate-x-1/2
+//     w-[90vw]
+//     max-w-[600px]
+//     overflow-x-auto
+//     no-scrollbar
+//   "
+//             >
+//               <div
+//                 className="
+//       flex
+//       gap-3
+//       bg-white/10
+//       backdrop-blur-md
+//       p-3
+//       rounded-xl
+//       w-max
+//     "
+//               >
+//                 {fullImageUrls.map((img, index) => (
+//                   <div
+//                     key={index}
+//                     onClick={() => {
+//                       setCurrentIndex(index);
+//                       setCurrentImage(img);
+//                     }}
+//                     className={`
+//           min-w-[70px]
+//           w-[70px]
+//           h-[70px]
+//           rounded-lg
+//           cursor-pointer
+//           border-2
+//           flex-shrink-0
+//           ${currentIndex === index
+//                         ? "border-[#005BAA]"
+//                         : "border-transparent"
+//                       }
+//         `}
+//                   >
+//                     <img
+//                       src={img}
+//                       alt=""
+//                       className="w-full h-full object-cover rounded-lg"
+//                     />
+//                   </div>
+//                 ))}
+//               </div>
+//             </div>
+
+//           </div>,
+//           document.body,
+//         )}
+//     </>
+//   );
+// }
+
+
+
 import { useEffect, useMemo, useState, useRef } from "react";
 import Slider from "react-slick";
 import { getImageUrl } from "../utils/helper";
@@ -47,25 +514,53 @@ export default function ProductGallery({
     return Array.from(seen.values());
   }, [variants]);
 
-  const fullImageUrls = useMemo(() => {
+  const mediaItems = useMemo(() => {
+    let imageList = [];
+    let videoList = [];
+
     if (
       Array.isArray(activeVariant?.images) &&
       activeVariant.images.length > 0
     ) {
-      return activeVariant.images.map((img) => getImageUrl(img));
+      imageList = activeVariant.images.map((img) => getImageUrl(img));
+    } else {
+      const firstVariant = product?.variants?.[0];
+      if (
+        Array.isArray(firstVariant?.images) &&
+        firstVariant.images.length > 0
+      ) {
+        imageList = firstVariant.images.map((img) => getImageUrl(img));
+      } else if (product?.images) {
+        imageList = [getImageUrl(product.images)];
+      }
     }
-    const firstVariant = product?.variants?.[0];
-    if (Array.isArray(firstVariant?.images) && firstVariant.images.length > 0) {
-      return firstVariant.images.map((img) => getImageUrl(img));
+
+    if (
+      Array.isArray(activeVariant?.videos) &&
+      activeVariant.videos.length > 0
+    ) {
+      videoList = activeVariant.videos.map((vid) => getImageUrl(vid));
+    } else {
+      const firstVariant = product?.variants?.[0];
+      if (
+        Array.isArray(firstVariant?.videos) &&
+        firstVariant.videos.length > 0
+      ) {
+        videoList = firstVariant.videos.map((vid) => getImageUrl(vid));
+      }
     }
-    if (product?.images) return [getImageUrl(product.images)];
-    return [];
+
+    return [
+      ...imageList.map((url) => ({ url, type: "image" })),
+      ...videoList.map((url) => ({ url, type: "video" })),
+    ];
   }, [activeVariant, product]);
+
+  const fullImageUrls = mediaItems;
 
   useEffect(() => {
     if (fullImageUrls.length > 0) {
       setCurrentImage(fullImageUrls[0]);
-      setThumbIndex(0);
       setThumbIndex(0);
       setCurrentIndex(0);
     } else {
@@ -92,12 +587,13 @@ export default function ProductGallery({
 
   const handleMouseMove = (e) => {
     if (window.innerWidth < 1024) return;
+    if (currentImage?.type === "video") return; // no zoom on video
     const rect = imgRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setZoomStyle({
       display: "block",
-      backgroundImage: `url(${currentImage})`,
+      backgroundImage: `url(${currentImage?.url})`,
       backgroundPosition: `${x}% ${y}%`,
       backgroundSize: "250%",
       backgroundRepeat: "no-repeat",
@@ -105,7 +601,8 @@ export default function ProductGallery({
   };
 
   const handleMouseEnter = () => {
-    if (window.innerWidth >= 1024) setShowZoom(true);
+    if (window.innerWidth >= 1024 && currentImage?.type !== "video")
+      setShowZoom(true);
   };
 
   const handleMouseLeave = () => {
@@ -196,26 +693,42 @@ export default function ProductGallery({
                 transform: `translateY(-${thumbIndex * THUMB_STEP}px)`,
               }}
             >
-              {fullImageUrls.map((img, index) => (
+              {fullImageUrls.map((item, index) => (
                 <div
                   key={index}
-                  onClick={() => setCurrentImage(img)}
+                  onClick={() => {
+                    setCurrentImage(item);
+                    setCurrentIndex(index);
+                  }}
                   style={{
                     width: `${THUMB_SIZE}px`,
                     height: `${THUMB_SIZE}px`,
                     flexShrink: 0,
                   }}
-                  className={`rounded-xl border-2 overflow-hidden cursor-pointer transition-colors
-                  ${currentImage === img
+                  className={`relative rounded-xl border-2 overflow-hidden cursor-pointer transition-colors
+                  ${currentImage?.url === item.url
                       ? "border-[#005BAA]"
                       : "border-transparent hover:border-[#005BAA]"
                     }`}
                 >
-                  <img
-                    src={img}
-                    alt={`Thumbnail ${index}`}
-                    className="w-full h-full object-fill"
-                  />
+                  {item.type === "video" ? (
+                    <>
+                      <video
+                        src={item.url}
+                        className="w-full h-full object-fill"
+                        muted
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                        <div className="w-0 h-0 border-l-[10px] border-l-white border-y-[6px] border-y-transparent ml-0.5" />
+                      </div>
+                    </>
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={`Thumbnail ${index}`}
+                      className="w-full h-full object-fill"
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -238,20 +751,30 @@ export default function ProductGallery({
         <div className="hidden md:block flex-1 relative">
           {currentImage ? (
             <div className="relative">
-              <img
-                ref={imgRef}
-                key={currentImage}
-                src={currentImage}
-                alt="Main product"
-                className="w-full h-auto rounded-[10px] object-contain transition-all duration-300 ease-in-out cursor-crosshair"
-                onMouseMove={handleMouseMove}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
-                onClick={() => {
-                  setIsFullscreen(true);
-                  setZoomLevel(1);
-                }}
-              />
+              {currentImage.type === "video" ? (
+                <video
+                  ref={imgRef}
+                  key={currentImage.url}
+                  src={currentImage.url}
+                  controls
+                  className="w-full h-auto rounded-[10px] object-contain"
+                />
+              ) : (
+                <img
+                  ref={imgRef}
+                  key={currentImage.url}
+                  src={currentImage.url}
+                  alt="Main product"
+                  className="w-full h-auto rounded-[10px] object-contain transition-all duration-300 ease-in-out cursor-crosshair"
+                  onMouseMove={handleMouseMove}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  onClick={() => {
+                    setIsFullscreen(true);
+                    setZoomLevel(1);
+                  }}
+                />
+              )}
               {showZoom && (
                 <div
                   className="absolute top-0 rounded-[10px] border border-gray-200 shadow-xl pointer-events-none z-50 bg-white"
@@ -292,19 +815,27 @@ export default function ProductGallery({
           {fullImageUrls.length > 0 ? (
             <div className="relative">
               <Slider {...sliderSettings}>
-                {fullImageUrls.map((img, index) => (
+                {fullImageUrls.map((item, index) => (
                   <div key={index}>
-                    <img
-                      src={img}
-                      alt={`Slide ${index}`}
-                      onClick={() => {
-                        setCurrentIndex(index);
-                        setCurrentImage(img);
-                        setIsFullscreen(true);
-                        setZoomLevel(1);
-                      }}
-                      className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
-                    />
+                    {item.type === "video" ? (
+                      <video
+                        src={item.url}
+                        controls
+                        className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={`Slide ${index}`}
+                        onClick={() => {
+                          setCurrentIndex(index);
+                          setCurrentImage(item);
+                          setIsFullscreen(true);
+                          setZoomLevel(1);
+                        }}
+                        className="w-full h-[300px] sm:h-[500px] object-fill rounded-2xl"
+                      />
+                    )}
                   </div>
                 ))}
               </Slider>
@@ -366,19 +897,23 @@ export default function ProductGallery({
         createPortal(
           <div className="fixed inset-0 bg-black z-[9999999] flex items-center justify-center">
             <div className="absolute top-5 right-5 flex gap-3 z-20">
-              <button
-                onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 5))}
-                className="w-12 h-12 bg-white rounded-full text-2xl font-bold"
-              >
-                +
-              </button>
+              {currentImage?.type !== "video" && (
+                <>
+                  <button
+                    onClick={() => setZoomLevel((z) => Math.min(z + 0.5, 5))}
+                    className="w-12 h-12 bg-white rounded-full text-2xl font-bold"
+                  >
+                    +
+                  </button>
 
-              <button
-                onClick={() => setZoomLevel((z) => Math.max(z - 0.5, 1))}
-                className="w-12 h-12 bg-white rounded-full text-2xl font-bold"
-              >
-                -
-              </button>
+                  <button
+                    onClick={() => setZoomLevel((z) => Math.max(z - 0.5, 1))}
+                    className="w-12 h-12 bg-white rounded-full text-2xl font-bold"
+                  >
+                    -
+                  </button>
+                </>
+              )}
 
               <button
                 onClick={() => setIsFullscreen(false)}
@@ -389,15 +924,24 @@ export default function ProductGallery({
             </div>
             <NavBtn direction="left" onClick={handlePrevImage} variant="primary" className="absolute left-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
       w-14 h-14 rounded-full text-3xl"/>
-            <img
-              src={currentImage}
-              alt=""
-              style={{
-                transform: `scale(${zoomLevel})`,
-                transition: "0.3s ease",
-              }}
-              className="max-h-[80vh] max-w-[80vw] object-contain rounded-3xl"
-            />
+            {currentImage?.type === "video" ? (
+              <video
+                src={currentImage?.url}
+                controls
+                autoPlay
+                className="max-h-[80vh] max-w-[80vw] object-contain rounded-3xl"
+              />
+            ) : (
+              <img
+                src={currentImage?.url}
+                alt=""
+                style={{
+                  transform: `scale(${zoomLevel})`,
+                  transition: "0.3s ease",
+                }}
+                className="max-h-[80vh] max-w-[80vw] object-contain rounded-3xl"
+              />
+            )}
             <NavBtn direction="right" onClick={handleNextImage} variant="primary" className="absolute right-5 top-1/2 flex justify-center items-center -translate-y-1/2 z-20
       w-14 h-14 rounded-full text-3xl" />
 
@@ -425,14 +969,15 @@ export default function ProductGallery({
       w-max
     "
               >
-                {fullImageUrls.map((img, index) => (
+                {fullImageUrls.map((item, index) => (
                   <div
                     key={index}
                     onClick={() => {
                       setCurrentIndex(index);
-                      setCurrentImage(img);
+                      setCurrentImage(item);
                     }}
                     className={`
+          relative
           min-w-[70px]
           w-[70px]
           h-[70px]
@@ -446,11 +991,24 @@ export default function ProductGallery({
                       }
         `}
                   >
-                    <img
-                      src={img}
-                      alt=""
-                      className="w-full h-full object-cover rounded-lg"
-                    />
+                    {item.type === "video" ? (
+                      <>
+                        <video
+                          src={item.url}
+                          className="w-full h-full object-cover rounded-lg"
+                          muted
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
+                          <div className="w-0 h-0 border-l-[8px] border-l-white border-y-[5px] border-y-transparent ml-0.5" />
+                        </div>
+                      </>
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt=""
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    )}
                   </div>
                 ))}
               </div>

@@ -1,27 +1,30 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown, ChevronUp, BadgePercent } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import { fetchCoupons } from "../../features/coupons/couponsThunk";
 import spacialoffer from "../../assets/abc1.png";
-
 const getProductSubCategoryId = (product) =>
   String(
     product?.category_id?._id ||
-    product?.category_id ||
-    product?.parent_id?._id ||
-    product?.parent_id ||
-    product?.subcategory_id?._id ||
-    product?.subcategory_id ||
-    product?.subcategory?._id ||
-    product?.subcategory ||
-    "",
+      product?.category_id ||
+      product?.parent_id?._id ||
+      product?.parent_id ||
+      product?.subcategory_id?._id ||
+      product?.subcategory_id ||
+      product?.subcategory?._id ||
+      product?.subcategory ||
+      "",
   );
-
-export const filterCouponsForProduct = (coupons, product, userOrderCount = null, userId = null) => {
+export const filterCouponsForProduct = (
+  coupons,
+  product,
+  userOrderCount = null,
+  userId = null,
+) => {
   if (!product) return [];
   const subCatId = getProductSubCategoryId(product);
-
   return (coupons || []).filter((coupon) => {
     if (coupon.status !== "active") return false;
 
@@ -30,7 +33,6 @@ export const filterCouponsForProduct = (coupons, product, userOrderCount = null,
       if (userOrderCount === null) return false;
       if (userOrderCount > 0) return false;
     }
-
     if (coupon.apply_type === "allproducts") return true;
 
     if (coupon.apply_type === "specificproducts") {
@@ -38,13 +40,11 @@ export const filterCouponsForProduct = (coupons, product, userOrderCount = null,
         (p) => String(p?._id || p) === String(product?._id),
       );
     }
-
     if (coupon.apply_type === "specificsubcategory") {
       return coupon.subcategories?.some(
         (sub) => String(sub?._id || sub) === subCatId,
       );
     }
-
     return false;
   });
 };
@@ -66,61 +66,85 @@ export const calcCouponDiscount = (coupon, price) => {
   return Math.min(discount, price);
 };
 
-export default function Offer({ product, price = 0, onApplyOffer }) {
+export default function Offer({
+  product,
+  price = 0,
+  activeVariantState,
+  selectedPackState,
+  setShowLoginPopup,
+}) {
   const [open, setOpen] = useState(true);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [applyingCode, setApplyingCode] = useState(null);
   const { coupons = [] } = useSelector((state) => state.coupons);
-  const { user } = useSelector((state) => state.auth);
-
+  const { user, token } = useSelector((state) => state.auth);
   const [userOrderCount, setUserOrderCount] = useState(null);
-
   useEffect(() => {
     dispatch(fetchCoupons({ status: "active" }));
   }, [dispatch]);
-  
   useEffect(() => {
-    if (!user?._id) { setUserOrderCount(0); return; }
+    if (!user?._id) {
+      setUserOrderCount(0);
+      return;
+    }
     const fetchCount = async () => {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
           `${process.env.REACT_APP_API_URL}/orders/public?limit=1`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const data = await res.json();
         setUserOrderCount(data?.data?.total ?? 0);
-      } catch { setUserOrderCount(0); }
+      } catch {
+        setUserOrderCount(0);
+      }
     };
     fetchCount();
   }, [user?._id]);
 
-  const applicableCoupons = filterCouponsForProduct(coupons, product, userOrderCount, user?._id)
+  const applicableCoupons = filterCouponsForProduct(
+    coupons,
+    product,
+    userOrderCount,
+    user?._id,
+  )
     .map((c) => ({ ...c, discount: calcCouponDiscount(c, price) }))
     .filter((c) => c.discount > 0)
     .sort((a, b) => b.discount - a.discount);
-
 
   if (applicableCoupons.length === 0 || !price) return null;
 
   const bestOffer = applicableCoupons[0];
   const bestPrice = Math.max(0, Math.round(price - bestOffer.discount));
 
-  const handleApplyOffer = async (coupon) => {
-    if (!onApplyOffer) {
-      navigate("/cart", {
-        state: { autoApplyCoupon: coupon.code, openCouponDrawer: true },
-      });
+  const handleApplyOffer = (coupon) => {
+    if (!token) {
+      setShowLoginPopup?.(true);
       return;
     }
-
-    setApplyingCode(coupon.code);
-    try {
-      await onApplyOffer(coupon);
-    } finally {
-      setApplyingCode(null);
+    if (activeVariantState?.stock_quantity === 0) {
+      toast.error("This product is out of stock!");
+      return;
     }
+    setApplyingCode(coupon.code);
+    navigate("/checkout", {
+      state: {
+        buyNow: true,
+        item: {
+          product_id: product,
+          variant_id: activeVariantState,
+          quantity: 1,
+          pack_of: Number(selectedPackState?.badge || 1),
+          price: Number(selectedPackState?.offerprice || 0),
+          original_price: Number(selectedPackState?.price || 0),
+        },
+        autoApplyCoupon: coupon.code,
+        openCouponDrawer: true,
+      },
+    });
+    setApplyingCode(null);
   };
 
   return (
@@ -145,13 +169,11 @@ export default function Offer({ product, price = 0, onApplyOffer }) {
           {open ? <ChevronUp /> : <ChevronDown />}
         </div>
       </button>
-
       {!open && (
         <div className="bg-blue-50 px-4 py-3 text-[13px] text-gray-700">
           Apply offers for maximum savings!
         </div>
       )}
-
       {open && (
         <div className="bg-white p-4 max-h-[315px] overflow-y-auto no-scrollbar ">
           <div className="border rounded-xl p-4 bg-blue-50 mb-4 sticky top-0 z-0">

@@ -30,7 +30,6 @@ import { deleteCartItem, fetchCart } from "../features/cart/cartThunk";
 import LoginForm from "./Login";
 import CouponDrawer from "../components/cart/Coupondrawer";
 import { fetchCoupons } from "../features/coupons/couponsThunk";
-
 export default function Checkout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -39,6 +38,7 @@ export default function Checkout() {
   const buyNowItem = location.state?.item;
   const { items = [], loading } = useSelector((state) => state.cart);
   const baseItems = buyNowMode ? [buyNowItem] : items;
+  const [consultationGift, setConsultationGift] = useState(null);
   const [quantities, setQuantities] = useState(() =>
     Object.fromEntries(
       (baseItems || []).map((item) => [
@@ -62,12 +62,10 @@ export default function Checkout() {
       [key]: Math.max(1, (prev[key] || 1) - 1),
     }));
   };
-
   const checkoutItems = (baseItems || []).map((item) => {
     const key = item._id || item.product_id?._id;
     return { ...item, quantity: quantities[key] || item.quantity || 1 };
   });
-
   const { pages } = useSelector((state) => state.pages);
   const { loading: paymentLoading } = useSelector((state) => state.payments);
   const { user } = useSelector((state) => state.auth);
@@ -86,7 +84,6 @@ export default function Checkout() {
   );
   const [userOrderCount, setUserOrderCount] = useState(null);
   const [giftItem, setGiftItem] = useState(null);
-
   const clearCartItems = async () => {
     const cart_id = localStorage.getItem("cart_id");
     if (!cart_id || buyNowMode) return;
@@ -102,11 +99,9 @@ export default function Checkout() {
     }
     dispatch(clearCart());
   };
-
   useEffect(() => {
     if (location.state?.openCouponDrawer) setDrawerOpen(true);
   }, [location.state]);
-
   useEffect(() => {
     if (!user?._id) {
       setUserOrderCount(0);
@@ -127,15 +122,30 @@ export default function Checkout() {
     };
     fetchOrderCount();
   }, [user?._id]);
-
+  useEffect(() => {
+    if (!user?._id) return;
+    const fetchGift = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${process.env.REACT_APP_API_URL}/bookconsaltans/gift-eligibility?user_id=${user._id}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const data = await res.json();
+        if (data?.success && data?.data) setConsultationGift(data.data);
+        else setConsultationGift(null);
+      } catch {
+        setConsultationGift(null);
+      }
+    };
+    fetchGift();
+  }, [user?._id]);
   const handleApplyCartCoupon = () => applyCouponByCode(cartCouponCode);
-
   const handleSelectCoupon = (code) => {
     setCartCouponCode(code);
     applyCouponByCode(code);
     setTimeout(() => setDrawerOpen(false), 800);
   };
-
   const applyCouponByCode = (code) => {
     const trimmed = code?.trim().toUpperCase();
     const coupon = coupons.find((c) => c.code === trimmed);
@@ -146,7 +156,6 @@ export default function Checkout() {
       });
       return;
     }
-
     const isFirstOrderOnly =
       coupon.coupon_type === "first_order" || coupon.coupon_type === "referral";
 
@@ -166,12 +175,10 @@ export default function Checkout() {
         return;
       }
     }
-
     if (coupon.coupon_type === "buy_x_get_y") {
       const buyQty = coupon?.buy_x_get_y?.buy_quantity || 0;
       const getQty = coupon?.buy_x_get_y?.get_quantity || 0;
       const freeProductIds = coupon?.buy_x_get_y?.free_products || [];
-
       const eligibleQty = items.reduce((total, item) => {
         const key = item._id || item.product_id?._id;
         const actualQty = quantities[key] || item.quantity || 1;
@@ -182,7 +189,6 @@ export default function Checkout() {
         if (!isMatched) return total;
         return total + actualQty;
       }, 0);
-
       if (eligibleQty < buyQty) {
         setCouponMsg({
           text: `Add ${buyQty - eligibleQty} more eligible product(s) to use this coupon!`,
@@ -190,7 +196,6 @@ export default function Checkout() {
         });
         return;
       }
-
       if (freeProductIds.length > 0) {
         const freeItems = freeProductIds.slice(0, getQty).map((pid) => ({
           product_id: typeof pid === "object" ? pid._id : pid,
@@ -201,7 +206,6 @@ export default function Checkout() {
           is_gift: true,
           is_buy_x_get_y: true,
         }));
-
         setGiftItem({
           type: "buy_x_get_y",
           items: freeItems,
@@ -215,10 +219,8 @@ export default function Checkout() {
         });
         return;
       }
-
       const freeItems = [];
       let remaining = getQty;
-
       for (const item of items) {
         if (remaining <= 0) break;
         const isMatched =
@@ -227,11 +229,9 @@ export default function Checkout() {
             (p) => String(p?._id || p) === String(item?.product_id?._id),
           );
         if (!isMatched) continue;
-
         const key = item._id || item.product_id?._id;
         const actualQty = quantities[key] || item.quantity || 1;
         const freeQty = Math.min(remaining, actualQty);
-
         freeItems.push({
           product_id: item.product_id?._id || item.product_id,
           variant_id: item.variant_id?._id || item.variant_id || null,
@@ -247,7 +247,6 @@ export default function Checkout() {
         });
         remaining -= freeQty;
       }
-
       setGiftItem(
         freeItems.length > 0
           ? { type: "buy_x_get_y", items: freeItems, getQty }
@@ -261,7 +260,6 @@ export default function Checkout() {
       });
       return;
     }
-
     if (coupon.coupon_type === "free_gift") {
       const giftIds =
         coupon.gift_product_ids?.length > 0
@@ -282,7 +280,6 @@ export default function Checkout() {
       } else {
         setGiftItem(null);
       }
-
       setAppliedCoupon(coupon);
       setCartCouponCode(coupon.code);
       setCouponMsg({
@@ -291,7 +288,6 @@ export default function Checkout() {
       });
       return;
     }
-
     if (
       coupon.apply_type === "Excludeproduct" ||
       coupon.apply_type === "Excludecategories"
@@ -326,7 +322,6 @@ export default function Checkout() {
         return;
       }
     }
-
     setGiftItem(null);
     setAppliedCoupon(coupon);
     setCartCouponCode(coupon.code);
@@ -335,7 +330,6 @@ export default function Checkout() {
       type: "success",
     });
   };
-
   const [formData, setFormData] = React.useState({
     email: "",
     firstName: "",
@@ -347,13 +341,12 @@ export default function Checkout() {
     pincode: "",
     phone: "",
   });
-
   useEffect(() => {
     dispatch(fetchPageBySlug("checkout"));
     dispatch(fetchSystemSettings());
   }, [dispatch]);
   useEffect(() => {
-    if (!items.length) return;
+    if (!checkoutItems.length) return;
     dispatch(fetchCoupons({ status: "active" }));
   }, [dispatch, items.length]);
   useEffect(() => {
@@ -384,7 +377,6 @@ export default function Checkout() {
       })();
     }
   }, []);
-
   const getDiscountedPrice = (item) => {
     const originalPrice = Number(
       item?.original_price || item?.variant_id?.price || 0,
@@ -399,26 +391,22 @@ export default function Checkout() {
         : originalPrice;
     return { originalPrice, discountedPrice };
   };
-
   const mrpTotal = checkoutItems.reduce(
     (sum, item) =>
       sum + getDiscountedPrice(item).originalPrice * (item.quantity || 1),
     0,
   );
-
   const offerPriceTotal = checkoutItems.reduce(
     (sum, item) =>
       sum + getDiscountedPrice(item).discountedPrice * (item.quantity || 1),
     0,
   );
-
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCartCouponCode("");
     setCouponMsg({ text: "", type: "" });
     setGiftItem(null);
   };
-
   let couponDiscount = 0;
   if (appliedCoupon) {
     couponDiscount =
@@ -431,9 +419,7 @@ export default function Checkout() {
         appliedCoupon.max_discount_amount,
       );
   }
-
   const subtotal = offerPriceTotal - couponDiscount;
-
   const getPaymentType = (method) => {
     switch (method) {
       case "cod":
@@ -443,7 +429,6 @@ export default function Checkout() {
         return "prepaid";
     }
   };
-
   const settingsLoaded = !!settings;
   const paymentType = getPaymentType(selectedPayment);
   const shipping = settingsLoaded
@@ -457,7 +442,6 @@ export default function Checkout() {
     if (method === "partial_cod" || method === "cod") return "COD";
     return "Online";
   };
-
   const couponDiscountAmount = appliedCoupon
     ? appliedCoupon.discount_type === "fixed"
       ? appliedCoupon.discount_value
@@ -465,7 +449,6 @@ export default function Checkout() {
     : 0;
   const totalSaved = mrpTotal - subtotal + couponDiscountAmount;
   const itemDiscount = mrpTotal - offerPriceTotal;
-
   const validateForm = (userLS) => {
     if (!userLS || !userLS._id) {
       setShowLoginPopup(true);
@@ -490,7 +473,6 @@ export default function Checkout() {
     }
     return true;
   };
-
   const createNewOrder = async (userLS) => {
     let giftItems = [];
 
@@ -563,7 +545,6 @@ export default function Checkout() {
     }
     return orderId;
   };
-
   const loadRazorpay = () =>
     new Promise((resolve) => {
       if (window.Razorpay) return resolve(true);
@@ -574,7 +555,6 @@ export default function Checkout() {
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
-
   const handleRazorpayAmount = async (
     userLS,
     orderId,
@@ -654,7 +634,6 @@ export default function Checkout() {
     });
     rzp.open();
   };
-
   const handleCOD = async (userLS, orderId) => {
     if (isPartialCod && partialCodAdvance > 0) {
       await handleRazorpayAmount(
@@ -684,7 +663,6 @@ export default function Checkout() {
     toast("Order placed successfully! 🎉");
     navigate("/ordercompleted");
   };
-
   const handlePhonePe = async (userLS, orderId) => {
     const phonePeRes = await dispatch(
       createPhonePeOrder({
@@ -721,7 +699,6 @@ export default function Checkout() {
     toast("Redirecting to PhonePe... 📱");
     window.location.href = paymentUrl;
   };
-
   const handlePlaceOrder = async () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
     if (!validateForm(userLS)) return;
@@ -732,7 +709,6 @@ export default function Checkout() {
       await handleCOD(userLS, orderId);
     else await handleRazorpayAmount(userLS, orderId, total, selectedPayment);
   };
-
   if (!loading && checkoutItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -755,7 +731,6 @@ export default function Checkout() {
       </div>
     );
   }
-
   return (
     <>
       <div className="pb-24">
@@ -791,9 +766,8 @@ export default function Checkout() {
                 giftItem={giftItem}
               />
             </div>
-
             <div className="custom-lg:sticky custom-lg:top-[100px] space-y-6">
-              {items.length > 0 && (
+              {checkoutItems.length > 0 && (
                 <div className="bg-white rounded-[12px] border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-[18px] py-[14px] border-b border-gray-100">
                     <span className="text-[15px] font-bold text-gray-900">
@@ -848,9 +822,22 @@ export default function Checkout() {
                       Change / View all coupons
                     </button>
                   )}
+                  {consultationGift && (
+                    <div className="p-4 flex items-center gap-3 bg-pink-50 border border-pink-200 rounded-lg">
+                      <span className="text-xl">🎁</span>
+                      <div>
+                        <p className="text-[13px] font-bold text-pink-700">
+                          Free Gift Unlocked: {consultationGift.product?.name}
+                        </p>
+                        <p className="text-[12px] text-pink-500">
+                          Aa product automatically free ma add thase order place
+                          karta j!
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
               <OrderSummary
                 formData={formData}
                 appliedCoupon={appliedCoupon}
@@ -869,7 +856,6 @@ export default function Checkout() {
             </div>
           </Row>
         </Section>
-
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
           <div className="w-[90%] lg:max-w-[1440px] mx-auto flex items-center justify-between py-3 px-2 hidden md:flex">
             <div className="flex flex-col leading-tight">
@@ -967,9 +953,17 @@ export default function Checkout() {
         autoApplyCode={autoApplyCode}
         userOrderCount={userOrderCount}
         checkoutQuantities={quantities}
+        items={checkoutItems}
         onAutoApplyDone={() => {
           setAutoApplyCode(null);
-          navigate(location.pathname, { replace: true, state: {} });
+          navigate(location.pathname, {
+            replace: true,
+            state: {
+              ...location.state,
+              autoApplyCoupon: null,
+              openCouponDrawer: false,
+            },
+          });
         }}
       />
       {showLoginPopup && (

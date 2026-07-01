@@ -15,13 +15,20 @@ import { fetchProductLabels } from "../features/productLabels/productlabelsThunk
 import { useSearchParams } from "react-router-dom";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import SEO from "../components/seo/seo";
-import { Toaster } from "react-hot-toast";
+import LoginForm from "./Login";
+import RegistrationForm from "./RegistrationForm";
+import ForgetForm from "./ForgetForm";
 
 const ProductCard = lazy(() => import("../components/product/ProductCard"));
-
 function Allproducts() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { token } = useSelector((state) => state.auth);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isForgetOpen, setIsForgetOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
   const { products = [], loading } = useSelector(
     (state) => state.products || {},
   );
@@ -106,6 +113,10 @@ function Allproducts() {
   const categorySubIds = filteredSubCategories.map((sub) => String(sub._id));
 
   const filteredProducts = products.filter((product) => {
+    if (product.ishidden) {
+      return false;
+    }
+
     if (activeCategory !== "all") {
       const productSubIds =
         product.category_id?.map((id) => normalizeId(id)) || [];
@@ -212,6 +223,14 @@ function Allproducts() {
         lastWindowScrollY.current = 0;
       }, 100);
     }
+  };
+
+  const handleCartClick = () => {
+    if (!token) {
+      setIsLoginOpen(true);
+      return;
+    }
+    navigate("/cart");
   };
 
   const handleFilterClick = (filterName, categoryId) => {
@@ -333,9 +352,7 @@ function Allproducts() {
                 key={cat._id}
                 onClick={() => handleCategoryClick(cat._id)}
                 className={`w-full flex flex-col items-center py-3 gap-1 transition-all duration-200
-                    
-                  
-                    `}
+                                  `}
               >
                 <div
                   className={`w-[70px] h-[70px] rounded-xl border  flex items-center justify-center overflow-hidden
@@ -497,7 +514,7 @@ function Allproducts() {
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <Button
             variants="common"
-            onClick={() => navigate("/cart")}
+            onClick={handleCartClick}
             className="flex items-center gap-3 px-6 py-3 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 whitespace-nowrap
                 bg-primary text-white text-[18px] min-w-[100px] py-[8px] md:py-[15px] hover:bg-[var(--theme-hover-color)] hover:text-white"
           >
@@ -518,6 +535,52 @@ function Allproducts() {
               <ChevronRight size={24} />
             </div>
           </Button>
+        </div>
+      )}
+
+      {isLoginOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
+            <LoginForm
+              onClose={() => setIsLoginOpen(false)}
+              onSwitchRegister={() => {
+                setIsLoginOpen(false);
+                setIsRegisterOpen(true);
+              }}
+              onSwitchForget={() => {
+                setIsLoginOpen(false);
+                setIsForgetOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {isRegisterOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
+            <RegistrationForm
+              onClose={() => setIsRegisterOpen(false)}
+              onSwitch={() => {
+                setIsRegisterOpen(false);
+                setIsLoginOpen(true);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {isForgetOpen && (
+        <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
+          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
+            <ForgetForm
+              onClose={() => setIsForgetOpen(false)}
+              onSwitch={() => {
+                setIsForgetOpen(false);
+                setIsLoginOpen(true);
+              }}
+            />
+          </div>
         </div>
       )}
     </>

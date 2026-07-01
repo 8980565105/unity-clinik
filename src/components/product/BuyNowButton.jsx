@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from "react-redux";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   addToCart,
@@ -29,7 +30,6 @@ export default function BuyNowButton({
   const openProtectedLink = useProtectedLink(setIsLoginOpen, token);
   const [isForgetOpen, setIsForgetOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-
   const handleBuyNow = () => {
     if (!token) {
       setIsLoginOpen(true);
@@ -40,7 +40,6 @@ export default function BuyNowButton({
       toast.error("This product is out of stock!");
       return;
     }
-
     navigate("/checkout", {
       state: {
         buyNow: true,
@@ -54,8 +53,7 @@ export default function BuyNowButton({
         },
       },
     });
-  }
-
+  };
 
   return (
     <>
@@ -68,23 +66,25 @@ export default function BuyNowButton({
         {loading ? "Processing..." : "Buy Now"}
       </Button>
 
-      {isLoginOpen && (
-        <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
-          <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
-            <LoginForm
-              onClose={() => setIsLoginOpen(false)}
-              onSwitchRegister={() => {
-                setIsLoginOpen(false);
-                setIsRegisterOpen(true);
-              }}
-              onSwitchForget={() => {
-                setIsLoginOpen(false);
-                setIsForgetOpen(true);
-              }}
-            />
-          </div>
-        </div>
-      )}
+      {isLoginOpen &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
+            <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">
+              <LoginForm
+                onClose={() => setIsLoginOpen(false)}
+                onSwitchRegister={() => {
+                  setIsLoginOpen(false);
+                  setIsRegisterOpen(true);
+                }}
+                onSwitchForget={() => {
+                  setIsLoginOpen(false);
+                  setIsForgetOpen(true);
+                }}
+              />
+            </div>
+          </div>,
+          document.body,
+        )}
       {isRegisterOpen && (
         <div className="fixed inset-0 bg-black/60 z-[100000] flex items-center justify-center px-4">
           <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">

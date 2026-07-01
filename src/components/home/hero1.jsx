@@ -72,13 +72,11 @@ export default function Hero1() {
               <div className="relative z-10 flex items-center justify-between h-full px-20">
                 <div className="text-left flex flex-col justify-between h-full w-full py-[30px] mb-[55px]">
                   <div className="text-white">
-                    <p className="mt-5 text-[20px] uppercase">
-                      {slide.title}
-                    </p>
+                    <p className="mt-5 text-[20px] uppercase">{slide.title}</p>
                     <h1 className="text-[70px] font-bold leading-none my-10">
                       {slide.description}
                     </h1>
-                    
+
                     <Button
                       onClick={() => navigate(slide.button_link)}
                       variant="commone"
@@ -250,6 +248,7 @@ export default function Hero1() {
                     </div>
                   </div>
                 </div>
+                
                 <div className="relative w-full mt-[-6px]">
                   <img
                     src={getImageUrl(slide.mainImage)}
@@ -260,14 +259,10 @@ export default function Hero1() {
                     className="w-full object-contain object-top"
                     style={{ height: "340px" }}
                   />
-                  {/* <div
-                    className="absolute bottom-0 left-0 right-0 h-10"
-                    style={{
-                      background:
-                        "linear-gradient(to top, rgba(0,0,0,0.2), transparent)",
-                    }}
-                  /> */}
                 </div>
+
+
+
                 <div className="flex bg-white rounded-b-[20px] border-b">
                   {[
                     {
