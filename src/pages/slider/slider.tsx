@@ -18,7 +18,7 @@ export default function SliderPage() {
 
     const columns = [
         { key: "section", label: "Section", width: "w-48" },
-     
+
     ];
 
     return (

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,30 @@ import {
 } from "@/features/pages/pagesThunk";
 import { SectionType, Slide } from "@/features/pages/pagesSlice";
 
+export const HOME_SECTIONS = [
+  "hero",
+  "honest",
+  "holisticapproach",
+  "timelineresult",
+  "getstarted",
+  "successstorysection",
+  "bestsellers",
+  "bannerslider",
+  "banner2",
+  "categoriessection",
+  "shortbanner",
+  "topdoctor",
+  "trendingclothes",
+  "banner4",
+  "featuredproducts",
+  "countsection",
+  "recommendedsection",
+  "reportcard",
+  "contacthome",
+  "customerreviews",
+  "featuresection",
+];
+
 export default function PageFormPage() {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
@@ -35,6 +59,14 @@ export default function PageFormPage() {
   const [metaKeyphrase, setMetaKeyphrase] = useState("");
   const [seoImage, setSeoImage] = useState("");
 
+  const [homeSections, setHomeSections] = useState(
+    HOME_SECTIONS.map((item, index) => ({
+      type: item,
+      enabled: true,
+      order: index + 1,
+    }))
+  );
+
   const [sections, setSections] = useState<SectionType[]>([
     {
       type: "content",
@@ -50,6 +82,24 @@ export default function PageFormPage() {
     },
   ]);
 
+
+  const dragItem = useRef(null);
+  const dragOverItem = useRef(null);
+
+  const handleSort = () => {
+    const copy = [...homeSections];
+
+    const dragItemContent = copy.splice(dragItem.current, 1)[0];
+
+    copy.splice(dragOverItem.current, 0, dragItemContent);
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    setHomeSections(copy);
+  };
+
+
   useEffect(() => {
     if (isEditMode && id) {
       dispatch(getPageById(id)).then((res: any) => {
@@ -64,6 +114,9 @@ export default function PageFormPage() {
           setStatus(page.status || "active");
           setOrder(page.order || 1);
           setSections(page.sections?.length ? page.sections : []);
+          if (page.home_sections?.length) {
+            setHomeSections(page.home_sections);
+          }
         }
       });
     }
@@ -163,7 +216,10 @@ export default function PageFormPage() {
             : undefined,
         };
       }),
+      home_sections: homeSections,
     };
+
+
 
     try {
       let result;
@@ -223,14 +279,7 @@ export default function PageFormPage() {
                   onChange={(e) => setPageName(e.target.value)}
                 />
               </div>
-              {/* <div>
-                <Label>Description</Label>
-                <Textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Short page description..."
-                />
-              </div> */}
+
             </CardContent>
           </Card>
           <Card className="shadow-md border border-gray-200">
@@ -268,6 +317,57 @@ export default function PageFormPage() {
               </div>
             </CardContent>
           </Card>
+          {pageName?.toLowerCase() === "home" && (
+            <Card className="shadow-md border">
+              <CardHeader>
+                <CardTitle>Home Section Builder</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Drag & Drop to change homepage section order.
+                </p>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                {homeSections.map((item, index) => (
+                  <div
+                    key={item.type}
+                    draggable
+                    onDragStart={() => (dragItem.current = index)}
+                    onDragEnter={() => (dragOverItem.current = index)}
+                    onDragEnd={handleSort}
+                    onDragOver={(e) => e.preventDefault()}
+                    className="flex items-center justify-between rounded-lg border bg-white p-4 cursor-move hover:bg-gray-50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-gray-500">
+                        {index + 1}
+                      </span>
+
+                      <span>{item.type}</span>
+                    </div>
+
+                    <div className="flex gap-3 items-center">
+                      <Label htmlFor={`home-section-status-${item.type}`}>
+                        {item.enabled ? "Active" : "Inactive"}
+                      </Label>
+                      <Switch
+                        id={`home-section-status-${item.type}`}
+                        checked={item.enabled}
+                        onCheckedChange={(val) => {
+                          setHomeSections((prev) =>
+                            prev.map((sec, i) =>
+                              i === index ? { ...sec, enabled: val } : sec
+                            )
+                          );
+                        }}
+                      />
+                      <span className="text-xl">☰</span>
+                    </div>
+
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
           <Card className="shadow-sm border border-gray-100">
             <CardHeader className="flex justify-between items-center pb-2">
               <CardTitle className="text-lg font-semibold">Page Sections</CardTitle>
@@ -535,16 +635,7 @@ export default function PageFormPage() {
                   onCheckedChange={(val) => setStatus(val ? "active" : "inactive")}
                 />
               </div>
-              {/* <div>
-                <Label>Order</Label>
-                <Input
-                  type="number"
-                  value={order === "" ? "" : order}
-                  onChange={(e) =>
-                    setOrder(e.target.value === "" ? "" : Number(e.target.value))
-                  }
-                />
-              </div> */}
+
               <div className="flex gap-3 sticky top-[250px]">
                 <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
                   {isEditMode ? "Update Page" : "Create Page"}
@@ -557,8 +648,6 @@ export default function PageFormPage() {
               </div>
             </CardContent>
           </Card>
-
-
         </div>
       </form>
     </div>

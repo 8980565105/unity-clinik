@@ -31,15 +31,13 @@ export default function Users() {
   const [page, setPage] = useState(1);
   const limit = 5;
 
-  // Debounce search
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedQuery(searchQuery), 500);
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
   const { user } = useSelector((state: RootState) => state.auth);
-  const userRole = user?.role; // now you have userRole
-  console.log("userRole", userRole)
+  const userRole = user?.role; 
 
 
   useEffect(() => {
@@ -104,7 +102,6 @@ export default function Users() {
     }
   };
 
-  // Updated getStatusBadge using is_active
   const getStatusBadge = (is_active: boolean) => (
     <span
       className={`px-2 py-1 rounded-full text-xs font-semibold ${is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
@@ -119,7 +116,6 @@ export default function Users() {
 
   return (
     <div className="space-y-8 p-6 mx-auto">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-gray-900">
@@ -143,7 +139,6 @@ export default function Users() {
         </div>
       </div>
 
-      {/* Search & Bulk Actions */}
       <Card className="shadow-sm border border-gray-200">
         <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
           <div className="relative w-full md:max-w-sm">
@@ -172,7 +167,6 @@ export default function Users() {
         </CardContent>
       </Card>
 
-      {/* Users Table */}
       <Card className="shadow-sm border border-gray-200">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold">
@@ -212,7 +206,6 @@ export default function Users() {
                       </td>
 
                       <td className="p-3 font-medium text-gray-900 truncate flex items-center gap-2">
-                        {/* Profile Picture or Avatar */}
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                           {user.profile_picture ? (
                             <img

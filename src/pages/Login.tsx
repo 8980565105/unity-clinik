@@ -22,7 +22,6 @@ export default function Login() {
 
     if (loginUser.fulfilled.match(result)) {
       toast.success("Logged in successfully!");
-      console.log("LOGIN SUCCESS");
       navigate("/");
     } else {
       const message =

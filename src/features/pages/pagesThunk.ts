@@ -6,8 +6,14 @@ import { ROUTES } from "../../services/routes";
 export const fetchPages = createAsyncThunk(
   "pages/fetchPages",
   async (
-    params: { page?: number; limit?: number; search?: string; status?: "active" | "inactive"; isDownload?: boolean } = {},
-    { rejectWithValue }
+    params: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      status?: "active" | "inactive";
+      isDownload?: boolean;
+    } = {},
+    { rejectWithValue },
   ) => {
     try {
       const res = await api.get(ROUTES.pages.getAll, { params });
@@ -16,7 +22,7 @@ export const fetchPages = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );
 
 // ✅ Get page by ID
@@ -30,7 +36,7 @@ export const getPageById = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );
 
 // ✅ Create page
@@ -44,7 +50,7 @@ export const createPage = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );
 
 // ✅ Update page
@@ -58,13 +64,16 @@ export const updatePage = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );
 
 // ✅ Update page status
 export const updatePageStatus = createAsyncThunk(
   "pages/updatePageStatus",
-  async ({ id, status }: { id: string; status: "active" | "inactive"}, { rejectWithValue }) => {
+  async (
+    { id, status }: { id: string; status: "active" | "inactive" },
+    { rejectWithValue },
+  ) => {
     try {
       const res = await api.put(ROUTES.pages.updateStatus(id), { status });
       if (res.data.success) return res.data.data;
@@ -72,7 +81,7 @@ export const updatePageStatus = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );
 
 // ✅ Delete page
@@ -86,7 +95,7 @@ export const deletePage = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );
 
 // ✅ Bulk delete pages
@@ -100,5 +109,5 @@ export const bulkDeletePages = createAsyncThunk(
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }
-  }
+  },
 );

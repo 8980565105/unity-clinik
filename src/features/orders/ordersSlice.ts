@@ -14,6 +14,7 @@ import {
   updateTracking,
   markDelivered,
   markRTO,
+  addTrackingAWB,
 } from "./ordersThunk";
 
 export interface OrderItem {
@@ -187,6 +188,7 @@ const ordersSlice = createSlice({
       updateTracking,
       markDelivered,
       markRTO,
+      addTrackingAWB,
     ];
 
     flowThunks.forEach((thunk) => {

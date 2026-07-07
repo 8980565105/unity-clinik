@@ -69,7 +69,7 @@ export default function BrandFormPage() {
         toast.error((result.payload as string) || "Something went wrong");
       }
     } catch (err) {
-      console.log("Server Error");
+      toast.error("server Error")
     }
   };
 

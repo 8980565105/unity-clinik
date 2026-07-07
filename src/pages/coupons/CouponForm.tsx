@@ -19,7 +19,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { fetchProducts } from "@/features/products/productsThunk";
 import Select from "react-select";
 import { fetchsubCategories } from "@/features/subcategories/subcategoriesThunk";
-
+import { TiptapEditor } from "@/components/ui/TiptapEditor";
+// import { Header } from "@radix-ui/react-accordion";
 const generateCouponCode = (length = 8) => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
@@ -37,6 +38,8 @@ export default function CouponFormPage() {
   const basePath = useBasePath();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [header_title, setheader_title] = useState("");
+
   const [discountType, setDiscountType] = useState<
     "percentage" | "fixed" | "freeshiping" | "product" | "buy x get y"
   >("percentage");
@@ -76,7 +79,7 @@ export default function CouponFormPage() {
       const res = await dispatch(fetchProducts({})).unwrap();
       setProducts(res.products || []);
     } catch (error) {
-      console.log(error);
+      toast.error(error);
     }
   };
 
@@ -87,7 +90,7 @@ export default function CouponFormPage() {
       ).unwrap();
       setSubCategories(res?.categories || []);
     } catch (error) {
-      console.log(error);
+      toast.error(error);
     }
   };
 
@@ -99,6 +102,7 @@ export default function CouponFormPage() {
           setName(coupon.name || "");
           setCode(coupon.code || "");
           setDescription(coupon.description || "");
+          setheader_title(coupon.header_title || "");
           setDiscountType(coupon.discount_type || "percentage");
           setCouponType(coupon.coupon_type || "normal");
           setBuyQuantity(Number(coupon.buy_x_get_y?.buy_quantity));
@@ -198,6 +202,7 @@ export default function CouponFormPage() {
       name,
       code: code.toUpperCase(),
       description,
+      header_title,
       discount_type: discountType,
       coupon_type: couponType,
       discount_value: Number(discountValue),
@@ -342,6 +347,16 @@ export default function CouponFormPage() {
                   placeholder="Enter coupon description..."
                 />
               </div>
+              <div>
+                <div>
+                  <Label htmlFor="header">Header title</Label>
+
+                  <TiptapEditor
+                    value={header_title}
+                    onChange={(value) => setheader_title(value)}
+                  />
+                </div>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -379,6 +394,7 @@ export default function CouponFormPage() {
                     <option value="free_gift">Free Gift Coupon</option>
                     <option value="referral">Referral Coupon</option>
                     <option value="buy_x_get_y">Buy X Get Y Free</option>
+                    <option value="privet">privet</option>
                   </select>
                 </div>
               </div>
@@ -650,7 +666,7 @@ export default function CouponFormPage() {
             </CardContent>
           </Card>
         </div>
-      </form>
-    </div>
+      </form >
+    </div >
   );
 }

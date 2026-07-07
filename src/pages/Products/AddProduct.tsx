@@ -1891,9 +1891,7 @@ export default function ProductFormPage() {
   const [images, setImages] = useState("");
   const [status, setStatus] = useState(true);
   const [isHidden, setIsHidden] = useState(false);
-
   const [order, setOrder] = useState("");
-
   const [createdId, setCreatedId] = useState<string | undefined>(id);
   const effectiveEditMode = Boolean(createdId);
 
@@ -1906,6 +1904,8 @@ export default function ProductFormPage() {
       status: "active", is_featured: false, is_best_seller: false, is_trending: false,
       description: "", steps: "",
       videos: [] as string[],
+      // shippingChargeType: "null",
+      // shippingChargeValue: "0",
     },
   ]);
   const [sections, setSections] = useState<any[]>([]);
@@ -1967,6 +1967,8 @@ export default function ProductFormPage() {
               steps: v.steps || "",
               description: v.description || "",
               videos: Array.isArray(v.videos) ? v.videos : [],
+              // shippingChargeType: v.shippingChargeType || "null",
+              // shippingChargeValue: v.shippingChargeValue ?? "0",
             })));
           }
 
@@ -2254,12 +2256,18 @@ export default function ProductFormPage() {
         return toast.error(`Type field is required.`);
       }
 
+
+
       if (!v.price) {
         return toast.error(`Price field is required.`);
       }
 
       if (!v.stock_quantity) {
         return toast.error(`Stock Quantity field is required.`);
+      }
+
+      if (!v.ProductWeight) {
+        return toast.error(`Product Weight is required.`)
       }
     }
 
@@ -2292,7 +2300,6 @@ export default function ProductFormPage() {
 
     const payload = {
       name, tag, description, steps, category_id: categoryId, images,
-      // order: Number(order),
       status: status ? "active" : "inactive", ishidden: isHidden, variants, sections: cleanSections,
     };
 
@@ -2337,6 +2344,8 @@ export default function ProductFormPage() {
               steps: v.steps || "",
               description: v.description || "",
               videos: Array.isArray(v.videos) ? v.videos : [],
+              // shippingChargeType: v.shippingChargeType || "null",
+              // shippingChargeValue: v.shippingChargeValue ?? "0",
             })));
           }
           dispatch(fetchProducts({ page: 1, limit: 100, status: "active" }) as any);
@@ -2461,7 +2470,53 @@ export default function ProductFormPage() {
                     <div><Label>Product Length (cms) </Label><Input type="number" value={v.ProductLength} onChange={(e) => handleVariantChange(idx, "ProductLength", e.target.value)} /></div>
                     <div><Label>Product Width (cms) </Label><Input type="number" value={v.ProductWidth} onChange={(e) => handleVariantChange(idx, "ProductWidth", e.target.value)} /></div>
                     <div><Label>Product Height (cms) </Label><Input type="number" value={v.ProductHeight} onChange={(e) => handleVariantChange(idx, "ProductHeight", e.target.value)} /></div>
-                    <div><Label>Product Weight (Kg) </Label><Input type="number" value={v.ProductWeight} onChange={(e) => handleVariantChange(idx, "ProductWeight", e.target.value)} /></div>
+                    <div><Label>Product Weight (g)* </Label><Input type="number" value={v.ProductWeight} onChange={(e) => handleVariantChange(idx, "ProductWeight", e.target.value)} /></div>
+
+
+
+                    {/* <div>
+                      <Label>Shipping Charge Type</Label>
+                      <Select
+                        value={v.shippingChargeType || "null"}
+                        onValueChange={(value) => {
+                          handleVariantChange(idx, "shippingChargeType", value);
+                          if (value === "null" || value === "free") {
+                            handleVariantChange(idx, "shippingChargeValue", "0");
+                          }
+                        }}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Select shipping charge type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="null">Default (Global Settings)</SelectItem>
+                          <SelectItem value="free">Always Free</SelectItem>
+                          <SelectItem value="fixed">Fixed (₹ per unit)</SelectItem>
+                          <SelectItem value="percentage">Percentage (%)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {(v.shippingChargeType === "fixed" || v.shippingChargeType === "percentage") && (
+                      <div>
+                        <Label>
+                          {v.shippingChargeType === "percentage" ? "Charge (%)" : "Charge (₹ per unit)"}
+                        </Label>
+                        <Input
+                          type="number"
+                          value={v.shippingChargeValue || ""}
+                          placeholder={v.shippingChargeType === "percentage" ? "e.g. 5" : "e.g. 50"}
+                          onChange={(e) => handleVariantChange(idx, "shippingChargeValue", e.target.value)}
+                        />
+                      </div>
+                    )} */}
+
+
+
+
+
+
+
+
+
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">

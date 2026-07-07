@@ -199,7 +199,19 @@ function PopupForm() {
             if (!image) return toast.error("Please upload an image");
             if (!heading.trim()) return toast.error("Please enter a heading");
             if (!price || Number(price) < 0) return toast.error("Please enter a valid price");
-            if (!offerPrice || Number(offerPrice) < 0) return toast.error("Please enter a valid offer price");
+            // if (!offerPrice || Number(offerPrice) < 0) return toast.error("Please enter a valid offer price");
+            if (
+                offerPrice === "" ||
+                Number(offerPrice) < 0
+            ) {
+                return toast.error("Please enter a valid offer price");
+            }
+            if (
+                bookConsultation.productOfferPrice === "" ||
+                Number(bookConsultation.productOfferPrice) < 0
+            ) {
+                return toast.error("Please enter product offer price");
+            }
 
             payload.consultation = {
                 title1,
@@ -575,35 +587,7 @@ function PopupForm() {
                                         />
                                     </div>
                                     <div>
-                                        {/* <Label>Select Product</Label> */}
 
-                                        {/* <Select
-                                            value={item.product_id || ""}
-                                            onValueChange={(val) =>
-                                                updateSectionItem(
-                                                    itemIdx,
-                                                    "product_id",
-                                                    val
-                                                )
-                                            }
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select Product" />
-                                            </SelectTrigger>
-
-                                            <SelectContent>
-                                                {(products || [])
-                                                    .filter((p) => p._id !== id)
-                                                    .map((p) => (
-                                                        <SelectItem
-                                                            key={p._id}
-                                                            value={p._id}
-                                                        >
-                                                            {p.name}
-                                                        </SelectItem>
-                                                    ))}
-                                            </SelectContent>
-                                        </Select> */}
                                         <Label>Select Product</Label>
                                         <Select
                                             value={bookConsultation.product_id || ""}

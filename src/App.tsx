@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -49,7 +48,7 @@ import Result from "./pages/Result/Result";
 import EmailsFormPage from "./pages/Email/EmailFrom";
 import CustomerReviewsFrom from "./pages/CustomerReviews/CustomerReviewsFrom";
 import EmailsPage from "./pages/Email/Email";
-import Register from "./pages/Register";
+// import Register from "./pages/Register";
 import SliderPage from "./pages/slider/slider";
 import SlideFormPage from "./pages/slider/sliderFrom";
 import SystemSettings from "./pages/systemseting/systemsetingFrom";
@@ -58,10 +57,9 @@ import Popup from "./pages/popup/popup";
 import PopupFrom from "./pages/popup/poupform";
 import BookConsoltantion from "./pages/bookconsaltantions/book";
 import ConsultationPageForm from "./pages/bookconsaltantions/consaltantionPageFrom";
-
+import SippingCharge from "./pages/sippingcharge/SippingCharge";
 
 const queryClient = new QueryClient();
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -70,13 +68,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* <Route path="/register" element={<Register />} /> */}
           <Route path="/forgate-password" element={<Forgatepassword />}></Route>
           <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
             <Route path="/" element={<AdminLayout />}>
-
               <Route index element={<VelzonDashboard />} />
-
               <Route path="products" element={<Products />} />
               <Route path="products/add" element={<AddProduct />} />
               <Route path="products/:id/edit" element={<AddProduct />} />
@@ -86,64 +82,49 @@ const App = () => (
               <Route path="subcategories" element={<Subcategories />} />
               <Route path="subcategories/add" element={<SubCategoryFormPage />} />
               <Route path="subcategories/:id/edit" element={<SubCategoryFormPage />} />
-
               <Route path="brands" element={<Brands />} />
               <Route path="brands/add" element={<BrandFormPage />} />
               <Route path="brands/:id/edit" element={<BrandFormPage />} />
               <Route path="types" element={<Types />} />
               <Route path="types/add" element={<TypeFormPage />} />
               <Route path="types/:id/edit" element={<TypeFormPage />} />
-
               <Route path="product-labels" element={<ProductLabels />} />
               <Route path="product-labels/add" element={<ProductLabelFormPage />} />
               <Route path="product-labels/:id/edit" element={<ProductLabelFormPage />} />
-
               <Route path="coupons" element={<CouponsPage />} />
               <Route path="coupons/add" element={<CouponFormPage />} />
               <Route path="coupons/:id/edit" element={<CouponFormPage />} />
-
               <Route path="orders" element={<Orders />} />
               <Route path="payments" element={<Payments />} />
               <Route path="warehouse" element={<Warehouse />} />
               <Route path="warehouse/add" element={<WarehouseFormPage />} />
               <Route path="warehouse/:id/edit" element={<WarehouseFormPage />} />
-
               <Route path="users" element={<Users />} />
               <Route path="users/add" element={<UserFormPage />} />
               <Route path="users/:id/edit" element={<UserFormPage />} />
               <Route path="customer-reviews" element={<CustomerReviews />} />
               <Route path="customer-reviews/add" element={<CustomerReviewsFrom />} />
               <Route path="customer-reviews/:id/edit" element={<CustomerReviewsFrom />} />
-
               <Route path="wishlists" element={<Wishlist />} />
               <Route path="carts" element={<Cart />} />
               <Route path="about" element={<AboutPageFrom />} />
               <Route path="results" element={<Result />} />
               <Route path="results/add" element={<ResultFrom />} />
               <Route path="results/:id/edit" element={<ResultFrom />} />
-
               <Route path="emails" element={<EmailsPage />} />
               <Route path="emails/add" element={<EmailsFormPage />} />
               <Route path="emails/:id/edit" element={<EmailsFormPage />} />
-
               <Route path="pages" element={<Pages />} />
               <Route path="pages/add" element={<PageFormPage />} />
               <Route path="pages/:id/edit" element={<PageFormPage />} />
-
               <Route path="slider" element={<SliderPage />} />
               <Route path="slider/add" element={<SlideFormPage />} />
               <Route path="slider/:id/edit" element={<SlideFormPage />} />
-
               <Route path="popup" element={<Popup />} />
               <Route path="popup/add" element={<PopupFrom />} />
               <Route path="popup/:id/edit" element={<PopupFrom />} />
-
-
-
-
               <Route path="bookConsoltantion" element={<BookConsoltantion />} />
               <Route path="consoltantion" element={<ConsultationPageForm />} />
-
               <Route path="navbar" element={<Navbar />} />
               <Route path="navbar/add" element={<NavbarFormPage />} />
               <Route path="navbar/:id/edit" element={<NavbarFormPage />} />
@@ -158,11 +139,10 @@ const App = () => (
               <Route path="store-owners/add" element={<StoreOwnerFormPage />} />
               <Route path="store-owners/:id/edit" element={<StoreOwnerFormPage />} />
               <Route path="system_settings" element={<SystemSettings />} />
-
+              <Route path="charge" element={<SippingCharge />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Route>
-
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

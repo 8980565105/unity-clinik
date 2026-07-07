@@ -276,3 +276,25 @@ export const markRTO = createAsyncThunk(
     }
   },
 );
+export const addTrackingAWB = createAsyncThunk(
+  "orders/addTrackingAWB",
+  async (
+    {
+      id,
+      awb_number,
+      courier_name,
+    }: { id: string; awb_number: string; courier_name?: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await api.patch(ROUTES.orders.addAwb(id), {
+        awb_number,
+        courier_name,
+      });
+      if (res.data.success) return res.data.data;
+      return rejectWithValue(res.data.message || "Failed to add AWB");
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);

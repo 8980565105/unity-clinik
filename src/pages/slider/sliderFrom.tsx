@@ -38,6 +38,19 @@ interface ShoppageSlide {
     badge: string; bgImageUrl: string | null; productimgUrl: string | null;
 }
 
+interface ReportCardSlide {
+    beforeImageUrl: string | null;
+    afterImageUrl: string | null;
+    beforeMonth: string;
+    afterMonth: string;
+    stage: string;
+    title: string;
+    description: string;
+    name: string;
+    age: string;
+    rating: string;
+}
+
 interface SuccessStorySlide {
     name: string;
     age: string;
@@ -50,18 +63,93 @@ interface SuccessStorySlide {
     videoUploading: boolean;
 }
 
-type SectionType = "" | "hero1" | "banner1" | "topDoctor" | "banner2" | "banner3" | "banner4" | "shoppage" | "successStory";
+interface HonestStageItem {
+    title: string;
+    imageUrl: string | null;
+    success: boolean;
+}
+interface HonestSlide {
+    genderType: "male" | "female";
+    stages: HonestStageItem[];
+}
 
+interface GetStartedStep {
+    stepLabel: string;
+    title: string;
+    description: string;
+    imageUrl: string | null;
+}
+
+interface TimelineStageItem {
+    month: string;
+    title: string;
+    imageUrl: string | null;
+}
+interface TimelineSlide {
+    genderType: "male" | "female";
+    stages: TimelineStageItem[];
+}
+
+interface HolisticCard {
+    title: string;
+    description: string;
+    imageUrl: string | null;
+}
+
+
+
+
+
+
+
+
+
+
+
+// type SectionType = "" | "hero1" | "banner1" | "topDoctor" | "banner2" | "banner3" | "banner4" | "shoppage" | "successStory" | "reportCard";
+
+
+// const ALL_SECTIONS: Exclude<SectionType, "">[] = [
+//     "hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4", "shoppage", "successStory", "reportCard",
+// ];
+
+type SectionType =
+    | ""
+    | "hero1" | "banner1" | "topDoctor" | "banner2" | "banner3" | "banner4"
+    | "shoppage" | "successStory" | "reportCard"
+    | "honestExpectations" | "getStarted" | "timelineResult" | "holisticApproach";
 
 const ALL_SECTIONS: Exclude<SectionType, "">[] = [
-    "hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4", "shoppage", "successStory",
+    "hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4",
+    "shoppage", "successStory", "reportCard",
+    "honestExpectations", "getStarted", "timelineResult", "holisticApproach",
 ];
+
+// const SECTION_LABELS: Record<string, string> = {
+//     hero1: "Hero Section 1", banner1: "Banner 1", topDoctor: "Top Doctors",
+//     banner2: "Banner 2", banner3: "Banner 3", banner4: "Banner 4",
+//     shoppage: "Shop Page Slider", successStory: "Success Stories",
+//     reportCard: "Report Cards (Before/After)",
+// };
 
 const SECTION_LABELS: Record<string, string> = {
     hero1: "Hero Section 1", banner1: "Banner 1", topDoctor: "Top Doctors",
     banner2: "Banner 2", banner3: "Banner 3", banner4: "Banner 4",
     shoppage: "Shop Page Slider", successStory: "Success Stories",
+    reportCard: "Report Cards (Before/After)",
+    honestExpectations: "Honest Expectations (Stages)",
+    getStarted: "How To Get Started (Steps)",
+    timelineResult: "Timeline Result (Month wise)",
+    holisticApproach: "Holistic Approach (Cards)",
 };
+
+
+const defaultReportCardSlide = (): ReportCardSlide => ({
+    beforeImageUrl: null, afterImageUrl: null,
+    beforeMonth: "", afterMonth: "",
+    stage: "", title: "", description: "",
+    name: "", age: "", rating: "",
+});
 
 
 const defaultHero1Slide = (): Hero1Slide => ({
@@ -84,6 +172,29 @@ const defaultSuccessStorySlide = (): SuccessStorySlide => ({
     mainImageUrl: null, beforeImageUrl: null, afterImageUrl: null,
     videoUrl: null, videoUploading: false,
 });
+
+
+const defaultHonestStage = (): HonestStageItem => ({ title: "", imageUrl: null, success: true });
+const defaultHonestSlide = (gender: "male" | "female"): HonestSlide => ({
+    genderType: gender,
+    stages: [defaultHonestStage()],
+});
+
+const defaultGetStartedStep = (): GetStartedStep => ({
+    stepLabel: "", title: "", description: "", imageUrl: null,
+});
+
+const defaultTimelineStage = (): TimelineStageItem => ({ month: "", title: "", imageUrl: null });
+const defaultTimelineSlide = (gender: "male" | "female"): TimelineSlide => ({
+    genderType: gender,
+    stages: [defaultTimelineStage()],
+});
+
+const defaultHolisticCard = (): HolisticCard => ({ title: "", description: "", imageUrl: null });
+
+
+
+
 
 
 function updateField<T>(setter: React.Dispatch<React.SetStateAction<T[]>>, index: number, field: keyof T, value: T[keyof T]) {
@@ -391,6 +502,14 @@ export default function SlideFormPage() {
     const [banner4Data, setBanner4Data] = useState<BannerImageData>(defaultBannerData());
     const [shoppageData, setShoppageData] = useState<ShoppageSlide[]>([defaultShoppageSlide()]);
     const [successStorySlides, setSuccessStorySlides] = useState<SuccessStorySlide[]>([defaultSuccessStorySlide()]);
+    const [reportCardSlides, setReportCardSlides] = useState<ReportCardSlide[]>([defaultReportCardSlide()]);
+    const [reportCardTitle, setReportCardTitle] = useState<string>("");
+    const [honestMaleStages, setHonestMaleStages] = useState<HonestStageItem[]>([defaultHonestStage()]);
+    const [honestFemaleStages, setHonestFemaleStages] = useState<HonestStageItem[]>([defaultHonestStage()]);
+    const [getStartedSteps, setGetStartedSteps] = useState<GetStartedStep[]>([defaultGetStartedStep()]);
+    const [timelineMaleStages, setTimelineMaleStages] = useState<TimelineStageItem[]>([defaultTimelineStage()]);
+    const [timelineFemaleStages, setTimelineFemaleStages] = useState<TimelineStageItem[]>([defaultTimelineStage()]);
+    const [holisticCards, setHolisticCards] = useState<HolisticCard[]>([defaultHolisticCard()]);
 
     const slidesState = useSelector((state: any) => state.slides);
     const allSlides: any[] = Array.isArray(slidesState)
@@ -467,6 +586,57 @@ export default function SlideFormPage() {
                         videoUploading: false,
                     })));
                 }
+                if (doc.section === "reportCard" && Array.isArray(doc.reportCardSlides)) {
+                    setReportCardTitle(doc.reportCardTitle ?? "");
+                    setReportCardSlides(doc.reportCardSlides.map((s: any) => ({
+                        beforeImageUrl: s.beforeImage ?? null,
+                        afterImageUrl: s.afterImage ?? null,
+                        beforeMonth: s.beforeMonth ?? "",
+                        afterMonth: s.afterMonth ?? "",
+                        stage: s.stage ?? "",
+                        title: s.title ?? "",
+                        description: s.description ?? "",
+                        name: s.name ?? "",
+                        age: s.age ?? "",
+                        rating: s.rating ?? "",
+                    })));
+                }
+
+                if (doc.section === "honestExpectations" && doc.honestExpectations) {
+                    setHonestMaleStages(
+                        (doc.honestExpectations.male ?? []).map((s: any) => ({
+                            title: s.title ?? "", imageUrl: s.image ?? null, success: !!s.success,
+                        }))
+                    );
+                    setHonestFemaleStages(
+                        (doc.honestExpectations.female ?? []).map((s: any) => ({
+                            title: s.title ?? "", imageUrl: s.image ?? null, success: !!s.success,
+                        }))
+                    );
+                }
+                if (doc.section === "getStarted" && Array.isArray(doc.getStartedSteps)) {
+                    setGetStartedSteps(doc.getStartedSteps.map((s: any) => ({
+                        stepLabel: s.stepLabel ?? "", title: s.title ?? "",
+                        description: s.description ?? "", imageUrl: s.image ?? null,
+                    })));
+                }
+                if (doc.section === "timelineResult" && doc.timelineResult) {
+                    setTimelineMaleStages(
+                        (doc.timelineResult.male ?? []).map((s: any) => ({
+                            month: s.month ?? "", title: s.title ?? "", imageUrl: s.image ?? null,
+                        }))
+                    );
+                    setTimelineFemaleStages(
+                        (doc.timelineResult.female ?? []).map((s: any) => ({
+                            month: s.month ?? "", title: s.title ?? "", imageUrl: s.image ?? null,
+                        }))
+                    );
+                }
+                if (doc.section === "holisticApproach" && Array.isArray(doc.holisticCards)) {
+                    setHolisticCards(doc.holisticCards.map((s: any) => ({
+                        title: s.title ?? "", description: s.description ?? "", imageUrl: s.image ?? null,
+                    })));
+                }
             })
             .catch(() => { toast.error("Failed to load slide data"); navigate(`${basePath}/slider`); })
             .finally(() => setPageLoading(false));
@@ -539,7 +709,44 @@ export default function SlideFormPage() {
                 videoUrl: s.videoUrl,
                 status: statusValue,
             }));
+
+        } else if (selectedSection === "reportCard") {
+            payload.reportCardTitle = reportCardTitle;
+            payload.slides = reportCardSlides.map(s => ({
+                beforeImage: s.beforeImageUrl,
+                afterImage: s.afterImageUrl,
+                beforeMonth: s.beforeMonth,
+                afterMonth: s.afterMonth,
+                stage: s.stage,
+                title: s.title,
+                description: s.description,
+                name: s.name,
+                age: s.age,
+                rating: s.rating,
+                status: statusValue,
+            }));
+
+        } else if (selectedSection === "honestExpectations") {
+            payload.honestExpectations = {
+                male: honestMaleStages.map(s => ({ title: s.title, image: s.imageUrl, success: s.success })),
+                female: honestFemaleStages.map(s => ({ title: s.title, image: s.imageUrl, success: s.success })),
+            };
+        } else if (selectedSection === "getStarted") {
+            payload.slides = getStartedSteps.map(s => ({
+                stepLabel: s.stepLabel, title: s.title, description: s.description, image: s.imageUrl,
+            }));
+        } else if (selectedSection === "timelineResult") {
+            payload.timelineResult = {
+                male: timelineMaleStages.map(s => ({ month: s.month, title: s.title, image: s.imageUrl })),
+                female: timelineFemaleStages.map(s => ({ month: s.month, title: s.title, image: s.imageUrl })),
+            };
+        } else if (selectedSection === "holisticApproach") {
+            payload.slides = holisticCards.map(s => ({
+                title: s.title, description: s.description, image: s.imageUrl,
+            }));
         }
+
+
 
         try {
             setSubmitLoading(true);
@@ -617,7 +824,9 @@ export default function SlideFormPage() {
                         </CardContent>
                     </Card>
 
-                    {selectedSection === "successStory" && (
+
+
+                    {(selectedSection === "successStory" || selectedSection === "reportCard") && (
                         <Card className="shadow-md border border-blue-100 bg-blue-50/30">
                             <CardHeader>
                                 <CardTitle className="text-lg font-semibold text-blue-800">
@@ -632,6 +841,7 @@ export default function SlideFormPage() {
                             </CardContent>
                         </Card>
                     )}
+
 
                     {selectedSection === "hero1" && (
                         <div className="space-y-4">
@@ -868,6 +1078,342 @@ export default function SlideFormPage() {
                                 className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors text-sm font-medium"
                             >
                                 + Add More Story
+                            </button>
+                        </div>
+                    )}
+
+                    {selectedSection === "reportCard" && (
+                        <div className="space-y-4">
+                            <Card className="border border-gray-200 shadow-sm">
+                                <CardContent className="pt-6">
+                                    <Label>Section Title <span className="text-red-500">*</span></Label>
+                                    <Input
+                                        placeholder="e.g. Our Transformation Stories"
+                                        value={reportCardTitle}
+                                        onChange={e => setReportCardTitle(e.target.value)}
+                                        required
+                                        className="mt-1"
+                                    />
+                                </CardContent>
+                            </Card>
+
+                            {reportCardSlides.map((slide, index) => (
+                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-base font-semibold text-gray-700">
+                                                Card {index + 1}
+                                            </CardTitle>
+                                            {reportCardSlides.length > 1 && (
+                                                <Button type="button" variant="destructive" size="sm" onClick={() => removeSlideItem(setReportCardSlides, index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-5">
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <Label>Name <span className="text-red-500">*</span></Label>
+                                                <Input placeholder="e.g. Satya" value={slide.name}
+                                                    onChange={e => updateField(setReportCardSlides, index, "name", e.target.value)}
+                                                    required className="mt-1" />
+                                            </div>
+                                            <div>
+                                                <Label>Age</Label>
+                                                <Input placeholder="e.g. 36" value={slide.age} type="number" min={0}
+                                                    onChange={e => updateField(setReportCardSlides, index, "age", e.target.value)}
+                                                    className="mt-1" />
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <Label>Stage</Label>
+                                                <Input placeholder="e.g. Stage 4" value={slide.stage}
+                                                    onChange={e => updateField(setReportCardSlides, index, "stage", e.target.value)}
+                                                    className="mt-1" />
+                                            </div>
+                                            <div>
+                                                <Label>Rating</Label>
+                                                <Input placeholder="e.g. 4.7" value={slide.rating} type="number" step="0.1" min={0} max={5}
+                                                    onChange={e => updateField(setReportCardSlides, index, "rating", e.target.value)}
+                                                    className="mt-1" />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <Label>Title <span className="text-red-500">*</span></Label>
+                                            <Input placeholder="e.g. Consistency paid off" value={slide.title}
+                                                onChange={e => updateField(setReportCardSlides, index, "title", e.target.value)}
+                                                required className="mt-1" />
+                                        </div>
+
+                                        <div>
+                                            <Label>Description</Label>
+                                            <Textarea placeholder="Review description..." value={slide.description}
+                                                onChange={e => updateField(setReportCardSlides, index, "description", e.target.value)}
+                                                className="mt-1 min-h-[100px]" />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <Label>Before Month Label</Label>
+                                                <Input placeholder="e.g. Month 1" value={slide.beforeMonth}
+                                                    onChange={e => updateField(setReportCardSlides, index, "beforeMonth", e.target.value)}
+                                                    className="mt-1" />
+                                            </div>
+                                            <div>
+                                                <Label>After Month Label</Label>
+                                                <Input placeholder="e.g. Month 6" value={slide.afterMonth}
+                                                    onChange={e => updateField(setReportCardSlides, index, "afterMonth", e.target.value)}
+                                                    className="mt-1" />
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-4 flex-wrap">
+                                            <div>
+                                                <Label>Before Image</Label>
+                                                <div className="mt-1">
+                                                    <ImageUpload value={slide.beforeImageUrl} onChange={url => updateField(setReportCardSlides, index, "beforeImageUrl", url as string | null)} size={150} />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <Label>After Image</Label>
+                                                <div className="mt-1">
+                                                    <ImageUpload value={slide.afterImageUrl} onChange={url => updateField(setReportCardSlides, index, "afterImageUrl", url as string | null)} size={150} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </CardContent>
+                                </Card>
+                            ))}
+
+                            <button
+                                type="button"
+                                onClick={() => addSlideItem(setReportCardSlides, defaultReportCardSlide)}
+                                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 transition-colors text-sm font-medium"
+                            >
+                                + Add More Report Card
+                            </button>
+                        </div>
+                    )}
+
+
+                    {selectedSection === "honestExpectations" && (
+                        <div className="space-y-6">
+                            {(["male", "female"] as const).map((gender) => {
+                                const stages = gender === "male" ? honestMaleStages : honestFemaleStages;
+                                const setStages = gender === "male" ? setHonestMaleStages : setHonestFemaleStages;
+                                return (
+                                    <Card key={gender} className="border border-gray-200 shadow-sm">
+                                        <CardHeader>
+                                            <CardTitle className="text-base font-semibold text-gray-700 uppercase">
+                                                {gender} Stages
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            {stages.map((stage, index) => (
+                                                <div key={index} className="border rounded-lg p-4 space-y-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <h4 className="font-medium">Stage {index + 1}</h4>
+                                                        <div className="flex items-center gap-3">
+                                                            <Label className="text-sm">Success?</Label>
+                                                            <Switch
+                                                                checked={stage.success}
+                                                                onCheckedChange={val => updateField(setStages, index, "success", val)}
+                                                            />
+                                                            {stages.length > 1 && (
+                                                                <Button type="button" variant="destructive" size="sm"
+                                                                    onClick={() => removeSlideItem(setStages, index)}>
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <Label>Title</Label>
+                                                        <Input placeholder="e.g. Stage 1" value={stage.title}
+                                                            onChange={e => updateField(setStages, index, "title", e.target.value)}
+                                                            className="mt-1" />
+                                                    </div>
+                                                    <div>
+                                                        <Label>Image</Label>
+                                                        <div className="mt-1">
+                                                            <ImageUpload value={stage.imageUrl}
+                                                                onChange={url => updateField(setStages, index, "imageUrl", url as string | null)}
+                                                                size={130} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <button type="button"
+                                                onClick={() => addSlideItem(setStages, defaultHonestStage)}
+                                                className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 text-sm font-medium">
+                                                + Add {gender} Stage
+                                            </button>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {selectedSection === "getStarted" && (
+                        <div className="space-y-4">
+                            {getStartedSteps.map((step, index) => (
+                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-base font-semibold text-gray-700">Step {index + 1}</CardTitle>
+                                            {getStartedSteps.length > 1 && (
+                                                <Button type="button" variant="destructive" size="sm"
+                                                    onClick={() => removeSlideItem(setGetStartedSteps, index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <Label>Step Label</Label>
+                                            <Input placeholder="e.g. STEP 1" value={step.stepLabel}
+                                                onChange={e => updateField(setGetStartedSteps, index, "stepLabel", e.target.value)}
+                                                className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Title</Label>
+                                            <Input placeholder="e.g. Take the hair test" value={step.title}
+                                                onChange={e => updateField(setGetStartedSteps, index, "title", e.target.value)}
+                                                className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Description</Label>
+                                            <Textarea value={step.description}
+                                                onChange={e => updateField(setGetStartedSteps, index, "description", e.target.value)}
+                                                className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Image</Label>
+                                            <div className="mt-1">
+                                                <ImageUpload value={step.imageUrl}
+                                                    onChange={url => updateField(setGetStartedSteps, index, "imageUrl", url as string | null)}
+                                                    size={130} />
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            <button type="button" onClick={() => addSlideItem(setGetStartedSteps, defaultGetStartedStep)}
+                                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 text-sm font-medium">
+                                + Add Step
+                            </button>
+                        </div>
+                    )}
+
+                    {selectedSection === "timelineResult" && (
+                        <div className="space-y-6">
+                            {(["male", "female"] as const).map((gender) => {
+                                const stages = gender === "male" ? timelineMaleStages : timelineFemaleStages;
+                                const setStages = gender === "male" ? setTimelineMaleStages : setTimelineFemaleStages;
+                                return (
+                                    <Card key={gender} className="border border-gray-200 shadow-sm">
+                                        <CardHeader>
+                                            <CardTitle className="text-base font-semibold text-gray-700 uppercase">
+                                                {gender} Timeline
+                                            </CardTitle>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            {stages.map((stage, index) => (
+                                                <div key={index} className="border rounded-lg p-4 space-y-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <h4 className="font-medium">Month {index + 1}</h4>
+                                                        {stages.length > 1 && (
+                                                            <Button type="button" variant="destructive" size="sm"
+                                                                onClick={() => removeSlideItem(setStages, index)}>
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <Label>Month Label</Label>
+                                                            <Input placeholder="e.g. Month 1" value={stage.month}
+                                                                onChange={e => updateField(setStages, index, "month", e.target.value)}
+                                                                className="mt-1" />
+                                                        </div>
+                                                        <div>
+                                                            <Label>Title</Label>
+                                                            <Input placeholder="e.g. Control dandruff" value={stage.title}
+                                                                onChange={e => updateField(setStages, index, "title", e.target.value)}
+                                                                className="mt-1" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <Label>Image</Label>
+                                                        <div className="mt-1">
+                                                            <ImageUpload value={stage.imageUrl}
+                                                                onChange={url => updateField(setStages, index, "imageUrl", url as string | null)}
+                                                                size={130} />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            <button type="button" onClick={() => addSlideItem(setStages, defaultTimelineStage)}
+                                                className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 text-sm font-medium">
+                                                + Add {gender} Month
+                                            </button>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {selectedSection === "holisticApproach" && (
+                        <div className="space-y-4">
+                            {holisticCards.map((card, index) => (
+                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-base font-semibold text-gray-700">Card {index + 1}</CardTitle>
+                                            {holisticCards.length > 1 && (
+                                                <Button type="button" variant="destructive" size="sm"
+                                                    onClick={() => removeSlideItem(setHolisticCards, index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <Label>Title</Label>
+                                            <Input placeholder="e.g. Customised Kit" value={card.title}
+                                                onChange={e => updateField(setHolisticCards, index, "title", e.target.value)}
+                                                className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Description</Label>
+                                            <Textarea value={card.description}
+                                                onChange={e => updateField(setHolisticCards, index, "description", e.target.value)}
+                                                className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Image</Label>
+                                            <div className="mt-1">
+                                                <ImageUpload value={card.imageUrl}
+                                                    onChange={url => updateField(setHolisticCards, index, "imageUrl", url as string | null)}
+                                                    size={130} />
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            <button type="button" onClick={() => addSlideItem(setHolisticCards, defaultHolisticCard)}
+                                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 text-sm font-medium">
+                                + Add Card
                             </button>
                         </div>
                     )}

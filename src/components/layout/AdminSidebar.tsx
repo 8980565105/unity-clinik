@@ -112,7 +112,7 @@ const adminSections = [
       { title: "Contact Messages", url: "/contact-messages", icon: MessageSquare },
       { title: "Settings", url: "/settings", icon: Settings },
       { title: "System Settings", url: "/system_settings", icon: Settings },
-
+      { title: "Shipping charge", url: "/charge", icon: Navigation },
     ],
   },
 ];
@@ -121,16 +121,13 @@ export function AdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { user } = useSelector((state: RootState) => state.auth);
-
   const isCollapsed = state === "collapsed";
-
   const isActive = (url: string) => {
     return (
       location.pathname === url ||
       location.pathname.startsWith(url + "/")
     );
   };
-
   const isGroupActive = (items: { url: string }[]) =>
     items.some((item) => isActive(item.url));
 
@@ -143,11 +140,8 @@ export function AdminSidebar() {
         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
     ].join(" ");
   };
-
-
   const sections = adminSections;
   const panelLabel = "Admin Dashboard";
-
   return (
     <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">

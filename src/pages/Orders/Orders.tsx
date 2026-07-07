@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
@@ -23,10 +22,10 @@ import {
   updateTracking,
   markDelivered,
   markRTO,
+  addTrackingAWB,
 } from "@/features/orders/ordersThunk";
 import { fetchWarehouse } from "@/features/warehouse/warehouseThunk"
 import { clearSelectedOrder } from "@/features/orders/ordersSlice";
-
 import {
   Select,
   SelectContent,
@@ -156,7 +155,7 @@ export default function Orders() {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({ status: "all", advanced: { ...DEFAULT_ADVANCED } });
-  type ModalType = "detail" | "confirm" | "cancel" | "pack" | "courier" | "ship" | "tracking" | "deliver" | "rto" | null;
+  type ModalType = "detail" | "confirm" | "cancel" | "pack" | "courier" | "ship" | "addAwb" | "tracking" | "deliver" | "rto" | null;
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [targetOrder, setTargetOrder] = useState<Order | null>(null);
   const [adminNote, setAdminNote] = useState("");
@@ -281,6 +280,24 @@ export default function Orders() {
     } catch (err: any) { toast.error(err || "Failed to ship order"); }
   };
 
+  const handleAddAwb = async () => {
+    if (!targetOrder) return;
+    try {
+      await dispatch(
+        addTrackingAWB({
+          id: targetOrder._id,
+          awb_number: courierForm.awb_number,
+          courier_name: courierForm.courier_name,
+        }),
+      ).unwrap();
+      toast.success("AWB added. Tracking started!");
+      refreshOrders();
+      closeModal();
+    } catch (err: any) {
+      toast.error(err || "Failed to add AWB");
+    }
+  };
+
   const handleTracking = async () => {
     if (!targetOrder) return;
     try {
@@ -349,7 +366,6 @@ export default function Orders() {
     setExpandedRows((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
 
   const totalPages = Math.ceil(total / limit);
-
   const renderActionButtons = (order: Order) => {
     switch (order.status) {
       case "pending":
@@ -362,42 +378,27 @@ export default function Orders() {
       case "processing":
         return (
           <>
-            <button onClick={() => openModal("pack", order)} className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 font-medium">
-              <Package size={11} className="inline mr-1" />Pack
+            <button onClick={() => openModal("addAwb", order)} className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700 hover:bg-orange-200 font-medium">
+              Add AWB
             </button>
             <button onClick={() => openModal("cancel", order)} className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 font-medium">Cancel</button>
           </>
-        );
-      case "packed":
-        return (
-          <button onClick={() => openModal("courier", order)} className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700 hover:bg-orange-200 font-medium">
-            <Truck size={11} className="inline mr-1" />Assign Courier
-          </button>
         );
       case "ready_to_ship":
         return (
           <button onClick={() => openModal("ship", order)} className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-700 hover:bg-purple-200 font-medium">Dispatch</button>
         );
       case "shipped":
-        return (
-          <button onClick={() => openModal("tracking", order)} className="px-2 py-1 text-xs rounded bg-cyan-100 text-cyan-700 hover:bg-cyan-200 font-medium">In Transit</button>
-        );
       case "in_transit":
         return (
-          <>
-            <button onClick={() => openModal("deliver", order)} className="px-2 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200 font-medium">
-              <CheckCircle size={11} className="inline mr-1" />Delivered
-            </button>
-            <button onClick={() => openModal("rto", order)} className="px-2 py-1 text-xs rounded bg-rose-100 text-rose-700 hover:bg-rose-200 font-medium">RTO</button>
-          </>
+          <button onClick={() => openModal("deliver", order)} className="px-2 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200 font-medium">
+            <CheckCircle size={11} className="inline mr-1" />Delivered
+          </button>
         );
       case "completed":
         return (
-          <>
-            <button onClick={() => downloadPDF(ROUTES.orders.invoice(order._id), `invoice-${order.order_number}.pdf`)}
-              className="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 font-medium">Invoice</button>
-            <button onClick={() => openModal("rto", order)} className="px-2 py-1 text-xs rounded bg-pink-100 text-pink-700 hover:bg-pink-200 font-medium">Return</button>
-          </>
+          <button onClick={() => downloadPDF(ROUTES.orders.invoice(order._id), `invoice-${order.order_number}.pdf`)}
+            className="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 font-medium">Invoice</button>
         );
       default:
         return null;
@@ -423,9 +424,7 @@ export default function Orders() {
             </ConfirmDialog>
           )}
         </div>
-
       </div>
-
 
       <Card className="border border-gray-200 shadow-sm">
         <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-3 flex-wrap">
@@ -434,7 +433,6 @@ export default function Orders() {
             <Input placeholder="Search order number, status..." value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
           </div>
-
           <Select value={appliedFilters.status}
             onValueChange={(v) => { setPage(1); setAppliedFilters((p) => ({ ...p, status: v })); }}>
             <SelectTrigger className="w-[200px]"><SelectValue placeholder="Filter by status" /></SelectTrigger>
@@ -530,9 +528,7 @@ export default function Orders() {
                                 <button onClick={() => downloadPDF(ROUTES.orders.packingSlip(order._id), `slip-${order.order_number}.pdf`)}
                                   className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 font-medium">Slip</button>
                               )}
-
                               {renderActionButtons(order)}
-
                               <ConfirmDialog title="Delete Order" description={`Delete order "${order.order_number}"?`} confirmText="Delete" onConfirm={() => handleDelete(order._id)} danger>
                                 <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:bg-red-50">
                                   <Trash2 className="h-4 w-4" />
@@ -562,17 +558,6 @@ export default function Orders() {
                                     {order.items?.map((item: any) => (
                                       <tr key={item._id} className="hover:bg-white">
                                         <td className="px-3 py-2 font-medium">{item.product?.name || "Product"}</td>
-                                        {/* <td className="px-3 py-2">
-                                          {item.is_gift ? (
-                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-700">
-                                              🎁 Gift
-                                            </span>
-                                          ) : (
-                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                                              Paid
-                                            </span>
-                                          )}
-                                        </td> */}
                                         <td className="px-3 py-2">
                                           {item.is_gift ? (
                                             <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-700">
@@ -710,6 +695,36 @@ export default function Orders() {
         </Modal>
       )}
 
+      {activeModal === "addAwb" && targetOrder && (
+        <Modal title={`Add AWB — ${targetOrder.order_number}`} onClose={closeModal}>
+          <p className="text-sm text-gray-600 mb-3">
+            iThink dashboard ma order create thai gayo chhe. Tya thi courier select karya pachi malela AWB number ahiya enter karo.
+          </p>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Courier Name</label>
+              <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm"
+                value={courierForm.courier_name}
+                onChange={(e) => setCourierForm({ ...courierForm, courier_name: e.target.value })}
+                placeholder="e.g. Delhivery, Blue Dart" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">AWB Number <span className="text-red-500">*</span></label>
+              <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm"
+                value={courierForm.awb_number}
+                onChange={(e) => setCourierForm({ ...courierForm, awb_number: e.target.value })}
+                placeholder="Enter AWB number from iThink dashboard" />
+            </div>
+          </div>
+          <div className="flex gap-3 mt-4">
+            <Button disabled={actionLoading || !courierForm.awb_number} onClick={handleAddAwb} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white">
+              {actionLoading ? "Saving..." : "Save & Start Tracking"}
+            </Button>
+            <Button variant="outline" onClick={closeModal} className="flex-1">Cancel</Button>
+          </div>
+        </Modal>
+      )}
+
       {activeModal === "cancel" && targetOrder && (
         <Modal title={`Cancel Order — ${targetOrder.order_number}`} onClose={closeModal}>
           <p className="text-sm text-gray-600 mb-3">Are you sure you want to cancel this order? Stock will be restored.</p>
@@ -800,11 +815,22 @@ export default function Orders() {
                   value={courierForm.courier_name} onChange={(e) => setCourierForm({ ...courierForm, courier_name: e.target.value })} placeholder="Enter courier name" />
               </div>
             )}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">AWB / Tracking Number <span className="text-red-500">*</span></label>
               <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 value={courierForm.awb_number} onChange={(e) => setCourierForm({ ...courierForm, awb_number: e.target.value })} placeholder="Enter AWB number" />
-            </div>
+            </div> */}
+            {courierForm.partner === "ithink" ? (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                ⚡ AWB number automatically iThink Logistics thi generate thase.
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">AWB / Tracking Number <span className="text-red-500">*</span></label>
+                <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  value={courierForm.awb_number} onChange={(e) => setCourierForm({ ...courierForm, awb_number: e.target.value })} placeholder="Enter AWB number" />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Date</label>
               <input type="date" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -812,7 +838,8 @@ export default function Orders() {
             </div>
           </div>
           <div className="flex gap-3 mt-4">
-            <Button disabled={actionLoading || !courierForm.awb_number} onClick={handleAssignCourier} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white">
+            {/* <Button disabled={actionLoading || !courierForm.awb_number} onClick={handleAssignCourier} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"> */}
+            <Button disabled={actionLoading || (courierForm.partner !== "ithink" && !courierForm.awb_number)} onClick={handleAssignCourier} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white">
               <Truck size={14} className="mr-1" />{actionLoading ? "Assigning..." : "Assign & Ready to Ship"}
             </Button>
             <Button variant="outline" onClick={closeModal} className="flex-1">Cancel</Button>

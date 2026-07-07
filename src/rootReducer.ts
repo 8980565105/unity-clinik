@@ -28,6 +28,7 @@ import aboutpageReducer from "./features/about/aboutSlice";
 import popupReducer from "./features/popup/PopupSlice";
 import consultationpageReducer from "./features/consoltantion/consoltantionSlice";
 import bookconsaltansReducer from "./features/bookconsoltantion/bookconsoltSlice";
+import sippingchargeReducer from "./features/sippingcharge/sippingchargeSlice";
 
 export const rootReducer = {
   auth: authReducer,
@@ -60,4 +61,5 @@ export const rootReducer = {
   popup: popupReducer,
   consultationpage: consultationpageReducer,
   bookconsaltans: bookconsaltansReducer,
+  sippingcharge: sippingchargeReducer,
 };
