@@ -22,7 +22,7 @@ import { resetReviewStatus } from "../../features/reivews/reviewsSlice";
 import toast from "react-hot-toast";
 import OrderTracking from "../../pages/orderTraking";
 import Loding from "../loding/loding";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import order from "../../assets/order.webp";
 import Row from "../ui/Row";
 import Button from "../ui/Button";
@@ -30,6 +30,8 @@ import NavBtn from "../ui/Navbtn";
 import Section from "../ui/Section";
 import { fetchPageBySlug } from "../../features/pages/pagesThunk";
 import SEO from "../seo/seo";
+import ImageUpload from "../ui/ImageUpload";
+import { fetchProductById } from "../../features/products/productsThunk";
 
 const STATUS_CONFIG = {
   pending: {
@@ -164,7 +166,7 @@ const PaymentBadge = ({ method }) => {
   );
 };
 
-const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
+const OrderCard = ({ order, onReview, onTrack, onReorder, baseUrl = "" }) => {
   const firstItem = order.items?.[0];
   const product = firstItem?.product;
   const variant = firstItem?.variant;
@@ -243,6 +245,9 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
           </Button>
           <Button variant="common" onClick={() => onTrack(order)}>
             Track
+          </Button>
+          <Button variant="common" onClick={() => onReorder(order)}>
+            Re Order
           </Button>
         </div>
       </div>
@@ -325,6 +330,12 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
           >
             Track Order
           </button>
+          <button
+            onClick={() => onReorder(order)}
+            className="flex-1 py-2.5 px-3 text-xs font-semibold text-white bg-[#1B4F8A] rounded-xl hover:bg-[#163f6e] transition-colors"
+          >
+            Re Order
+          </button>
         </div>
       </div>
     </div>
@@ -332,6 +343,7 @@ const OrderCard = ({ order, onReview, onTrack, baseUrl = "" }) => {
 };
 
 export default function Orders() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -348,6 +360,8 @@ export default function Orders() {
     rating: 5,
     title: "",
     comment: "",
+    beforeImage: null,
+    afterImage: null,
     product_id: "",
   });
   const { pages, slugLoading } = useSelector((state) => state.pages);
@@ -378,11 +392,19 @@ export default function Orders() {
 
   useEffect(() => {
     if (reviewSuccess) {
-      toast.success("Review submitted successfully!", {
-        position: "top-center",
-      });
+      toast.success("Review submitted successfully");
+
       setIsReviewOpen(false);
-      setReviewData({ rating: 5, title: "", comment: "", product_id: "" });
+
+      setReviewData({
+        rating: 5,
+        title: "",
+        comment: "",
+        beforeImage: null,
+        afterImage: null,
+        product_id: "",
+      });
+
       dispatch(resetReviewStatus());
     }
   }, [reviewSuccess, dispatch]);
@@ -420,37 +442,144 @@ export default function Orders() {
     "cancelled",
   ];
 
-  const openReviewModal = (order) => {
-    if (order.status !== "completed") {
-      toast("You can only review completed orders.", {
-        position: "top-center",
-      });
+  const handleReorder = async (order) => {
+    if (!order?.items?.length) {
+      toast.error("No items found in this order");
       return;
     }
+
+    const outOfStockItems = order.items.filter(
+      (i) => i.variant?.stock_quantity === 0 || i.product?.stock_quantity === 0,
+    );
+
+    if (outOfStockItems.length === order.items.length) {
+      toast.error("All items in this order are out of stock!");
+      return;
+    }
+
+    const checkoutItems = await Promise.all(
+      order.items
+        .filter(
+          (i) =>
+            i.variant?.stock_quantity !== 0 && i.product?.stock_quantity !== 0,
+        )
+        .map(async (i) => {
+          let variant = i.variant || {};
+          let product = i.product || {};
+
+          const variantId =
+            typeof i.variant === "object" ? i.variant?._id : i.variant;
+          const productId =
+            typeof i.product === "object" ? i.product?._id : i.product;
+
+          if (
+            productId &&
+            (variant.price == null || variant.offerprice == null)
+          ) {
+            try {
+              const resultAction = await dispatch(fetchProductById(productId));
+
+              if (fetchProductById.fulfilled.match(resultAction)) {
+                const freshProduct =
+                  resultAction.payload?.product || resultAction.payload;
+
+                const freshVariant = freshProduct?.variants?.find(
+                  (v) => String(v._id) === String(variantId),
+                );
+
+                if (freshVariant) variant = { ...freshVariant, ...variant };
+                if (freshProduct) product = { ...freshProduct, ...product };
+              }
+            } catch (err) {}
+          }
+
+          const originalPrice = Number(
+            variant.price || product.price || i.price_at_order || 0,
+          );
+
+          const offerPrice = Number(variant.offerprice || 0);
+
+          const finalPrice =
+            offerPrice > 0 && offerPrice < originalPrice
+              ? offerPrice
+              : originalPrice;
+
+          return {
+            product_id: product,
+            variant_id: variant,
+            quantity: i.quantity || 1,
+            pack_of: Number(i.pack_of || 1),
+            price: finalPrice,
+            original_price: originalPrice,
+          };
+        }),
+    );
+
+    navigate("/checkout", {
+      state: {
+        buyNow: true,
+        items: checkoutItems,
+      },
+    });
+  };
+
+  const openReviewModal = (order) => {
     const productId =
-      order.products?.[0]?.product_id || order.items?.[0]?.product_id;
+      order.items?.[0]?.product?._id || order.items?.[0]?.product_id || "";
+
     setSelectedOrder(order);
-    setReviewData((prev) => ({ ...prev, product_id: productId }));
+
+    setReviewData({
+      rating: 5,
+      title: "",
+      comment: "",
+      beforeImage: null,
+      afterImage: null,
+      product_id: productId,
+    });
+
     setIsReviewOpen(true);
   };
 
   const handleReviewSubmit = (e) => {
     e.preventDefault();
-    const userId = JSON.parse(localStorage.getItem("user"))?._id;
-    dispatch(addReview({ ...reviewData, user_id: userId, is_approved: true }));
+
+    const user = JSON.parse(localStorage.getItem("user") || "null");
+
+    if (!user) {
+      toast.error("Please login first");
+      return;
+    }
+
+    dispatch(
+      addReview({
+        product_id: reviewData.product_id,
+        user_id: user._id,
+        rating: reviewData.rating,
+        title: reviewData.title,
+        comment: reviewData.comment,
+        beforeImage: reviewData.beforeImage,
+        afterImage: reviewData.afterImage,
+        is_approved: false,
+      }),
+    );
   };
+
   const openViewModal = (order) => {
     setSelectedOrder(order);
     setIsViewOpen(true);
   };
+
   const openCancelModal = (order) => {
     setSelectedOrder(order);
     setIsCancelOpen(true);
   };
+
   const openTracking = (order) => {
     setTrackingOrder(order);
     setIsTrackingOpen(true);
   };
+
   const closeModal = () => {
     setSelectedOrder(null);
     setIsViewOpen(false);
@@ -504,7 +633,7 @@ export default function Orders() {
                   </button>
                 )}
               </div>
-              <div className="flex justify-between gap-2 items-center">
+              {/* <div className="flex justify-between gap-2 items-center">
                 <div>
                   <button
                     onClick={() => {
@@ -614,7 +743,8 @@ export default function Orders() {
                     </div>
                   )}
                 </div>
-              </div>
+
+              </div> */}
             </div>
           </div>
         </Row>
@@ -627,6 +757,7 @@ export default function Orders() {
                   order={order}
                   onReview={openReviewModal}
                   onTrack={openTracking}
+                  onReorder={handleReorder}
                   baseUrl={baseUrl}
                 />
               ))
@@ -690,119 +821,116 @@ export default function Orders() {
         </Row>
       </Section>
 
-      {isViewOpen && selectedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white w-full max-w-[560px] rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h3 className="text-lg font-bold text-gray-800">Order Details</h3>
-              <button
-                onClick={closeModal}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X size={20} className="text-gray-500" />
-              </button>
-            </div>
-            <div className="p-6 grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Order ID</p>
-                <p className="font-semibold text-sm text-gray-800 break-all">
-                  {selectedOrder.order_id || selectedOrder._id}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Status</p>
-                <span
-                  className={`text-xs font-bold px-2 py-1 rounded-full ${
-                    getStatus(selectedOrder.status).bg
-                  } ${getStatus(selectedOrder.status).text}`}
-                >
-                  {getStatus(selectedOrder.status).label}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Total Price</p>
-                <p className="font-bold text-gray-800">
-                  ₹{selectedOrder.total_price?.toLocaleString("en-IN")}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Tax (10%)</p>
-                <p className="font-bold text-gray-800">
-                  ₹{(selectedOrder.total_price * 0.1).toLocaleString("en-IN")}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Payment Method</p>
-                <p className="text-sm text-gray-700">
-                  {selectedOrder.payment_method || "N/A"}
-                </p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-xs text-gray-400 mb-0.5">Shipping Address</p>
-                <p className="text-sm text-gray-700">
-                  {selectedOrder.shippingAddress?.address ||
-                    "No address provided"}
-                </p>
-              </div>
-            </div>
-            <div className="px-6 py-4 border-t flex justify-end gap-2">
-              {selectedOrder.status !== "cancelled" && (
+        {isViewOpen && selectedOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+            <div className="bg-white w-full max-w-[560px] rounded-2xl shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-6 py-4 border-b">
+                <h3 className="text-lg font-bold text-gray-800">Order Details</h3>
                 <button
-                  onClick={() => {
-                    closeModal();
-                    openCancelModal(selectedOrder);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+                  onClick={closeModal}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  Cancel Order
+                  <X size={20} className="text-gray-500" />
                 </button>
-              )}
-              <button
-                onClick={closeModal}
-                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-              >
-                Close
-              </button>
+              </div>
+              <div className="p-6 grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Order ID</p>
+                  <p className="font-semibold text-sm text-gray-800 break-all">
+                    {selectedOrder.order_id || selectedOrder._id}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Status</p>
+                  <span
+                    className={`text-xs font-bold px-2 py-1 rounded-full ${
+                      getStatus(selectedOrder.status).bg
+                    } ${getStatus(selectedOrder.status).text}`}
+                  >
+                    {getStatus(selectedOrder.status).label}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Total Price</p>
+                  <p className="font-bold text-gray-800">
+                    ₹{selectedOrder.total_price?.toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Tax (10%)</p>
+                  <p className="font-bold text-gray-800">
+                    ₹{(selectedOrder.total_price * 0.1).toLocaleString("en-IN")}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Payment Method</p>
+                  <p className="text-sm text-gray-700">
+                    {selectedOrder.payment_method || "N/A"}
+                  </p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-xs text-gray-400 mb-0.5">Shipping Address</p>
+                  <p className="text-sm text-gray-700">
+                    {selectedOrder.shippingAddress?.address ||
+                      "No address provided"}
+                  </p>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t flex justify-end gap-2">
+                {selectedOrder.status !== "cancelled" && (
+                  <button
+                    onClick={() => {
+                      closeModal();
+                      openCancelModal(selectedOrder);
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+                  >
+                    Cancel Order
+                  </button>
+                )}
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {isReviewOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="bg-white w-full max-w-[460px] rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex justify-between items-center px-5 py-4 border-b bg-gray-50">
-              <h3 className="text-lg font-bold text-gray-800">
-                Write a Review
-              </h3>
+        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center px-4">
+          <div className="bg-white w-full max-w-[600px] max-h-[90vh] rounded-3xl overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-3xl font-bold">Write Review</h2>
               <button
                 onClick={() => setIsReviewOpen(false)}
-                className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                className="w-10 h-10 rounded-full border flex items-center justify-center hover:bg-gray-100 transition-colors"
               >
-                <X size={18} className="text-gray-500" />
+                <X size={18} />
               </button>
             </div>
-            <form onSubmit={handleReviewSubmit} className="p-5 space-y-4">
-              <div className="text-center">
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  Your Rating
-                </label>
-                <div className="flex justify-center gap-1">
-                  {[1, 2, 3, 4, 5].map((num) => (
+
+            <form onSubmit={handleReviewSubmit} className="p-6">
+              <div className="mb-6">
+                <h4 className="font-bold text-xl mb-4">Rate this Product</h4>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
                     <button
-                      key={num}
+                      key={star}
                       type="button"
                       onClick={() =>
-                        setReviewData({ ...reviewData, rating: num })
+                        setReviewData((prev) => ({ ...prev, rating: star }))
                       }
                       className="transition-transform active:scale-90"
                     >
                       <Star
-                        size={34}
-                        fill={num <= reviewData.rating ? "#FACC15" : "none"}
+                        size={36}
+                        fill={star <= reviewData.rating ? "#facc15" : "none"}
                         strokeWidth={1.5}
                         className={
-                          num <= reviewData.rating
+                          star <= reviewData.rating
                             ? "text-yellow-400"
                             : "text-gray-300"
                         }
@@ -811,67 +939,122 @@ export default function Orders() {
                   ))}
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="w-full border border-gray-200 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#1B4F8A] focus:border-transparent transition-all"
-                  placeholder="Give your review a title"
-                  value={reviewData.title}
-                  onChange={(e) =>
-                    setReviewData({ ...reviewData, title: e.target.value })
-                  }
-                />
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Review Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    required
+                    placeholder="Give your review a title"
+                    value={reviewData.title}
+                    onChange={(e) =>
+                      setReviewData((prev) => ({
+                        ...prev,
+                        title: e.target.value,
+                      }))
+                    }
+                    className="w-full h-[55px] border border-gray-200 rounded-xl px-4 text-sm outline-none focus:ring-2 focus:ring-[#1B4F8A] focus:border-transparent transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700 mb-1">
+                    Review Description
+                  </label>
+                  <textarea
+                    rows={5}
+                    placeholder="Share your experience with this product"
+                    value={reviewData.comment}
+                    onChange={(e) =>
+                      setReviewData((prev) => ({
+                        ...prev,
+                        comment: e.target.value,
+                      }))
+                    }
+                    className="w-full border border-gray-200 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-[#1B4F8A] focus:border-transparent transition-all resize-none"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Comment
-                </label>
-                <textarea
-                  rows="4"
-                  className="w-full border border-gray-200 p-3 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#1B4F8A] focus:border-transparent transition-all resize-none"
-                  placeholder="Share your experience with this product"
-                  value={reviewData.comment}
-                  onChange={(e) =>
-                    setReviewData({ ...reviewData, comment: e.target.value })
-                  }
-                />
+
+              <div className="grid grid-cols-2 gap-4 mt-5">
+                <div>
+                  <label className="block font-semibold mb-2">
+                    Before Image
+                  </label>
+
+                  <ImageUpload
+                    value={reviewData.beforeImage}
+                    onChange={(url) =>
+                      setReviewData((prev) => ({
+                        ...prev,
+                        beforeImage: url,
+                      }))
+                    }
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-semibold mb-2">
+                    After Image
+                  </label>
+
+                  <ImageUpload
+                    value={reviewData.afterImage}
+                    onChange={(url) =>
+                      setReviewData((prev) => ({
+                        ...prev,
+                        afterImage: url,
+                      }))
+                    }
+                  />
+                </div>
               </div>
-              <button
-                type="submit"
-                disabled={reviewLoading}
-                className="w-full bg-[#1B4F8A] text-white py-3 rounded-xl text-sm font-bold hover:bg-[#163f6e] transition-colors disabled:opacity-60"
-              >
-                {reviewLoading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg
-                      className="animate-spin h-4 w-4 text-white"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Submitting...
-                  </span>
-                ) : (
-                  "Submit Review"
-                )}
-              </button>
+
+              <div className="flex  gap-4 mt-6">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => setIsReviewOpen(false)}
+                  className="items-center !min-w-[150px] w-full rounded-xl font-semibold h-[55px]"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="common"
+                  type="submit"
+                  disabled={reviewLoading}
+                  className="items-center w-full text-white rounded-xl font-semibold h-[55px]"
+                >
+                  {reviewLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                          fill="none"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        />
+                      </svg>
+                      Submitting...
+                    </span>
+                  ) : (
+                    "Submit Review"
+                  )}
+                </Button>
+              </div>
             </form>
           </div>
         </div>

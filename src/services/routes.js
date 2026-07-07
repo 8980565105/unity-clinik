@@ -175,5 +175,8 @@ export const ROUTES = {
   consultationPage: {
     getPublic: "/consultationpage/public",
   },
+  sippingcharge: {
+      getPublic: "/sippingcharge/public",
+  }
 };
 

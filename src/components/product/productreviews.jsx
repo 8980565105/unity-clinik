@@ -38,11 +38,6 @@ function Productreviews({ productId, setShowLoginPopup }) {
     afterImage: null,
   });
 
-  // useEffect(() => {
-  //   if (productId) {
-  //   }
-  // }, [dispatch, productId]);
-
   useEffect(() => {
     if (reviewSuccess) {
       toast.success("Review submitted successfully!", {

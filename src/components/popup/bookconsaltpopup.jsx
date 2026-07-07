@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Phone, Video, ChevronDown } from "lucide-react";
+import { X, Phone, Video } from "lucide-react";
 import toast from "react-hot-toast";
 import { getImageUrl } from "../utils/helper";
 import { useDispatch } from "react-redux";
@@ -20,23 +20,21 @@ export function BookConsultationPopup({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const [view, setView] = useState("details");
+
   const [consultationType, setConsultationType] = useState("voice");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("+91");
-  const [isProcessing, setIsProcessing] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-
-  const [isSlotPopupOpen, setIsSlotPopupOpen] = useState(false);
-  const [isSavingSlot, setIsSavingSlot] = useState(false);
-  const [lastBookingData, setLastBookingData] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const bookConsultationData =
     apiData?.bookConsultation ?? apiData?.data?.bookConsultation ?? null;
   const bookConsultation = bookConsultationData?.BookConsultation ?? {};
   const status = bookConsultationData?.status ?? "inactive";
-
   const productTitle = bookConsultation.productTitle ?? "Derma Roller";
   const subtitle =
     bookConsultation.subtitle ?? "After A Successful Consultation!";
@@ -68,18 +66,34 @@ export function BookConsultationPopup({
       document.body.appendChild(script);
     });
 
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget && onClose) onClose();
+  const resetAll = () => {
+    setView("details");
+    setConsultationType("voice");
+    setPhoneNumber("");
+    setCountryCode("+91");
+    setFullName("");
+    setEmail("");
+    setMessage("");
+    setIsProcessing(false);
   };
 
-  const handleConfirm = async (e) => {
+  const handleClose = () => {
+    if (isProcessing) return;
+    resetAll();
+    if (onClose) onClose();
+  };
+
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) handleClose();
+  };
+
+  const handleNext = (e) => {
     e.preventDefault();
 
     if (!fullName.trim()) {
       toast.error("Please enter your full name");
       return;
     }
-
     if (!phoneNumber) {
       toast.error("Please enter your phone number");
       return;
@@ -91,15 +105,22 @@ export function BookConsultationPopup({
         return;
       }
     }
-
     const phoneRegex = /^[0-9]{10}$/;
     if (countryCode === "+91" && !phoneRegex.test(phoneNumber.trim())) {
       toast.error("Please enter a valid 10-digit mobile number");
       return;
     }
 
-    setIsProcessing(true);
+    setView("slot");
+  };
 
+  const handleBackToDetails = () => {
+    if (isProcessing) return;
+    setView("details");
+  };
+
+  const handleConfirmSlotAndPay = async ({ date, time, durationMinutes }) => {
+    setIsProcessing(true);
     try {
       const loaded = await loadRazorpay();
       if (!loaded) {
@@ -111,14 +132,17 @@ export function BookConsultationPopup({
       const razorRes = await dispatch(
         createRazorpayOrder({ amount: selectedPrice }),
       );
-
       if (!createRazorpayOrder.fulfilled.match(razorRes)) {
         toast.error(razorRes.payload || "Payment initialization failed");
         setIsProcessing(false);
         return;
       }
-
       const razorOrder = razorRes.payload;
+
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      const slot_date = `${y}-${m}-${d}`;
 
       const options = {
         key: process.env.REACT_APP_RAZORPAY_KEY,
@@ -136,7 +160,6 @@ export function BookConsultationPopup({
                 razorpay_signature: response.razorpay_signature,
               }),
             );
-
             if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) {
               toast.error("Payment verification failed");
               return;
@@ -157,34 +180,20 @@ export function BookConsultationPopup({
                 user_id:
                   JSON.parse(localStorage.getItem("user") || "null")?._id ||
                   null,
+                slot_date,
+                slot_time: time,
+                slot_duration: durationMinutes,
               }),
             );
 
             if (createConsultationBooking.fulfilled.match(bookingRes)) {
-              toast.success(
-                `Payment successful! Now pick your ${consultationType === "voice" ? "voice" : "video"} call slot.`,
-              );
-
               const bookingPayload = bookingRes.payload;
-
               const extractedId =
                 bookingPayload?.data?._id ??
                 bookingPayload?.data?.id ??
                 bookingPayload?._id ??
                 bookingPayload?.id ??
                 null;
-
-              if (!extractedId) {
-                console.error(
-                  "Booking created but id missing in response:",
-                  bookingPayload,
-                );
-                toast.error(
-                  "Booking saved but reference id missing, please contact support",
-                );
-                setIsProcessing(false);
-                return;
-              }
 
               const bookingData = {
                 type: consultationType,
@@ -195,25 +204,63 @@ export function BookConsultationPopup({
                 price: selectedPrice,
                 transaction_id: response.razorpay_payment_id,
                 booking_id: extractedId,
+                slot_date,
+                slot_time: time,
+                slot_duration: durationMinutes,
               };
 
-              setLastBookingData(bookingData);
-
-              if (onConfirm) {
-                onConfirm(bookingData);
+              if (extractedId) {
+                const slotRes = await dispatch(
+                  updateBookingSlot({
+                    booking_id: extractedId,
+                    slot_date,
+                    slot_time: time,
+                    slot_duration: durationMinutes,
+                  }),
+                );
+                if (!updateBookingSlot.fulfilled.match(slotRes)) {
+                  toast.error(
+                    slotRes.payload ||
+                      "Payment succeeded but slot could not be saved, please contact support",
+                  );
+                  setIsProcessing(false);
+                  return;
+                }
+              } else {
+                console.error(
+                  "Booking created but id missing in response:",
+                  bookingPayload,
+                );
+                toast.error(
+                  "Booking saved but reference id missing, slot not saved. Please contact support",
+                );
+                setIsProcessing(false);
+                return;
               }
 
+              toast.success(
+                `Booking confirmed for ${date.toDateString()} at ${time} 🎉`,
+              );
+              if (onConfirm) onConfirm(bookingData);
+              resetAll();
               if (onClose) onClose();
-              setIsSlotPopupOpen(true);
+              navigate("/");
             } else {
-              toast.error("Booking save failed, please contact support");
+              toast.error(
+                bookingRes.payload ||
+                  "Booking save failed, please contact support",
+              );
             }
           } catch (err) {
             toast.error("Something went wrong after payment");
+          } finally {
+            setIsProcessing(false);
           }
         },
         prefill: {
           contact: phoneNumber,
+          name: fullName,
+          email: email || undefined,
         },
         theme: { color: "#000000" },
         modal: {
@@ -235,52 +282,18 @@ export function BookConsultationPopup({
     }
   };
 
-  const handleSlotSubmit = async ({ date, time, durationMinutes }) => {
-    if (!lastBookingData?.booking_id) {
-      toast.error("Booking reference missing, please contact support");
-      return;
-    }
-
-    setIsSavingSlot(true);
-    try {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      const slot_date = `${y}-${m}-${d}`;
-
-      const res = await dispatch(
-        updateBookingSlot({
-          booking_id: lastBookingData.booking_id,
-          slot_date,
-          slot_time: time,
-          slot_duration: durationMinutes,
-        }),
-      );
-
-      if (updateBookingSlot.fulfilled.match(res)) {
-        toast.success(`Slot confirmed: ${date.toDateString()} at ${time} 🎉`);
-        setIsSlotPopupOpen(false);
-        navigate("/");
-      } else {
-        toast.error(res.payload || "Failed to save slot, please try again");
-      }
-    } catch (err) {
-      toast.error("Failed to save slot, please try again");
-    } finally {
-      setIsSavingSlot(false);
-    }
-  };
+  if (!isOpen || status !== "active") return null;
 
   return (
     <>
-      {isOpen && status === "active" && (
+      {view === "details" && (
         <div
           onClick={handleBackdropClick}
           className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 animate-fade-in"
         >
           <div className="relative bg-white w-full max-w-[480px] h-[650px] rounded-[20px] shadow-2xl relative overflow-y-auto animate-scale-up border border-gray-100 flex flex-col hide-scrollbar::-webkit-scrollbar hide-scrollbar">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="absolute top-2 right-2 z-50 w-8 h-8 rounded-full bg-white flex items-center justify-center transition-all cursor-pointer group"
               aria-label="Close popup"
             >
@@ -290,12 +303,13 @@ export function BookConsultationPopup({
               />
             </button>
 
-            <div className="bg-[#0b0c0e] h-[175px] px-6 pt-6 pb-4 relative flex justify-between ">
-              <div className="z-10 flex flex-col justify-start max-w-[50%] mt-2">
-                <h2 className="text-white text-xl md:text-2xl font-black tracking-tight leading-none uppercase">
+            {/* <div className="bg-[#0b0c0e] h-[175px] px-6 pt-6 pb-4 relative flex justify-between "> */}
+            <div className="bg-[#FAF3ED] h-[175px] px-6 pt-6 pb-4 relative flex justify-between">
+              <div className="z-20 flex flex-col justify-start max-w-[50%]">
+                <h2 className="text-black text-xl md:text-2xl font-black tracking-tight leading-none uppercase">
                   {productTitle}
                 </h2>
-                <p className="text-gray-400 text-[9px] md:text-[10px] font-black tracking-wider leading-tight uppercase mt-1.5">
+                <p className="text-gray-700 text-[9px] md:text-[10px] font-black tracking-wider leading-tight uppercase mt-1.5">
                   {subtitle.includes("\n")
                     ? subtitle.split("\n").map((line, i) => (
                         <span key={i}>
@@ -307,11 +321,13 @@ export function BookConsultationPopup({
                 </p>
               </div>
 
-              <div className="absolute left-2 bottom-[-15px] z-20 pointer-events-none">
+              {/* <div className="absolute left-1/2 -translate-x-1/2 bottom-[-12px] z-10 pointer-events-none"> */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+
                 <img
                   src={getImageUrl(imageUrl)}
                   alt={productTitle}
-                  className="w-[200px] h-[130px] object-contain filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]"
+                  className="w-[200px] h-[100px] object-contain filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]"
                 />
               </div>
 
@@ -350,7 +366,7 @@ export function BookConsultationPopup({
               </div>
 
               <form
-                onSubmit={handleConfirm}
+                onSubmit={handleNext}
                 className="mt-4 flex flex-col text-left"
               >
                 <span className="text-[10px] md:text-[11px] font-black tracking-widest text-[#a0a5b5] uppercase">
@@ -414,7 +430,7 @@ export function BookConsultationPopup({
                 <span className="text-[10px] md:text-[11px] font-black tracking-widest text-[#a0a5b5] uppercase mt-5">
                   Your Details
                 </span>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
                       Full Name*
@@ -442,46 +458,10 @@ export function BookConsultationPopup({
                     />
                   </div>
 
-                  {/* <label>Number*</label>
-                  <div
-                    className="mt-2 border-2 border-gray-100 rounded-[20px] flex items-center
-             px-4 py-3.5 input-common"
-                  >
-                    <div className="flex items-center gap-1.5 pr-3 mr-3 border-r-2 border-gray-200 text-gray-900 font-extrabold text-sm select-none cursor-pointer">
-                      <span>{countryCode}</span>
-                      <ChevronDown
-                        size={14}
-                        className="text-gray-400 stroke-[3]"
-                      />
-                    </div>
-                    <input
-                      type="tel"
-                      placeholder="Phone Number *"
-                      value={phoneNumber}
-                      onChange={(e) =>
-                        setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))
-                      }
-                      className="flex-1 bg-transparent border-none outline-none text-gray-900 font-extrabold text-sm placeholder-gray-400"
-                      maxLength={10}
-                      required
-                    />
-                  </div> */}
                   <div>
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">
                       Phone Number*
                     </label>
-                    {/* <div
-                      className="mt-1 border-2 border-gray-100 rounded-[20px] flex items-center
-                 px-4 py-3.5 focus-within:border-black transition-colors duration-200 bg-[#fafafc]
-                  focus-within:bg-white"
-                    > */}
-                    {/* <div className="flex items-center gap-1.5 pr-3 mr-3 border-r-2 border-gray-200 text-gray-900 font-extrabold text-sm select-none cursor-pointer">
-                        <span>{countryCode}</span>
-                        <ChevronDown
-                          size={14}
-                          className="text-gray-400 stroke-[3]"
-                        />
-                      </div> */}
                     <input
                       type="tel"
                       placeholder="Phone Number *"
@@ -490,11 +470,9 @@ export function BookConsultationPopup({
                         setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))
                       }
                       className="input-common w-full mt-1 border-2 border-gray-100 rounded-[20px] px-4 py-3 text-sm font-bold text-gray-900 outline-none focus:border-black bg-[#fafafc] focus:bg-white transition-colors"
-                      // className="flex-1 bg-transparent border-none outline-none text-gray-900 font-extrabold text-sm placeholder-gray-400"
                       maxLength={10}
                       required
                     />
-                    {/* </div> */}
                   </div>
 
                   <div>
@@ -510,20 +488,11 @@ export function BookConsultationPopup({
                     />
                   </div>
                 </div>
-
                 <button
                   type="submit"
-                  disabled={isProcessing}
-                  className="w-full bg-black hover:bg-neutral-900 text-white font-extrabold tracking-widest py-4 rounded-[20px] uppercase text-xs md:text-sm mt-6 shadow-lg shadow-black/10 active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full bg-black hover:bg-neutral-900 text-white font-extrabold tracking-widest py-4 rounded-[20px] uppercase text-xs md:text-sm mt-6 shadow-lg shadow-black/10 active:scale-[0.98] transition-all duration-200 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {isProcessing ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      PROCESSING...
-                    </>
-                  ) : (
-                    `PAY ₹${selectedPrice} & CONFIRM`
-                  )}
+                  NEXT: CHOOSE DATE & SLOT
                 </button>
 
                 <span className="text-[9px] md:text-[10px] text-gray-400 font-black tracking-widest text-center mt-3.5 uppercase">
@@ -536,11 +505,13 @@ export function BookConsultationPopup({
       )}
 
       <BookSlotPopup
-        isOpen={isSlotPopupOpen}
-        onClose={() => setIsSlotPopupOpen(false)}
-        onSubmit={handleSlotSubmit}
+        isOpen={view === "slot"}
+        onClose={handleClose}
+        onBack={handleBackToDetails}
+        onSubmit={handleConfirmSlotAndPay}
         consultationType={consultationType}
-        isSubmitting={isSavingSlot}
+        isSubmitting={isProcessing}
+        price={selectedPrice}
       />
     </>
   );

@@ -24,20 +24,30 @@ import { createOrder } from "../features/orders/orderThunk";
 import {
   calculateShipping,
   calculatePartialCodAdvance,
+  getShippingPaymentKey,
+  getDisabledPaymentTypes,
 } from "../utils/shippingCalculator";
-import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
 import { deleteCartItem, fetchCart } from "../features/cart/cartThunk";
 import LoginForm from "./Login";
 import CouponDrawer from "../components/cart/Coupondrawer";
 import { fetchCoupons } from "../features/coupons/couponsThunk";
+import { fetchShippingCharge } from "../features/sippingcharge/sippingchargeThunk";
+
 export default function Checkout() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
   const buyNowMode = location.state?.buyNow;
   const buyNowItem = location.state?.item;
+  const buyNowItems = location.state?.items;
   const { items = [], loading } = useSelector((state) => state.cart);
-  const baseItems = buyNowMode ? [buyNowItem] : items;
+
+  const baseItems = buyNowMode
+    ? buyNowItems?.length
+      ? buyNowItems
+      : [buyNowItem]
+    : items;
+
   const [consultationGift, setConsultationGift] = useState(null);
   const [quantities, setQuantities] = useState(() =>
     Object.fromEntries(
@@ -69,7 +79,7 @@ export default function Checkout() {
   const { pages } = useSelector((state) => state.pages);
   const { loading: paymentLoading } = useSelector((state) => state.payments);
   const { user } = useSelector((state) => state.auth);
-  const settings = useSelector((state) => state.systemseting.data);
+  const settings = useSelector((state) => state.sippingcharge.data);
   const checkoutPage = pages?.find((page) => page.slug === "checkout");
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const razorpayKey = process.env.REACT_APP_RAZORPAY_KEY;
@@ -343,7 +353,7 @@ export default function Checkout() {
   });
   useEffect(() => {
     dispatch(fetchPageBySlug("checkout"));
-    dispatch(fetchSystemSettings());
+    dispatch(fetchShippingCharge());
   }, [dispatch]);
   useEffect(() => {
     if (!checkoutItems.length) return;
@@ -429,25 +439,99 @@ export default function Checkout() {
         return "prepaid";
     }
   };
+  const overrideItems = checkoutItems.filter((item) => {
+    const t = item?.variant_id?.shippingChargeType;
+    return t && t !== "null";
+  });
+  const defaultItems = checkoutItems.filter((item) => {
+    const t = item?.variant_id?.shippingChargeType;
+    return !t || t === "null";
+  });
+
+  const overrideShipping = overrideItems.reduce((sum, item) => {
+    const type = item.variant_id.shippingChargeType;
+    const qty = item.quantity || 1;
+
+    if (type === "free") return sum;
+
+    if (type === "fixed") {
+      const value = Number(item.variant_id.shippingChargeValue || 0);
+      return sum + value * qty;
+    }
+
+    if (type === "percentage") {
+      const { discountedPrice } = getDiscountedPrice(item);
+      const value = Number(item.variant_id.shippingChargeValue || 0);
+      return sum + Math.round((discountedPrice * qty * value) / 100);
+    }
+    return sum;
+  }, 0);
+  const defaultSubtotal = defaultItems.reduce((sum, item) => {
+    const { discountedPrice } = getDiscountedPrice(item);
+    return sum + discountedPrice * (item.quantity || 1);
+  }, 0);
+
+  const totalWeight = defaultItems.reduce((sum, item) => {
+    const weight = Number(item?.variant_id?.ProductWeight || 0);
+    return sum + weight * (item.quantity || 1);
+  }, 0);
   const settingsLoaded = !!settings;
-  const paymentType = getPaymentType(selectedPayment);
-  const shipping = settingsLoaded
-    ? calculateShipping(subtotal, paymentType, settings)
-    : 0;
+  const shippingPaymentKey = getShippingPaymentKey(selectedPayment);
+  const defaultShippingItems = defaultItems.map((item) => {
+    const { discountedPrice } = getDiscountedPrice(item);
+    return {
+      productId: item.product_id?._id || item.product_id,
+      subCategoryId:
+        item.product_id?.subcategory_id?._id ||
+        item.product_id?.subcategory_id ||
+        item.product_id?.category_id?._id ||
+        item.product_id?.category_id,
+      price: discountedPrice,
+      quantity: item.quantity || 1,
+      weight: Number(item?.variant_id?.ProductWeight || 0),
+      name: item.product_id?.name || item.product_id?.title || "",
+    };
+  });
+  const disabledPaymentTypes = settingsLoaded
+    ? getDisabledPaymentTypes(defaultShippingItems, settings)
+    : {
+        cod: { disabled: false, products: [] },
+        partial_cod: { disabled: false, products: [] },
+        prepaid: { disabled: false, products: [] },
+      };
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    const isPrepaidMethod =
+      selectedPayment === "razorpay" || selectedPayment === "PhonePe";
+    const isDisabledNow =
+      (isPrepaidMethod && disabledPaymentTypes.prepaid.disabled) ||
+      (selectedPayment === "cod" && disabledPaymentTypes.cod.disabled) ||
+      (selectedPayment === "partial_cod" &&
+        disabledPaymentTypes.partial_cod.disabled);
+    if (isDisabledNow) {
+      if (!disabledPaymentTypes.prepaid.disabled)
+        setSelectedPayment("razorpay");
+      else if (!disabledPaymentTypes.cod.disabled) setSelectedPayment("cod");
+      else if (!disabledPaymentTypes.partial_cod.disabled)
+        setSelectedPayment("partial_cod");
+    }
+  }, [settingsLoaded, disabledPaymentTypes, selectedPayment]);
+  const defaultShipping =
+    settingsLoaded && defaultShippingItems.length > 0
+      ? calculateShipping(defaultShippingItems, shippingPaymentKey, settings)
+      : 0;
+
+  const shipping = overrideShipping + defaultShipping;
+
   const total = Number((subtotal + shipping).toFixed(0));
   const partialCodAdvance = calculatePartialCodAdvance(total, settings);
   const isPartialCod = selectedPayment === "partial_cod";
-
   const getBackendPaymentMethod = (method) => {
     if (method === "partial_cod" || method === "cod") return "COD";
     return "Online";
   };
-  const couponDiscountAmount = appliedCoupon
-    ? appliedCoupon.discount_type === "fixed"
-      ? appliedCoupon.discount_value
-      : Math.round((subtotal * appliedCoupon.discount_value) / 100)
-    : 0;
-  const totalSaved = mrpTotal - subtotal + couponDiscountAmount;
+  const totalSaved = mrpTotal - subtotal + couponDiscount;
+
   const itemDiscount = mrpTotal - offerPriceTotal;
   const validateForm = (userLS) => {
     if (!userLS || !userLS._id) {
@@ -498,7 +582,6 @@ export default function Checkout() {
             : giftItem.product_id
               ? [giftItem.product_id]
               : [];
-
         giftItems = ids.map((pid) => ({
           product_id: typeof pid === "object" ? pid._id : pid,
           variant_id: null,
@@ -510,9 +593,7 @@ export default function Checkout() {
         }));
       }
     }
-
     const finalItems = [...checkoutItems, ...giftItems];
-
     const orderData = {
       user_id: userLS._id,
       items: finalItems,
@@ -702,6 +783,19 @@ export default function Checkout() {
   const handlePlaceOrder = async () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
     if (!validateForm(userLS)) return;
+    const isPrepaidMethod =
+      selectedPayment === "razorpay" || selectedPayment === "PhonePe";
+    if (
+      (isPrepaidMethod && disabledPaymentTypes.prepaid.disabled) ||
+      (selectedPayment === "cod" && disabledPaymentTypes.cod.disabled) ||
+      (selectedPayment === "partial_cod" &&
+        disabledPaymentTypes.partial_cod.disabled)
+    ) {
+      toast.error(
+        "Selected payment method is not available for some products in your cart",
+      );
+      return;
+    }
     const orderId = await createNewOrder(userLS);
     if (!orderId) return;
     if (selectedPayment === "PhonePe") await handlePhonePe(userLS, orderId);
@@ -786,7 +880,8 @@ export default function Checkout() {
                           </p>
                         ) : (
                           <p className="text-[12px] text-green-600 font-medium mt-[2px]">
-                            ₹{couponDiscountAmount.toLocaleString("en-IN")}{" "}
+                            ₹
+                            {Math.round(couponDiscount).toLocaleString("en-IN")}{" "}
                             coupon savings
                           </p>
                         )}
@@ -830,8 +925,7 @@ export default function Checkout() {
                           Free Gift Unlocked: {consultationGift.product?.name}
                         </p>
                         <p className="text-[12px] text-pink-500">
-                          Aa product automatically free ma add thase order place
-                          karta j!
+                          consultation book gift free
                         </p>
                       </div>
                     </div>
@@ -852,6 +946,7 @@ export default function Checkout() {
                 partialCodAdvance={partialCodAdvance}
                 settingsLoaded={settingsLoaded}
                 isBuyNowMode={buyNowMode}
+                disabledPaymentTypes={disabledPaymentTypes}
               />
             </div>
           </Row>
@@ -896,7 +991,6 @@ export default function Checkout() {
               )}
             </Button>
           </div>
-
           <div className="grid grid-cols-2 h-[60px] md:hidden">
             <div className="flex flex-col justify-center leading-tight ms-2">
               <div className="flex items-baseline gap-1.5">

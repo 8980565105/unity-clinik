@@ -15,11 +15,9 @@ import { getImageUrl } from "../utils/helper";
 import toast from "react-hot-toast";
 import Button from "../ui/Button";
 import api from "../../services/api";
-
 function ProductPopup({ item, onClose }) {
   const navigate = useNavigate();
   if (!item) return null;
-
   const originalPrice = Number(
     item?.original_price || item?.variant_id?.price || 0,
   );
@@ -30,20 +28,16 @@ function ProductPopup({ item, onClose }) {
     originalPrice > discountedPrice
       ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
       : item?.product_id?.discount_id?.value || 0;
-
   const imgSrc =
     item.variant_id?.images?.length > 0
       ? getImageUrl(item.variant_id.images[0])
       : getImageUrl(item.product_id?.images?.[0]);
-
   const productId = item.product_id?._id;
   const categories = item.product_id?.categories || [];
-
   const handleViewFull = () => {
     onClose();
     navigate(`/products/${productId}`);
   };
-
   return (
     <div
       className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -119,7 +113,6 @@ function ProductPopup({ item, onClose }) {
 
 function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
   const [loading, setLoading] = useState(false);
-
   const [form, setForm] = useState({
     fullName: "",
     phone: "",
@@ -696,12 +689,10 @@ export default function CheckoutForm({
   const selectedAddress = addresses[selectedIndex] || null;
   const handleAddAddressClick = () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
-
     if (!userLS?._id) {
       setShowLoginPopup(true);
       return;
     }
-
     setShowPopup(true);
   };
 

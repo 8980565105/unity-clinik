@@ -21,7 +21,7 @@ export default function CouponSidebar() {
 
   const CLOSE_STORAGE_KEY = "couponPopupClosedAt";
   // const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
-  const COOLDOWN_MS = 10 * 60 * 1000; // 10 minit (testing)
+  const COOLDOWN_MS = 10 * 60 * 1000; 
   const TRIGGER_PATHS = ["/cart", "/checkout"];
 
   const [closedAt, setClosedAt] = useState(() =>
@@ -41,16 +41,46 @@ export default function CouponSidebar() {
     const isTriggerPage = TRIGGER_PATHS.some((path) =>
       location.pathname.toLowerCase().startsWith(path),
     );
-
+    let collapseTimer;
     if (isTriggerPage) {
       setVisible(true);
       setOpen(true);
+      collapseTimer = setTimeout(() => {
+        setOpen(false);
+      }, 5000);
     } else {
       const onCooldown = isCooldownActive(closedAt);
       setVisible(!onCooldown);
       setOpen(!onCooldown);
+      if (!onCooldown) {
+        collapseTimer = setTimeout(() => {
+          setOpen(false);
+        }, 5000);
+      }
     }
+    return () => clearTimeout(collapseTimer);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!closedAt) return;
+    const elapsed = Date.now() - Number(closedAt);
+    const remaining = COOLDOWN_MS - elapsed;
+    const reveal = () => {
+      localStorage.removeItem(CLOSE_STORAGE_KEY);
+      setClosedAt(null);
+      setVisible(true);
+      setOpen(true);
+      setTimeout(() => {
+        setOpen(false);
+      }, 5000);
+    };
+    if (remaining <= 0) {
+      reveal();
+      return;
+    }
+    const timer = setTimeout(reveal, remaining);
+    return () => clearTimeout(timer);
+  }, [closedAt]);
 
   useEffect(() => {
     if (!closedAt) return;

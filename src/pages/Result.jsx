@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ResultsCard from "../components/results/ResultsCard";
 import Section from "../components/ui/Section";
@@ -7,8 +7,11 @@ import { fetchResults } from "../features/results/resultsThunk";
 import SEO from "../components/seo/seo";
 import { fetchPageBySlug, fetchPages } from "../features/pages/pagesThunk";
 import Loding from "../components/loding/loding";
-import SuccessStorySection from "../components/home/SuccessStory";
 
+const SuccessStorySection = lazy(
+  () => import("../components/home/SuccessStory.jsx"),
+);
+const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
 const BASE_URL = process.env.REACT_APP_API_URL_IMAGE;
 function Modal({ data, onClose }) {
   const [expand, setExpand] = useState(false);
@@ -137,8 +140,12 @@ export default function Result() {
           </div>
         </Row>
       </Section>
-
-      <SuccessStorySection />
+      <Suspense>
+        <SuccessStorySection />
+      </Suspense>
+      <Suspense>
+        <ReportCard />
+      </Suspense>
     </>
   );
 }

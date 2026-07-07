@@ -29,6 +29,7 @@ import SystemSettingsReducer from "./features/systemsetting/systemsettingSlice";
 import aboutReducer from "./features/about/aboutSlice";
 import popupReducer from "./features/popup/popupSlice";
 import consultationPageReducer from "./features/consaltantion/consaltantionSlice";
+import sippingchargeReducer from "./features/sippingcharge/sippingchargeSlice";
 
 export const rootReducer = {
   auth: authReducer,
@@ -62,4 +63,5 @@ export const rootReducer = {
   about: aboutReducer,
   popup: popupReducer,
   consultationPage: consultationPageReducer,
+  sippingcharge: sippingchargeReducer,
 };

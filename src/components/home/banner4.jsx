@@ -14,24 +14,9 @@ export default function Banner4() {
   const desktopImg = bannerImage ? getImageUrl(bannerImage) : null;
 
   const mobileImg = bannerMobileImage ? getImageUrl(bannerMobileImage) : null;
-  // const desktopImg = getImageUrl(banner4?.banner4?.image);
-  // const mobileImg = getImageUrl(banner4?.banner4?.mobileimg);
 
   return (
     <>
-      {/* <Section className="w-full">
-        <img
-          src={desktopImg}
-          alt="banner4"
-          className="hidden md:block w-full h-auto object-cover"
-        />
-        <img
-          src={mobileImg}
-          alt="banner4"
-          className="block md:hidden w-full h-auto object-cover"
-        />
-      </Section> */}
-
       {desktopImg && (
         <Section className="w-full">
           <picture>

@@ -4,10 +4,15 @@ import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import LoginForm from "./Login.jsx";
 import SEO from "../components/seo/seo.js";
 import Hero1 from "../components/home/hero1.jsx";
-import Section from "../components/ui/Section.jsx";
+// import Section from "../components/ui/Section.jsx";
 import Loding from "../components/loding/loding.jsx";
-import { getImageUrl } from "../components/utils/helper.js";
+// import { getImageUrl } from "../components/utils/helper.js";
 import { ConstaltationPopup } from "../components/popup/constaltantionpopup.jsx";
+import Honest from "../components/home/honest.jsx";
+import HolisticApproach from "../components/home/HolisticApproach.jsx";
+import TimelineResult from "../components/home/TimelineResult.jsx";
+import GetStarted from "../components/home/GetStarted.jsx";
+import Banner2 from "./banner2.jsx";
 
 const CategoriesSection = lazy(
   () => import("../components/home/CategoriesSection"),
@@ -49,28 +54,43 @@ const Banner4 = lazy(() => import("../components/home/banner4.jsx"));
 const SuccessStorySection = lazy(
   () => import("../components/home/SuccessStory.jsx"),
 );
+
+const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
+
 const Home = () => {
   const dispatch = useDispatch();
   const [showLoginPopup, setShowLoginPopup] = useState(false);
-  // const [isConsultationPopupOpen, setIsConsultationPopupOpen] = useState(false);
-
   const [isConsultationPopupOpen, setIsConsultationPopupOpen] = useState(false);
   const [isHomeLoaded, setIsHomeLoaded] = useState(false);
-
   const { pages, slugLoading } = useSelector((state) => state.pages);
   const { data: popupData } = useSelector((state) => state.popup);
-
   const homePage = pages?.find((page) => page.slug === "home");
-  const { slides } = useSelector((state) => state.slides);
-  const banner2 = slides.find((s) => s.section === "banner2");
-  const { productLabels = [] } = useSelector((state) => state.productLabels);
+  // const { slides } = useSelector((state) => state.slides);
+  // const { productLabels = [] } = useSelector((state) => state.productLabels);
 
-  const bannerImage = banner2?.banner2?.image;
-  const bannerMobileImage = banner2?.banner2?.mobileimg;
-
-  const desktopImg = bannerImage ? getImageUrl(bannerImage) : null;
-
-  const mobileImg = bannerMobileImage ? getImageUrl(bannerMobileImage) : null;
+  const sectionMap = {
+    hero: <Hero1 />,
+    honest: <Honest />,
+    holisticapproach: <HolisticApproach />,
+    timelineresult: <TimelineResult />,
+    getstarted: <GetStarted />,
+    successstorysection: <SuccessStorySection />,
+    bestsellers: <Bestsellers />,
+    bannerslider: <BannerSlider />,
+    banner2: <Banner2 />,
+    categoriessection: <CategoriesSection />,
+    shortbanner: <ShortBanner />,
+    topdoctor: <Topdoctor />,
+    trendingclothes: <TrendingClothes />,
+    banner4: <Banner4 />,
+    featuredproducts: <FeaturedProducts />,
+    countsection: <Countsection />,
+    recommendedsection: <RecommendedSection />,
+    reportcard: <ReportCard />,
+    contacthome: <ContactHome />,
+    customerreviews: <Customerreviews />,
+    featuresection: <FeatureSection />,
+  };
 
   useEffect(() => {
     if (!slugLoading) {
@@ -84,22 +104,7 @@ const Home = () => {
 
   useEffect(() => {
     const hasSeen = localStorage.getItem("hasSeenConsultationPopup");
-
-    //   if (
-    //     isHomeLoaded &&
-    //     !hasSeen &&
-    //     popupData &&
-    //     popupData.status === "active" &&
-    //     popupData.type === "consultation"
-    //   ) {
-    //     const timer = setTimeout(() => {
-    //       setIsConsultationPopupOpen(true);
-    //     }, 3000);
-
-    //     return () => clearTimeout(timer);
-    //   }
     const consultation = popupData?.consultation;
-
     if (
       isHomeLoaded &&
       !hasSeen &&
@@ -109,7 +114,6 @@ const Home = () => {
       const timer = setTimeout(() => {
         setIsConsultationPopupOpen(true);
       }, 3000);
-
       return () => clearTimeout(timer);
     }
   }, [popupData, isHomeLoaded]);
@@ -120,7 +124,6 @@ const Home = () => {
     } else {
       document.body.style.overflow = "auto";
     }
-
     return () => {
       document.body.style.overflow = "auto";
     };
@@ -144,86 +147,25 @@ const Home = () => {
         image={`${process.env.REACT_APP_API_URL_IMAGE}${homePage?.seo_image}`}
       />
       <div className="text-center">
-        <Hero1 />
-
-        <Suspense>
-          <SuccessStorySection />
-        </Suspense>
-        <Suspense>
-          <Bestsellers />
-        </Suspense>
-
-        <Suspense>
-          <BannerSlider />
-        </Suspense>
-
-        {desktopImg && (
-          <Section className="w-full">
-            <picture>
-              {mobileImg && (
-                <source media="(max-width: 767px)" srcSet={mobileImg} />
-              )}
-
-              <img
-                src={desktopImg}
-                alt="banner2"
-                loading="lazy"
-                decoding="async"
-                className="w-full h-auto object-cover"
-              />
-            </picture>
-          </Section>
-        )}
-
-        <Suspense>
-          <CategoriesSection />
-        </Suspense>
-        <Suspense>
-          <ShortBanner />
-        </Suspense>
-        <Suspense>
-          <Topdoctor />
-        </Suspense>
-        <Suspense>
-          <TrendingClothes />
-        </Suspense>
-
-        <Suspense>
-          <Banner4 />
-        </Suspense>
-        <Suspense>
-          <FeaturedProducts />
-        </Suspense>
-        <Suspense>
-          <Countsection />
-        </Suspense>
-        <Suspense>
-          <RecommendedSection />
-        </Suspense>
-        <Suspense>
-          <ContactHome />
-        </Suspense>
-        <Suspense>
-          <Customerreviews />
-        </Suspense>
-        <Suspense>
-          <FeatureSection />
+        <Suspense fallback={<Loding />}>
+          {homePage?.home_sections
+            ?.filter((item) => item.enabled)
+            ?.sort((a, b) => a.order - b.order)
+            ?.map((item) => (
+              <React.Fragment key={item.type}>
+                {sectionMap[item.type]}
+              </React.Fragment>
+            ))}
         </Suspense>
       </div>
 
       {isConsultationPopupOpen && (
-        // <ConstaltationPopup
-        //   isOpen={isConsultationPopupOpen}
-        //   onClose={handleCloseConsultationPopup}
-        //   data={popupData?.consultation}
-        // />
         <ConstaltationPopup
           isOpen={isConsultationPopupOpen}
           onClose={handleCloseConsultationPopup}
           data={popupData?.consultation?.consultation}
         />
       )}
-
       {showLoginPopup && (
         <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center px-4">
           <div className="relative bg-white w-full max-w-md rounded-md overflow-hidden">

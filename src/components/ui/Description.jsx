@@ -6,7 +6,7 @@ function Description({ Description, align = "center", className = "" }) {
       } ${className}`}
     >
 
-      <p className="text-center text-gray-500 text-sm">
+      <p className={`text-center text-gray-500 text-[14px] text-[28px] ${className}`}>
         {Description}
       </p>
 

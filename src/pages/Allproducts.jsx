@@ -19,6 +19,12 @@ import LoginForm from "./Login";
 import RegistrationForm from "./RegistrationForm";
 import ForgetForm from "./ForgetForm";
 
+const SuccessStorySection = lazy(
+  () => import("../components/home/SuccessStory.jsx"),
+);
+
+const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
+
 const ProductCard = lazy(() => import("../components/product/ProductCard"));
 function Allproducts() {
   const dispatch = useDispatch();
@@ -507,6 +513,14 @@ function Allproducts() {
                 </div>
               )}
             </div>
+
+            <Suspense>
+              <SuccessStorySection />
+            </Suspense>
+
+            <Suspense>
+              <ReportCard />
+            </Suspense>
           </div>
         </div>
       </div>

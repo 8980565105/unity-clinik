@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getImageUrl } from "../components/utils/helper";
@@ -8,6 +8,11 @@ import NavBtn from "../components/ui/Navbtn";
 import Heading from "../components/ui/Heading";
 import SEO from "../components/seo/seo";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
+const SuccessStorySection = lazy(
+  () => import("../components/home/SuccessStory.jsx"),
+);
+
+const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
 
 const CARD_W = 170;
 const GAP = 16;
@@ -284,6 +289,14 @@ export default function Collections({ products = [] }) {
           )}
         </Row>
       </Section>
+
+      <Suspense>
+        <SuccessStorySection />
+      </Suspense>
+
+      <Suspense>
+        <ReportCard />
+      </Suspense>
     </>
   );
 }

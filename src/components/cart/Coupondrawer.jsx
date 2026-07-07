@@ -50,7 +50,21 @@ export default function CouponDrawer({
     onAutoApplyDone?.();
   }, [isOpen, autoApplyCode, coupons]);
 
+  const isCouponLimitReached = (coupon) => {
+    if (!coupon.userusage_limit) return false;
+    if (!user?._id) return false;
+
+    const userEntry = coupon.user_usage?.find(
+      (u) => String(u.user_id) === String(user._id),
+    );
+    const userUsedCount = userEntry ? userEntry.count : 0;
+
+    return userUsedCount >= coupon.userusage_limit;
+  };
+
   const filteredCoupons = coupons.filter((coupon) => {
+    if (coupon.coupon_type === "privet") return false;
+
     const isFirstOrderOnly =
       coupon.coupon_type === "first_order" || coupon.coupon_type === "referral";
 
@@ -211,13 +225,19 @@ export default function CouponDrawer({
                   coupon.coupon_type !== "buy_x_get_y"
                     ? true
                     : eligibleQty >= buyQty;
+
+                const limitReached = isCouponLimitReached(coupon);
+                const canApply = canApplyBuyXGetY && !limitReached;
+
                 return (
                   <div
                     key={coupon._id}
                     className={`border rounded-[10px] overflow-hidden transition-all ${
                       isApplied
                         ? "border-green-400 bg-green-50"
-                        : "border-gray-200 bg-white"
+                        : limitReached
+                          ? ""
+                          : ""
                     }`}
                   >
                     <div className="flex items-center justify-between px-[14px] py-[12px]">
@@ -239,7 +259,9 @@ export default function CouponDrawer({
                             {coupon.code}
                           </span>
                           <span
-                            className={`text-[11px] font-semibold ${isApplied ? "text-green-600" : "text-[#1a5fb4]"}`}
+                            className={`text-[11px] font-semibold ${
+                              isApplied ? "text-green-600" : "text-[#1a5fb4]"
+                            }`}
                           >
                             {coupon.discount_type === "fixed"
                               ? `Get ₹${coupon.discount_value} off`
@@ -247,6 +269,7 @@ export default function CouponDrawer({
                           </span>
                         </div>
                       </div>
+
                       {isApplied ? (
                         <button
                           onClick={() => {
@@ -260,27 +283,30 @@ export default function CouponDrawer({
                         </button>
                       ) : (
                         <button
-                          disabled={!canApplyBuyXGetY}
+                          disabled={!canApply}
                           onClick={() => {
+                            if (!canApply) return;
                             onSelectCoupon(coupon.code);
                           }}
-                          className={`
-    text-[13px]
-    font-bold
-    rounded-[6px]
-    px-[16px]
-    py-[6px]
-    ${
-      canApplyBuyXGetY
-        ? "text-white bg-[#1a5fb4]"
-        : "text-gray-400 bg-gray-200 cursor-not-allowed"
-    }
-  `}
+                          className={`text-[13px] font-bold rounded-[6px] px-[16px] py-[6px] ${
+                            canApply
+                              ? "text-white bg-[#1a5fb4]"
+                              : "text-gray-400 bg-gray-200 cursor-not-allowed"
+                          }`}
                         >
                           Apply
                         </button>
                       )}
                     </div>
+
+                    {limitReached && (
+                      <div className="px-[14px] pb-[10px]">
+                        <p className="text-[11px] font-semibold text-red-500">
+                          You've already used this coupon the maximum number of
+                          times.
+                        </p>
+                      </div>
+                    )}
 
                     {coupon.name && (
                       <div className="px-[14px] pb-[10px]">

@@ -1,7 +1,6 @@
 import { X, Clock, Calendar, ArrowRight } from "lucide-react";
 import { getImageUrl } from "../utils/helper";
 import { useNavigate } from "react-router-dom";
-
 export function ConstaltationPopup({ isOpen = true, onClose, data }) {
   const defaultData = {
     title1: "LIMITED TIME OFFER",
@@ -80,7 +79,6 @@ export function ConstaltationPopup({ isOpen = true, onClose, data }) {
             </div>
           </div>
 
-          {/* <div className="md:col-span-5 flex justify-center gap-4 items-center relative"> */}
           <div className="md:col-span-5 flex flex-row md:flex-col justify-center items-center gap-4 relative">
             <div className="relative transform -rotate-1 -skew-x-[12deg] shadow-lg rounded-lg overflow-hidden border border-[#c2e2c2]/50 max-w-[210px] w-full">
               <div className="bg-[#155e37] text-white px-5 py-2.5 flex flex-col items-center">

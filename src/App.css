@@ -707,3 +707,44 @@ video {
 video:fullscreen {
   object-fit: contain;
 }
+
+
+/* announce bar */
+
+.announcement-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  width: 100%;
+  text-align: center;
+}
+
+.announcement-content p {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+@media (min-width: 768px) {
+  .announcement-content p {
+    font-size: 15px;
+  }
+}
+
+.announcement-content strong {
+  font-weight: 700;
+}
+
+.announcement-content em {
+  font-style: italic;
+}
+
+.announcement-content u {
+  text-decoration: underline;
+}
+
+.announcement-content span {
+  color: inherit;
+}

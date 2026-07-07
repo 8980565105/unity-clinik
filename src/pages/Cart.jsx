@@ -10,13 +10,12 @@ import SEO from "../components/seo/seo";
 import { Truck, Tag, ChevronRight } from "lucide-react";
 import CouponDrawer from "../components/cart/Coupondrawer.jsx";
 import Button from "../components/ui/Button.jsx";
-import { fetchSystemSettings } from "../features/systemsetting/systemsetting.Thunk";
+import { fetchShippingCharge } from "../features/sippingcharge/sippingchargeThunk";
 import { calculateShipping } from "../utils/shippingCalculator";
 import { fetchPageBySlug } from "../features/pages/pagesThunk.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import cart from "../assets/emptycart.webp";
 import { fetchCart } from "../features/cart/cartThunk";
-
 export default function Cart() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,11 +28,10 @@ export default function Cart() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const dispatch = useDispatch();
   const { coupons = [] } = useSelector((state) => state.coupons);
-  const settings = useSelector((state) => state.systemseting.data);
+  const settings = useSelector((state) => state.sippingcharge.data);
   const { pages } = useSelector((state) => state.pages);
   const cartPage = pages?.find((page) => page.slug === "cart");
   const { items = [], loading } = useSelector((state) => state.cart);
-
   useEffect(() => {
     if (location.state?.openCouponDrawer) {
       setDrawerOpen(true);
@@ -45,10 +43,9 @@ export default function Cart() {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(fetchSystemSettings());
+    dispatch(fetchShippingCharge());
     dispatch(fetchPageBySlug("cart"));
   }, [dispatch]);
-
   const getDiscountedPrice = (item) => {
     const originalPrice = Number(
       item?.original_price || item?.variant_id?.price || 0,
@@ -60,15 +57,74 @@ export default function Cart() {
       ? originalPrice - (originalPrice * discount) / 100
       : originalPrice;
   };
-
-  const subtotal = items.reduce((sum, item) => {
+  const settingsLoaded = !!settings;
+  const defaultItemsForProgress = items.filter((item) => {
+    const t = item?.variant_id?.shippingChargeType;
+    return !t || t === "null";
+  });
+  const subtotal = defaultItemsForProgress.reduce((sum, item) => {
     return sum + getDiscountedPrice(item) * (item.quantity || 1);
   }, 0);
+  const totalWeight = defaultItemsForProgress.reduce((sum, item) => {
+    const weight = Number(item?.variant_id?.ProductWeight || 0);
+    return sum + weight * (item.quantity || 1);
+  }, 0);
+  const defaultShippingItems = defaultItemsForProgress.map((item) => {
+    const discountedPrice = getDiscountedPrice(item);
+    return {
+      productId: item.product_id?._id || item.product_id,
+      subCategoryId:
+        item.product_id?.subcategory_id?._id ||
+        item.product_id?.subcategory_id ||
+        item.product_id?.category_id?._id ||
+        item.product_id?.category_id,
+      price: discountedPrice,
+      quantity: item.quantity || 1,
+      weight: Number(item?.variant_id?.ProductWeight || 0),
+    };
+  });
 
-  const freeThreshold = settings?.prepaid?.freeThreshold || 0;
-  const remaining = Math.max(0, freeThreshold - subtotal);
-  const progressPercent = Math.min(100, (subtotal / freeThreshold) * 100);
-  const isFree = subtotal >= freeThreshold;
+  const defaultShipping =
+    settingsLoaded && defaultShippingItems.length > 0
+      ? calculateShipping(defaultShippingItems, "prepaid", settings)
+      : 0;
+
+  const totalQuantity = defaultItemsForProgress.reduce(
+    (sum, item) => sum + (item.quantity || 1),
+    0,
+  );
+
+  const activePrepaidRules = settings?.productRules?.prepaid || [];
+  const defaultRule = activePrepaidRules.find(
+    (r) => r.applyTo === "allproducts",
+  );
+
+  const ruleShippingTypeRaw = String(
+    defaultRule?.shippingType || settings?.shippingType || "price",
+  )
+    .toLowerCase()
+    .trim();
+
+  const isWeightWise = ruleShippingTypeRaw.includes("weight");
+  const isQuantityWise =
+    ruleShippingTypeRaw.includes("quantity") ||
+    ruleShippingTypeRaw.includes("quntity") || 
+    ruleShippingTypeRaw.includes("qty");
+
+  const freeThreshold = defaultRule?.freeThreshold || 0;
+
+  const progressValue = isWeightWise
+    ? totalWeight
+    : isQuantityWise
+      ? totalQuantity
+      : subtotal;
+
+  const remaining = Math.max(0, freeThreshold - progressValue);
+  const progressPercent =
+    freeThreshold > 0
+      ? Math.min(100, (progressValue / freeThreshold) * 100)
+      : 0;
+  const isFree = freeThreshold > 0 && progressValue >= freeThreshold;
 
   const applyCouponByCode = (code) => {
     const trimmed = code?.trim().toUpperCase();
@@ -142,7 +198,6 @@ export default function Cart() {
       </>
     );
   }
-
   return (
     <>
       <SEO
@@ -150,12 +205,11 @@ export default function Cart() {
         description={cartPage?.meta_description}
         image={`${process.env.REACT_APP_API_URL_IMAGE}${cartPage?.seo_image}`}
       />
-
       <CartProgress currentStep={1} />
       <Section>
         <Row className="grid grid-cols-1 custom-lg:grid-cols-[3fr_1fr] gap-[30px] items-start">
           <div className="flex-1 flex flex-col gap-4">
-            {items.length > 0 && (
+            {items.length > 0 && freeThreshold > 0 && (
               <div className="bg-white rounded-[12px] px-[20px] py-[14px] shadow-sm border border-gray-100">
                 <div className="flex justify-between items-center mb-[8px]">
                   <div className="flex items-center gap-[8px]">
@@ -165,6 +219,28 @@ export default function Cart() {
                         <span className="text-green-600 font-semibold">
                           🎉 You've unlocked FREE SHIPPING!
                         </span>
+                      ) : isWeightWise ? (
+                        <>
+                          Add{" "}
+                          <span className="font-bold text-gray-900">
+                            {Math.round(remaining).toLocaleString("en-IN")}g
+                          </span>{" "}
+                          more for{" "}
+                          <span className="font-bold text-[#1a5fb4]">
+                            FREE SHIPPING
+                          </span>
+                        </>
+                      ) : isQuantityWise ? (
+                        <>
+                          Add{" "}
+                          <span className="font-bold text-gray-900">
+                            {Math.round(remaining).toLocaleString("en-IN")}
+                          </span>{" "}
+                          more item(s) for{" "}
+                          <span className="font-bold text-[#1a5fb4]">
+                            FREE SHIPPING
+                          </span>
+                        </>
                       ) : (
                         <>
                           Add{" "}
@@ -179,8 +255,14 @@ export default function Cart() {
                       )}
                     </span>
                   </div>
+
                   <span className="text-[11px] text-gray-400 font-medium tracking-wide">
-                    GOAL: ₹{freeThreshold.toLocaleString("en-IN")}
+                    GOAL:{" "}
+                    {isWeightWise
+                      ? `${freeThreshold.toLocaleString("en-IN")}g`
+                      : isQuantityWise
+                        ? `${freeThreshold.toLocaleString("en-IN")} item(s)`
+                        : `₹${freeThreshold.toLocaleString("en-IN")}`}
                   </span>
                 </div>
                 <div className="w-full h-[6px] bg-gray-100 rounded-full overflow-hidden">
@@ -214,8 +296,6 @@ export default function Cart() {
           </div>
 
           <div className="space-y-4 sticky top-[100px] self-start">
-
-
             <CartSummary appliedCoupon={appliedCoupon} />
           </div>
         </Row>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import ContactCard from "../components/contactus/ContactCard";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
@@ -7,10 +7,16 @@ import { EnvelopeIcon } from "@heroicons/react/24/outline";
 import MapForm from "../components/contactus/MapForm";
 import SecondarySection from "../components/ui/SecondarySection";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPageBySlug } from "../features/pages/pagesThunk";
+import { fetchPageBySlug, fetchPages } from "../features/pages/pagesThunk";
 import { getImageUrl } from "../components/utils/helper";
 import contactBg from "../assets/contact.webp";
 import SEO from "../components/seo/seo";
+
+const SuccessStorySection = lazy(
+  () => import("../components/home/SuccessStory.jsx"),
+);
+
+const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
 
 const staticBg = {
   sections: [
@@ -30,6 +36,7 @@ export default function ContactUs() {
 
   useEffect(() => {
     dispatch(fetchPageBySlug("contact"));
+    dispatch(fetchPages());
   }, [dispatch]);
 
   const contactPageFromApi = pages?.find((page) => page.slug === "contact");
@@ -56,6 +63,7 @@ export default function ContactUs() {
           backgroundImage={getBgImage(section)}
         />
       ))}
+
       <Section>
         <Row className="xl:max-w-[1122px] grid grid-cols-1 md:grid-cols-3 gap-[30px] py-[25px] md:py-[50px]">
           <ContactCard
@@ -83,6 +91,14 @@ export default function ContactUs() {
       </Section>
 
       <MapForm />
+
+      <Suspense>
+        <SuccessStorySection />
+      </Suspense>
+
+      <Suspense>
+        <ReportCard />
+      </Suspense>
     </>
   );
 }

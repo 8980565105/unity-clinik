@@ -949,7 +949,7 @@ const Header = () => {
                     className="flex items-center gap-[15px] w-full"
                   >
                     <Package size={18} />
-                    <span>Orders</span>
+                    <span>My Orders</span>
                   </button>
                 </li>
                 <div className="border border-[#989696]"> </div>
@@ -1339,7 +1339,8 @@ const Header = () => {
                   onClick={() => openProtectedLink("/orders")}
                   className="flex items-center gap-[15px]"
                 >
-                  <Package size={20} /> Orders
+                  <Package size={20} />
+                  My Orders
                 </button>
               </div>
               <div className="py-4 px-4 cursor-pointer light-color">
@@ -1365,7 +1366,6 @@ const Header = () => {
                 >
                   Sign Up
                 </Button>
-
                 <Button
                   variant="common"
                   onClick={() => {

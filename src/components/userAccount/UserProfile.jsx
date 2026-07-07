@@ -109,7 +109,7 @@ export default function UserProfile() {
           </div>
         </Row>
 
-        <div className="relative bottom-[-30px] w-[90%] md:w-[90%] lg:max-w-[1440px] left-1/2 -translate-x-1/2 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="relative bottom-[-30px] w-[90%] md:w-[90%] lg:max-w-[1440px] left-1/2 -translate-x-1/2 grid grid-cols-1 md:grid-cols-5 gap-4">
           <button
             onClick={() => setActiveTab("account")}
             className={`flex items-center justify-between px-5 py-5 rounded-xl bg-white shadow-sm border transition-all hover:shadow-md ${
@@ -137,7 +137,10 @@ export default function UserProfile() {
               <p className="text-[16px] font-semibold text-gray-800">Address</p>
               <p className="text-[13px] text-gray-400 mt-1">View Saved</p>
             </div>
-            <span className="text-gray-400 text-xl"> <ChevronRight /></span>
+            <span className="text-gray-400 text-xl">
+              {" "}
+              <ChevronRight />
+            </span>
           </button>
 
           <button
@@ -148,7 +151,10 @@ export default function UserProfile() {
               <p className="text-[16px] font-semibold text-gray-800">Orders</p>
               <p className="text-[13px] text-gray-400 mt-1">View History</p>
             </div>
-            <span className="text-gray-400 text-xl"> <ChevronRight /></span>
+            <span className="text-gray-400 text-xl">
+              {" "}
+              <ChevronRight />
+            </span>
           </button>
 
           <button
@@ -161,8 +167,25 @@ export default function UserProfile() {
               </p>
               <p className="text-[13px] text-gray-400 mt-1">View Saved</p>
             </div>
-            <span className="text-gray-400 text-xl"> <ChevronRight /></span>
+            <span className="text-gray-400 text-xl">
+              <ChevronRight />
+            </span>
           </button>
+          <button
+            onClick={() => navigate("/wallet")}
+            className="flex items-center justify-between px-5 py-5 rounded-xl bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md"
+          >
+            <div className="text-left">
+              <p className="text-[16px] font-semibold text-gray-800">
+                Unity wallet
+              </p>
+              <p className="text-[13px] text-gray-400 mt-1">View wallet</p>
+            </div>
+            <span className="text-gray-400 text-xl">
+              <ChevronRight />
+            </span>
+          </button>
+
           <div className="md:hidden">
             <button
               onClick={() => {

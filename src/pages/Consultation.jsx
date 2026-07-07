@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import {
   Check,
   X,
@@ -23,6 +23,12 @@ import Heading from "../components/ui/Heading.jsx";
 import Description from "../components/ui/Description.jsx";
 import Loding from "../components/loding/loding.jsx";
 import LoginForm from "./Login.jsx";
+
+const SuccessStorySection = lazy(
+  () => import("../components/home/SuccessStory.jsx"),
+);
+
+const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
 
 const WhatsappImageCard = ({ src }) => (
   <div className="w-[280px] rounded-[20px] shadow-lg overflow-hidden flex justify-center items-center flex-shrink-0 select-none bg-gray-100 hover:scale-105">
@@ -54,9 +60,9 @@ export default function ConsultationPage() {
 
   const handleBookConsultationClick = () => {
     if (!isAuthenticated) {
-      setIsLoginPopupOpen(true); // Login popup open karo
+      setIsLoginPopupOpen(true);
     } else {
-      setIsBookPopupOpen(true); // Consultation popup open karo
+      setIsBookPopupOpen(true);
     }
   };
 
@@ -391,6 +397,10 @@ export default function ConsultationPage() {
         </div>
       )}
 
+      <Suspense>
+        <SuccessStorySection />
+      </Suspense>
+
       {social.status !== false && (
         <Section className="bg-white !py-12">
           <Row>
@@ -667,8 +677,11 @@ export default function ConsultationPage() {
         </Section>
       )}
 
+      <Suspense>
+        <ReportCard />
+      </Suspense>
+
       <button
-        // onClick={() => setIsBookPopupOpen(true)}
         onClick={handleBookConsultationClick}
         className="fixed bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 z-[999] flex items-center
          justify-center gap-2.5 rounded-full bg-[#155e37] px-8 py-3.5 text-sm 

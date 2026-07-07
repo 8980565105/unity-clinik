@@ -3,17 +3,15 @@ import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import { useSelector, useDispatch } from "react-redux";
 import { calculateShipping } from "../../utils/shippingCalculator";
-import { fetchSystemSettings } from "../../features/systemsetting/systemsetting.Thunk";
+import { fetchShippingCharge } from "../../features/sippingcharge/sippingchargeThunk";
 
 export default function CartSummary({ appliedCoupon }) {
   const { items = [] } = useSelector((state) => state.cart);
-  const settings = useSelector((state) => state.systemseting.data);
+  const settings = useSelector((state) => state.sippingcharge.data);
   const dispatch = useDispatch();
-
   useEffect(() => {
-    dispatch(fetchSystemSettings());
+    dispatch(fetchShippingCharge());
   }, [dispatch]);
-
   const getDiscountedPrice = (item) => {
     const originalPrice = Number(
       item?.original_price || item?.variant_id?.price || 0,
@@ -29,7 +27,6 @@ export default function CartSummary({ appliedCoupon }) {
         : originalPrice;
     return { originalPrice, discountedPrice };
   };
-
   const mrpTotal = items.reduce((sum, item) => {
     const { originalPrice } = getDiscountedPrice(item);
     return sum + originalPrice * (item.quantity || 1);
@@ -39,9 +36,7 @@ export default function CartSummary({ appliedCoupon }) {
     const { discountedPrice } = getDiscountedPrice(item);
     return sum + discountedPrice * (item.quantity || 1);
   }, 0);
-
   const productDiscount = mrpTotal - discountedItemsTotal;
-
   let couponDiscount = 0;
   if (appliedCoupon) {
     couponDiscount =
@@ -59,16 +54,62 @@ export default function CartSummary({ appliedCoupon }) {
     localStorage.removeItem("applied_coupon");
   }
   const subtotal = discountedItemsTotal - couponDiscount;
+  const overrideItems = items.filter((item) => {
+    const t = item?.variant_id?.shippingChargeType;
+    return t && t !== "null";
+  });
+  const defaultItems = items.filter((item) => {
+    const t = item?.variant_id?.shippingChargeType;
+    return !t || t === "null";
+  });
+  const overrideShipping = overrideItems.reduce((sum, item) => {
+    const type = item.variant_id.shippingChargeType;
+    const qty = item.quantity || 1;
+    if (type === "free") return sum;
+    if (type === "fixed") {
+      const value = Number(item.variant_id.shippingChargeValue || 0);
+      return sum + value * qty;
+    }
+    if (type === "percentage") {
+      const { discountedPrice } = getDiscountedPrice(item);
+      const value = Number(item.variant_id.shippingChargeValue || 0);
+      return sum + Math.round((discountedPrice * qty * value) / 100);
+    }
 
+    return sum;
+  }, 0);
+  const defaultSubtotal = defaultItems.reduce((sum, item) => {
+    const { discountedPrice } = getDiscountedPrice(item);
+    return sum + discountedPrice * (item.quantity || 1);
+  }, 0);
+  const totalWeight = defaultItems.reduce((sum, item) => {
+    const weight = Number(item?.variant_id?.ProductWeight || 0);
+    return sum + weight * (item.quantity || 1);
+  }, 0);
+  const defaultShippingItems = defaultItems.map((item) => {
+    const discountedPrice = getDiscountedPrice(item).discountedPrice;
+    return {
+      productId: item.product_id?._id || item.product_id,
+      subCategoryId:
+        item.product_id?.subcategory_id?._id ||
+        item.product_id?.subcategory_id ||
+        item.product_id?.category_id?._id ||
+        item.product_id?.category_id,
+      price: discountedPrice,
+      quantity: item.quantity || 1,
+      weight: Number(item?.variant_id?.ProductWeight || 0),
+    };
+  });
   const settingsLoaded = !!settings;
+  const defaultShipping =
+    settingsLoaded && defaultShippingItems.length > 0
+      ? calculateShipping(defaultShippingItems, "prepaid", settings)
+      : 0;
   const shippingRaw = settingsLoaded
-    ? calculateShipping(subtotal, "prepaid", settings)
+    ? overrideShipping + defaultShipping
     : null;
-
   const isFreeShipping = shippingRaw === 0;
-
   const orderTotal = subtotal;
-
   const totalSaved = productDiscount + couponDiscount;
 
   return (
@@ -78,7 +119,6 @@ export default function CartSummary({ appliedCoupon }) {
           Order Summary
         </span>
       </div>
-
       <div className="px-[20px] py-[16px] space-y-[14px]">
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium text-gray-500">
@@ -99,7 +139,6 @@ export default function CartSummary({ appliedCoupon }) {
             </span>
           </div>
         )}
-
         {appliedCoupon && couponDiscount > 0 && (
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-medium text-gray-500">
@@ -110,16 +149,13 @@ export default function CartSummary({ appliedCoupon }) {
             </span>
           </div>
         )}
-
         <div className="border-t border-gray-100" />
-
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-bold text-gray-800">Subtotal</span>
           <span className="text-[14px] font-bold text-gray-900">
             ₹{Math.round(subtotal).toLocaleString("en-IN")}
           </span>
         </div>
-
         <div className="flex items-center justify-between">
           <span className="text-[13px] font-medium text-gray-500">
             Shipping
@@ -157,17 +193,6 @@ export default function CartSummary({ appliedCoupon }) {
           )}
         </div>
       </div>
-
-      {/* <div className="px-[20px] pb-[20px]">
-        <Link to="/checkout">
-          <Button
-            variant="common"
-            className="w-full uppercase text-[14px] font-bold py-[14px]"
-          >
-            PROCEED TO CHECKOUT
-          </Button>
-        </Link>
-      </div> */}
     </div>
   );
 }

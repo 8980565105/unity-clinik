@@ -18,7 +18,6 @@ export default function BuyNowButton({
   product,
   activeVariantState,
   selectedPackState,
-
   className = "",
 }) {
   const dispatch = useDispatch();
@@ -35,7 +34,6 @@ export default function BuyNowButton({
       setIsLoginOpen(true);
       return;
     }
-
     if (activeVariantState?.stock_quantity === 0) {
       toast.error("This product is out of stock!");
       return;

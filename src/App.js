@@ -22,6 +22,9 @@ import CouponSidebar from "./components/Coupon/CouponSidebar";
 import ConsultationPage from "./pages/Consultation";
 import Button from "./components/ui/Button";
 import { resolveGuestId } from "./utils/guestId";
+import Analytics from "./services/Analytics";
+import AnnouncementBar from "./components/layout/AnnouncementBar";
+import Wallet from "./pages/wallet";
 
 const Home = lazy(() => import("./pages/Home"));
 const Allproducts = lazy(() => import("./pages/Allproducts"));
@@ -189,7 +192,9 @@ const RouterWrapper = () => {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+      <Analytics />
       <ScrollToTop />
+      <AnnouncementBar />
       <Header />
       <CouponSidebar />
       <Suspense
@@ -221,6 +226,7 @@ const RouterWrapper = () => {
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/consultation" element={<ConsultationPage />} />
           <Route path="/honest-report" element={<HonestReportPage />} />
+          <Route path="/wallet" element={<Wallet />} />
           <Route
             path="/payment/phonepe/callback"
             element={<PhonePeCallback />}
@@ -228,20 +234,6 @@ const RouterWrapper = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
-
-      {/* {(location.pathname === "/" || location.pathname === "/home") && (
-        <div className="fixed bottom-0 z-[9999] w-full">
-          <div className="bg-primary flex justify-center items-center w-full py-1">
-            <Button
-              variant="common"
-              className="!py-2 !bg-white !text-primary !font-bold !w-fit"
-              onClick={() => navigate("/consultation")}
-            >
-              Book a Consultation
-            </Button>
-          </div>
-        </div>
-      )} */}
 
       {(location.pathname === "/" || location.pathname === "/home") && (
         <div
