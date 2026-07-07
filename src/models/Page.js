@@ -32,13 +32,57 @@ const sectionSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+const HomeSectionType = [
+  "hero",
+  "honest",
+  "holisticapproach",
+  "timelineresult",
+  "getstarted",
+  "successstorysection",
+  "bestsellers",
+  "bannerslider",
+  "banner2",
+  "categoriessection",
+  "shortbanner",
+  "topdoctor",
+  "trendingclothes",
+  "banner4",
+  "featuredproducts",
+  "countsection",
+  "recommendedsection",
+  "reportcard",
+  "contacthome",
+  "customerreviews",
+  "featuresection",
+];
 
+const homeSectionSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: HomeSectionType,
+      required: true,
+    },
+
+    enabled: {
+      type: Boolean,
+      default: true,
+    },
+
+    order: {
+      type: Number,
+      required: true,
+    },
+  },
+  { _id: false },
+);
 const pageSchema = new mongoose.Schema(
   {
     page_name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, lowercase: true },
     description: { type: String },
     sections: [sectionSchema],
+    home_sections: [homeSectionSchema],
     meta_title: { type: String },
     meta_description: { type: String },
     meta_keyphrase: { type: String },

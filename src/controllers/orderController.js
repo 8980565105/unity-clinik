@@ -11,7 +11,7 @@ const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 const bwipjs = require("bwip-js");
 const {
-  createIthinkShipment,
+  syncOrderToIthink,
   trackIthinkAWB,
   mapIthinkStatus,
 } = require("../services/ithinkLogistics");
@@ -675,6 +675,46 @@ const createOrder = async (req, res) => {
     }
     orderItems.forEach((oi) => (oi.order_id = savedOrder._id));
     await OrderItem.insertMany(orderItems);
+
+    console.log("====================================");
+    console.log("CREATE ORDER START");
+    console.log("Order ID:", savedOrder._id);
+    console.log("Order Number:", savedOrder.order_number);
+    console.log("====================================");
+
+    try {
+      const populatedOrder = await Order.findById(savedOrder._id).populate(
+        "user_id",
+      );
+      const populatedItems = await OrderItem.find({ order_id: savedOrder._id })
+        .populate("product_id")
+        .populate("variant_id");
+
+      
+
+      await syncOrderToIthink({
+        order: populatedOrder,
+        orderItems: populatedItems,
+      });
+
+      savedOrder.status_history.push({
+        status: "pending",
+        changed_by: "system",
+        note: "Order pushed to iThink dashboard — awaiting courier assignment",
+        changed_at: new Date(),
+      });
+      await savedOrder.save();
+    } catch (err) {
+      console.error("iThink push error:", err.message);
+      savedOrder.status_history.push({
+        status: "pending",
+        changed_by: "system",
+        note: "iThink push failed: " + err.message,
+        changed_at: new Date(),
+      });
+      await savedOrder.save();
+    }
+
     const populatedForEmail = await Order.findById(savedOrder._id).populate(
       "user_id",
       "name email",
@@ -699,6 +739,7 @@ const createOrder = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 4. CONFIRM ORDER → creates Packing record automatically
 // ═══════════════════════════════════════════════════════════════════════════════
+
 const confirmOrder = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate(
@@ -713,6 +754,7 @@ const confirmOrder = async (req, res) => {
         null,
         `Order is already '${order.status}'`,
       );
+
     const items = await OrderItem.find({ order_id: order._id }).populate(
       "product_id",
       "name sku weight",
@@ -729,6 +771,7 @@ const confirmOrder = async (req, res) => {
       (sum, i) => sum + i.weight * i.quantity,
       0,
     );
+
     const packing = new Packing({
       order_id: order._id,
       order_number: order.order_number,
@@ -747,6 +790,7 @@ const confirmOrder = async (req, res) => {
       packed_by: req.user?.name || "admin",
     });
     await packing.save();
+
     order.status = "processing";
     order.packing_id = packing._id;
     if (req.body.admin_note) order.admin_note = req.body.admin_note;
@@ -754,8 +798,10 @@ const confirmOrder = async (req, res) => {
       order,
       "processing",
       req.user?.name || "admin",
-      req.body.admin_note || "",
+      req.body.admin_note ||
+        "Order confirmed. Already available on iThink dashboard — assign courier there.",
     );
+
     await order.save();
     const { email, name } = getCustomerInfo(order);
     sendOrderConfirmed(order, email, name);
@@ -765,6 +811,7 @@ const confirmOrder = async (req, res) => {
     sendResponse(res, false, null, err.message);
   }
 };
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // 5. CANCEL ORDER
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1220,7 +1267,7 @@ const assignCourier = async (req, res) => {
     if (partner === "ithink") {
       const orderItems = await OrderItem.find({ order_id: order._id })
         .populate("product_id", "name")
-        .populate("variant_id", "sku");
+       .populate("variant_id", "sku ProductWeight ProductHeight ProductWidth ProductLength images");
       const result = await syncOrderToIthink({ order, orderItems });
       awb_number = result.awb_number;
       tracking_url = result.tracking_url;
@@ -1713,6 +1760,45 @@ const getOrderTracking = async (req, res) => {
   }
 };
 
+const addTrackingAWB = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate(
+      "user_id",
+      "name email",
+    );
+    if (!order) return sendResponse(res, false, null, "Order not found");
+
+    const awb_number = safeString(req.body.awb_number);
+    if (!awb_number)
+      return sendResponse(res, false, null, "AWB number required");
+
+    order.courier = {
+      partner: "ithink",
+      name: safeString(req.body.courier_name) || "iThink",
+      awb_number,
+      tracking_url: `https://my.ithinklogistics.com/tracking/${awb_number}`,
+      last_status: "Manifested",
+      last_updated: new Date(),
+    };
+    order.status = "shipped";
+    pushHistory(
+      order,
+      "shipped",
+      req.user?.name || "admin",
+      `AWB added: ${awb_number}`,
+    );
+    await order.save();
+
+    const { email, name } = getCustomerInfo(order);
+    sendOrderShipped(order, email, name);
+    sendAdminOrderShipped(order, name, email);
+
+    sendResponse(res, true, order, "AWB added, tracking started");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
 module.exports = {
   getOrders,
   getPublicUserOrders,
@@ -1720,6 +1806,7 @@ module.exports = {
   createOrder,
   updateOrder,
   deleteOrder,
+  addTrackingAWB,
   bulkDeleteOrders,
   updateOrderStatus,
   confirmOrder,

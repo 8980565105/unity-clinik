@@ -27,7 +27,6 @@ const authMiddleware = async (req, res, next) => {
     next();
   } catch (err) {
     if (err.name === "TokenExpiredError") {
-      console.log("🔥 JWT EXPIRED:", err.expiredAt);
       return sendResponse(res, false, null, "Unauthorized: Token Expired");
     }
 

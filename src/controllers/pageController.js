@@ -61,10 +61,15 @@ const getPageBySlug = async (req, res) => {
     if (!slug) return sendResponse(res, false, null, "Slug is required");
 
     const query = { slug, status: "active" };
-
     const page = await Page.findOne(query);
-    if (!page) return sendResponse(res, false, null, "Page not found");
 
+    if (!page) {
+      return sendResponse(res, false, null, "Page not found");
+    }
+
+    if (page.slug === "home") {
+      page.home_sections.sort((a, b) => a.order - b.order);
+    }
     sendResponse(res, true, page, "Page retrieved by slug");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -122,7 +127,12 @@ const createPage = async (req, res) => {
           (Array.isArray(sec.slides) && sec.slides.length > 0),
       );
     }
-
+    if (data.slug === "home" && Array.isArray(data.home_sections)) {
+      data.home_sections = data.home_sections.map((item, index) => ({
+        ...item,
+        order: index + 1,
+      }));
+    }
     const page = new Page(data);
     const saved = await page.save();
     sendResponse(res, true, saved, "Page created successfully");
@@ -148,9 +158,6 @@ const updatePage = async (req, res) => {
     delete data.slug;
     const filter = { _id: req.params.id, ...buildStoreFilter(req) };
 
-    // ─────────────────────────────────────────────────
-    // Duplicate slug check — same store ma bija page ma
-    // ─────────────────────────────────────────────────
     if (data.slug) {
       const duplicate = await Page.findOne({
         slug: data.slug,
@@ -176,6 +183,22 @@ const updatePage = async (req, res) => {
           sec.background_image_url?.trim() ||
           (Array.isArray(sec.slides) && sec.slides.length > 0),
       );
+    }
+
+    const page = await Page.findById(req.params.id);
+
+    // if (updated.slug === "home" && Array.isArray(data.home_sections)) {
+    //   data.home_sections = data.home_sections.map((item, index) => ({
+    //     ...item,
+    //     order: index + 1,
+    //   }));
+    // }
+
+    if (page && page.slug === "home" && Array.isArray(data.home_sections)) {
+      data.home_sections = data.home_sections.map((item, index) => ({
+        ...item,
+        order: index + 1,
+      }));
     }
 
     const updated = await Page.findOneAndUpdate(filter, data, {

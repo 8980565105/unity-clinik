@@ -25,6 +25,7 @@ const getCoupons = async (req, res) => {
 
     if (!req.user || userRole === "user") {
       query.status = "active";
+      query.coupon_type = { $ne: "private" };
       query.$and = [
         {
           $or: [
@@ -292,6 +293,20 @@ const applyCoupon = async (req, res) => {
 
     if (coupon.status !== "active") {
       return sendResponse(res, false, null, "Coupon is not active");
+    }
+
+    if (coupon.coupon_type === "private" && coupon.assigned_users?.length > 0) {
+      const isAssigned = coupon.assigned_users.some(
+        (uid) => uid.toString() === userId.toString(),
+      );
+      if (!isAssigned) {
+        return sendResponse(
+          res,
+          false,
+          null,
+          "This coupon is not valid for your account",
+        );
+      }
     }
 
     const now = new Date();

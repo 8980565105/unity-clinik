@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { handleIthinkWebhook } = require("../controllers/webhookController");
-
 router.post(
   "/ithink",
   express.raw({ type: "application/json" }),

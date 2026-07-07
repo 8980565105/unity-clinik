@@ -5,6 +5,10 @@ const couponSchema = new mongoose.Schema(
     name: { type: String, required: true },
     code: { type: String, required: true, unique: true },
     description: { type: String, required: false },
+    header_title: {
+      type: String,
+      default: "",
+    },
     discount_type: {
       type: String,
       enum: ["percentage", "fixed", "freeshiping"],
@@ -12,7 +16,14 @@ const couponSchema = new mongoose.Schema(
     },
     coupon_type: {
       type: String,
-      enum: ["normal", "first_order", "free_gift", "referral", "buy_x_get_y"],
+      enum: [
+        "normal",
+        "first_order",
+        "free_gift",
+        "referral",
+        "buy_x_get_y",
+        "private",
+      ],
       default: "normal",
     },
 

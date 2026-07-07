@@ -18,7 +18,6 @@ const generateOtp = () =>
 //       },
 //     },
 //   );
-//   console.log(response);
 
 //   if (response.data?.type === "error" || response.data?.status === "error") {
 //     throw new Error(response.data?.message || "OTP sending failed");
@@ -36,9 +35,6 @@ const sendMobileOtp = async (mobile, otp) => {
 
   try {
     const response = await axios.get(url);
-
-    console.log("AquaSMS Response:", response.data);
-
     if (
       String(response.data).toLowerCase().includes("error") ||
       String(response.data).toLowerCase().includes("invalid") ||

@@ -202,7 +202,6 @@ const verifyPhonePePayment = async (req, res) => {
         "merchant_transaction_id",
       );
 
-      console.log("Found order:", order);
 
       if (!order) {
         return sendResponse(res, false, null, "Order not found");
@@ -249,7 +248,6 @@ const verifyPhonePePayment = async (req, res) => {
       },
     });
 
-    console.log("PhonePe status response:", response.data);
 
     const paymentData = response.data?.data;
     const paymentSuccess =

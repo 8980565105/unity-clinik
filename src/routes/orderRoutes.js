@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { getOrderTracking } = require("../controllers/orderController");
+const {
+  getOrderTracking,
+  addTrackingAWB,
+} = require("../controllers/orderController");
 const {
   getOrders,
   getPublicUserOrders,
@@ -33,27 +36,20 @@ router.use(authMiddleware);
 router.get("/", getOrders);
 router.get("/:id", getOrderById);
 router.post("/", createOrder);
-router.put("/:id", authorizeMinRole("store_user"), updateOrder);
-router.put("/:id/status", authorizeMinRole("store_user"), updateOrderStatus);
-router.delete("/:id", authorizeMinRole("store_user"), deleteOrder);
-router.post("/bulk-delete", authorizeMinRole("store_user"), bulkDeleteOrders);
-router.put("/:id/cancel", authorizeMinRole("store_user"), cancelOrder);
-router.put("/:id/confirm", authorizeMinRole("store_user"), confirmOrder);
-router.put("/:id/pack", authorizeMinRole("store_user"), packOrder);
-router.put(
-  "/:id/assign-courier",
-  authorizeMinRole("store_user"),
-  assignCourier,
-);
-router.put("/:id/ship", authorizeMinRole("store_user"), shipOrder);
-router.put("/:id/tracking", authorizeMinRole("store_user"), updateTracking);
-router.put("/:id/deliver", authorizeMinRole("store_user"), markDelivered);
-router.put("/:id/rto", authorizeMinRole("store_user"), markRTO);
-router.get(
-  "/:id/packing-slip",
-  authorizeMinRole("store_owner"),
-  generatePackingSlip,
-);
-router.get("/:id/invoice", authorizeMinRole("store_owner"), generateInvoice);
+router.put("/:id", authorizeMinRole("admin"), updateOrder);
+router.put("/:id/status", authorizeMinRole("admin"), updateOrderStatus);
+router.delete("/:id", authorizeMinRole("admin"), deleteOrder);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeleteOrders);
+router.put("/:id/cancel", authorizeMinRole("admin"), cancelOrder);
+router.put("/:id/confirm", authorizeMinRole("admin"), confirmOrder);
+router.put("/:id/pack", authorizeMinRole("admin"), packOrder);
+router.patch("/:id/add-awb", authorizeMinRole("admin"), addTrackingAWB);
+router.put("/:id/assign-courier", authorizeMinRole("admin"), assignCourier);
+router.put("/:id/ship", authorizeMinRole("admin"), shipOrder);
+router.put("/:id/tracking", authorizeMinRole("admin"), updateTracking);
+router.put("/:id/deliver", authorizeMinRole("admin"), markDelivered);
+router.put("/:id/rto", authorizeMinRole("admin"), markRTO);
+router.get("/:id/packing-slip", authorizeMinRole("admin"), generatePackingSlip);
+router.get("/:id/invoice", authorizeMinRole("admin"), generateInvoice);
 router.get("/:id/tracking", authMiddleware, getOrderTracking);
 module.exports = router;

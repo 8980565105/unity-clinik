@@ -138,7 +138,6 @@ const createPopup = async (req, res) => {
       status: status || "active",
       createdBy: req.user ? req.user._id : null,
     };
-    // const data = BookConsultation || {};
 
     if (type === "coupon") {
       const cTitle = coupon?.title ?? title;
@@ -191,25 +190,7 @@ const createPopup = async (req, res) => {
         description: cDesc,
         buttonText: cBtnText,
       };
-    }
-    // else if (type === "BookConsultation") {
-    //   const data = BookConsultation || {};
-    //   popupData.BookConsultation = {
-    //     productTitle: data.productTitle ?? productTitle ?? "",
-    //     subtitle: data.subtitle ?? subtitle ?? "",
-    //     productPrice: Number(data.productPrice ?? productPrice ?? 0),
-    //     productOfferPrice: Number(
-    //       data.productOfferPrice ?? productOfferPrice ?? 0,
-    //     ),
-    //     tag: data.tag ?? tag ?? "",
-    //     image: data.image ?? image ?? "",
-    //     popupTitle: data.popupTitle ?? popupTitle ?? "",
-    //     popupDescription: data.popupDescription ?? popupDescription ?? "",
-    //     voicePrice: Number(data.voicePrice ?? voicePrice ?? 0),
-    //     videoPrice: Number(data.videoPrice ?? videoPrice ?? 0),
-    //   };
-    // }
-    else if (type === "BookConsultation") {
+    } else if (type === "BookConsultation") {
       if (!BookConsultation) {
         return sendResponse(
           res,
@@ -222,15 +203,15 @@ const createPopup = async (req, res) => {
       popupData.BookConsultation = {
         productTitle: BookConsultation.productTitle || "",
         subtitle: BookConsultation.subtitle || "",
-        productPrice: Number(BookConsultation.productPrice || 0),
-        productOfferPrice: Number(BookConsultation.productOfferPrice || 0),
         tag: BookConsultation.tag || "",
         image: BookConsultation.image || "",
         popupTitle: BookConsultation.popupTitle || "",
         popupDescription: BookConsultation.popupDescription || "",
-        voicePrice: Number(BookConsultation.voicePrice || 0),
-        videoPrice: Number(BookConsultation.videoPrice || 0),
         product_id: BookConsultation.product_id || null,
+        productPrice: Number(BookConsultation.productPrice ?? 0),
+        productOfferPrice: Number(BookConsultation.productOfferPrice ?? 0),
+        voicePrice: Number(BookConsultation.voicePrice ?? 0),
+        videoPrice: Number(BookConsultation.videoPrice ?? 0),
       };
     }
 
@@ -268,7 +249,6 @@ const updatePopup = async (req, res) => {
 
     const resolvedType = type || existing.type;
 
-    // Use $unset to clean up the alternative type if changing type or formatting
     const updateData = {};
     if (type && VALID_TYPES.includes(type)) {
       updateData.type = type;
@@ -339,73 +319,76 @@ const updatePopup = async (req, res) => {
         description: cDesc,
         buttonText: cBtnText,
       };
-      // Explicitly clean up coupon when updating consultation type
       updateData.$unset = { coupon: "" };
     } else if (resolvedType === "BookConsultation") {
       const existingBook = existing.BookConsultation || {};
 
       // updateData.BookConsultation = {
       //   productTitle:
-      //     BookConsultation?.productTitle ??
-      //     productTitle ??
-      //     existingBook.productTitle,
-      //   subtitle:
-      //     BookConsultation?.subtitle ?? subtitle ?? existingBook.subtitle,
+      //     BookConsultation?.productTitle || existingBook.productTitle,
+
+      //   subtitle: BookConsultation?.subtitle || existingBook.subtitle,
+
       //   productPrice: Number(
-      //     BookConsultation?.productPrice ??
-      //       productPrice ??
-      //       existingBook.productPrice,
+      //     BookConsultation?.productPrice || existingBook.productPrice,
       //   ),
+
       //   productOfferPrice: Number(
-      //     BookConsultation?.productOfferPrice ??
-      //       productOfferPrice ??
-      //       existingBook.productOfferPrice,
+      //     BookConsultation?.productOfferPrice || existingBook.productOfferPrice,
       //   ),
-      //   tag: BookConsultation?.tag ?? tag ?? existingBook.tag,
-      //   image: BookConsultation?.image ?? image ?? existingBook.image,
-      //   popupTitle:
-      //     BookConsultation?.popupTitle ?? popupTitle ?? existingBook.popupTitle,
+
+      //   tag: BookConsultation?.tag || existingBook.tag,
+
+      //   image: BookConsultation?.image || existingBook.image,
+
+      //   popupTitle: BookConsultation?.popupTitle || existingBook.popupTitle,
+
       //   popupDescription:
-      //     BookConsultation?.popupDescription ??
-      //     popupDescription ??
-      //     existingBook.popupDescription,
+      //     BookConsultation?.popupDescription || existingBook.popupDescription,
+
       //   voicePrice: Number(
-      //     BookConsultation?.voicePrice ?? voicePrice ?? existingBook.voicePrice,
+      //     BookConsultation?.voicePrice || existingBook.voicePrice,
       //   ),
+
       //   videoPrice: Number(
-      //     BookConsultation?.videoPrice ?? videoPrice ?? existingBook.videoPrice,
+      //     BookConsultation?.videoPrice || existingBook.videoPrice,
       //   ),
+      //   product_id:
+      //     BookConsultation?.product_id ?? existingBook.product_id ?? null,
       // };
       updateData.BookConsultation = {
         productTitle:
-          BookConsultation?.productTitle || existingBook.productTitle,
+          BookConsultation?.productTitle ?? existingBook.productTitle,
 
-        subtitle: BookConsultation?.subtitle || existingBook.subtitle,
+        subtitle: BookConsultation?.subtitle ?? existingBook.subtitle,
 
         productPrice: Number(
-          BookConsultation?.productPrice || existingBook.productPrice,
+          BookConsultation?.productPrice ?? existingBook.productPrice ?? 0,
         ),
 
         productOfferPrice: Number(
-          BookConsultation?.productOfferPrice || existingBook.productOfferPrice,
+          BookConsultation?.productOfferPrice ??
+            existingBook.productOfferPrice ??
+            0,
         ),
 
-        tag: BookConsultation?.tag || existingBook.tag,
+        tag: BookConsultation?.tag ?? existingBook.tag,
 
-        image: BookConsultation?.image || existingBook.image,
+        image: BookConsultation?.image ?? existingBook.image,
 
-        popupTitle: BookConsultation?.popupTitle || existingBook.popupTitle,
+        popupTitle: BookConsultation?.popupTitle ?? existingBook.popupTitle,
 
         popupDescription:
-          BookConsultation?.popupDescription || existingBook.popupDescription,
+          BookConsultation?.popupDescription ?? existingBook.popupDescription,
 
         voicePrice: Number(
-          BookConsultation?.voicePrice || existingBook.voicePrice,
+          BookConsultation?.voicePrice ?? existingBook.voicePrice ?? 0,
         ),
 
         videoPrice: Number(
-          BookConsultation?.videoPrice || existingBook.videoPrice,
+          BookConsultation?.videoPrice ?? existingBook.videoPrice ?? 0,
         ),
+
         product_id:
           BookConsultation?.product_id ?? existingBook.product_id ?? null,
       };
