@@ -5,6 +5,7 @@ const Store = require("../models/Store");
 const nodemailer = require("nodemailer");
 const escapeHtml = require("escape-html");
 const { sendResponse } = require("../utils/response");
+const { buildDeviceSnapshot } = require("../utils/deviceInfo");
 const {
   sendMobileOtp,
   createMobileOtp,
@@ -96,6 +97,23 @@ const findUserForOtp = async (email, rawDomain) => {
   return { user: null, storeName: null, otpKey: null };
 };
 
+const recordLoginActivity = async (user, req) => {
+  try {
+    const snapshot = await buildDeviceSnapshot(req);
+    user.lastLogin = new Date();
+    user.loginCount = (user.loginCount || 0) + 1;
+    user.lastDevice = snapshot;
+    user.loginHistory = user.loginHistory || [];
+    user.loginHistory.unshift({ ...snapshot, loggedInAt: new Date() });
+    if (user.loginHistory.length > 20) {
+      user.loginHistory = user.loginHistory.slice(0, 20);
+    }
+    await user.save();
+  } catch (e) {
+    console.error("[Tracking] Failed to record login activity:", e.message);
+  }
+};
+
 const login = async (req, res) => {
   try {
     const { email, password, domain: rawDomain } = req.body;
@@ -127,6 +145,8 @@ const login = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return sendResponse(res, false, null, "Invalid credentials");
+
+    await recordLoginActivity(user, req);
 
     const token = generateToken(user);
     const userObj = user.toObject();
@@ -164,6 +184,7 @@ const register = async (req, res) => {
       storeDescription,
       storeTheme,
       storeAddress,
+      referralCode: usedReferralCode,
     } = req.body;
 
     if (!name) return sendResponse(res, false, null, "Name are required");
@@ -195,6 +216,16 @@ const register = async (req, res) => {
         ? req.body.profile_picture
         : null) ||
       null;
+
+    let referredBy = null;
+    if (usedReferralCode) {
+      const referrer = await User.findOne({
+        referralCode: usedReferralCode.trim().toUpperCase(),
+      });
+      if (referrer) referredBy = referrer._id;
+    }
+
+    const deviceSnapshot = await buildDeviceSnapshot(req);
 
     if (role === "admin") {
       const adminExists = await User.findOne({ role: "admin" });
@@ -231,6 +262,11 @@ const register = async (req, res) => {
         address: cleanAddress,
         profile_picture,
         authProvider: "email",
+        referredBy,
+        lastLogin: new Date(),
+        loginCount: 1,
+        lastDevice: deviceSnapshot,
+        loginHistory: [{ ...deviceSnapshot, loggedInAt: new Date() }],
       });
 
       const token = generateToken(user);
@@ -278,6 +314,11 @@ const register = async (req, res) => {
       address: cleanAddress,
       profile_picture,
       authProvider,
+      referredBy,
+      lastLogin: new Date(),
+      loginCount: 1,
+      lastDevice: deviceSnapshot,
+      loginHistory: [{ ...deviceSnapshot, loggedInAt: new Date() }],
     });
 
     const token = generateToken(user);
@@ -427,7 +468,7 @@ const verifyMobileOtpHandler = async (req, res) => {
 
 const mobileOtpLogin = async (req, res) => {
   try {
-    const { mobile_number, otp } = req.body;
+    const { mobile_number, otp, referralCode: usedReferralCode } = req.body;
     if (!mobile_number || !otp)
       return sendResponse(res, false, null, "Mobile and OTP required");
 
@@ -437,6 +478,16 @@ const mobileOtpLogin = async (req, res) => {
     let user = await User.findOne({ mobile_number }).populate("storeId");
 
     if (!user) {
+      let referredBy = null;
+      if (usedReferralCode) {
+        const referrer = await User.findOne({
+          referralCode: usedReferralCode.trim().toUpperCase(),
+        });
+        if (referrer) referredBy = referrer._id;
+      }
+
+      const deviceSnapshot = await buildDeviceSnapshot(req);
+
       user = await User.create({
         name: `User${mobile_number.slice(-4)}`,
         mobile_number,
@@ -445,6 +496,11 @@ const mobileOtpLogin = async (req, res) => {
         role: "user",
         is_active: true,
         authProvider: "phone",
+        referredBy,
+        lastLogin: new Date(),
+        loginCount: 1,
+        lastDevice: deviceSnapshot,
+        loginHistory: [{ ...deviceSnapshot, loggedInAt: new Date() }],
       });
       user = await User.findById(user._id).populate("storeId");
     } else {
@@ -455,6 +511,9 @@ const mobileOtpLogin = async (req, res) => {
             : "This account uses Email/Password login. Please use Email login.";
         return sendResponse(res, false, null, providerMsg);
       }
+      if (!user.is_active)
+        return sendResponse(res, false, null, "Account is inactive");
+      await recordLoginActivity(user, req);
     }
 
     if (!user.is_active)
@@ -476,7 +535,11 @@ const mobileOtpLogin = async (req, res) => {
 
 const googleLogin = async (req, res) => {
   try {
-    const { credential, domain: rawDomain } = req.body;
+    const {
+      credential,
+      domain: rawDomain,
+      referralCode: usedReferralCode,
+    } = req.body;
     if (!credential)
       return sendResponse(res, false, null, "Google credential is required");
 
@@ -490,6 +553,16 @@ const googleLogin = async (req, res) => {
     let user = await User.findOne({ email }).populate("storeId");
 
     if (!user) {
+      let referredBy = null;
+      if (usedReferralCode) {
+        const referrer = await User.findOne({
+          referralCode: usedReferralCode.trim().toUpperCase(),
+        });
+        if (referrer) referredBy = referrer._id;
+      }
+
+      const deviceSnapshot = await buildDeviceSnapshot(req);
+
       user = await User.create({
         name,
         email,
@@ -498,6 +571,11 @@ const googleLogin = async (req, res) => {
         profile_picture: picture,
         is_active: true,
         authProvider: "google",
+        referredBy,
+        lastLogin: new Date(),
+        loginCount: 1,
+        lastDevice: deviceSnapshot,
+        loginHistory: [{ ...deviceSnapshot, loggedInAt: new Date() }],
       });
       user = await User.findById(user._id).populate("storeId");
     } else {
@@ -508,6 +586,9 @@ const googleLogin = async (req, res) => {
             : "This account uses Email/Password login. Please use Email login.";
         return sendResponse(res, false, null, providerMsg);
       }
+      if (!user.is_active)
+        return sendResponse(res, false, null, "Account is inactive");
+      await recordLoginActivity(user, req);
     }
 
     if (!user.is_active)

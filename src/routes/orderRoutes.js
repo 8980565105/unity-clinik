@@ -3,6 +3,8 @@ const router = express.Router();
 const {
   getOrderTracking,
   addTrackingAWB,
+  requestReturn,
+  decideReturn,
 } = require("../controllers/orderController");
 const {
   getOrders,
@@ -23,6 +25,7 @@ const {
   markDelivered,
   markRTO,
   generateInvoice,
+  refundOrder,
 } = require("../controllers/orderController");
 
 const {
@@ -36,6 +39,14 @@ router.use(authMiddleware);
 router.get("/", getOrders);
 router.get("/:id", getOrderById);
 router.post("/", createOrder);
+router.put("/:id/request-return", authMiddleware, requestReturn);
+router.put(
+  "/:id/decide-return",
+  authMiddleware,
+  authorizeMinRole("admin"),
+  decideReturn,
+);
+
 router.put("/:id", authorizeMinRole("admin"), updateOrder);
 router.put("/:id/status", authorizeMinRole("admin"), updateOrderStatus);
 router.delete("/:id", authorizeMinRole("admin"), deleteOrder);
@@ -52,4 +63,5 @@ router.put("/:id/rto", authorizeMinRole("admin"), markRTO);
 router.get("/:id/packing-slip", authorizeMinRole("admin"), generatePackingSlip);
 router.get("/:id/invoice", authorizeMinRole("admin"), generateInvoice);
 router.get("/:id/tracking", authMiddleware, getOrderTracking);
+router.put("/:id/refund", authorizeMinRole("admin"), refundOrder);
 module.exports = router;

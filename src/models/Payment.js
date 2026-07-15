@@ -5,7 +5,8 @@ const paymentSchema = new mongoose.Schema(
     order_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Order",
-      required: true,
+      required: false,
+      default: null,
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -44,6 +45,18 @@ const paymentSchema = new mongoose.Schema(
     payment_date: {
       type: Date,
       default: Date.now,
+    },
+    type: {
+      type: String,
+      enum: ["order", "wallet_recharge", "book_consultation"],
+      required: true,
+      default: "order",
+    },
+    booking_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bookconsaltion",
+      required: false,
+      default: null,
     },
   },
   { timestamps: true },

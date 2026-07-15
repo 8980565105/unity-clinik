@@ -38,14 +38,17 @@ const consultationpageRoutes = require("./src/routes/consaltantionRoute");
 const bookconsaltansRoutes = require("./src/routes/bookRoutes");
 const guestRoutes = require("./src/routes/guestRoutes");
 const sippingchargeRoutes = require("./src/routes/sippingchargeRoutes");
+const walletRoutes = require("./src/routes/walletRoutes");
+const reffrelRoutes = require("./src/routes/reffrelRoutes");
 const sitemapRoutes = require("./src/routes/sitemapRoutes");
-
+const trackingRoutes = require("./src/routes/trackingRoutes");
+const pincodeeRoutes = require("./src/routes/pincodeRoutes")
 const helmet = require("helmet");
 
-// dotenv.config();
 connectDB();
 
 const app = express();
+app.set("trust proxy", true);
 
 const ALLOWED_ORIGINS = process.env.ADMIN_ORIGINS.split(",")
   .map((o) => o.trim())
@@ -142,6 +145,11 @@ app.use("/api/bookconsaltans", bookconsaltansRoutes);
 app.use("/api/guest", guestRoutes);
 app.use("/api/sippingcharge", sippingchargeRoutes);
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
+app.use("/api/wallet", walletRoutes);
+app.use("/api/reffrel", reffrelRoutes);
+app.use("/api/track", trackingRoutes);
+app.use("/api/pincode", pincodeeRoutes);
+
 app.use("/", sitemapRoutes);
 
 app.use(errorHandler);

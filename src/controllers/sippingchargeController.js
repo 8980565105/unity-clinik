@@ -9,8 +9,67 @@ const toNumber = (v, fallback = 0) => {
 const defaultSettings = () => ({
   shippingType: "price",
   partialCod: { codType: "fixed", value: 0 },
-  productRules: { cod: [], prepaid: [], partialCod: [] },
+  productRules: { cod: [], prepaid: [], partialCod: [], wallet: [] },
+  giftRules: [],
 });
+
+const sanitizeGiftRule = (rule = {}) => ({
+  status: rule.status !== undefined ? Boolean(rule.status) : true,
+  applyTo: [
+    "allproducts",
+    "specificproducts",
+    "specificsubcategory",
+    "Excludeproduct",
+    "Excludecategories",
+  ].includes(rule.applyTo)
+    ? rule.applyTo
+    : "allproducts",
+  products: Array.isArray(rule.products) ? rule.products : [],
+  subCategories: Array.isArray(rule.subCategories) ? rule.subCategories : [],
+  minimumAmount: toNumber(rule.minimumAmount),
+  maximumAmount: toNumber(rule.maximumAmount),
+  giftProduct: rule.giftProduct || null,
+  shortDescription: rule.shortDescription || "",
+  priority: toNumber(rule.priority),
+});
+
+const validateGiftRule = (rule, index) => {
+  const errors = [];
+  if (
+    (rule.applyTo === "specificproducts" ||
+      rule.applyTo === "Excludeproduct") &&
+    rule.products.length === 0
+  ) {
+    errors.push(`Gift rule #${index + 1}: at least one product required`);
+  }
+  if (
+    (rule.applyTo === "specificsubcategory" ||
+      rule.applyTo === "Excludecategories") &&
+    rule.subCategories.length === 0
+  ) {
+    errors.push(`Gift rule #${index + 1}: at least one subcategory required`);
+  }
+  if (!rule.giftProduct) {
+    errors.push(`Gift rule #${index + 1}: gift product is required`);
+  }
+  if (
+    rule.minimumAmount === undefined ||
+    rule.minimumAmount === null ||
+    isNaN(rule.minimumAmount)
+  ) {
+    errors.push(`Gift rule #${index + 1}: minimum amount is required`);
+  }
+  if (
+    rule.maximumAmount > 0 &&
+    rule.minimumAmount > 0 &&
+    rule.maximumAmount <= rule.minimumAmount
+  ) {
+    errors.push(
+      `Gift rule #${index + 1}: maximum amount must be greater than minimum`,
+    );
+  }
+  return errors;
+};
 
 const sanitizeRanges = (ranges = []) => {
   if (!Array.isArray(ranges)) return [];
@@ -67,7 +126,9 @@ const sanitizeRule = (rule = {}) => ({
     ? rule.shippingType
     : "price",
 
-  paymentType: ["all", "cod", "partial", "prepaid"].includes(rule.paymentType)
+  paymentType: ["all", "cod", "partial", "prepaid", "wallet"].includes(
+    rule.paymentType,
+  )
     ? rule.paymentType
     : "all",
 
@@ -145,10 +206,16 @@ const saveShippingCharge = async (req, res) => {
     const partialRules = Array.isArray(body?.productRules?.partialCod)
       ? body.productRules.partialCod.map(sanitizeRule)
       : [];
+    const walletRules = Array.isArray(body?.productRules?.wallet) // 👈 NEW
+      ? body.productRules.wallet.map(sanitizeRule)
+      : [];
+
+    const giftRules = Array.isArray(body?.giftRules)
+      ? body.giftRules.map(sanitizeGiftRule)
+      : [];
 
     let settings = await sippingchargeModel.findOne();
 
-    
     const payload = {
       shippingType,
       partialCod: body?.partialCod
@@ -169,7 +236,11 @@ const saveShippingCharge = async (req, res) => {
         partialCod: body?.productRules?.partialCod
           ? partialRules
           : settings?.productRules?.partialCod || [],
+        wallet: body?.productRules?.wallet
+          ? walletRules
+          : settings?.productRules?.wallet || [],
       },
+      giftRules: body?.giftRules ? giftRules : settings?.giftRules || [],
     };
 
     let errors = [];
@@ -180,7 +251,8 @@ const saveShippingCharge = async (req, res) => {
     partialRules.forEach((r, i) =>
       errors.push(...validateRule(r, "Partial COD", i)),
     );
-
+    walletRules.forEach((r, i) => errors.push(...validateRule(r, "Wallet", i)));
+    giftRules.forEach((r, i) => errors.push(...validateGiftRule(r, i)));
     if (
       payload.partialCod.value === undefined ||
       payload.partialCod.value === null ||

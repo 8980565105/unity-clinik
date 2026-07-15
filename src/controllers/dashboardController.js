@@ -26,8 +26,8 @@ const getDashboard = async (req, res) => {
     }
 
     const userFilter = isAdmin
-      ? { role: "store_user" }
-      : { role: "store_user", domain: storeDomain };
+      ? { role: "user" }
+      : { role: "user", domain: storeDomain };
 
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const currentMonthEnd = new Date(

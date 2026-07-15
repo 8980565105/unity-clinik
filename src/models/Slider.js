@@ -329,6 +329,34 @@ const holisticCardSchema = new mongoose.Schema(
   { _id: true },
 );
 
+const contactSectionSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      default: "",
+    },
+    numberTitle: {
+      type: String,
+      default: "",
+    },
+    description: {
+      type: String,
+      default: "",
+    },
+    buttonText: {
+      type: String,
+      default: "",
+    },
+    buttonLink: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  },
+);
+
 // ------------------------------------------------
 
 const sliderSectionSchema = new mongoose.Schema(
@@ -349,6 +377,7 @@ const sliderSectionSchema = new mongoose.Schema(
         "getStarted",
         "timelineResult",
         "holisticApproach",
+        "contactSection",
       ],
       required: true,
     },
@@ -373,6 +402,7 @@ const sliderSectionSchema = new mongoose.Schema(
     getStartedSteps: { type: [getStartedStepSchema], default: undefined },
     timelineResult: { type: timelineResultSchema, default: undefined },
     holisticCards: { type: [holisticCardSchema], default: undefined },
+    contactSection: { type: contactSectionSchema, default: undefined },
 
     showOnPages: { type: [String], default: [] },
   },

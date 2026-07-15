@@ -25,6 +25,10 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    advance_amount: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: [
@@ -63,7 +67,7 @@ const orderSchema = new mongoose.Schema(
 
     payment_method: {
       type: String,
-      enum: ["COD", "Online"],
+      enum: ["COD", "Online", "Wallet", "partial_cod"],
     },
     payment_status: {
       type: String,
@@ -115,6 +119,14 @@ const orderSchema = new mongoose.Schema(
     ],
 
     invoice_generated: { type: Boolean, default: false },
+    return_status: {
+      type: String,
+      enum: ["none", "requested", "approved", "rejected"],
+      default: "none",
+    },
+    return_reason: { type: String, default: "" },
+    return_requested_at: { type: Date, default: null },
+    return_decided_at: { type: Date, default: null },
   },
   { timestamps: true },
 );

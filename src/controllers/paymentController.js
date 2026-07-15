@@ -3,6 +3,7 @@ const OrderItem = require("../models/OrderItem");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const razorpay = require("../config/razorpay");
+const Wallet = require("../models/Wallet");
 const crypto = require("crypto");
 const axios = require("axios");
 const { sendResponse } = require("../utils/response");
@@ -29,19 +30,64 @@ const createRazorpayOrder = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // RAZORPAY - VERIFY PAYMENT
 // ═══════════════════════════════════════════════════════════════════════════════
+// const verifyRazorpayPayment = async (req, res) => {
+//   try {
+//     const {
+//       razorpay_order_id,
+//       razorpay_payment_id,
+//       razorpay_signature,
+//       order_id,
+//       user_id,
+//     } = req.body;
+
+//     if (!razorpay_payment_id) {
+//       return sendResponse(res, false, null, "razorpay_payment_id missing");
+//     }
+//     const body = razorpay_order_id + "|" + razorpay_payment_id;
+//     const expectedSignature = crypto
+//       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+//       .update(body)
+//       .digest("hex");
+
+//     if (expectedSignature !== razorpay_signature) {
+//       return sendResponse(res, false, null, "Invalid signature");
+//     }
+
+//     await Order.findByIdAndUpdate(order_id, {
+//       payment_status: "paid",
+//       transaction_id: razorpay_payment_id,
+//     });
+
+//     const existingPayment = await Payment.findOne({ order_id });
+//     if (existingPayment) {
+//       await Payment.findByIdAndUpdate(existingPayment._id, {
+//         transaction_id: razorpay_payment_id,
+//         status: "completed",
+//       });
+//     }
+
+//     sendResponse(res, true, { razorpay_payment_id }, "Payment verified");
+//   } catch (err) {
+//     sendResponse(res, false, null, err?.error?.description || err.message);
+//   }
+// };
+
 const verifyRazorpayPayment = async (req, res) => {
+  const session = await mongoose.startSession();
   try {
     const {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
       order_id,
-      user_id,
+      wallet_amount = 0,
+      orderData,
     } = req.body;
 
     if (!razorpay_payment_id) {
       return sendResponse(res, false, null, "razorpay_payment_id missing");
     }
+
     const body = razorpay_order_id + "|" + razorpay_payment_id;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -52,25 +98,90 @@ const verifyRazorpayPayment = async (req, res) => {
       return sendResponse(res, false, null, "Invalid signature");
     }
 
-    await Order.findByIdAndUpdate(order_id, {
-      payment_status: "paid",
-      transaction_id: razorpay_payment_id,
-    });
+    session.startTransaction();
 
-    const existingPayment = await Payment.findOne({ order_id });
-    if (existingPayment) {
-      await Payment.findByIdAndUpdate(existingPayment._id, {
-        transaction_id: razorpay_payment_id,
-        status: "completed",
-      });
+    let targetOrderId = order_id;
+    let order;
+
+    if (orderData) {
+      const { saveNewOrder } = require("./orderController");
+      order = await saveNewOrder(orderData, session);
+      targetOrderId = order._id;
+    } else {
+      order = await Order.findById(order_id).session(session);
     }
 
-    sendResponse(res, true, { razorpay_payment_id }, "Payment verified");
+    if (!order) {
+      await session.abortTransaction();
+      return sendResponse(res, false, null, "Order not found");
+    }
+
+    const { activateOrder } = require("./orderController");
+    order = await activateOrder(targetOrderId, razorpay_payment_id, session);
+
+    if (Number(wallet_amount) > 0) {
+      const wallet = await Wallet.findOne({ userId: order.user_id }).session(
+        session,
+      );
+
+      if (!wallet || wallet.balance < Number(wallet_amount)) {
+        await session.abortTransaction();
+        return sendResponse(
+          res,
+          false,
+          null,
+          "Insufficient wallet balance at confirm time",
+        );
+      }
+
+      wallet.balance -= Number(wallet_amount);
+      wallet.totalUsed += Number(wallet_amount);
+      wallet.transactions.push({
+        type: "debit",
+        reason: "Used on Order",
+        points: Number(wallet_amount),
+        orderId: targetOrderId,
+        transaction_id: razorpay_payment_id,
+      });
+      await wallet.save({ session });
+    }
+
+    const existingPayment = await Payment.findOne({ order_id: targetOrderId }).session(
+      session,
+    );
+    if (existingPayment) {
+      await Payment.findByIdAndUpdate(
+        existingPayment._id,
+        { transaction_id: razorpay_payment_id, status: "completed" },
+        { session },
+      );
+    } else {
+      await Payment.create(
+        [
+          {
+            order_id: targetOrderId,
+            user_id: order.user_id,
+            payment_method: orderData ? (orderData.payment_method || "Razorpay") : "Razorpay",
+            amount_paid: order.payment_method === "partial_cod" ? (order.advance_amount || order.total_price) : order.total_price,
+            transaction_id: razorpay_payment_id,
+            status: "completed",
+            type: "order",
+          },
+        ],
+        { session },
+      );
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    sendResponse(res, true, { razorpay_payment_id, order_id: targetOrderId }, "Payment verified");
   } catch (err) {
+    await session.abortTransaction().catch(() => {});
+    session.endSession();
     sendResponse(res, false, null, err?.error?.description || err.message);
   }
 };
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // RAZORPAY - WEBHOOK
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -180,7 +291,7 @@ const createPhonePePayment = async (req, res) => {
     const updatedOrder = await Order.findByIdAndUpdate(
       order_id,
       { merchant_transaction_id: merchantTransactionId },
-      {returnDocument: 'after' },
+      { returnDocument: "after" },
     );
 
     sendResponse(
@@ -201,7 +312,6 @@ const verifyPhonePePayment = async (req, res) => {
       const order = await Order.findById(order_id).select(
         "merchant_transaction_id",
       );
-
 
       if (!order) {
         return sendResponse(res, false, null, "Order not found");
@@ -248,7 +358,6 @@ const verifyPhonePePayment = async (req, res) => {
       },
     });
 
-
     const paymentData = response.data?.data;
     const paymentSuccess =
       response.data?.success && paymentData?.responseCode === "SUCCESS";
@@ -265,10 +374,8 @@ const verifyPhonePePayment = async (req, res) => {
     const transactionId = paymentData?.transactionId || merchantTransactionId;
     const amountPaid = paymentData?.amount ? paymentData.amount / 100 : 0;
 
-    await Order.findByIdAndUpdate(order_id, {
-      payment_status: "paid",
-      transaction_id: transactionId,
-    });
+    const { activateOrder } = require("./orderController");
+    await activateOrder(order_id, transactionId);
 
     const existingPayment = await Payment.findOne({ order_id });
     if (existingPayment) {
@@ -287,6 +394,7 @@ const verifyPhonePePayment = async (req, res) => {
         amount_paid: amountPaid,
         transaction_id: transactionId,
         status: "completed",
+        type: "order",
       });
     }
 
@@ -338,10 +446,8 @@ const phonePeCallback = async (req, res) => {
       });
 
       if (order) {
-        await Order.findByIdAndUpdate(order._id, {
-          payment_status: "paid",
-          transaction_id: txnId,
-        });
+        const { activateOrder } = require("./orderController");
+        await activateOrder(order._id, txnId);
 
         const existingPayment = await Payment.findOne({ order_id: order._id });
         if (existingPayment) {
@@ -358,6 +464,7 @@ const phonePeCallback = async (req, res) => {
             amount_paid: amountPaid,
             transaction_id: txnId,
             status: "completed",
+            type: "order",
           });
         }
       }
@@ -377,6 +484,7 @@ const getPayments = async (req, res) => {
       search = "",
       isDownload = "false",
       status,
+      type,
     } = req.query;
 
     const download = isDownload.toLowerCase() === "true";
@@ -389,6 +497,12 @@ const getPayments = async (req, res) => {
     if (status && ["pending", "completed", "failed"].includes(status)) {
       query.status = status;
     }
+    if (
+      type &&
+      ["order", "wallet_recharge", "book_consultation"].includes(type)
+    ) {
+      query.type = type;
+    }
     if (userRole === "admin") {
     } else {
       return sendResponse(res, false, null, "Forbidden: Insufficient role");
@@ -398,7 +512,8 @@ const getPayments = async (req, res) => {
         .sort({ createdAt: -1 })
         .populate("order_id", "order_number total_price status payment_method")
         .populate("user_id", "name email")
-        .populate("coupon_id", "code discount_value");
+        .populate("coupon_id", "code discount_value")
+        .populate("booking_id", "type slot_date slot_time product_title");
       return sendResponse(res, true, { payments }, "All payments for download");
     }
     page = parseInt(page);
@@ -410,7 +525,8 @@ const getPayments = async (req, res) => {
       .sort({ createdAt: -1 })
       .populate("order_id", "order_number total_price status payment_method")
       .populate("user_id", "name email")
-      .populate("coupon_id", "code discount_value");
+      .populate("coupon_id", "code discount_value")
+      .populate("booking_id", "type slot_date slot_time product_title");
     sendResponse(res, true, {
       payments,
       total,
@@ -448,6 +564,8 @@ const createPayment = async (req, res) => {
       transaction_id,
     } = req.body;
 
+    const type = "order";
+
     const payment = new Payment({
       user_id,
       order_id,
@@ -457,6 +575,7 @@ const createPayment = async (req, res) => {
       coupon_id: coupon_id || null,
       status: status || "pending",
       transaction_id: transaction_id || "",
+      type,
     });
 
     const savedPayment = await payment.save();
@@ -509,6 +628,75 @@ const bulkDeletePayments = async (req, res) => {
   }
 };
 
+const markPaymentFailed = async (req, res) => {
+  try {
+    const {
+      order_id,
+      booking_id,
+      user_id,
+      payment_method,
+      amount,
+      type,
+      reason,
+      transaction_id, 
+      razorpay_order_id,
+      error_code, 
+    } = req.body;
+
+    let finalAmount = amount;
+    if (order_id && !finalAmount) {
+      const order = await Order.findById(order_id);
+      if (order) {
+        finalAmount = order.total_price;
+      }
+    }
+
+    if (!user_id || !finalAmount) {
+      return sendResponse(res, false, null, "user_id and amount are required");
+    }
+
+    if (transaction_id) {
+      const existing = await Payment.findOne({
+        transaction_id,
+        status: "failed",
+      });
+      if (existing) {
+        return sendResponse(res, true, existing, "Already recorded");
+      }
+    }
+
+    const payment = await Payment.create({
+      order_id: order_id || null,
+      booking_id: booking_id || null,
+      user_id,
+      payment_method: payment_method || "Razorpay",
+      amount_paid: finalAmount,
+      status: "failed",
+      transaction_id: transaction_id || "",
+      type: type || "order",
+    });
+
+    if (order_id) {
+      const order = await Order.findById(order_id);
+      if (order && order.payment_status !== "paid") {
+        if (order.payment_method === "partial_cod") {
+          order.payment_status = "pending";
+          await order.save();
+          console.log(`Order ${order_id} kept as Payment Pending.`);
+        } else {
+          await OrderItem.deleteMany({ order_id });
+          await Order.findByIdAndDelete(order_id);
+          console.log(`Order ${order_id} deleted because payment failed.`);
+        }
+      }
+    }
+
+    sendResponse(res, true, payment, "Payment marked as failed");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
 module.exports = {
   createRazorpayOrder,
   razorpayWebhook,
@@ -522,4 +710,5 @@ module.exports = {
   updatePayment,
   deletePayment,
   bulkDeletePayments,
+  markPaymentFailed,
 };

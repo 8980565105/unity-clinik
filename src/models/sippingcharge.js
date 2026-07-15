@@ -38,11 +38,38 @@ const productRuleSchema = new mongoose.Schema(
     },
     paymentType: {
       type: String,
-      enum: ["all", "cod", "partial", "prepaid"],
+      enum: ["all", "cod", "partial", "prepaid", "wallet"],
       default: "all",
     },
     freeThreshold: { type: Number, default: 0 },
     ranges: { type: [rangeSchema], default: [] },
+  },
+  { _id: false },
+);
+
+const giftRuleSchema = new mongoose.Schema(
+  {
+    status: { type: Boolean, default: true },
+    applyTo: {
+      type: String,
+      enum: [
+        "allproducts",
+        "specificproducts",
+        "specificsubcategory",
+        "Excludeproduct",
+        "Excludecategories",
+      ],
+      default: "allproducts",
+    },
+    products: [{ type: mongoose.Schema.Types.ObjectId, ref: "product" }],
+    subCategories: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "subcategory" },
+    ],
+    minimumAmount: { type: Number, default: 0 },
+    maximumAmount: { type: Number, default: 0 }, // 0 = no upper limit
+    giftProduct: { type: mongoose.Schema.Types.ObjectId, ref: "product" },
+    shortDescription: { type: String, default: "" },
+    priority: { type: Number, default: 0 },
   },
   { _id: false },
 );
@@ -68,7 +95,9 @@ const sippingchargeSchema = new mongoose.Schema(
       cod: { type: [productRuleSchema], default: [] },
       prepaid: { type: [productRuleSchema], default: [] },
       partialCod: { type: [productRuleSchema], default: [] },
+      wallet: { type: [productRuleSchema], default: [] },
     },
+    giftRules: { type: [giftRuleSchema], default: [] },
   },
   { timestamps: true },
 );

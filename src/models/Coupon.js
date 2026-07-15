@@ -4,6 +4,16 @@ const couponSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     code: { type: String, required: true, unique: true },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
+
+    is_prepaid_only: {
+      type: Boolean,
+      default: false,
+    },
     description: { type: String, required: false },
     header_title: {
       type: String,

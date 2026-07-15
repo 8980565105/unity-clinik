@@ -1,5 +1,3 @@
-
-
 const express = require("express");
 const router = express.Router();
 const {
@@ -15,6 +13,7 @@ const {
   createPhonePePayment,
   verifyPhonePePayment,
   phonePeCallback,
+  markPaymentFailed,
 } = require("../controllers/paymentController");
 
 const {
@@ -32,15 +31,12 @@ router.post("/phonepe/callback", phonePeCallback);
 
 router.use(authMiddleware);
 
-router.get("/", authorizeMinRole("store_owner"), getPayments);
-router.get("/:id", authorizeMinRole("store_owner"), getPaymentById);
+router.get("/", authorizeMinRole("admin"), getPayments);
+router.post("/mark-failed", markPaymentFailed);
+router.get("/:id", authorizeMinRole("admin"), getPaymentById);
 router.post("/", createPayment);
-router.put("/:id", authorizeMinRole("store_owner"), updatePayment);
-router.delete("/:id", authorizeMinRole("store_owner"), deletePayment);
-router.post(
-  "/bulk-delete",
-  authorizeMinRole("store_owner"),
-  bulkDeletePayments,
-);
+router.put("/:id", authorizeMinRole("admin"), updatePayment);
+router.delete("/:id", authorizeMinRole("admin"), deletePayment);
+router.post("/bulk-delete", authorizeMinRole("admin"), bulkDeletePayments);
 
 module.exports = router;

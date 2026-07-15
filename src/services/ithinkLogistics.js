@@ -6,7 +6,7 @@ const SECRET_KEY = process.env.ITHINK_SECRET_KEY;
 const PICKUP_ADDRESS_ID = process.env.ITHINK_PICKUP_ADDRESS_ID;
 const RETURN_ADDRESS_ID =
   process.env.ITHINK_RETURN_ADDRESS_ID || PICKUP_ADDRESS_ID;
-const LOGISTICS_PARTNER = process.env.ITHINK_LOGISTICS_PARTNER || "Delhivery";
+const LOGISTICS_PARTNER = process.env.ITHINK_LOGISTICS_PARTNER;
 const fmtDate = (d) => {
   const dt = d ? new Date(d) : new Date();
   const dd = String(dt.getDate()).padStart(2, "0");
@@ -197,9 +197,105 @@ const verifyIthinkSignature = (rawBody, signature) => {
   return expected === signature;
 };
 
+// const checkPincodeServiceability = async (pincode) => {
+//   try {
+//     const response = await axios.post(
+//       "https://my.ithinklogistics.com/api_v3/pincode/check.json",
+//       {
+//         data: {
+//           pincode: String(pincode),
+//           access_token: process.env.ITHINK_ACCESS_TOKEN,
+//           secret_key: process.env.ITHINK_SECRET_KEY,
+//         },
+//       },
+//       { headers: { "Content-Type": "application/json" } },
+//     );
+
+//     const deliveryCodes = response.data?.data?.delivery_codes;
+
+//     if (!deliveryCodes || deliveryCodes.length === 0) {
+//       return { serviceable: false };
+//     }
+
+//     const postalCode = deliveryCodes[0]?.postal_code;
+//     const isServiceable =
+//       postalCode?.cash === "Y" || postalCode?.pre_paid === "Y";
+
+//     return {
+//       serviceable: isServiceable,
+//       cod: postalCode?.cash === "Y",
+//       prepaid: postalCode?.pre_paid === "Y",
+//       district: postalCode?.district || "",
+//       state_code: postalCode?.state_code || "",
+//     };
+//   } catch (err) {
+//     console.error(
+//       "iThink pincode check error:",
+//       err?.response?.data || err.message,
+//     );
+//     // API fail thay to bhi service unavailable j maano (safe default)
+//     return { serviceable: false, error: true };
+//   }
+// };
+
+const checkPincodeServiceability = async (pincode) => {
+  try {
+    const response = await axios.post(
+      "https://my.ithinklogistics.com/api_v3/pincode/check.json",
+      {
+        data: {
+          pincode: String(pincode),
+          access_token: process.env.ITHINK_ACCESS_TOKEN,
+          secret_key: process.env.ITHINK_SECRET_KEY,
+        },
+      },
+      { headers: { "Content-Type": "application/json" } },
+    );
+
+    const pincodeData = response.data?.data?.[String(pincode)];
+
+    if (!pincodeData) {
+      return { serviceable: false };
+    }
+
+    const metaKeys = [
+      "remark",
+      "state_name",
+      "city_name",
+      "city_id",
+      "state_id",
+    ];
+    const courierEntries = Object.keys(pincodeData)
+      .filter((key) => !metaKeys.includes(key))
+      .map((key) => pincodeData[key]);
+
+    const isServiceable = courierEntries.some(
+      (courier) => courier?.cod === "Y" || courier?.prepaid === "Y",
+    );
+
+    const codAvailable = courierEntries.some((c) => c?.cod === "Y");
+    const prepaidAvailable = courierEntries.some((c) => c?.prepaid === "Y");
+
+    return {
+      serviceable: isServiceable,
+      cod: codAvailable,
+      prepaid: prepaidAvailable,
+      district: pincodeData.city_name || "",
+      state_code: pincodeData.state_name || "",
+      remark: pincodeData.remark || "",
+    };
+  } catch (err) {
+    console.error(
+      "iThink pincode check error:",
+      err?.response?.data || err.message,
+    );
+    return { serviceable: false, error: true };
+  }
+};
 module.exports = {
   syncOrderToIthink,
   trackIthinkAWB,
   mapIthinkStatus,
   verifyIthinkSignature,
+  checkPincodeServiceability,
 };

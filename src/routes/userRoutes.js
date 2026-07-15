@@ -11,6 +11,7 @@ const {
   getOwnProfile,
   deleteOwnProfile,
   updateUserStatus,
+  getUserTracking,
 } = require("../controllers/userController");
 const {
   authMiddleware,
@@ -56,5 +57,6 @@ router.put(
 router.put("/:id/status", authorizeMinRole("store_owner"), updateUserStatus);
 router.delete("/:id", authorizeMinRole("store_owner"), deleteUser);
 router.post("/bulk-delete", authorizeMinRole("store_owner"), bulkDeleteUsers);
+router.get("/:id/tracking", authorizeMinRole("admin"), getUserTracking);
 
 module.exports = router;

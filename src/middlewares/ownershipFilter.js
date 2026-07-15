@@ -20,16 +20,16 @@ const applyOwnershipFilter = (req, baseQuery = {}) => {
   return baseQuery;
 };
 
-const ownershipMiddleware = (field = "storeId") => {
-  return async (req, res, next) => {
-    req.ownershipQuery = {};
-    next();
-  };
-};
+// const ownershipMiddleware = (field = "storeId") => {
+//   return async (req, res, next) => {
+//     req.ownershipQuery = {};
+//     next();
+//   };
+// };
 
 module.exports = {
   injectOwnershipFilter,
   injectPublicStoreFilter,
   applyOwnershipFilter,
-  ownershipMiddleware,
+  // ownershipMiddleware,
 };

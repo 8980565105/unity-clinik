@@ -18,7 +18,6 @@ const bookconsaltansSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-
     product_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",

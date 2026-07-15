@@ -6,7 +6,10 @@ const Packing = require("../models/paking");
 const ProductVariant = require("../models/ProductVariant");
 const Product = require("../models/Product");
 const Bookconsaltion = require("../models/Bookconsaltans");
+const User = require("../models/User");
+const walletService = require("../services/walletService");
 const { sendResponse } = require("../utils/response");
+
 const PDFDocument = require("pdfkit");
 const QRCode = require("qrcode");
 const bwipjs = require("bwip-js");
@@ -14,6 +17,7 @@ const {
   syncOrderToIthink,
   trackIthinkAWB,
   mapIthinkStatus,
+  checkPincodeServiceability,
 } = require("../services/ithinkLogistics");
 
 const {
@@ -26,6 +30,9 @@ const {
   sendOrderDelivered,
   sendOrderCancelled,
   sendOrderRTO,
+  sendReturnRequested,
+  sendReturnDecision,
+  sendRefundProcessed,
 
   sendAdminNewOrder,
   sendAdminOrderConfirmed,
@@ -36,6 +43,9 @@ const {
   sendAdminOrderDelivered,
   sendAdminOrderCancelled,
   sendAdminOrderRTO,
+  sendAdminReturnRequested,
+  sendAdminReturnDecision,
+  sendAdminRefundProcessed,
 } = require("../utils/orderEmailService");
 
 const safeString = (val) => {
@@ -83,6 +93,22 @@ const isDiscountValid = (discount) => {
     discount.start_date <= now &&
     discount.end_date >= now
   );
+};
+
+const getEmailItems = async (orderId) => {
+  try {
+    const items = await OrderItem.find({ order_id: orderId })
+      .populate("product_id", "name")
+      .populate("variant_id", "sku");
+    return items.map((it) => ({
+      name: it.product_id?.name || (it.is_gift ? "Gift Item" : "Product"),
+      sku: it.variant_id?.sku || "",
+      quantity: it.quantity,
+      price: it.price_at_order,
+    }));
+  } catch (_) {
+    return [];
+  }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -461,279 +487,461 @@ const getOrderById = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // 3. CREATE ORDER
 // ═══════════════════════════════════════════════════════════════════════════════
-const createOrder = async (req, res) => {
-  let consultationGiftBooking = null;
-  try {
-    const {
-      user_id,
-      coupon_id,
-      shippingAddress,
-      payment_method = "COD",
-      transaction_id,
-      shipping_charge = 0,
-      coupon_discount = 0,
-      subtotal = 0,
-      total_price,
-    } = req.body;
-    const items = safeArray(req.body.items);
-    if (!items.length) {
-      return sendResponse(res, false, null, "No items provided");
+const saveNewOrder = async (orderData, session = null) => {
+  const {
+    user_id,
+    coupon_id,
+    shippingAddress,
+    payment_method = "COD",
+    advance_amount = 0,
+    transaction_id,
+    shipping_charge = 0,
+    coupon_discount = 0,
+    subtotal = 0,
+    total_price,
+    items: rawItems,
+  } = orderData;
+
+  const pincode = shippingAddress?.pincode;
+  if (!pincode) {
+    throw new Error("Pincode is required");
+  }
+  const serviceCheck = await checkPincodeServiceability(pincode);
+  if (!serviceCheck.serviceable) {
+    throw new Error("Service not available in your pincode");
+  }
+
+  const items = safeArray(rawItems);
+  if (!items.length) {
+    throw new Error("No items provided");
+  }
+  let calculatedProductTotal = 0;
+  const orderItems = [];
+  let couponDoc = null;
+  if (coupon_id) {
+    const Coupon = require("../models/Coupon");
+    couponDoc = await Coupon.findById(coupon_id).session(session);
+
+    if (!couponDoc) {
+      throw new Error("Invalid coupon");
     }
-    let calculatedProductTotal = 0;
-    const orderItems = [];
-    let couponDoc = null;
-    if (coupon_id) {
-      const Coupon = require("../models/Coupon");
-      couponDoc = await Coupon.findById(coupon_id);
 
-      if (!couponDoc) {
-        return sendResponse(res, false, null, "Invalid coupon");
-      }
-
-      if (couponDoc.status !== "active") {
-        return sendResponse(res, false, null, "Coupon is not active");
-      }
-
-      const now = new Date();
-      if (couponDoc.start_date && now < couponDoc.start_date) {
-        return sendResponse(res, false, null, "Coupon is not started yet");
-      }
-      if (couponDoc.end_date && now > couponDoc.end_date) {
-        return sendResponse(res, false, null, "Coupon has expired");
-      }
-
-      if (
-        couponDoc.usage_limit !== null &&
-        couponDoc.used_count >= couponDoc.usage_limit
-      ) {
-        return sendResponse(res, false, null, "Coupon usage limit reached");
-      }
-
-      if (couponDoc.userusage_limit !== null) {
-        const userEntry = (couponDoc.user_usage || []).find(
-          (u) => u.user_id.toString() === user_id.toString(),
-        );
-        const userUsedCount = userEntry ? userEntry.count : 0;
-
-        if (userUsedCount >= couponDoc.userusage_limit) {
-          return sendResponse(
-            res,
-            false,
-            null,
-            "You have already used this coupon maximum times",
-          );
-        }
-      }
-
-      if (couponDoc.coupon_type === "first_order") {
-        const previousOrders = await Order.countDocuments({
-          user_id: user_id,
-          status: { $nin: ["cancelled"] },
-        });
-
-        if (previousOrders > 0) {
-          return sendResponse(
-            res,
-            false,
-            null,
-            "This coupon is only valid on your first order!",
-          );
-        }
-
-        const alreadyUsed = await Order.findOne({
-          user_id: user_id,
-          coupon_id: couponDoc._id,
-          status: { $nin: ["cancelled"] },
-        });
-
-        if (alreadyUsed) {
-          return sendResponse(
-            res,
-            false,
-            null,
-            "You have already used this coupon!",
-          );
-        }
-      }
+    if (couponDoc.status !== "active") {
+      throw new Error("Coupon is not active");
     }
-    for (const item of items) {
-      if (item.is_gift === true) {
-        orderItems.push({
-          order_id: null,
-          product_id: item.product_id,
-          variant_id: null,
-          quantity: item.quantity || 1,
-          price_at_order: 0,
-          is_gift: true,
-        });
-        continue;
-      }
-      const variant = await ProductVariant.findById(item.variant_id).populate(
-        "product_id",
-      );
-      if (!variant) return sendResponse(res, false, null, "Variant not found");
-      if (variant.stock_quantity < item.quantity)
-        return sendResponse(
-          res,
-          false,
-          null,
-          `Not enough stock for ${variant.sku}`,
-        );
-      let price = variant.price;
-      const discount_id = variant.product_id.discount_id;
-      if (discount_id) {
-        const discount = await Discount.findById(discount_id);
-        if (isDiscountValid(discount)) {
-          if (discount.type === "percentage")
-            price = price - (price * discount.value) / 100;
-          else if (discount.type === "fixed") price = price - discount.value;
-          if (price < 0) price = 0;
-        }
-      }
-      calculatedProductTotal += price * item.quantity;
-      variant.stock_quantity -= item.quantity;
-      await variant.save();
-      orderItems.push({
-        order_id: null,
-        product_id: variant.product_id._id,
-        variant_id: variant._id,
-        quantity: item.quantity,
-        price_at_order: price,
-      });
-    }
-    if (user_id) {
-      consultationGiftBooking = await Bookconsaltion.findOneAndUpdate(
-        {
-          user_id,
-          slot_status: "confirmed",
-          is_redeemed: false,
-          product_id: { $ne: null },
-        },
-        { $set: { is_redeemed: true } },
-        { sort: { createdAt: 1 }, returnDocument: "after" },
-      );
-      if (consultationGiftBooking) {
-        orderItems.push({
-          order_id: null,
-          product_id: consultationGiftBooking.product_id,
-          variant_id: null,
-          quantity: 1,
-          price_at_order: 0,
-          is_gift: true,
-          is_consultation_gift: true,
-        });
-      }
-    }
-    const finalTotal =
-      Number(subtotal || calculatedProductTotal) + Number(shipping_charge || 0);
 
-    const order = new Order({
-      user_id,
-      subtotal: Number(subtotal) || calculatedProductTotal,
-      shipping_charge: Number(shipping_charge) || 0,
-      coupon_discount: Number(coupon_discount) || 0,
-      total_price: Number(total_price) || finalTotal,
-      coupon_id: coupon_id || null,
-      shippingAddress,
-      payment_method,
-      payment_status:
-        payment_method === "Online" && transaction_id ? "paid" : "pending",
-      transaction_id: transaction_id || "",
-      status: "pending",
-    });
-    pushHistory(order, "pending", "customer", "Order placed");
-    const savedOrder = await order.save();
-
-    if (consultationGiftBooking) {
-      consultationGiftBooking.redeemed_order_id = savedOrder._id;
-      await consultationGiftBooking.save();
+    const now = new Date();
+    if (couponDoc.start_date && now < couponDoc.start_date) {
+      throw new Error("Coupon is not started yet");
     }
-    if (coupon_id && couponDoc) {
-      const Coupon = require("../models/Coupon");
+    if (couponDoc.end_date && now > couponDoc.end_date) {
+      throw new Error("Coupon has expired");
+    }
+
+    if (
+      couponDoc.usage_limit !== null &&
+      couponDoc.used_count >= couponDoc.usage_limit
+    ) {
+      throw new Error("Coupon usage limit reached");
+    }
+
+    if (couponDoc.userusage_limit !== null) {
       const userEntry = (couponDoc.user_usage || []).find(
         (u) => u.user_id.toString() === user_id.toString(),
       );
+      const userUsedCount = userEntry ? userEntry.count : 0;
+
+      if (userUsedCount >= couponDoc.userusage_limit) {
+        throw new Error("You have already used this coupon maximum times");
+      }
+    }
+
+    if (couponDoc.coupon_type === "first_order") {
+      const previousOrders = await Order.countDocuments({
+        user_id: user_id,
+        status: { $nin: ["cancelled"] },
+      }).session(session);
+
+      if (previousOrders > 0) {
+        throw new Error("This coupon is only valid on your first order!");
+      }
+
+      const alreadyUsed = await Order.findOne({
+        user_id: user_id,
+        coupon_id: couponDoc._id,
+        status: { $nin: ["cancelled"] },
+      }).session(session);
+
+      if (alreadyUsed) {
+        throw new Error("You have already used this coupon!");
+      }
+    }
+  }
+
+  for (const item of items) {
+    if (item.is_gift === true) {
+      orderItems.push({
+        order_id: null,
+        product_id: item.product_id,
+        variant_id: null,
+        quantity: item.quantity || 1,
+        price_at_order: 0,
+        is_gift: true,
+      });
+      continue;
+    }
+    const variant = await ProductVariant.findById(item.variant_id)
+      .populate("product_id")
+      .session(session);
+    if (!variant) throw new Error("Variant not found");
+    if (variant.stock_quantity < item.quantity)
+      throw new Error(`Not enough stock for ${variant.sku}`);
+    let price = variant.price;
+    const discount_id = variant.product_id.discount_id;
+    if (discount_id) {
+      const discount = await Discount.findById(discount_id).session(session);
+      if (isDiscountValid(discount)) {
+        if (discount.type === "percentage")
+          price = price - (price * discount.value) / 100;
+        else if (discount.type === "fixed") price = price - discount.value;
+        if (price < 0) price = 0;
+      }
+    }
+    calculatedProductTotal += price * item.quantity;
+    orderItems.push({
+      order_id: null,
+      product_id: variant.product_id._id,
+      variant_id: variant._id,
+      quantity: item.quantity,
+      price_at_order: price,
+    });
+  }
+
+  let consultationGiftBooking = null;
+  if (user_id) {
+    consultationGiftBooking = await Bookconsaltion.findOne({
+      user_id,
+      slot_status: "confirmed",
+      is_redeemed: false,
+      product_id: { $ne: null },
+    })
+      .sort({ createdAt: 1 })
+      .session(session);
+
+    if (consultationGiftBooking) {
+      orderItems.push({
+        order_id: null,
+        product_id: consultationGiftBooking.product_id,
+        variant_id: null,
+        quantity: 1,
+        price_at_order: 0,
+        is_gift: true,
+        is_consultation_gift: true,
+      });
+    }
+  }
+
+  const finalTotal =
+    Number(subtotal || calculatedProductTotal) + Number(shipping_charge || 0);
+
+  const order = new Order({
+    user_id,
+    subtotal: Number(subtotal) || calculatedProductTotal,
+    advance_amount: Number(advance_amount) || 0,
+    shipping_charge: Number(shipping_charge) || 0,
+    coupon_discount: Number(coupon_discount) || 0,
+    total_price: Number(total_price) || finalTotal,
+    coupon_id: coupon_id || null,
+    shippingAddress,
+    payment_method,
+    payment_status:
+      (payment_method === "Online" || payment_method === "Wallet") &&
+      (transaction_id || payment_method === "Wallet")
+        ? "paid"
+        : "pending",
+    transaction_id: transaction_id || "",
+    status: "pending",
+  });
+
+  pushHistory(order, "pending", "customer", "Order placed");
+  const savedOrder = await order.save({ session });
+
+  if (payment_method === "Wallet") {
+    const Wallet = require("../models/Wallet");
+    const wallet = await Wallet.findOne({ userId: user_id }).session(session);
+    if (!wallet || wallet.balance < savedOrder.total_price) {
+      throw new Error("Insufficient wallet balance");
+    }
+    wallet.balance -= savedOrder.total_price;
+    wallet.totalUsed += savedOrder.total_price;
+    wallet.transactions.push({
+      type: "debit",
+      reason: "Used on Order",
+      points: savedOrder.total_price,
+      orderId: savedOrder._id,
+    });
+    await wallet.save({ session });
+  }
+
+  if (consultationGiftBooking && (payment_method === "COD" || payment_method === "Wallet")) {
+    consultationGiftBooking.is_redeemed = true;
+    consultationGiftBooking.redeemed_order_id = savedOrder._id;
+    await consultationGiftBooking.save({ session });
+  }
+
+  orderItems.forEach((oi) => (oi.order_id = savedOrder._id));
+  await OrderItem.insertMany(orderItems, { session });
+
+  return savedOrder;
+};
+
+const createOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const savedOrder = await saveNewOrder(req.body, session);
+
+    if (savedOrder.payment_method === "COD" || savedOrder.payment_method === "Wallet") {
+      const orderItems = await OrderItem.find({ order_id: savedOrder._id }).session(session);
+      for (const item of orderItems) {
+        if (item.is_gift) continue;
+        if (!item.variant_id) continue;
+        const variant = await ProductVariant.findById(item.variant_id).session(session);
+        if (variant) {
+          variant.stock_quantity -= item.quantity;
+          await variant.save({ session });
+        }
+      }
+
+      if (savedOrder.coupon_id) {
+        const Coupon = require("../models/Coupon");
+        const couponDoc = await Coupon.findById(savedOrder.coupon_id).session(session);
+        if (couponDoc) {
+          const userEntry = (couponDoc.user_usage || []).find(
+            (u) => u.user_id.toString() === savedOrder.user_id.toString(),
+          );
+          if (userEntry) {
+            await Coupon.updateOne(
+              { _id: savedOrder.coupon_id, "user_usage.user_id": savedOrder.user_id },
+              { $inc: { used_count: 1, "user_usage.$.count": 1 } },
+              { session }
+            );
+          } else {
+            await Coupon.updateOne(
+              { _id: savedOrder.coupon_id },
+              { $inc: { used_count: 1 }, $push: { user_usage: { user_id: savedOrder.user_id, count: 1 } } },
+              { session }
+            );
+          }
+        }
+      }
+
+      const Payment = require("../models/Payment");
+      if (savedOrder.payment_method === "COD") {
+        await Payment.create(
+          [
+            {
+              order_id: savedOrder._id,
+              user_id: savedOrder.user_id,
+              payment_method: "COD",
+              amount_paid: 0,
+              status: "pending",
+              type: "order",
+            },
+          ],
+          { session },
+        );
+      } else if (savedOrder.payment_method === "Wallet") {
+        await Payment.create(
+          [
+            {
+              order_id: savedOrder._id,
+              user_id: savedOrder.user_id,
+              payment_method: "Wallet",
+              amount_paid: savedOrder.total_price,
+              transaction_id: "wallet_" + savedOrder._id,
+              status: "completed",
+              type: "order",
+            },
+          ],
+          { session },
+        );
+      }
+
+      try {
+        const populatedOrder = await Order.findById(savedOrder._id).populate("user_id").session(session);
+        const populatedItems = await OrderItem.find({ order_id: savedOrder._id })
+          .populate("product_id")
+          .populate("variant_id")
+          .session(session);
+
+        await syncOrderToIthink({
+          order: populatedOrder,
+          orderItems: populatedItems,
+        });
+
+        savedOrder.status_history.push({
+          status: "pending",
+          changed_by: "system",
+          note: "Order pushed to iThink dashboard — awaiting courier assignment",
+          changed_at: new Date(),
+        });
+        await savedOrder.save({ session });
+      } catch (err) {
+        console.error("iThink push error:", err.message);
+        savedOrder.status_history.push({
+          status: "pending",
+          changed_by: "system",
+          note: "iThink push failed: " + err.message,
+          changed_at: new Date(),
+        });
+        await savedOrder.save({ session });
+      }
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    if (savedOrder.payment_method === "COD" || savedOrder.payment_method === "Wallet") {
+      const populatedForEmail = await Order.findById(savedOrder._id).populate("user_id", "name email");
+      const { email: placedEmail, name: placedName } = getCustomerInfo(populatedForEmail || savedOrder);
+      const emailItems = await getEmailItems(savedOrder._id);
+      sendOrderPlaced(populatedForEmail || savedOrder, placedEmail, placedName, emailItems);
+      sendAdminNewOrder(populatedForEmail || savedOrder, placedName, placedEmail, emailItems);
+    }
+
+    sendResponse(res, true, savedOrder, "Order created successfully");
+  } catch (err) {
+    await session.abortTransaction().catch(() => {});
+    session.endSession();
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+const activateOrder = async (orderId, transactionId = "", session = null) => {
+  const order = await Order.findById(orderId).session(session);
+  if (!order) throw new Error("Order not found");
+
+  if (order.payment_status === "paid") {
+    return order;
+  }
+
+  order.payment_status = "paid";
+  if (transactionId) {
+    order.transaction_id = transactionId;
+  }
+  await order.save({ session });
+
+  const orderItems = await OrderItem.find({ order_id: orderId }).session(session);
+
+  for (const item of orderItems) {
+    if (item.is_gift) continue;
+    if (!item.variant_id) continue;
+    const variant = await ProductVariant.findById(item.variant_id).session(session);
+    if (variant) {
+      variant.stock_quantity -= item.quantity;
+      await variant.save({ session });
+    }
+  }
+
+  const hasConsultationGift = orderItems.some((item) => item.is_consultation_gift);
+  if (hasConsultationGift && order.user_id) {
+    await Bookconsaltion.findOneAndUpdate(
+      {
+        user_id: order.user_id,
+        slot_status: "confirmed",
+        is_redeemed: false,
+        product_id: { $ne: null },
+      },
+      { $set: { is_redeemed: true, redeemed_order_id: order._id } },
+      { sort: { createdAt: 1 } }
+    ).session(session);
+  }
+
+  if (order.coupon_id) {
+    const Coupon = require("../models/Coupon");
+    const couponDoc = await Coupon.findById(order.coupon_id).session(session);
+    if (couponDoc) {
+      const userEntry = (couponDoc.user_usage || []).find(
+        (u) => u.user_id.toString() === order.user_id.toString(),
+      );
       if (userEntry) {
         await Coupon.updateOne(
-          { _id: coupon_id, "user_usage.user_id": user_id },
+          { _id: order.coupon_id, "user_usage.user_id": order.user_id },
           {
             $inc: {
               used_count: 1,
               "user_usage.$.count": 1,
             },
-          },
-        );
+          }
+        ).session(session);
       } else {
         await Coupon.updateOne(
-          { _id: coupon_id },
+          { _id: order.coupon_id },
           {
             $inc: { used_count: 1 },
-            $push: { user_usage: { user_id: user_id, count: 1 } },
-          },
-        );
+            $push: { user_usage: { user_id: order.user_id, count: 1 } },
+          }
+        ).session(session);
       }
     }
-    orderItems.forEach((oi) => (oi.order_id = savedOrder._id));
-    await OrderItem.insertMany(orderItems);
-
-    console.log("====================================");
-    console.log("CREATE ORDER START");
-    console.log("Order ID:", savedOrder._id);
-    console.log("Order Number:", savedOrder.order_number);
-    console.log("====================================");
-
-    try {
-      const populatedOrder = await Order.findById(savedOrder._id).populate(
-        "user_id",
-      );
-      const populatedItems = await OrderItem.find({ order_id: savedOrder._id })
-        .populate("product_id")
-        .populate("variant_id");
-
-      
-
-      await syncOrderToIthink({
-        order: populatedOrder,
-        orderItems: populatedItems,
-      });
-
-      savedOrder.status_history.push({
-        status: "pending",
-        changed_by: "system",
-        note: "Order pushed to iThink dashboard — awaiting courier assignment",
-        changed_at: new Date(),
-      });
-      await savedOrder.save();
-    } catch (err) {
-      console.error("iThink push error:", err.message);
-      savedOrder.status_history.push({
-        status: "pending",
-        changed_by: "system",
-        note: "iThink push failed: " + err.message,
-        changed_at: new Date(),
-      });
-      await savedOrder.save();
-    }
-
-    const populatedForEmail = await Order.findById(savedOrder._id).populate(
-      "user_id",
-      "name email",
-    );
-    const { email: placedEmail, name: placedName } = getCustomerInfo(
-      populatedForEmail || savedOrder,
-    );
-    sendOrderPlaced(populatedForEmail || savedOrder, placedEmail, placedName);
-    sendAdminNewOrder(populatedForEmail || savedOrder, placedName, placedEmail);
-    sendResponse(res, true, savedOrder, "Order created successfully");
-  } catch (err) {
-    if (consultationGiftBooking) {
-      await Bookconsaltion.findByIdAndUpdate(consultationGiftBooking._id, {
-        is_redeemed: false,
-        redeemed_order_id: null,
-      });
-    }
-    sendResponse(res, false, null, err.message);
   }
+
+  try {
+    const populatedOrder = await Order.findById(order._id).populate("user_id").session(session);
+    const populatedItems = await OrderItem.find({ order_id: order._id })
+      .populate("product_id")
+      .populate("variant_id")
+      .session(session);
+
+    await syncOrderToIthink({
+      order: populatedOrder,
+      orderItems: populatedItems,
+    });
+
+    order.status_history.push({
+      status: "pending",
+      changed_by: "system",
+      note: "Order pushed to iThink dashboard — awaiting courier assignment",
+      changed_at: new Date(),
+    });
+    await order.save({ session });
+  } catch (err) {
+    console.error("iThink push error in activateOrder:", err.message);
+    order.status_history.push({
+      status: "pending",
+      changed_by: "system",
+      note: "iThink push failed: " + err.message,
+      changed_at: new Date(),
+    });
+    await order.save({ session });
+  }
+
+  try {
+    const populatedForEmail = await Order.findById(order._id)
+      .populate("user_id", "name email")
+      .session(session);
+    const { email: placedEmail, name: placedName } = getCustomerInfo(
+      populatedForEmail || order,
+    );
+    const emailItems = await getEmailItems(order._id);
+    sendOrderPlaced(
+      populatedForEmail || order,
+      placedEmail,
+      placedName,
+      emailItems,
+    );
+    sendAdminNewOrder(
+      populatedForEmail || order,
+      placedName,
+      placedEmail,
+      emailItems,
+    );
+  } catch (emailErr) {
+    console.error("Email send error in activateOrder:", emailErr.message);
+  }
+
+  return order;
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -804,8 +1012,9 @@ const confirmOrder = async (req, res) => {
 
     await order.save();
     const { email, name } = getCustomerInfo(order);
-    sendOrderConfirmed(order, email, name);
-    sendAdminOrderConfirmed(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendOrderConfirmed(order, email, name, emailItems);
+    sendAdminOrderConfirmed(order, name, email, emailItems);
     sendResponse(res, true, { order, packing }, "Order confirmed");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -822,13 +1031,19 @@ const cancelOrder = async (req, res) => {
       "name email",
     );
     if (!order) return sendResponse(res, false, null, "Order not found");
-    if (
-      req.user?.role === "store_user" &&
-      order.user_id?._id?.toString() !== req.user._id.toString()
-    ) {
+
+    const isAdmin = ["admin", "store_owner"].includes(req.user?.role);
+    const isOwner = order.user_id?._id?.toString() === req.user._id.toString();
+
+    if (!isAdmin && !isOwner) {
       return sendResponse(res, false, null, "Forbidden: Not your order");
     }
-    if (["cancelled", "completed", "refunded"].includes(order.status)) {
+
+    if (
+      ["cancelled", "completed", "refunded", "returned", "rto"].includes(
+        order.status,
+      )
+    ) {
       return sendResponse(
         res,
         false,
@@ -836,16 +1051,39 @@ const cancelOrder = async (req, res) => {
         `Cannot cancel order with status '${order.status}'`,
       );
     }
+
+    if (!isAdmin) {
+      const hoursSincePlaced =
+        (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60);
+      if (hoursSincePlaced > 24) {
+        return sendResponse(
+          res,
+          false,
+          null,
+          "Cancellation window (24 hours) has expired. Please contact support.",
+        );
+      }
+      if (["shipped", "in_transit"].includes(order.status)) {
+        return sendResponse(
+          res,
+          false,
+          null,
+          "Order is already shipped. Contact support to cancel.",
+        );
+      }
+    }
+
     const { reason = "Cancelled by customer" } = req.body;
     order.status = "cancelled";
     order.cancel_reason = safeString(reason);
     pushHistory(
       order,
       "cancelled",
-      req.user?.name || "customer",
+      req.user?.name || (isAdmin ? "admin" : "customer"),
       safeString(reason),
     );
     await order.save();
+
     const items = await OrderItem.find({ order_id: order._id });
     for (const item of items) {
       const variant = await ProductVariant.findById(item.variant_id);
@@ -854,10 +1092,40 @@ const cancelOrder = async (req, res) => {
         await variant.save();
       }
     }
+
+    // AUTO REFUND TO WALLET (same as before)
+    if (
+      order.payment_status === "paid" &&
+      (order.payment_method === "Online" ||
+        order.payment_method === "Wallet" ||
+        order.payment_method === "partial_cod")
+    ) {
+      if (order.payment_status !== "refunded") {
+        let refundAmount = order.total_price;
+        if (order.payment_method === "partial_cod") {
+          refundAmount = order.advance_amount || order.total_price;
+        }
+        await walletService.creditWallet(
+          order.user_id._id || order.user_id,
+          refundAmount,
+          `Refund for cancelled Order #${order.order_number}`,
+          { orderId: order._id },
+        );
+        order.payment_status = "refunded";
+        await order.save();
+      }
+    }
+
     const { email, name } = getCustomerInfo(order);
-    sendOrderCancelled(order, email, name);
-    sendAdminOrderCancelled(order, name, email);
-    sendResponse(res, true, order, "Order cancelled");
+    const emailItems = await getEmailItems(order._id);
+    sendOrderCancelled(order, email, name, emailItems);
+    sendAdminOrderCancelled(order, name, email, emailItems);
+
+    let message = "Order cancelled successfully";
+    if (order.payment_status === "refunded") {
+      message += `. ₹${order.total_price} refunded to customer's wallet.`;
+    }
+    sendResponse(res, true, order, message);
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
@@ -899,8 +1167,9 @@ const packOrder = async (req, res) => {
       ? await Packing.findById(order.packing_id)
       : null;
     const { email, name } = getCustomerInfo(order);
-    sendOrderPacked(order, email, name);
-    sendAdminOrderPacked(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendOrderPacked(order, email, name, emailItems);
+    sendAdminOrderPacked(order, name, email, emailItems);
     sendResponse(res, true, { order, packing }, "Order packed");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -1267,7 +1536,10 @@ const assignCourier = async (req, res) => {
     if (partner === "ithink") {
       const orderItems = await OrderItem.find({ order_id: order._id })
         .populate("product_id", "name")
-       .populate("variant_id", "sku ProductWeight ProductHeight ProductWidth ProductLength images");
+        .populate(
+          "variant_id",
+          "sku ProductWeight ProductHeight ProductWidth ProductLength images",
+        );
       const result = await syncOrderToIthink({ order, orderItems });
       awb_number = result.awb_number;
       tracking_url = result.tracking_url;
@@ -1296,8 +1568,9 @@ const assignCourier = async (req, res) => {
     );
     await order.save();
     const { email, name } = getCustomerInfo(order);
-    sendCourierAssigned(order, email, name);
-    sendAdminCourierAssigned(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendCourierAssigned(order, email, name, emailItems);
+    sendAdminCourierAssigned(order, name, email, emailItems);
     sendResponse(res, true, order, "Courier assigned");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -1325,8 +1598,9 @@ const shipOrder = async (req, res) => {
     pushHistory(order, "shipped", req.user?.name || "admin", "Order shipped");
     await order.save();
     const { email, name } = getCustomerInfo(order);
-    sendOrderShipped(order, email, name);
-    sendAdminOrderShipped(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendOrderShipped(order, email, name, emailItems);
+    sendAdminOrderShipped(order, name, email, emailItems);
     sendResponse(res, true, order, "Order shipped");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -1365,8 +1639,9 @@ const updateTracking = async (req, res) => {
     );
     await order.save();
     const { email, name } = getCustomerInfo(order);
-    sendTrackingUpdated(order, email, name);
-    sendAdminTrackingUpdated(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendTrackingUpdated(order, email, name, note, emailItems);
+    sendAdminTrackingUpdated(order, name, note, emailItems);
     sendResponse(res, true, order, "Tracking updated");
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -1394,9 +1669,47 @@ const markDelivered = async (req, res) => {
     );
     await order.save();
 
+    try {
+      const buyer = await User.findById(order.user_id?._id || order.user_id);
+      if (buyer?.referredBy) {
+        const completedCount = await Order.countDocuments({
+          user_id: buyer._id,
+          status: "completed",
+        });
+        if (completedCount === 1) {
+          const referrer = await User.findById(buyer.referredBy);
+          if (referrer) {
+            const Reffrel = require("../models/reffrel");
+            let settings = await Reffrel.findOne({ key: "referral" });
+            if (!settings) settings = await Reffrel.create({ key: "referral" });
+
+            const referrerPoints = settings.referrerPoints || 100;
+            const refereePoints = settings.refereePoints || 100;
+
+            await walletService.creditWallet(
+              referrer._id,
+              referrerPoints,
+              `Referral bonus — ${buyer.name} joined`,
+              { refUserId: buyer._id, orderId: order._id },
+            );
+            await walletService.creditWallet(
+              buyer._id,
+              refereePoints,
+              "Welcome bonus — your first order",
+              { orderId: order._id },
+            );
+          }
+        }
+      }
+    } catch (refErr) {
+      console.error("Referral bonus error:", refErr.message);
+    }
+    // ─────────────────────────────────────────
+
     const { email, name } = getCustomerInfo(order);
-    sendOrderDelivered(order, email, name);
-    sendAdminOrderDelivered(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendOrderDelivered(order, email, name, emailItems);
+    sendAdminOrderDelivered(order, name, email, emailItems);
 
     sendResponse(res, true, order, "Order marked as delivered");
   } catch (err) {
@@ -1428,8 +1741,9 @@ const markRTO = async (req, res) => {
     await order.save();
 
     const { email, name } = getCustomerInfo(order);
-    sendOrderRTO(order, email, name);
-    sendAdminOrderRTO(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendOrderRTO(order, email, name, type, reason, emailItems);
+    sendAdminOrderRTO(order, name, type, reason, emailItems);
 
     sendResponse(res, true, order, `Order marked as ${type}`);
   } catch (err) {
@@ -1790,10 +2104,247 @@ const addTrackingAWB = async (req, res) => {
     await order.save();
 
     const { email, name } = getCustomerInfo(order);
-    sendOrderShipped(order, email, name);
-    sendAdminOrderShipped(order, name, email);
+    const emailItems = await getEmailItems(order._id);
+    sendOrderShipped(order, email, name, emailItems);
+    sendAdminOrderShipped(order, name, email, emailItems);
 
     sendResponse(res, true, order, "AWB added, tracking started");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+// ═══════════════════════════════════════════
+// REQUEST RETURN (by customer) — within 24hr of delivery
+// ═══════════════════════════════════════════
+const requestReturn = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate(
+      "user_id",
+      "name email",
+    );
+    if (!order) return sendResponse(res, false, null, "Order not found");
+
+    if (order.user_id?._id?.toString() !== req.user._id.toString()) {
+      return sendResponse(res, false, null, "Forbidden: Not your order");
+    }
+
+    if (order.status !== "completed") {
+      return sendResponse(
+        res,
+        false,
+        null,
+        "Only delivered orders can be returned",
+      );
+    }
+
+    if (order.return_status !== "none") {
+      return sendResponse(
+        res,
+        false,
+        null,
+        `Return already ${order.return_status} for this order`,
+      );
+    }
+
+    const deliveredAt = order.courier?.delivered_at;
+    if (!deliveredAt) {
+      return sendResponse(res, false, null, "Delivery date not found");
+    }
+
+    const hoursSinceDelivered =
+      (Date.now() - new Date(deliveredAt).getTime()) / (1000 * 60 * 60);
+    if (hoursSinceDelivered > 24) {
+      return sendResponse(
+        res,
+        false,
+        null,
+        "Return window (24 hours after delivery) has expired",
+      );
+    }
+
+    const { reason = "Return requested by customer" } = req.body;
+    order.return_status = "requested";
+    order.return_reason = safeString(reason);
+    order.return_requested_at = new Date();
+    pushHistory(
+      order,
+      "return_requested",
+      req.user?.name || "customer",
+      safeString(reason),
+    );
+    await order.save();
+
+    const { email, name } = getCustomerInfo(order);
+    const emailItems = await getEmailItems(order._id);
+    sendReturnRequested(order, email, name, safeString(reason), emailItems);
+    sendAdminReturnRequested(order, name, safeString(reason), emailItems);
+
+    sendResponse(res, true, order, "Return request submitted successfully");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+// ═══════════════════════════════════════════
+// APPROVE / REJECT RETURN (by admin)
+// ═══════════════════════════════════════════
+const decideReturn = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate(
+      "user_id",
+      "name email",
+    );
+    if (!order) return sendResponse(res, false, null, "Order not found");
+
+    if (order.return_status !== "requested") {
+      return sendResponse(
+        res,
+        false,
+        null,
+        "No pending return request for this order",
+      );
+    }
+
+    const { decision, note = "" } = req.body;
+    if (!["approved", "rejected"].includes(decision)) {
+      return sendResponse(res, false, null, "Invalid decision");
+    }
+
+    order.return_status = decision;
+    order.return_decided_at = new Date();
+    if (note) order.admin_note = safeString(note);
+
+    if (decision === "approved") {
+      order.status = "returned";
+      pushHistory(
+        order,
+        "returned",
+        req.user?.name || "admin",
+        note || "Return approved — awaiting product pickup & refund",
+      );
+
+      const items = await OrderItem.find({ order_id: order._id });
+      for (const item of items) {
+        const variant = await ProductVariant.findById(item.variant_id);
+        if (variant) {
+          variant.stock_quantity += item.quantity;
+          await variant.save();
+        }
+      }
+    } else {
+      pushHistory(
+        order,
+        "return_rejected",
+        req.user?.name || "admin",
+        note || "Return rejected",
+      );
+    }
+
+    await order.save();
+
+    const { email, name } = getCustomerInfo(order);
+    const emailItems = await getEmailItems(order._id);
+    sendReturnDecision(
+      order,
+      email,
+      name,
+      decision,
+      safeString(note),
+      emailItems,
+    );
+    sendAdminReturnDecision(
+      order,
+      name,
+      decision,
+      safeString(note),
+      emailItems,
+    );
+
+    sendResponse(
+      res,
+      true,
+      order,
+      decision === "approved"
+        ? "Return approved. Product restocked. Please refund the customer from the Refund button."
+        : "Return request rejected",
+    );
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+// ═══════════════════════════════════════════
+// MANUAL REFUND TO WALLET (admin enters amount)
+// ═══════════════════════════════════════════
+const refundOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate(
+      "user_id",
+      "name email",
+    );
+    if (!order) return sendResponse(res, false, null, "Order not found");
+
+    if (order.payment_status === "refunded") {
+      return sendResponse(res, false, null, "This order is already refunded");
+    }
+
+    const { amount, note = "" } = req.body;
+    const refundAmount = Number(amount);
+
+    if (!refundAmount || refundAmount <= 0) {
+      return sendResponse(res, false, null, "Enter a valid refund amount");
+    }
+    if (refundAmount > order.total_price) {
+      return sendResponse(
+        res,
+        false,
+        null,
+        `Refund amount cannot exceed order total (₹${order.total_price})`,
+      );
+    }
+
+    await walletService.creditWallet(
+      order.user_id._id || order.user_id,
+      refundAmount,
+      `Refund for Order #${order.order_number}${note ? " — " + safeString(note) : ""}`,
+      { orderId: order._id },
+    );
+
+    order.payment_status = "refunded";
+    pushHistory(
+      order,
+      order.status,
+      req.user?.name || "admin",
+      `Refunded ₹${refundAmount} to wallet` +
+        (note ? ` — ${safeString(note)}` : ""),
+    );
+    await order.save();
+
+    const { email, name } = getCustomerInfo(order);
+    const emailItems = await getEmailItems(order._id);
+    sendRefundProcessed(
+      order,
+      email,
+      name,
+      refundAmount,
+      safeString(note),
+      emailItems,
+    );
+    sendAdminRefundProcessed(
+      order,
+      name,
+      refundAmount,
+      safeString(note),
+      emailItems,
+    );
+
+    sendResponse(
+      res,
+      true,
+      order,
+      `₹${refundAmount} refunded to customer's wallet successfully`,
+    );
   } catch (err) {
     sendResponse(res, false, null, err.message);
   }
@@ -1804,6 +2355,8 @@ module.exports = {
   getPublicUserOrders,
   getOrderById,
   createOrder,
+  saveNewOrder,
+  activateOrder,
   updateOrder,
   deleteOrder,
   addTrackingAWB,
@@ -1820,4 +2373,7 @@ module.exports = {
   markRTO,
   generateInvoice,
   getOrderTracking,
+  requestReturn,
+  decideReturn,
+  refundOrder,
 };
