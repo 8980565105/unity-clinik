@@ -641,9 +641,6 @@ const getUserTracking = async (req, res) => {
     const preferredShoppingTime =
       Object.entries(timeFrequency).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
-    // const preferredShoppingTime =
-    //   Object.entries(timeFrequency).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
-
     const accountAgeMonths = Math.max(daysSinceJoin / 30, 1);
     const purchaseFrequency = (totalOrders / accountAgeMonths).toFixed(1);
 
@@ -754,11 +751,11 @@ const getUserTracking = async (req, res) => {
       walletTransactions,
     };
 
-    const pageVisitSchema = await PageVisit.find({ user_id: userId })
+    const pageVisits = await PageVisit.find({ user_id: userId })
       .sort({ visited_at: -1 })
       .limit(200);
-
-    const totalPageViews = pageVisits.length;
+   
+      const totalPageViews = pageVisits.length;
 
     const pageFrequency = {};
     pageVisits.forEach((v) => {

@@ -16,9 +16,9 @@ const VALID_SECTIONS = [
   "timelineResult",
   "holisticApproach",
   "contactSection",
+  "featuressection",
 ];
 
-// sections that store a single object (not array) directly on their own key
 const OBJECT_SECTIONS = [
   "banner2",
   "banner3",
@@ -27,7 +27,6 @@ const OBJECT_SECTIONS = [
   "timelineResult",
   "contactSection",
 ];
-// sections that store an array under a custom (non-"slides") field name, built from generic "slides" payload
 const ARRAY_SECTION_FIELD_MAP = {
   hero1: "hero1Slides",
   banner1: "banner1Slides",
@@ -37,6 +36,7 @@ const ARRAY_SECTION_FIELD_MAP = {
   reportCard: "reportCardSlides",
   getStarted: "getStartedSteps",
   holisticApproach: "holisticCards",
+  featuressection: "featuresCards",
 };
 
 const getPublicSlider = async (req, res) => {
@@ -130,7 +130,6 @@ const createSlide = async (req, res) => {
       showOnPages: Array.isArray(showOnPages) ? showOnPages : [],
     };
 
-    // --- Object-shaped sections ---
     if (section === "banner2") {
       const doc = new Slider({ ...baseData, banner2: banner2 || {} });
       const saved = await doc.save();
@@ -175,7 +174,6 @@ const createSlide = async (req, res) => {
       return sendResponse(res, true, saved, "Section created successfully");
     }
 
-    // --- Array-shaped sections (generic "slides" payload) ---
     if (!Array.isArray(slides) || slides.length === 0)
       return sendResponse(
         res,
@@ -295,22 +293,18 @@ const updateSlide = async (req, res) => {
     if (resolvedSection === "contactSection" && contactSection) {
       updateData.contactSection = {
         title: contactSection.title ?? existing.contactSection?.title ?? "",
-
         numberTitle:
           contactSection.numberTitle ??
           existing.contactSection?.numberTitle ??
           "",
-
         description:
           contactSection.description ??
           existing.contactSection?.description ??
           "",
-
         buttonText:
           contactSection.buttonText ??
           existing.contactSection?.buttonText ??
           "",
-
         buttonLink:
           contactSection.buttonLink ??
           existing.contactSection?.buttonLink ??

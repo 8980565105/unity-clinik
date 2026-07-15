@@ -3,7 +3,7 @@ const Page = require("../models/Page");
 
 const getSitemap = async (req, res) => {
   try {
-    const SITE_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+    const SITE_URL = process.env.FRONTEND_URL;
 
     const products = await Product.find({}).select("slug _id updatedAt").lean();
 

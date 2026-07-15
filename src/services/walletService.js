@@ -68,26 +68,45 @@ const debitWallet = async (userId, points, reason, extra = {}) => {
   return wallet;
 };
 
+function getChargeAmount(entry, baseAmount) {
+  if (entry.chargeType === "percentage") {
+    return Math.round((Number(baseAmount) * Number(entry.charge)) / 100);
+  }
+  return Number(entry.charge) || 0;
+}
+
 const getApplicableBonus = async (amount) => {
   const settings = await Reffrel.findOne({ key: "referral" });
-  if (!settings || !Array.isArray(settings.walletOffers)) return 0;
+  if (!settings) return 0;
+
+  const numericAmount = Number(amount);
+
+  const matchedBox = (settings.walletbox || []).find(
+    (b) => Number(b.amount) === numericAmount,
+  );
+  if (matchedBox) {
+    return getChargeAmount(matchedBox, numericAmount);
+  }
+
+  if (!Array.isArray(settings.walletOffers)) return 0;
 
   const eligibleOffers = settings.walletOffers.filter(
-    (o) => Number(amount) >= Number(o.minAmount),
+    (o) => numericAmount >= Number(o.minAmount),
   );
-
   if (eligibleOffers.length === 0) return 0;
 
   const bestOffer = eligibleOffers.reduce((max, curr) =>
     curr.minAmount > max.minAmount ? curr : max,
   );
 
-  return Number(bestOffer.bonusPoints) || 0;
+  return getChargeAmount(bestOffer, numericAmount);
 };
+
 const addMoney = async (userId, amount, transaction_id, razorpay_order_id) => {
   const wallet = await getOrCreateWallet(userId);
   const numericAmount = Number(amount);
   const bonusPoints = await getApplicableBonus(numericAmount);
+
   wallet.balance += numericAmount;
   wallet.totalEarned += numericAmount;
   wallet.transactions.push({
@@ -97,6 +116,7 @@ const addMoney = async (userId, amount, transaction_id, razorpay_order_id) => {
     transaction_id,
     razorpay_order_id,
   });
+
   if (bonusPoints > 0) {
     wallet.balance += bonusPoints;
     wallet.totalEarned += bonusPoints;
@@ -108,6 +128,7 @@ const addMoney = async (userId, amount, transaction_id, razorpay_order_id) => {
       razorpay_order_id,
     });
   }
+
   await wallet.save();
   await Payment.create({
     order_id: null,
