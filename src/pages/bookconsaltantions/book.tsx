@@ -2,9 +2,12 @@ import { GenericTable } from "@/components/ui/adminTable";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store";
 import { bulkDeleteBookings, deleteBooking, fetchBookings } from "@/features/bookconsoltantion/bookconsoltThunk";
+import { useBasePath } from "@/hooks/useBasePath";
 
 export default function BookConsoltantion() {
     const dispatch = useDispatch<AppDispatch>();
+      const basePath = useBasePath();
+    
 
     const columns = [
         {
@@ -59,7 +62,9 @@ export default function BookConsoltantion() {
             rowKey="_id"
             searchEnabled
             statusToggleEnabled={false}
-            editEnabled={false}
+            editEnabled
+            viewEnabled={true}
+            viewPath={(item: any) => `${basePath}/bookConsoltantion/${item._id}/view`}
             fetchData={async ({ page, limit, search, status }) => {
                 try {
                     const res = await dispatch(

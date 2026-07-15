@@ -12,9 +12,23 @@ export const fetchUsers = createAsyncThunk(
       isDownload?: boolean;
       role?: string;
       is_active?: boolean;
+      authProvider?: string;
     } = {},
     { rejectWithValue },
   ) => {
+    // try {
+    //   const { role, ...query } = params;
+    //   const queryParams: Record<string, any> = { ...query };
+    //   if (query.is_active !== undefined) {
+    //     queryParams.is_active = query.is_active.toString();
+    //   }
+    //   const url = ROUTES.users.getAll;
+    //   const res = await api.get(url, { params: queryParams });
+    //   if (res.data.success) return res.data.data;
+    //   return rejectWithValue(res.data.message || "Failed to fetch users");
+    // } catch (err: any) {
+    //   return rejectWithValue(err.response?.data?.message || "Server Error");
+    // }
     try {
       const { role, ...query } = params;
       const queryParams: Record<string, any> = { ...query };
@@ -106,6 +120,19 @@ export const bulkDeleteUsers = createAsyncThunk(
       const res = await api.post(ROUTES.users.bulkDelete, { ids });
       if (res.data.success) return ids;
       return rejectWithValue(res.data.message || "Failed to delete users");
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);
+
+export const getUserTracking = createAsyncThunk(
+  "users/getUserTracking",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await api.get(ROUTES.users.tracking(id)); 
+      if (res.data.success) return res.data.data;
+      return rejectWithValue(res.data.message || "Failed to fetch tracking");
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Server Error");
     }

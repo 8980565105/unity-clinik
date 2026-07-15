@@ -10,6 +10,10 @@ import {
 export default function PaymentsPage() {
   const dispatch = useDispatch<AppDispatch>();
 
+  const STATUS_VALUES = ["pending", "completed", "failed"];
+  const TYPE_VALUES = ["order", "wallet_recharge", "book_consultation"];
+
+
   const columns = [
     { key: "transaction_id", label: "Transaction ID", width: "w-48" },
     {
@@ -24,6 +28,19 @@ export default function PaymentsPage() {
       label: "Amount",
       width: "w-30",
       render: (item: any) => `$${item?.amount_paid?.toFixed(2) || "0.00"}`,
+    },
+    {
+      key: "type",
+      label: "Type",
+      width: "w-40",
+      render: (item: any) => {
+        const map: Record<string, string> = {
+          order: "Order Payment",
+          wallet_recharge: "Wallet Recharge",
+          book_consultation: "Book Consultation",
+        };
+        return map[item.type] || item.type;
+      },
     },
     {
       key: "status",
@@ -65,17 +82,30 @@ export default function PaymentsPage() {
         { label: "Pending", value: "pending" },
         { label: "Completed", value: "completed" },
         { label: "Failed", value: "failed" },
+        { label: "Order", value: "order" },
+        { label: "Wallet Recharge", value: "wallet_recharge" },
+        { label: "Book Consultation", value: "book_consultation" },
       ]}
+
       fetchData={async ({ page, limit, search, status }) => {
         try {
-          const res = await dispatch(
-            fetchPayments({ page, limit, search, status })
-          ).unwrap();
+          const params: any = { page, limit, search };
+
+          if (status) {
+            if (STATUS_VALUES.includes(status)) {
+              params.status = status;
+            } else if (TYPE_VALUES.includes(status)) {
+              params.type = status;
+            }
+          }
+
+          const res = await dispatch(fetchPayments(params)).unwrap();
           return { data: res.payments, total: res.total };
         } catch (err: any) {
           throw new Error(err || "Failed to load payments");
         }
-      }}
+      }
+      }
       deleteItem={async (id) => {
         try {
           await dispatch(deletePayment(id)).unwrap();

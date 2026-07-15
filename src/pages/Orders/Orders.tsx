@@ -23,8 +23,9 @@ import {
   markDelivered,
   markRTO,
   addTrackingAWB,
+  refundOrder,
+  decideReturn,
 } from "@/features/orders/ordersThunk";
-import { fetchWarehouse } from "@/features/warehouse/warehouseThunk"
 import { clearSelectedOrder } from "@/features/orders/ordersSlice";
 import {
   Select,
@@ -83,6 +84,7 @@ const downloadPDF = async (url: string, filename: string) => {
   const blob = new Blob([res.data], { type: "application/pdf" });
   saveAs(blob, filename);
 };
+
 
 const Modal = ({ title, onClose, children, wide = false }: {
   title: string; onClose: () => void; children: React.ReactNode; wide?: boolean;
@@ -144,6 +146,13 @@ interface Warehouse {
   status: string;
 }
 
+
+const RETURN_TYPE_LABEL: Record<string, string> = {
+  wrong_product: "Wrong Product",
+  damage_product: "Damaged Product",
+};
+
+const baseUrl = `${import.meta.env.VITE_API_URL_IMAGE}` || "";
 export default function Orders() {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -155,7 +164,8 @@ export default function Orders() {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [tableLoading, setTableLoading] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState({ status: "all", advanced: { ...DEFAULT_ADVANCED } });
-  type ModalType = "detail" | "confirm" | "cancel" | "pack" | "courier" | "ship" | "addAwb" | "tracking" | "deliver" | "rto" | null;
+  type ModalType = "detail" | "confirm" | "cancel" | "pack" | "courier" | "ship" | "addAwb" | "tracking" | "deliver" | "rto" | "returnRequest" | "refund" | null
+
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [targetOrder, setTargetOrder] = useState<Order | null>(null);
   const [adminNote, setAdminNote] = useState("");
@@ -166,6 +176,10 @@ export default function Orders() {
   const [rtoForm, setRtoForm] = useState({ type: "rto" as "rto" | "returned" | "refunded", reason: "" });
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [warehouseLoading, setWarehouseLoading] = useState(false);
+
+  const [returnDecisionNote, setReturnDecisionNote] = useState("");
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundNote, setRefundNote] = useState("");
 
   const limit = 10;
   useEffect(() => {
@@ -195,6 +209,7 @@ export default function Orders() {
     load();
   }, [debouncedQuery, page, appliedFilters, dispatch]);
 
+
   const openModal = async (type: ModalType, order: Order) => {
     setTargetOrder(order);
     setActiveModal(type);
@@ -204,22 +219,10 @@ export default function Orders() {
     setCourierForm({ partner: "Delhivery", courier_name: "", awb_number: "", pickup_date: "" });
     setTrackingUrl("");
     setRtoForm({ type: "rto", reason: "" });
-
-    if (type === "pack") {
-      setWarehouses([]);
-      setWarehouseLoading(true);
-      try {
-        const res = await dispatch(fetchWarehouse({ status: "active", limit: 1000 })).unwrap();
-        const list: Warehouse[] = res?.warehouses ?? res?.data ?? res ?? [];
-        setWarehouses(Array.isArray(list) ? list.filter((w) => w.status === "active") : []);
-      } catch {
-        toast.error("Failed to load warehouses");
-      } finally {
-        setWarehouseLoading(false);
-      }
-    }
+    setReturnDecisionNote("");
+    setRefundAmount(String(order.total_price || ""));
+    setRefundNote("");
   };
-
   const closeModal = () => {
     setActiveModal(null);
     setTargetOrder(null);
@@ -324,6 +327,34 @@ export default function Orders() {
       refreshOrders(); closeModal();
     } catch (err: any) { toast.error(err || "Failed"); }
   };
+  const handleDecideReturn = async (decision: "approved" | "rejected") => {
+    if (!targetOrder) return;
+    try {
+      await dispatch(decideReturn({ id: targetOrder._id, decision, note: returnDecisionNote })).unwrap();
+      toast.success(decision === "approved" ? "Return approved & stock restored" : "Return rejected");
+      refreshOrders();
+      closeModal();
+    } catch (err: any) {
+      toast.error(err || "Failed to process return");
+    }
+  };
+
+  const handleRefund = async () => {
+    if (!targetOrder) return;
+    const amt = Number(refundAmount);
+    if (!amt || amt <= 0) {
+      toast.error("Enter a valid refund amount");
+      return;
+    }
+    try {
+      await dispatch(refundOrder({ id: targetOrder._id, amount: amt, note: refundNote })).unwrap();
+      toast.success(`₹${amt} refunded to customer's wallet`);
+      refreshOrders();
+      closeModal();
+    } catch (err: any) {
+      toast.error(err || "Failed to refund");
+    }
+  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -367,53 +398,73 @@ export default function Orders() {
 
   const totalPages = Math.ceil(total / limit);
   const renderActionButtons = (order: Order) => {
+    const buttons = [];
+
+    if (order.return_status === "requested") {
+      buttons.push(
+        <button key="return" onClick={() => openModal("returnRequest", order)}
+          className="px-2 py-1 text-xs rounded bg-pink-100 text-pink-700 hover:bg-pink-200 font-medium">
+          Return Request
+        </button>
+      );
+    }
+
+    if (order.payment_status !== "refunded" &&
+      ["returned", "cancelled"].includes(order.status) &&
+      order.payment_method !== "COD") {
+      buttons.push(
+        <button key="refund" onClick={() => openModal("refund", order)}
+          className="px-2 py-1 text-xs rounded bg-teal-100 text-teal-700 hover:bg-teal-200 font-medium">
+          Refund
+        </button>
+      );
+    }
+
     switch (order.status) {
       case "pending":
-        return (
-          <>
-            <button onClick={() => openModal("confirm", order)} className="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-medium">Confirm</button>
-            <button onClick={() => openModal("cancel", order)} className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 font-medium">Cancel</button>
-          </>
+        buttons.push(
+          <button key="confirm" onClick={() => openModal("confirm", order)} className="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-700 hover:bg-indigo-200 font-medium">Confirm</button>,
+          <button key="cancel" onClick={() => openModal("cancel", order)} className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 font-medium">Cancel</button>
         );
+        break;
       case "processing":
-        return (
-          <>
-            <button onClick={() => openModal("addAwb", order)} className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700 hover:bg-orange-200 font-medium">
-              Add AWB
-            </button>
-            <button onClick={() => openModal("cancel", order)} className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 font-medium">Cancel</button>
-          </>
+        buttons.push(
+          <button key="awb" onClick={() => openModal("addAwb", order)} className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700 hover:bg-orange-200 font-medium">Add AWB</button>,
+          <button key="cancel" onClick={() => openModal("cancel", order)} className="px-2 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200 font-medium">Cancel</button>
         );
+        break;
       case "ready_to_ship":
-        return (
-          <button onClick={() => openModal("ship", order)} className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-700 hover:bg-purple-200 font-medium">Dispatch</button>
+        buttons.push(
+          <button key="ship" onClick={() => openModal("ship", order)} className="px-2 py-1 text-xs rounded bg-purple-100 text-purple-700 hover:bg-purple-200 font-medium">Dispatch</button>
         );
+        break;
       case "shipped":
       case "in_transit":
-        return (
-          <button onClick={() => openModal("deliver", order)} className="px-2 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200 font-medium">
+        buttons.push(
+          <button key="deliver" onClick={() => openModal("deliver", order)} className="px-2 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200 font-medium">
             <CheckCircle size={11} className="inline mr-1" />Delivered
           </button>
         );
+        break;
       case "completed":
-        return (
-          <button onClick={() => downloadPDF(ROUTES.orders.invoice(order._id), `invoice-${order.order_number}.pdf`)}
+        buttons.push(
+          <button key="invoice" onClick={() => downloadPDF(ROUTES.orders.invoice(order._id), `invoice-${order.order_number}.pdf`)}
             className="px-2 py-1 text-xs rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 font-medium">Invoice</button>
         );
-      default:
-        return null;
+        break;
     }
-  };
 
+    return buttons;
+  };
   return (
     <div className="mx-auto p-6 space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="text-sm text-gray-500">Manage all customer orders and track their flow.</p>
+          <h1 className="text-2xl font-bold text-foreground">Orders</h1>
+          <p className="text-sm text-muted-foreground">Manage all customer orders and track their flow.</p>
         </div>
         <div className="flex">
-          <Button onClick={handleDownload} variant="outline" className="flex items-center gap-2">
+          <Button onClick={handleDownload} variant="outline" className="flex items-center gap-2 border-border bg-card text-foreground hover:bg-muted">
             <Download className="h-4 w-4" /> Export Excel
           </Button>
           {selectedIds.length > 0 && (
@@ -426,17 +477,19 @@ export default function Orders() {
         </div>
       </div>
 
-      <Card className="border border-gray-200 shadow-sm">
+
+
+      <Card className="border border-border bg-card shadow-sm">
         <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-3 flex-wrap">
           <div className="relative w-full md:max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Search order number, status..." value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
+              onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-input border-border text-foreground" />
           </div>
           <Select value={appliedFilters.status}
             onValueChange={(v) => { setPage(1); setAppliedFilters((p) => ({ ...p, status: v })); }}>
-            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Filter by status" /></SelectTrigger>
-            <SelectContent>
+            <SelectTrigger className="w-[200px] bg-input border-border text-foreground"><SelectValue placeholder="Filter by status" /></SelectTrigger>
+            <SelectContent className="bg-popover border-border text-popover-foreground">
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">New Order</SelectItem>
               <SelectItem value="processing">Order Confirmed</SelectItem>
@@ -446,26 +499,25 @@ export default function Orders() {
               <SelectItem value="in_transit">In Transit</SelectItem>
               <SelectItem value="completed">Delivered</SelectItem>
               <SelectItem value="cancelled">Cancelled</SelectItem>
-              <SelectItem value="rto">RTO</SelectItem>
+              {/* <SelectItem value="rto">RTO</SelectItem> */}
               <SelectItem value="returned">Returned</SelectItem>
               <SelectItem value="refunded">Refunded</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
       </Card>
-
-      <Card className="border border-gray-200 shadow-sm rounded-lg overflow-hidden">
-        <CardHeader className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-          <CardTitle className="text-base font-semibold text-gray-800">
+      <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
+        <CardHeader className="bg-table-header px-4 py-3 border-b border-border">
+          <CardTitle className="text-base font-semibold text-foreground">
             Orders
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto relative">
             {tableLoading && (
-              <div className="absolute inset-0 bg-white/70 z-10 flex items-center justify-center">
-                <div className="flex items-center gap-2 text-gray-500 text-sm">
-                  <svg className="animate-spin h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24">
+              <div className="absolute inset-0 bg-card/70 z-10 flex items-center justify-center">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <svg className="animate-spin h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
@@ -473,8 +525,8 @@ export default function Orders() {
                 </div>
               </div>
             )}
-            <table className="w-full text-sm text-gray-700">
-              <thead className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500">
+            <table className="w-full text-sm text-foreground">
+              <thead className="bg-table-header border-b border-border text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="p-3 text-left w-10">
                     <Checkbox
@@ -493,23 +545,23 @@ export default function Orders() {
                   <th className="p-3 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-border">
                 {!tableLoading && orders.length === 0 ? (
-                  <tr><td colSpan={10} className="p-10 text-center text-gray-400">No orders found.</td></tr>
+                  <tr><td colSpan={10} className="p-10 text-center text-muted-foreground">No orders found.</td></tr>
                 ) : (
                   orders.map((order, index) => {
                     const isExpanded = expandedRows.includes(order._id);
                     return (
                       <React.Fragment key={order._id}>
-                        <tr className="hover:bg-gray-50 transition">
+                        <tr className="hover:bg-table-hover transition-colors">
                           <td className="p-3">
                             <Checkbox checked={selectedIds.includes(order._id)} onCheckedChange={() => setSelectedIds((p) => p.includes(order._id) ? p.filter((i) => i !== order._id) : [...p, order._id])} />
                           </td>
-                          <td className="p-3 font-bold text-gray-500">#{(page - 1) * limit + index + 1}</td>
-                          <td className="p-3 font-medium text-blue-600">{order.order_number}</td>
+                          <td className="p-3 font-bold text-muted-foreground">#{(page - 1) * limit + index + 1}</td>
+                          <td className="p-3 font-medium text-primary">{order.order_number}</td>
                           <td className="p-3">{order.user?.name || "—"}</td>
                           <td className="p-3">{order.shippingAddress?.phone || "—"}</td>
-                          <td className="p-3 text-xs text-gray-500 max-w-[180px] truncate">
+                          <td className="p-3 text-xs text-muted-foreground max-w-[180px] truncate">
                             {order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
                           </td>
                           <td className="p-3 font-semibold">₹{order.total_price}</td>
@@ -522,7 +574,7 @@ export default function Orders() {
                           <td className="p-3">
                             <div className="flex items-center gap-1 flex-wrap justify-end">
                               <button onClick={() => toggleExpand(order._id)}
-                                className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium">View</button>
+                                className="px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 font-medium transition-colors">View</button>
 
                               {["packed", "ready_to_ship", "shipped", "in_transit", "completed"].includes(order.status) && (
                                 <button onClick={() => downloadPDF(ROUTES.orders.packingSlip(order._id), `slip-${order.order_number}.pdf`)}
@@ -530,7 +582,7 @@ export default function Orders() {
                               )}
                               {renderActionButtons(order)}
                               <ConfirmDialog title="Delete Order" description={`Delete order "${order.order_number}"?`} confirmText="Delete" onConfirm={() => handleDelete(order._id)} danger>
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500 hover:bg-red-50">
+                                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:bg-destructive/10">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </ConfirmDialog>
@@ -539,13 +591,13 @@ export default function Orders() {
                         </tr>
 
                         {isExpanded && (
-                          <tr className="bg-gray-50">
+                          <tr className="bg-muted/20">
                             <td colSpan={10} className="p-0">
-                              <div className="p-4 border-t border-gray-200">
-                                <p className="text-sm font-semibold text-gray-700 mb-3">Order Items</p>
-                                <table className="w-full text-sm">
+                              <div className="p-4 border-t border-border">
+                                <p className="text-sm font-semibold text-foreground mb-3">Order Items</p>
+                                <table className="w-full text-sm text-foreground">
                                   <thead>
-                                    <tr className="text-xs text-gray-500 border-b bg-gray-100">
+                                    <tr className="text-xs text-muted-foreground border-b border-border bg-muted/40">
                                       <th className="px-3 py-2 text-left">Product</th>
                                       <th className="px-3 py-2 text-left">type</th>
                                       <th className="px-3 py-2 text-left">Sku</th>
@@ -554,9 +606,9 @@ export default function Orders() {
                                       <th className="px-3 py-2 text-right">Subtotal</th>
                                     </tr>
                                   </thead>
-                                  <tbody className="divide-y divide-gray-100">
+                                  <tbody className="divide-y divide-border">
                                     {order.items?.map((item: any) => (
-                                      <tr key={item._id} className="hover:bg-white">
+                                      <tr key={item._id} className="hover:bg-card transition-colors">
                                         <td className="px-3 py-2 font-medium">{item.product?.name || "Product"}</td>
                                         <td className="px-3 py-2">
                                           {item.is_gift ? (
@@ -579,12 +631,12 @@ export default function Orders() {
                                 </table>
 
                                 {order.courier?.awb_number && (
-                                  <div className="mt-3 p-3 bg-blue-50 rounded-lg text-sm">
-                                    <p className="font-semibold text-blue-700 mb-1">Shipping Info</p>
+                                  <div className="mt-3 p-3 bg-muted/50 border border-border rounded-lg text-sm">
+                                    <p className="font-semibold text-primary mb-1">Shipping Info</p>
                                     <p>Courier: <strong>{order.courier.name || order.courier.partner}</strong></p>
                                     <p>AWB: <strong>{order.courier.awb_number}</strong></p>
                                     {order.courier.tracking_url && (
-                                      <a href={order.courier.tracking_url} target="_blank" rel="noreferrer" className="text-blue-600 underline text-xs">Track Shipment →</a>
+                                      <a href={order.courier.tracking_url} target="_blank" rel="noreferrer" className="text-primary underline text-xs">Track Shipment →</a>
                                     )}
                                   </div>
                                 )}
@@ -601,19 +653,21 @@ export default function Orders() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-end gap-2 p-4 border-t border-gray-100">
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-card">
               <Button size="sm"
                 variant="outline"
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                disabled={page === 1}>
+                disabled={page === 1}
+                className="bg-card border-border text-foreground hover:bg-muted"
+                >
                 Prev
               </Button>
               {Array.from({ length: totalPages }, (_, i) => (
                 <button key={i}
                   onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1 rounded text-sm ${page === i + 1
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  className={`px-3 py-1 rounded text-sm transition-colors ${page === i + 1
+                    ? "bg-primary text-primary-foreground font-medium"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
                     }`}>
                   {i + 1}
                 </button>
@@ -622,6 +676,7 @@ export default function Orders() {
                 variant="outline"
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                 disabled={page === totalPages}
+                className="bg-card border-border text-foreground hover:bg-muted"
               >
                 Next
               </Button>
@@ -815,11 +870,7 @@ export default function Orders() {
                   value={courierForm.courier_name} onChange={(e) => setCourierForm({ ...courierForm, courier_name: e.target.value })} placeholder="Enter courier name" />
               </div>
             )}
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">AWB / Tracking Number <span className="text-red-500">*</span></label>
-              <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                value={courierForm.awb_number} onChange={(e) => setCourierForm({ ...courierForm, awb_number: e.target.value })} placeholder="Enter AWB number" />
-            </div> */}
+
             {courierForm.partner === "ithink" ? (
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
                 ⚡ AWB number automatically iThink Logistics thi generate thase.
@@ -838,7 +889,6 @@ export default function Orders() {
             </div>
           </div>
           <div className="flex gap-3 mt-4">
-            {/* <Button disabled={actionLoading || !courierForm.awb_number} onClick={handleAssignCourier} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"> */}
             <Button disabled={actionLoading || (courierForm.partner !== "ithink" && !courierForm.awb_number)} onClick={handleAssignCourier} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white">
               <Truck size={14} className="mr-1" />{actionLoading ? "Assigning..." : "Assign & Ready to Ship"}
             </Button>
@@ -921,6 +971,193 @@ export default function Orders() {
           </div>
         </Modal>
       )}
+
+      {/* {activeModal === "returnRequest" && targetOrder && (
+        <Modal title={`Return Request — ${targetOrder.order_number}`} onClose={closeModal}>
+          <div className="p-3 bg-pink-50 rounded-lg text-sm mb-4">
+            <p><strong>Customer reason:</strong> {targetOrder.return_reason || "—"}</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Requested: {targetOrder.return_requested_at ? new Date(targetOrder.return_requested_at).toLocaleString("en-IN") : "—"}
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Admin Note (optional)</label>
+            <textarea rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+              value={returnDecisionNote} onChange={(e) => setReturnDecisionNote(e.target.value)} placeholder="Add a note..." />
+          </div>
+          <div className="flex gap-3 mt-4">
+            <Button disabled={actionLoading} onClick={() => handleDecideReturn("approved")} className="flex-1 bg-green-600 hover:bg-green-700">
+              {actionLoading ? "Processing..." : "Approve Return"}
+            </Button>
+            <Button disabled={actionLoading} onClick={() => handleDecideReturn("rejected")} variant="destructive" className="flex-1">
+              Reject
+            </Button>
+            <Button variant="outline" onClick={closeModal} className="flex-1">Close</Button>
+          </div>
+        </Modal>
+      )} */}
+
+      {activeModal === "returnRequest" && targetOrder && (
+        <Modal title={`Return Request — ${targetOrder.order_number}`} onClose={closeModal} wide>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 p-3 bg-pink-50 rounded-lg text-sm">
+              <div>
+                <p className="text-xs text-gray-500">Return Type</p>
+                <p className="font-semibold text-pink-700">
+                  {RETURN_TYPE_LABEL[(targetOrder as any).return_type] || "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Requested At</p>
+                <p className="font-medium">
+                  {targetOrder.return_requested_at
+                    ? new Date(targetOrder.return_requested_at).toLocaleString("en-IN")
+                    : "—"}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-gray-500">Customer Reason</p>
+                <p className="font-medium">{targetOrder.return_reason || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Customer</p>
+                <p className="font-medium">{(targetOrder as any).user?.name || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Order Total</p>
+                <p className="font-medium">₹{targetOrder.total_price}</p>
+              </div>
+            </div>
+
+            {/* Proof images */}
+            {(targetOrder as any).return_media?.images?.length > 0 && (
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Images ({(targetOrder as any).return_media.images.length})
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(targetOrder as any).return_media.images.map((url: string, i: number) => {
+                    const src = url.startsWith("http") ? url : `${baseUrl}${url}`;
+                    return (
+                      <a key={i} href={src} target="_blank" rel="noreferrer">
+                        <img
+                          src={src}
+                          alt={`return-proof-${i}`}
+                          className="w-24 h-24 object-cover rounded-lg border border-gray-200 hover:opacity-80 transition"
+                        />
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Proof videos */}
+            {(targetOrder as any).return_media?.videos?.length > 0 && (
+              <div>
+                <p className="text-sm font-semibold text-gray-700 mb-2">
+                  Videos ({(targetOrder as any).return_media.videos.length})
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(targetOrder as any).return_media.videos.map((url: string, i: number) => {
+                    const src = url.startsWith("http") ? url : `${baseUrl}${url}`;
+                    return (
+                      <video
+                        key={i}
+                        src={src}
+                        controls
+                        className="w-40 h-28 rounded-lg border border-gray-200 bg-black"
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {(!((targetOrder as any).return_media?.images?.length) &&
+              !((targetOrder as any).return_media?.videos?.length)) && (
+                <p className="text-xs text-gray-400">No proof media uploaded.</p>
+              )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Admin Note (optional)
+              </label>
+              <textarea
+                rows={3}
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
+                value={returnDecisionNote}
+                onChange={(e) => setReturnDecisionNote(e.target.value)}
+                placeholder="Add a note..."
+              />
+            </div>
+
+            <p className="text-xs text-indigo-600">
+              ✓ Approving will restock the product and automatically create an
+              iThink reverse pickup. Customer will see reverse tracking on their
+              order page once generated.
+            </p>
+          </div>
+
+          <div className="flex gap-3 mt-4">
+            <Button
+              disabled={actionLoading}
+              onClick={() => handleDecideReturn("approved")}
+              className="flex-1 bg-green-600 hover:bg-green-700"
+            >
+              {actionLoading ? "Processing..." : "Approve Return"}
+            </Button>
+            <Button
+              disabled={actionLoading}
+              onClick={() => handleDecideReturn("rejected")}
+              variant="destructive"
+              className="flex-1"
+            >
+              Reject
+            </Button>
+            <Button variant="outline" onClick={closeModal} className="flex-1">
+              Close
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      {activeModal === "refund" && targetOrder && (
+        <Modal title={`Refund to Wallet — ${targetOrder.order_number}`} onClose={closeModal}>
+          <div className="p-3 bg-teal-50 rounded-lg text-sm mb-4">
+            <p><strong>Customer:</strong> {targetOrder.user?.name}</p>
+            <p><strong>Order Total:</strong> ₹{targetOrder.total_price}</p>
+            <p><strong>Status:</strong> {STATUS_LABEL[targetOrder.status] || targetOrder.status}</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Refund Amount <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={targetOrder.total_price}
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              value={refundAmount}
+              onChange={(e) => setRefundAmount(e.target.value)}
+              placeholder="Enter amount to refund"
+            />
+            <p className="text-xs text-gray-400 mt-1">Max: ₹{targetOrder.total_price}</p>
+          </div>
+          <div className="mt-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Note (optional)</label>
+            <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              value={refundNote} onChange={(e) => setRefundNote(e.target.value)} placeholder="e.g. Product returned in good condition" />
+          </div>
+          <div className="flex gap-3 mt-4">
+            <Button disabled={actionLoading || !refundAmount} onClick={handleRefund} className="flex-1 bg-teal-600 hover:bg-teal-700">
+              {actionLoading ? "Refunding..." : `Refund ₹${refundAmount || 0} to Wallet`}
+            </Button>
+            <Button variant="outline" onClick={closeModal} className="flex-1">Cancel</Button>
+          </div>
+        </Modal>
+      )}
+
     </div>
   );
 }

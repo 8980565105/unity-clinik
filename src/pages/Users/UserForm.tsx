@@ -52,6 +52,7 @@ export default function UserFormPage() {
           setRole(u.role ?? "user");
           setStatus(!!u.is_active);
           setAvatarUrl(u.profile_picture ?? null);
+          console.log(u.profile_picture);
           setMobileNumber(u.mobile_number ?? "");
           setGender(u.gender ?? "male");
           setDob(u.date_of_birth ? new Date(u.date_of_birth).toISOString().split("T")[0] : "");

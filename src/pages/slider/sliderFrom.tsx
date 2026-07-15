@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,8 +19,6 @@ import {
 } from "@/features/slider/sliderThunk";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import api from "@/services/api";
-
-
 interface Hero1Slide {
     title: string; description: string; button_name: string; button_link: string;
     location: string; name: string; age: string; review: string;
@@ -37,7 +34,6 @@ interface ShoppageSlide {
     title: string; description: string; button_name: string; button_link: string;
     badge: string; bgImageUrl: string | null; productimgUrl: string | null;
 }
-
 interface ReportCardSlide {
     beforeImageUrl: string | null;
     afterImageUrl: string | null;
@@ -50,7 +46,6 @@ interface ReportCardSlide {
     age: string;
     rating: string;
 }
-
 interface SuccessStorySlide {
     name: string;
     age: string;
@@ -62,7 +57,6 @@ interface SuccessStorySlide {
     videoUrl: string | null;
     videoUploading: boolean;
 }
-
 interface HonestStageItem {
     title: string;
     imageUrl: string | null;
@@ -89,48 +83,31 @@ interface TimelineSlide {
     genderType: "male" | "female";
     stages: TimelineStageItem[];
 }
-
 interface HolisticCard {
     title: string;
     description: string;
     imageUrl: string | null;
 }
+interface ContactSection {
+    title: string;
+    numberTitle: string;
+    description: string;
+    buttonText: string;
+    buttonLink: string;
 
-
-
-
-
-
-
-
-
-
-
-// type SectionType = "" | "hero1" | "banner1" | "topDoctor" | "banner2" | "banner3" | "banner4" | "shoppage" | "successStory" | "reportCard";
-
-
-// const ALL_SECTIONS: Exclude<SectionType, "">[] = [
-//     "hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4", "shoppage", "successStory", "reportCard",
-// ];
+}
 
 type SectionType =
     | ""
     | "hero1" | "banner1" | "topDoctor" | "banner2" | "banner3" | "banner4"
     | "shoppage" | "successStory" | "reportCard"
-    | "honestExpectations" | "getStarted" | "timelineResult" | "holisticApproach";
+    | "honestExpectations" | "getStarted" | "timelineResult" | "holisticApproach" | "contactSection";
 
 const ALL_SECTIONS: Exclude<SectionType, "">[] = [
     "hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4",
     "shoppage", "successStory", "reportCard",
-    "honestExpectations", "getStarted", "timelineResult", "holisticApproach",
+    "honestExpectations", "getStarted", "timelineResult", "holisticApproach", "contactSection",
 ];
-
-// const SECTION_LABELS: Record<string, string> = {
-//     hero1: "Hero Section 1", banner1: "Banner 1", topDoctor: "Top Doctors",
-//     banner2: "Banner 2", banner3: "Banner 3", banner4: "Banner 4",
-//     shoppage: "Shop Page Slider", successStory: "Success Stories",
-//     reportCard: "Report Cards (Before/After)",
-// };
 
 const SECTION_LABELS: Record<string, string> = {
     hero1: "Hero Section 1", banner1: "Banner 1", topDoctor: "Top Doctors",
@@ -141,6 +118,7 @@ const SECTION_LABELS: Record<string, string> = {
     getStarted: "How To Get Started (Steps)",
     timelineResult: "Timeline Result (Month wise)",
     holisticApproach: "Holistic Approach (Cards)",
+    contactSection: "Contact Section",
 };
 
 
@@ -172,7 +150,13 @@ const defaultSuccessStorySlide = (): SuccessStorySlide => ({
     mainImageUrl: null, beforeImageUrl: null, afterImageUrl: null,
     videoUrl: null, videoUploading: false,
 });
-
+const defaultContactSection = () => ({
+    title: "",
+    numberTitle: "",
+    description: "",
+    buttonText: "",
+    buttonLink: ""
+});
 
 const defaultHonestStage = (): HonestStageItem => ({ title: "", imageUrl: null, success: true });
 const defaultHonestSlide = (gender: "male" | "female"): HonestSlide => ({
@@ -191,11 +175,6 @@ const defaultTimelineSlide = (gender: "male" | "female"): TimelineSlide => ({
 });
 
 const defaultHolisticCard = (): HolisticCard => ({ title: "", description: "", imageUrl: null });
-
-
-
-
-
 
 function updateField<T>(setter: React.Dispatch<React.SetStateAction<T[]>>, index: number, field: keyof T, value: T[keyof T]) {
     setter(prev => { const u = [...prev]; u[index] = { ...u[index], [field]: value }; return u; });
@@ -510,6 +489,7 @@ export default function SlideFormPage() {
     const [timelineMaleStages, setTimelineMaleStages] = useState<TimelineStageItem[]>([defaultTimelineStage()]);
     const [timelineFemaleStages, setTimelineFemaleStages] = useState<TimelineStageItem[]>([defaultTimelineStage()]);
     const [holisticCards, setHolisticCards] = useState<HolisticCard[]>([defaultHolisticCard()]);
+    const [contactSection, setContactSection] = useState(defaultContactSection());
 
     const slidesState = useSelector((state: any) => state.slides);
     const allSlides: any[] = Array.isArray(slidesState)
@@ -637,18 +617,38 @@ export default function SlideFormPage() {
                         title: s.title ?? "", description: s.description ?? "", imageUrl: s.image ?? null,
                     })));
                 }
+                if (doc.section === "contactSection") {
+                    setContactSection({
+                        title: doc.contactSection?.title || "",
+                        numberTitle: doc.contactSection?.numberTitle || "",
+                        description: doc.contactSection?.description || "",
+                        buttonText: doc.contactSection?.buttonText || "",
+                        buttonLink: doc.contactSection?.buttonLink || ""
+                    })
+
+                }
             })
             .catch(() => { toast.error("Failed to load slide data"); navigate(`${basePath}/slider`); })
             .finally(() => setPageLoading(false));
     }, [dispatch, id, isEditMode, basePath, navigate]);
 
-    const handleSectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleSectionChange = (
+        e: React.ChangeEvent<HTMLSelectElement>
+    ) => {
         const value = e.target.value as SectionType;
+
         if (isEditMode) return;
-        if (value && addedSections.includes(value)) {
-            toast.error(`"${SECTION_LABELS[value]}" already exists. Delete it first to recreate.`);
+        setSelectedSection("");
+
+        if (!value) return;
+
+        if (addedSections.includes(value)) {
+            toast.error(
+                `"${SECTION_LABELS[value]}" already exists.`
+            );
             return;
         }
+
         setSelectedSection(value);
     };
 
@@ -744,6 +744,15 @@ export default function SlideFormPage() {
             payload.slides = holisticCards.map(s => ({
                 title: s.title, description: s.description, image: s.imageUrl,
             }));
+        } else if (selectedSection === "contactSection") {
+            payload.contactSection = {
+                title: contactSection.title,
+                numberTitle: contactSection.numberTitle,
+                description: contactSection.description,
+                buttonText: contactSection.buttonText,
+                buttonLink: contactSection.buttonLink
+            }
+
         }
 
 
@@ -809,14 +818,16 @@ export default function SlideFormPage() {
                                 className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                             >
                                 <option value="">— Select Section —</option>
-                                {ALL_SECTIONS.map(sec => {
-                                    const isAdded = addedSections.includes(sec);
-                                    return (
-                                        <option key={sec} value={sec} disabled={isAdded}>
-                                            {isAdded ? `✅ ${SECTION_LABELS[sec]} (Already Added)` : SECTION_LABELS[sec]}
+                                {ALL_SECTIONS
+                                    .filter(sec => !addedSections.includes(sec) || sec === ownSection)
+                                    .map(sec => (
+                                        <option
+                                            key={sec}
+                                            value={sec}
+                                        >
+                                            {SECTION_LABELS[sec]}
                                         </option>
-                                    );
-                                })}
+                                    ))}
                             </select>
                             {isEditMode && (
                                 <p className="text-xs text-gray-400 mt-2">Section cannot be changed in edit mode.</p>
@@ -1417,7 +1428,87 @@ export default function SlideFormPage() {
                             </button>
                         </div>
                     )}
-
+                    {selectedSection === "contactSection" && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>
+                                    Contact Section
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div>
+                                    <Label>
+                                        Title
+                                    </Label>
+                                    <Input
+                                        value={contactSection.title}
+                                        onChange={(e) =>
+                                            setContactSection({
+                                                ...contactSection,
+                                                title: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <div>
+                                    <Label>
+                                        Number Title
+                                    </Label>
+                                    <Input
+                                        value={contactSection.numberTitle}
+                                        onChange={(e) =>
+                                            setContactSection({
+                                                ...contactSection,
+                                                numberTitle: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <div>
+                                    <Label>
+                                        Description
+                                    </Label>
+                                    <Textarea
+                                        value={contactSection.description}
+                                        onChange={(e) =>
+                                            setContactSection({
+                                                ...contactSection,
+                                                description: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <div>
+                                    <Label>
+                                        Button Text
+                                    </Label>
+                                    <Input
+                                        value={contactSection.buttonText}
+                                        onChange={(e) =>
+                                            setContactSection({
+                                                ...contactSection,
+                                                buttonText: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+                                <div>
+                                    <Label>
+                                        Button Link
+                                    </Label>
+                                    <Input
+                                        value={contactSection.buttonLink}
+                                        onChange={(e) =>
+                                            setContactSection({
+                                                ...contactSection,
+                                                buttonLink: e.target.value
+                                            })
+                                        }
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 <div className="space-y-6">

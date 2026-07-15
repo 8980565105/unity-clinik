@@ -248,12 +248,12 @@ export default function Settings() {
                 </div>
                 <div className="space-y-2">
                   <Label>Gender</Label>
-                  <select className="border rounded-md p-2 w-full" value={gender}
+                  <select className="border border-border rounded-md p-2 w-full bg-input text-foreground focus:ring-2 focus:ring-ring focus:outline-none" value={gender}
                     onChange={(e) => setGender(e.target.value as any)}>
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option className="bg-popover text-foreground" value="">Select Gender</option>
+                    <option className="bg-popover text-foreground" value="male">Male</option>
+                    <option className="bg-popover text-foreground" value="female">Female</option>
+                    <option className="bg-popover text-foreground" value="other">Other</option>
                   </select>
                 </div>
                 <div className="space-y-2">

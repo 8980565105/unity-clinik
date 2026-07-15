@@ -126,24 +126,24 @@ export default function CartPage() {
     <div className="space-y-8 p-6 mx-auto">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Cart</h1>
-          <p className="text-sm text-gray-500">Manage Cart Items</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Cart</h1>
+          <p className="text-sm text-muted-foreground">Manage Cart Items</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDownload} className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleDownload} className="flex items-center gap-2 border-border bg-card text-foreground hover:bg-muted">
             <Download className="h-4 w-4 mr-2" /> Export
           </Button>
         </div>
       </div>
 
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="shadow-sm border border-border bg-card">
         <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
           <div className="relative w-full md:max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={inputRef}
               placeholder="Search..."
-              className="pl-10"
+              className="pl-10 bg-input border-border text-foreground"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -164,16 +164,16 @@ export default function CartPage() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="shadow-sm border border-border bg-card">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">Cart Items</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">Cart Items</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 relative">
+          <div className="overflow-x-auto rounded-lg border border-border relative bg-card">
             {tableLoading && (
-              <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-lg">
-                <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
-                  <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <div className="absolute inset-0 bg-card/60 z-10 flex items-center justify-center rounded-lg">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
+                  <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
@@ -182,8 +182,8 @@ export default function CartPage() {
               </div>
             )}
 
-            <table className="w-full text-sm table-fixed">
-              <thead className="bg-gray-50 text-gray-700 text-sm font-medium">
+            <table className="w-full text-sm table-fixed text-foreground">
+              <thead className="bg-table-header text-muted-foreground text-sm font-medium border-b border-border">
                 <tr>
                   <th className="p-3 w-10 text-left">
                     <Checkbox
@@ -200,16 +200,16 @@ export default function CartPage() {
                   <th className="p-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {!tableLoading && paginatedItems.length === 0 ? (
                   <tr>
-                    <td className="p-6 text-center text-gray-400" colSpan={8}>
+                    <td className="p-6 text-center text-muted-foreground" colSpan={8}>
                       No cart items found.
                     </td>
                   </tr>
                 ) : (
                   paginatedItems.map((item) => (
-                    <tr key={item._id} className="border-t hover:bg-gray-50">
+                    <tr key={item._id} className="hover:bg-table-hover transition-colors">
                       <td className="p-3">
                         <Checkbox
                           checked={selectedIds.includes(item._id)}
@@ -222,12 +222,12 @@ export default function CartPage() {
                           }
                         />
                       </td>
-                      <td className="p-3 truncate">{item.cart.user_id?.name || "N/A"}</td>
-                      <td className="p-3 truncate">{item.cart.user_id?.email || "N/A"}</td>
-                      <td className="p-3 truncate">{item.product_id?.name || "N/A"}</td>
-                      <td className="p-3">{item.quantity}</td>
-                      <td className="p-3">${item.variant_id?.price?.toFixed(2) || "0.00"}</td>
-                      <td className="p-3">${(item.quantity * (item.variant_id?.price || 0)).toFixed(2)}</td>
+                      <td className="p-3 truncate text-foreground">{item.cart.user_id?.name || "N/A"}</td>
+                      <td className="p-3 truncate text-foreground">{item.cart.user_id?.email || "N/A"}</td>
+                      <td className="p-3 truncate text-foreground">{item.product_id?.name || "N/A"}</td>
+                      <td className="p-3 text-foreground">{item.quantity}</td>
+                      <td className="p-3 text-foreground">${item.variant_id?.price?.toFixed(2) || "0.00"}</td>
+                      <td className="p-3 text-foreground">${(item.quantity * (item.variant_id?.price || 0)).toFixed(2)}</td>
                       <td className="p-3 text-right">
                         <ConfirmDialog
                           title="Delete Item"
@@ -236,7 +236,7 @@ export default function CartPage() {
                           onConfirm={() => handleDelete(item.cart._id)}
                           danger
                         >
-                          <button className="text-red-600 hover:bg-red-50 p-1 rounded">
+                          <button className="text-destructive hover:bg-destructive/10 p-1 rounded transition-colors">
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </ConfirmDialog>
@@ -248,7 +248,7 @@ export default function CartPage() {
             </table>
           </div>
 
-          <div className="text-right mt-4 font-semibold text-lg">
+          <div className="text-right mt-4 font-semibold text-lg text-foreground">
             Grand Total: ${grandTotal.toFixed(2)}
           </div>
 
@@ -259,6 +259,7 @@ export default function CartPage() {
                 variant="outline"
                 onClick={() => setItemPage((p) => Math.max(p - 1, 1))}
                 disabled={itemPage === 1}
+                className="bg-card border-border text-foreground hover:bg-muted"
               >
                 Prev
               </Button>
@@ -266,7 +267,7 @@ export default function CartPage() {
                 <button
                   key={i}
                   onClick={() => setItemPage(i + 1)}
-                  className={`px-3 py-1 rounded ${itemPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100"}`}
+                  className={`px-3 py-1 rounded text-sm transition-colors ${itemPage === i + 1 ? "bg-primary text-primary-foreground font-medium" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
                 >
                   {i + 1}
                 </button>
@@ -276,6 +277,7 @@ export default function CartPage() {
                 variant="outline"
                 onClick={() => setItemPage((p) => Math.min(p + 1, totalItemPages))}
                 disabled={itemPage === totalItemPages}
+                className="bg-card border-border text-foreground hover:bg-muted"
               >
                 Next
               </Button>

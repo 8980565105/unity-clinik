@@ -7,6 +7,7 @@ import {
   deleteUser,
   bulkDeleteUsers,
   updateUserStatus,
+  getUserTracking,
 } from "./usersThunk";
 
 interface User {
@@ -26,6 +27,8 @@ interface UsersState {
   loading: boolean;
   error: string | null;
   selectedUser?: User;
+  tracking: any;
+  trackingLoading: boolean;
 }
 
 const initialState: UsersState = {
@@ -34,6 +37,8 @@ const initialState: UsersState = {
   loading: false,
   error: null,
   selectedUser: undefined,
+  tracking: null,
+  trackingLoading: false,
 };
 
 const usersSlice = createSlice({
@@ -65,7 +70,7 @@ const usersSlice = createSlice({
       })
       .addCase(updateUser.fulfilled, (state, action) => {
         const index = state.users.findIndex(
-          (u) => u._id === action.payload._id
+          (u) => u._id === action.payload._id,
         );
         if (index !== -1) state.users[index] = action.payload;
         if (state.selectedUser?._id === action.payload._id)
@@ -73,7 +78,7 @@ const usersSlice = createSlice({
       })
       .addCase(updateUserStatus.fulfilled, (state, action) => {
         const index = state.users.findIndex(
-          (c) => c._id === action.payload._id
+          (c) => c._id === action.payload._id,
         );
         if (index !== -1) {
           state.users[index] = action.payload;
@@ -86,9 +91,20 @@ const usersSlice = createSlice({
       })
       .addCase(bulkDeleteUsers.fulfilled, (state, action) => {
         state.users = state.users.filter(
-          (u) => !action.payload.includes(u._id)
+          (u) => !action.payload.includes(u._id),
         );
         state.total -= action.payload.length;
+      })
+      .addCase(getUserTracking.pending, (state) => {
+        state.trackingLoading = true;
+      })
+      .addCase(getUserTracking.fulfilled, (state, action) => {
+        state.trackingLoading = false;
+        state.tracking = action.payload;
+      })
+      .addCase(getUserTracking.rejected, (state, action) => {
+        state.trackingLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

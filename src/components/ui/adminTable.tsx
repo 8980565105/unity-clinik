@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Link } from "react-router-dom";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Eye, Trash } from "lucide-react";
 import { useBasePath } from "@/hooks/useBasePath";
 import {
   Select,
@@ -42,6 +42,9 @@ interface GenericTableProps<T> {
   onStatusToggle?: (id: string, newStatus: boolean) => Promise<void>;
   editEnabled?: boolean;
   statusKey?: string;
+  showActionsColumn?: boolean;
+  viewEnabled?: boolean;
+  viewPath?: (item: T) => string;
 }
 
 export function GenericTable<T extends Record<string, any>>({
@@ -60,6 +63,9 @@ export function GenericTable<T extends Record<string, any>>({
   statusToggleEnabled = false,
   editEnabled = true,
   statusKey = "status",
+  showActionsColumn = true,
+  viewEnabled = false,
+  viewPath,
 }: GenericTableProps<T>) {
   const [data, setData] = useState<T[]>([]);
   const [total, setTotal] = useState(0);
@@ -147,7 +153,9 @@ export function GenericTable<T extends Record<string, any>>({
 
   const totalPages = Math.ceil(total / pageSize);
   const extraCols =
-    (bulkDeleteItems ? 1 : 0) + (statusToggleEnabled ? 1 : 0) + 1;
+    (bulkDeleteItems ? 1 : 0) +
+    (statusToggleEnabled ? 1 : 0) +
+    (showActionsColumn ? 1 : 0);
 
   return (
     <div className="space-y-6">
@@ -213,7 +221,7 @@ export function GenericTable<T extends Record<string, any>>({
             placeholder={`Search ${title}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-sm"
+            className="max-w-sm bg-input border-border text-foreground"
           />
         )}
         {filters && (
@@ -221,10 +229,10 @@ export function GenericTable<T extends Record<string, any>>({
             value={statusFilter || "all"}
             onValueChange={(val) => setStatusFilter(val === "all" ? "" : val)}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] bg-input border-border text-foreground">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="bg-popover border-border text-popover-foreground">
               <SelectItem value="all">All</SelectItem>
               {filters.map((f) => (
                 <SelectItem key={f.value} value={f.value}>
@@ -236,9 +244,9 @@ export function GenericTable<T extends Record<string, any>>({
         )}
       </div>
 
-      <div className="overflow-x-auto border rounded-lg bg-white shadow-sm">
-        <table className="w-full table-fixed text-sm">
-          <thead className="bg-gray-50">
+      <div className="overflow-x-auto border border-border rounded-lg bg-card shadow-sm">
+        <table className="w-full table-fixed text-sm text-foreground">
+          <thead className="bg-table-header text-muted-foreground border-b border-border">
             <tr>
               {bulkDeleteItems && (
                 <th className="w-10 p-3 text-center">
@@ -255,22 +263,24 @@ export function GenericTable<T extends Record<string, any>>({
                 </th>
               )}
               {columns.map((col) => (
-                <th key={col.key} className={`p-3 text-left ${col.width || ""}`}>
+                <th key={col.key} className={`p-3 text-left font-medium ${col.width || ""}`}>
                   {col.label}
                 </th>
               ))}
               {statusToggleEnabled && (
-                <th className="w-20 p-3 text-center">Status</th>
+                <th className="w-20 p-3 text-center font-medium">Status</th>
               )}
-              <th className="w-20 p-3 text-right">Actions</th>
+              {showActionsColumn && (
+                <th className="w-28 p-3 text-right font-medium">Actions</th>
+              )}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border">
             {loading ? (
               <tr>
                 <td
                   colSpan={columns.length + extraCols}
-                  className="p-6 text-center text-gray-500"
+                  className="p-6 text-center text-muted-foreground"
                 >
                   Loading...
                 </td>
@@ -279,14 +289,14 @@ export function GenericTable<T extends Record<string, any>>({
               <tr>
                 <td
                   colSpan={columns.length + extraCols}
-                  className="p-6 text-center text-gray-500"
+                  className="p-6 text-center text-muted-foreground"
                 >
                   No records found
                 </td>
               </tr>
             ) : (
               data.map((item) => (
-                <tr key={item[rowKey]} className="hover:bg-gray-50">
+                <tr key={item[rowKey]} className="hover:bg-table-hover transition-colors">
                   {bulkDeleteItems && (
                     <td className="p-3 text-center">
                       <Checkbox
@@ -302,7 +312,7 @@ export function GenericTable<T extends Record<string, any>>({
                     </td>
                   )}
                   {columns.map((col) => (
-                    <td key={col.key} className="p-3 truncate">
+                    <td key={col.key} className="p-3 truncate text-foreground">
                       {col.render ? col.render(item) : item[col.key]}
                     </td>
                   ))}
@@ -314,37 +324,53 @@ export function GenericTable<T extends Record<string, any>>({
                       />
                     </td>
                   )}
-                  <td className="p-3 text-right">
-                    {rowActions ? (
-                      rowActions(item)
-                    ) : (
-                      <div className="flex justify-end items-center gap-2">
-                        {editEnabled && (
-                          <Link
-                            // to={`${basePath}/${title.toLowerCase()}/${item[rowKey]}/edit`}
-                            to={`${basePath}/${title.toLowerCase().replace(/\s+/g, "-")}/${item[rowKey]}/edit`}
-                            className="p-1 rounded hover:bg-gray-100 flex items-center justify-center"
-                          >
-                            <Edit className="w-5 h-5 text-blue-600 hover:text-blue-800" />
-                          </Link>
-                        )}
-                        {deleteItem && (
-                          <ConfirmDialog
-                            title={`Delete ${title.slice(0, -1)}`}
-                            description={`Are you sure you want to delete "${item.title || item.name || item[rowKey] || ""
-                              }"?`}
-                            confirmText="Delete"
-                            danger
-                            onConfirm={() =>
-                              handleDelete(item[rowKey] as string)
-                            }
-                          >
-                            <Trash className="w-5 h-5 text-red-600 hover:text-red-800" />
-                          </ConfirmDialog>
-                        )}
-                      </div>
-                    )}
-                  </td>
+                  {showActionsColumn && (
+                    <td className="p-3 text-right whitespace-nowrap">
+                    
+                      {rowActions ? (
+                        rowActions(item)
+                      ) : (
+                        <div className="flex justify-end items-center gap-1">
+
+                          {editEnabled && (
+                            <Link
+                              to={`${basePath}/${title.toLowerCase().replace(/\s+/g, "-")}/${item[rowKey]}/edit`}
+                              className="p-1 rounded hover:bg-muted flex items-center justify-center transition-colors"
+                            >
+                              <Edit className="w-5 h-5 text-primary hover:text-primary/80" />
+                            </Link>
+                          )}
+                          {viewEnabled && (
+                            <Link
+                              to={
+                                viewPath
+                                  ? viewPath(item)
+                                  : `${basePath}/${title.toLowerCase().replace(/\s+/g, "-")}/${item[rowKey]}/view`
+                              }
+                              className="p-1 rounded hover:bg-muted flex items-center justify-center transition-colors"
+                            >
+                              <Eye className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                            </Link>
+                          )}
+
+                          {deleteItem && (
+                            <ConfirmDialog
+                              title={`Delete ${title.slice(0, -1)}`}
+                              description={`Are you sure you want to delete "${item.title || item.name || item[rowKey] || ""
+                                }"?`}
+                              confirmText="Delete"
+                              danger
+                              onConfirm={() =>
+                                handleDelete(item[rowKey] as string)
+                              }
+                            >
+                              <Trash className="w-5 h-5 text-destructive hover:text-destructive/80 cursor-pointer" />
+                            </ConfirmDialog>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -357,8 +383,10 @@ export function GenericTable<T extends Record<string, any>>({
           <div className="flex justify-end items-center gap-2 mt-4">
             <Button
               size="sm"
+              variant="outline"
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
+              className="bg-card border-border text-foreground hover:bg-muted"
             >
               Prev
             </Button>
@@ -368,14 +396,17 @@ export function GenericTable<T extends Record<string, any>>({
                 size="sm"
                 variant={page === i + 1 ? "default" : "outline"}
                 onClick={() => setPage(i + 1)}
+                className={page === i + 1 ? "" : "bg-card border-border text-foreground hover:bg-muted"}
               >
                 {i + 1}
               </Button>
             ))}
             <Button
               size="sm"
+              variant="outline"
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
+              className="bg-card border-border text-foreground hover:bg-muted"
             >
               Next
             </Button>

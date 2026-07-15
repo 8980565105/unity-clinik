@@ -19,7 +19,6 @@ import settingReducer from "./features/settings/settingsSlice";
 import storesReducer from "./features/stores/storeSlice";
 import pagesReducer from "./features/pages/pagesSlice";
 import dashboardReducer from "./features/dashboard/dashboardSlice";
-import warehouseReducer from "./features/warehouse/warehouseSlice";
 import subcategoriReducer from "./features/subcategories/subcategoriesSlice";
 import faqsReducer from "./features/faqs/faqsSlice";
 import slidesReducer from "./features/slider/sliderSlice";
@@ -29,11 +28,12 @@ import popupReducer from "./features/popup/PopupSlice";
 import consultationpageReducer from "./features/consoltantion/consoltantionSlice";
 import bookconsaltansReducer from "./features/bookconsoltantion/bookconsoltSlice";
 import sippingchargeReducer from "./features/sippingcharge/sippingchargeSlice";
+import referralReducer from "./features/reffrelsetting/reffrelsettingSlice";
+import walletReducer from "./features/wallet/walletSlice";
 
 export const rootReducer = {
   auth: authReducer,
   products: productsReducer,
-  warehouse: warehouseReducer,
   categories: categoriesReducer,
   brands: brandsReducer,
   types: typesReducer,
@@ -62,4 +62,6 @@ export const rootReducer = {
   consultationpage: consultationpageReducer,
   bookconsaltans: bookconsaltansReducer,
   sippingcharge: sippingchargeReducer,
+  referral: referralReducer,
+    wallet: walletReducer,
 };

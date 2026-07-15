@@ -52,3 +52,30 @@ export const bulkDeleteBookings = createAsyncThunk(
     }
   },
 );
+
+export const fetchBookingById = createAsyncThunk(
+  "bookconsaltans/fetchOne",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await api.get(ROUTES.bookconsaltans.getById(id));
+      return res.data.data; // single booking object
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  },
+);
+
+export const updateBooking = createAsyncThunk(
+  "bookconsaltans/update",
+  async (
+    { id, data }: { id: string; data: Record<string, any> },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await api.patch(ROUTES.bookconsaltans.getById(id), data);
+      return res.data.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  },
+);

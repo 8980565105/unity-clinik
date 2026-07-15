@@ -15,6 +15,8 @@ import {
   markDelivered,
   markRTO,
   addTrackingAWB,
+  decideReturn,
+  refundOrder,
 } from "./ordersThunk";
 
 export interface OrderItem {
@@ -83,6 +85,10 @@ export interface Order {
   invoice_generated?: boolean;
   createdAt: string;
   updatedAt: string;
+  return_status?: "none" | "requested" | "approved" | "rejected";
+  return_reason?: string;
+  return_requested_at?: string;
+  return_decided_at?: string;
 }
 
 interface OrdersState {

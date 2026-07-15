@@ -13,7 +13,6 @@ import {
   updateUserStatus,
 } from "@/features/users/usersThunk";
 import { GenericTable } from "@/components/ui/adminTable";
-import { Label } from "recharts";
 
 export default function Users() {
   const dispatch = useDispatch<AppDispatch>();
@@ -31,7 +30,7 @@ export default function Users() {
           <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
             {item.profile_picture ? (
               <img
-                src={`${import.meta.env.VITE_API_URL_IMAGE}${item.profile_picture}`}
+                src={`${import.meta.env.VITE_API_URL_IMAGE}/uploads/${item.profile_picture}`}
                 alt={item.name}
                 className="w-full h-full object-cover"
               />
@@ -59,18 +58,34 @@ export default function Users() {
       rowKey="_id"
       searchEnabled
       statusToggleEnabled
+      viewEnabled={true}
+      viewPath={(item: any) => `${basePath}/users/${item._id}/view`}
       editEnabled={isAdmin}
       filters={[
         { label: "Active", value: "true" },
         { label: "Inactive", value: "false" },
+        { label: "Email User", value: "email" },
+        { label: "Google User", value: "google" },
+        { label: "Phone User", value: "phone" },
       ]}
+
       fetchData={async ({ page, limit, search, status }) => {
-        const boolStatus =
-          status === "true" ? true : status === "false" ? false : undefined;
+        const isActiveFilter = ["true", "false"].includes(status || "");
+        const boolStatus = isActiveFilter
+          ? status === "true"
+          : undefined;
+        const authProvider =
+          !isActiveFilter && status ? status : undefined;
 
         try {
           const res = await dispatch(
-            fetchUsers({ page, limit, search, is_active: boolStatus })
+            fetchUsers({
+              page,
+              limit,
+              search,
+              is_active: boolStatus,
+              authProvider,
+            })
           ).unwrap();
 
           const usersWithStatus = res.users.map((user: any) => ({

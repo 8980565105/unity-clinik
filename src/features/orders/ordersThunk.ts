@@ -298,3 +298,44 @@ export const addTrackingAWB = createAsyncThunk(
     }
   },
 );
+
+// ─── Decide Return (approve/reject) ───────────────────────────────────────
+export const decideReturn = createAsyncThunk(
+  "orders/decideReturn",
+  async (
+    {
+      id,
+      decision,
+      note,
+    }: { id: string; decision: "approved" | "rejected"; note?: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await api.put(ROUTES.orders.decideReturn(id), {
+        decision,
+        note,
+      });
+      if (res.data.success) return res.data.data;
+      return rejectWithValue(res.data.message || "Failed to update return");
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);
+
+// ─── Manual Refund (admin enters amount) ──────────────────────────────────
+export const refundOrder = createAsyncThunk(
+  "orders/refundOrder",
+  async (
+    { id, amount, note }: { id: string; amount: number; note?: string },
+    { rejectWithValue },
+  ) => {
+    try {
+      const res = await api.put(ROUTES.orders.refund(id), { amount, note });
+      if (res.data.success) return res.data.data;
+      return rejectWithValue(res.data.message || "Failed to refund order");
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Server Error");
+    }
+  },
+);

@@ -68,6 +68,8 @@ export default function CouponFormPage() {
   const [freeProducts, setFreeProducts] = useState<any[]>([]);
   const [selectedSubCategories, setSelectedSubCategories] = useState<any[]>([]);
   const [usedCount, setUsedCount] = useState(0);
+  // const [status, setStatus] = useState(true);
+  const [isPrepaidOnly, setIsPrepaidOnly] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -110,6 +112,9 @@ export default function CouponFormPage() {
           setUsageLimit(String(coupon.usage_limit || 0));
           setuserUsageLimit(String(coupon.userusage_limit || 0));
           setUsedCount(Number(coupon.used_count || 0));
+          setStatus(coupon.status === "active");
+          setIsPrepaidOnly(Boolean(coupon.is_prepaid_only));
+
           if (coupon.gift_product_ids && coupon.gift_product_ids.length > 0) {
             setGiftProducts(
               coupon.gift_product_ids.map((p: any) => ({
@@ -213,6 +218,7 @@ export default function CouponFormPage() {
       start_date: startDate ? new Date(startDate).toISOString() : null,
       end_date: endDate ? new Date(endDate).toISOString() : null,
       status: status ? "active" : "inactive",
+      is_prepaid_only: isPrepaidOnly,
       gift_product_ids:
         couponType === "free_gift"
           ? giftProducts.map((p) => p.value)
@@ -328,6 +334,15 @@ export default function CouponFormPage() {
                     className={autoGenerate ? "bg-gray-100 cursor-not-allowed" : ""}
                   />
                 </div>
+                <div className="flex flex-col space-y-2">
+                  <Label>Prepaid Only</Label>
+                  <Switch
+                    id="prepaid_only"
+                    checked={isPrepaidOnly}
+                    onCheckedChange={(val) => setIsPrepaidOnly(val)}
+                  />
+                </div>
+
                 <div className="flex gap-3 items-center">
                   <Input
                     className="w-5 h-5"

@@ -103,6 +103,8 @@ export const ROUTES = {
     rto: (id: string) => `/orders/${id}/rto`,
     invoice: (id: string) => `/orders/${id}/invoice`,
     addAwb: (id: string) => `/orders/${id}/add-awb`,
+    decideReturn: (id: string) => `orders/${id}/decide-return`,
+    refund: (id: string) => `orders/${id}/refund`,
   },
   payments: {
     getAll: "/payments",
@@ -119,6 +121,7 @@ export const ROUTES = {
     updateStatus: (id: string) => `/users/${id}/status`,
     delete: (id: string) => `/users/${id}`,
     bulkDelete: "/users/bulk-delete",
+    tracking: (id: string) => `/users/${id}/tracking`,
   },
   profile: {
     get: "/users/me",
@@ -272,5 +275,17 @@ export const ROUTES = {
   sippingcharge: {
     get: "/sippingcharge",
     update: "/sippingcharge",
+  },
+  referral: {
+    get: "/reffrel/referral-settings",
+    update: "/reffrel/referral-settings",
+  },
+  wallet: {
+    getBalance: "/wallet/balance",
+    getHistory: "/wallet/history",
+    addMoney: "/wallet/add-money",
+    adminGetAll: "/wallet/all",
+    adminAddBalance: (userId: string) => `/wallet/add-balance/${userId}`,
+    adminGetUserWallet: (userId: string) => `/wallet/user/${userId}`,
   },
 };

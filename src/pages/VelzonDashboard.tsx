@@ -275,7 +275,6 @@ export default function VelzonDashboard() {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         {statsCards.map((stat) => {
           const IconComponent = stat.icon;

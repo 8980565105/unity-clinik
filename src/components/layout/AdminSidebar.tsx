@@ -19,6 +19,8 @@ import {
   Settings,
   ChevronDown,
   Warehouse,
+  MapPin,
+  LucideWallet,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -73,7 +75,7 @@ const adminSections = [
     items: [
       { title: "Orders", url: "/orders", icon: ShoppingCart },
       { title: "payment", url: "/payments", icon: CreditCard },
-      { title: "Warehouse", url: "/warehouse", icon: Warehouse },
+      { title: "books consaltantions", url: "/bookConsoltantion", icon: Layers },
     ],
   },
 
@@ -91,7 +93,6 @@ const adminSections = [
     items: [
       { title: "Aboout", url: "/about", icon: Layers },
       { title: "Result", url: "/results", icon: Layers },
-      { title: "books consaltantions", url: "/bookConsoltantion", icon: Layers },
       { title: "consaltantions", url: "/consoltantion", icon: Layers },
       { title: "sliders", url: "/slider", icon: Columns },
     ]
@@ -104,7 +105,18 @@ const adminSections = [
     ]
   },
   {
-    label: "System",
+    label: "Wallets Setting",
+    items: [
+      {
+        title: "Reffrel Settings", url: "/reffrel_settings", icon: LucideWallet
+      },
+      {
+        title: "user wallet", url: "/userwallet", icon: LucideWallet
+      },
+    ]
+  },
+  {
+    label: "System Setting",
     items: [
       { title: "Pages", url: "/pages", icon: Layers },
       { title: "Navbar", url: "/navbar", icon: Navigation },
@@ -112,7 +124,8 @@ const adminSections = [
       { title: "Contact Messages", url: "/contact-messages", icon: MessageSquare },
       { title: "Settings", url: "/settings", icon: Settings },
       { title: "System Settings", url: "/system_settings", icon: Settings },
-      { title: "Shipping charge", url: "/charge", icon: Navigation },
+
+      { title: "Shipping charge", url: "/charge", icon: MapPin },
     ],
   },
 ];
@@ -143,62 +156,66 @@ export function AdminSidebar() {
   const sections = adminSections;
   const panelLabel = "Admin Dashboard";
   return (
-    <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border">
-        <div className="flex items-center gap-3 px-3 py-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Layers className="h-4 w-4" />
-          </div>
-          {!isCollapsed && (
-            <div>
-              <h2 className="text-lg font-semibold text-sidebar-foreground">
-                Unity clinic
-              </h2>
-              <p className="text-xs text-muted-foreground">{panelLabel}</p>
+    <>
+      <Sidebar className={isCollapsed ? "w-16" : "w-64"} collapsible="icon">
+        <SidebarHeader className="border-b border-sidebar-border">
+          <div className="flex items-center gap-3 px-3 py-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Layers className="h-4 w-4" />
             </div>
-          )}
-        </div>
-      </SidebarHeader>
+            {!isCollapsed && (
+              <div>
+                <h2 className="text-lg font-semibold text-sidebar-foreground">
+                  Unity clinic
+                </h2>
+                <p className="text-xs text-muted-foreground">{panelLabel}</p>
+              </div>
+            )}
+          </div>
+        </SidebarHeader>
 
-      <SidebarContent className="px-2 py-4">
-        {sections.map((section) => (
-          <Collapsible
-            key={section.label}
-            defaultOpen={isGroupActive(section.items)}
-          >
-            <SidebarGroup>
-              {!isCollapsed && (
-                <CollapsibleTrigger className="flex w-full items-center justify-between">
-                  <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    {section.label}
-                  </SidebarGroupLabel>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </CollapsibleTrigger>
-              )}
-              <CollapsibleContent>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {section.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild>
-                          <NavLink
-                            to={item.url}
-                            className={getNavClass(item.url)}
-                          >
-                            <item.icon className="h-4 w-4 shrink-0" />
-                            {!isCollapsed && <span>{item.title}</span>}
-                          </NavLink>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </CollapsibleContent>
-            </SidebarGroup>
-          </Collapsible>
-        ))}
-      </SidebarContent>
-    </Sidebar>
+        <SidebarContent className="px-2 py-4">
+          {sections.map((section) => (
+            <Collapsible
+              key={section.label}
+              defaultOpen={isGroupActive(section.items)}
+            >
+              <SidebarGroup>
+                {!isCollapsed && (
+                  <CollapsibleTrigger className="flex w-full items-center justify-between">
+                    <SidebarGroupLabel className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {section.label}
+                    </SidebarGroupLabel>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </CollapsibleTrigger>
+                )}
+                <CollapsibleContent>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {section.items.map((item) => (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild>
+                            <NavLink
+                              to={item.url}
+                              className={getNavClass(item.url)}
+                            >
+                              <item.icon className="h-4 w-4 shrink-0" />
+                              {!isCollapsed && <span>{item.title}</span>}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </CollapsibleContent>
+              </SidebarGroup>
+            </Collapsible>
+          ))}
+        </SidebarContent>
+      </Sidebar>
+
+
+    </>
   );
 }
 

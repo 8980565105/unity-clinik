@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ClipboardList, Layers, Trash2, Truck } from "lucide-react";
+import { ClipboardList, Layers, Trash2, Truck, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/store";
@@ -27,7 +27,7 @@ type ApplyTo =
     | "specificsubcategory"
     | "Excludeproduct"
     | "Excludecategories";
-type PaymentType = "all" | "cod" | "partial" | "prepaid";
+type PaymentType = "all" | "cod" | "partial" | "prepaid" | "wallet";
 type Option = { value: string; label: string };
 type ProductRule = {
     id: string;
@@ -39,7 +39,28 @@ type ProductRule = {
     freeThreshold: string;
     ranges: Range[];
 };
-type TabKey = "cod" | "partial" | "prepaid";
+
+type GiftRule = {
+    id: string;
+    status: boolean;
+    applyTo:
+    | "allproducts"
+    | "specificproducts"
+    | "specificsubcategory"
+    | "Excludeproduct"
+    | "Excludecategories";
+    products: Option[];
+    subCategories: Option[];
+    minimumAmount: string;
+    maximumAmount: string;
+    giftProduct: Option | null;
+    shortDescription: string;
+    priority: number;
+}
+
+
+
+type TabKey = "cod" | "partial" | "prepaid" | "wallet" | "gift";
 const uid = () => Math.random().toString(36).slice(2, 10);
 const emptyRange = (): Range => ({ from: "", to: "", charge: "", chargeType: "fixed" });
 const emptyRule = (shippingType: ShippingType = "price"): ProductRule => ({
@@ -332,6 +353,8 @@ const RuleCard = ({
                                 <SelectItem value="cod">cod</SelectItem>
                                 <SelectItem value="partial">partial cod</SelectItem>
                                 <SelectItem value="prepaid">prepaid</SelectItem>
+                                <SelectItem value="wallet">wallet</SelectItem>
+
                             </SelectContent>
                         </Select>
                     </div>
@@ -360,6 +383,163 @@ const RuleCard = ({
     );
 };
 
+const GiftRuleCard = ({
+    rule,
+    ruleIndex,
+    productOptions,
+    subCatOptions,
+    onUpdate,
+    onDelete,
+    errors,
+}: {
+    rule: GiftRule;
+    ruleIndex: number;
+    productOptions: Option[];
+    subCatOptions: Option[];
+    onUpdate: (index: number, updated: GiftRule) => void;
+    onDelete: (index: number) => void;
+    errors: Record<string, string>;
+}) => {
+    const fieldPrefix = `gift_${ruleIndex}`;
+    const patch = (partial: Partial<GiftRule>) => onUpdate(ruleIndex, { ...rule, ...partial });
+
+    const Err = ({ field }: { field: string }) =>
+        errors[field] ? <p className="text-red-500 text-xs mt-1">{errors[field]}</p> : null;
+
+    return (
+        <Card className="py-3 border-2">
+            <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base">Gift Rule #{ruleIndex + 1}</CardTitle>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <Label className="text-xs">Active</Label>
+                        <input
+                            type="checkbox"
+                            checked={rule.status}
+                            onChange={(e) => patch({ status: e.target.checked })}
+                            className="w-4 h-4"
+                        />
+                    </div>
+                    <Button variant="destructive" size="icon" onClick={() => onDelete(ruleIndex)}>
+                        <Trash2 size={16} />
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Applies To *</Label>
+                        <Select
+                            value={rule.applyTo}
+                            onValueChange={(val) =>
+                                patch({ applyTo: val as GiftRule["applyTo"], products: [], subCategories: [] })
+                            }
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="allproducts">All Products</SelectItem>
+                                <SelectItem value="specificproducts">Specific Products</SelectItem>
+                                <SelectItem value="specificsubcategory">Specific SubCategory</SelectItem>
+                                <SelectItem value="Excludeproduct">Exclude Selected Products</SelectItem>
+                                <SelectItem value="Excludecategories">Exclude Selected SubCategories</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Priority (lower = higher priority)</Label>
+                        <Input
+                            type="number"
+                            value={rule.priority}
+                            onChange={(e) => patch({ priority: Number(e.target.value) })}
+                        />
+                    </div>
+
+                    <div className="md:col-span-2">
+                        {(rule.applyTo === "specificproducts" || rule.applyTo === "Excludeproduct") && (
+                            <div className="space-y-2">
+                                <Label>
+                                    {rule.applyTo === "Excludeproduct" ? "Exclude Products" : "Select Products"}
+                                </Label>
+                                <ReactSelect
+                                    isMulti
+                                    options={productOptions}
+                                    value={rule.products}
+                                    onChange={(selected) => patch({ products: [...(selected || [])] })}
+                                    placeholder="Search and select products..."
+                                    className="mt-1"
+                                />
+                                <Err field={`${fieldPrefix}_products`} />
+                            </div>
+                        )}
+                        {(rule.applyTo === "specificsubcategory" || rule.applyTo === "Excludecategories") && (
+                            <div className="space-y-2">
+                                <Label>
+                                    {rule.applyTo === "Excludecategories" ? "Exclude SubCategories" : "Select SubCategory"}
+                                </Label>
+                                <ReactSelect
+                                    isMulti
+                                    options={subCatOptions}
+                                    value={rule.subCategories}
+                                    onChange={(selected) => patch({ subCategories: [...(selected || [])] })}
+                                    placeholder="Search and select subcategories..."
+                                    className="mt-1"
+                                />
+                                <Err field={`${fieldPrefix}_subCategories`} />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Minimum Cart Amount (₹) *</Label>
+                        <Input
+                            type="number"
+                            placeholder="e.g. 500"
+                            value={rule.minimumAmount}
+                            className={errors[`${fieldPrefix}_minimumAmount`] ? "border-red-500" : ""}
+                            onChange={(e) => patch({ minimumAmount: e.target.value })}
+                        />
+                        <Err field={`${fieldPrefix}_minimumAmount`} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Maximum Cart Amount (₹) — optional</Label>
+                        <Input
+                            type="number"
+                            placeholder="Leave blank = no upper limit"
+                            value={rule.maximumAmount}
+                            onChange={(e) => patch({ maximumAmount: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                        <Label>Gift Product *</Label>
+                        <ReactSelect
+                            options={productOptions}
+                            value={rule.giftProduct}
+                            onChange={(selected) => patch({ giftProduct: selected as Option })}
+                            placeholder="Select the free gift product..."
+                            className="mt-1"
+                        />
+                        <Err field={`${fieldPrefix}_giftProduct`} />
+                    </div>
+
+                    <div className="space-y-2 md:col-span-2">
+                        <Label>Short Description</Label>
+                        <Input
+                            placeholder="e.g. Get a free water bottle on orders above ₹500"
+                            value={rule.shortDescription}
+                            onChange={(e) => patch({ shortDescription: e.target.value })}
+                        />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
 export default function SippingCharge() {
     const dispatch = useDispatch<AppDispatch>();
     const [activeTab, setActiveTab] = useState<TabKey>("cod");
@@ -370,6 +550,7 @@ export default function SippingCharge() {
     const [codRules, setCodRules] = useState<ProductRule[]>([emptyRule()]);
     const [prepaidRules, setPrepaidRules] = useState<ProductRule[]>([emptyRule()]);
     const [partialRules, setPartialRules] = useState<ProductRule[]>([emptyRule()]);
+    const [walletRules, setWalletRules] = useState<ProductRule[]>([emptyRule()]);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -382,6 +563,9 @@ export default function SippingCharge() {
         () => subCategories.map((c) => ({ value: c._id, label: c.name })),
         [subCategories]
     );
+
+    const [giftRules, setGiftRules] = useState<GiftRule[]>([]);
+
     useEffect(() => {
         const fetchSettings = async () => {
             let loadedProducts: any[] = [];
@@ -407,10 +591,11 @@ export default function SippingCharge() {
                     setPcodValue(
                         data?.partialCod?.value !== undefined ? String(data.partialCod.value) : ""
                     );
-
                     setCodRules(mapRulesFromApi(data?.productRules?.cod, loadedProducts, loadedSubCategories));
                     setPrepaidRules(mapRulesFromApi(data?.productRules?.prepaid, loadedProducts, loadedSubCategories));
                     setPartialRules(mapRulesFromApi(data?.productRules?.partialCod, loadedProducts, loadedSubCategories));
+                    setWalletRules(mapRulesFromApi(data?.productRules?.wallet, loadedProducts, loadedSubCategories));
+                    setGiftRules(mapGiftRulesFromApi(data?.giftRules, loadedProducts, loadedSubCategories));
                 }
             } catch (err) {
                 console.error("Failed to load shipping charge settings:", err);
@@ -421,9 +606,12 @@ export default function SippingCharge() {
         fetchSettings();
     }, [dispatch]);
     const getRulesSetter = (tab: TabKey) =>
-        tab === "cod" ? setCodRules : tab === "prepaid" ? setPrepaidRules : setPartialRules;
+        tab === "cod" ? setCodRules : tab === "prepaid" ? setPrepaidRules : tab === "wallet" ? setWalletRules : setPartialRules;
+
     const getRules = (tab: TabKey) =>
-        tab === "cod" ? codRules : tab === "prepaid" ? prepaidRules : partialRules;
+        tab === "cod" ? codRules : tab === "prepaid" ? prepaidRules : tab === "wallet" ? walletRules : partialRules;
+
+
     const addRule = (tab: TabKey) => {
         const setter = getRulesSetter(tab);
         setter((prev) => [...prev, emptyRule()]);
@@ -440,6 +628,69 @@ export default function SippingCharge() {
             return copy;
         });
     };
+
+
+    const uidG = () => Math.random().toString(36).slice(2, 10);
+    const emptyGiftRule = (): GiftRule => ({
+        id: uidG(),
+        status: true,
+        applyTo: "allproducts",
+        products: [],
+        subCategories: [],
+        minimumAmount: "",
+        maximumAmount: "",
+        giftProduct: null,
+        shortDescription: "",
+        priority: 0,
+    });
+
+    const mapGiftRuleFromApi = (rule: any, allProducts: any[], allSubCats: any[]): GiftRule => ({
+        id: uidG(),
+        status: rule?.status !== undefined ? rule.status : true,
+        applyTo: rule?.applyTo || "allproducts",
+        products: mapIdsToOptions(rule?.products, allProducts),
+        subCategories: mapIdsToOptions(rule?.subCategories, allSubCats),
+        minimumAmount: rule?.minimumAmount !== undefined ? String(rule.minimumAmount) : "",
+        maximumAmount: rule?.maximumAmount !== undefined ? String(rule.maximumAmount) : "",
+        giftProduct: rule?.giftProduct
+            ? {
+                value: rule.giftProduct,
+                label: allProducts.find((p) => p._id === rule.giftProduct)?.name || rule.giftProduct,
+            }
+            : null,
+        shortDescription: rule?.shortDescription || "",
+        priority: rule?.priority || 0,
+    });
+
+    const mapGiftRulesFromApi = (rules: any[], allProducts: any[], allSubCats: any[]): GiftRule[] => {
+        if (!Array.isArray(rules) || rules.length === 0) return [];
+        return rules.map((r) => mapGiftRuleFromApi(r, allProducts, allSubCats));
+    };
+
+    const toApiGiftRule = (rule: GiftRule) => ({
+        status: rule.status,
+        applyTo: rule.applyTo,
+        products: rule.products.map((p) => p.value),
+        subCategories: rule.subCategories.map((c) => c.value),
+        minimumAmount: rule.minimumAmount === "" ? 0 : Number(rule.minimumAmount),
+        maximumAmount: rule.maximumAmount === "" ? 0 : Number(rule.maximumAmount),
+        giftProduct: rule.giftProduct?.value || null,
+        shortDescription: rule.shortDescription,
+        priority: rule.priority,
+    });
+
+
+
+    const addGiftRule = () => setGiftRules((prev) => [...prev, emptyGiftRule()]);
+    const deleteGiftRule = (index: number) =>
+        setGiftRules((prev) => prev.filter((_, i) => i !== index));
+    const updateGiftRule = (index: number, updated: GiftRule) =>
+        setGiftRules((prev) => {
+            const copy = [...prev];
+            copy[index] = updated;
+            return copy;
+        });
+
     const validateRuleList = (rules: ProductRule[], prefix: string, newErrors: Record<string, string>) => {
         let valid = true;
         rules.forEach((rule, ruleIndex) => {
@@ -476,6 +727,33 @@ export default function SippingCharge() {
                 newErrors["pcodValue"] = "Required";
                 valid = false;
             }
+        } else if (activeTab === "wallet") {
+            valid = validateRuleList(walletRules, "wallet", newErrors) && valid;
+        } else if (activeTab === "gift") {
+            giftRules.forEach((rule, i) => {
+                if (
+                    (rule.applyTo === "specificproducts" || rule.applyTo === "Excludeproduct") &&
+                    rule.products.length === 0
+                ) {
+                    newErrors[`gift_${i}_products`] = "At least one product is required";
+                    valid = false;
+                }
+                if (
+                    (rule.applyTo === "specificsubcategory" || rule.applyTo === "Excludecategories") &&
+                    rule.subCategories.length === 0
+                ) {
+                    newErrors[`gift_${i}_subCategories`] = "At least one subcategory is required";
+                    valid = false;
+                }
+                if (!rule.giftProduct) {
+                    newErrors[`gift_${i}_giftProduct`] = "Gift product is required";
+                    valid = false;
+                }
+                if (rule.minimumAmount === "") {
+                    newErrors[`gift_${i}_minimumAmount`] = "Minimum amount is required";
+                    valid = false;
+                }
+            });
         }
         setErrors(newErrors);
         return valid;
@@ -503,11 +781,18 @@ export default function SippingCharge() {
                 value: pcodValue === "" ? 0 : Number(pcodValue),
             };
             payload.productRules = { partialCod: partialRules.map(toApiRule) };
+        } else if (activeTab === "wallet") {
+            payload.productRules = { wallet: walletRules.map(toApiRule) };
+        } else if (activeTab === "gift") {
+            payload.giftRules = giftRules.map(toApiGiftRule);
         }
 
-        const tabLabel =
-            activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" : "Partial COD";
+        // const tabLabel =
+        //     activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" : activeTab === "wallet" ? "Wallet" : "Partial COD";
 
+        const tabLabel =
+            activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" :
+                activeTab === "wallet" ? "Wallet" : activeTab === "gift" ? "Gift" : "Partial COD";
         setSaving(true);
         try {
             await dispatch(saveShippingCharge(payload)).unwrap();
@@ -557,6 +842,8 @@ export default function SippingCharge() {
         setErrors({});
         setSaveMessage(null);
     };
+
+
     return (
         <>
             <div>
@@ -581,6 +868,24 @@ export default function SippingCharge() {
                     >
                         <Truck size={16} />
                         Prepaid Rules
+                    </button>
+
+                    <button
+                        onClick={() => handleTabChange("wallet")}
+                        className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-sm transition-all ${activeTab === "wallet" ? "bg-indigo-50 border border-indigo-200 text-indigo-600 shadow-sm" : "hover:bg-slate-100 text-slate-600 border border-transparent"}`}
+                    >
+                        <Wallet size={16} />
+                        Wallet Rules
+                    </button>
+                    <button
+                        onClick={() => handleTabChange("gift")}
+                        className={`flex items-center gap-2.5 px-5 py-3 rounded-xl font-semibold text-sm transition-all
+    ${activeTab === "gift"
+                                ? "bg-indigo-50 border border-indigo-200 text-indigo-600"
+                                : "hover:bg-slate-100 text-slate-600"
+                            }`}
+                    >
+                        🎁 Gift Rules
                     </button>
                 </div>
             </div>
@@ -636,11 +941,44 @@ export default function SippingCharge() {
                             </CardContent>
                         </Card>
                     )}
+                    {activeTab === "wallet" && (
+                        <Card>
+                            <CardHeader><CardTitle>Wallet Rules</CardTitle></CardHeader>
+                            <CardContent className="space-y-6">
+                                {renderTabRules("wallet", "wallet")}
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {activeTab === "gift" && (
+                        <Card>
+                            <CardHeader><CardTitle>Gift Rules</CardTitle></CardHeader>
+                            <CardContent className="space-y-6">
+                                {giftRules.map((rule, index) => (
+                                    <GiftRuleCard
+                                        key={rule.id}
+                                        rule={rule}
+                                        ruleIndex={index}
+                                        productOptions={productOptions}
+                                        subCatOptions={subCatOptions}
+                                        onUpdate={updateGiftRule}
+                                        onDelete={deleteGiftRule}
+                                        errors={errors}
+                                    />
+                                ))}
+                                <div className="flex justify-center">
+                                    <Button type="button" onClick={addGiftRule}>
+                                        + Add Gift Rule
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
                 <Card className="w-[25%] !h-fit p-4 sticky top-5 space-y-3">
                     <div className="flex flex-col gap-2">
                         <Button onClick={handleSave} disabled={saving}>
-                            {saving ? "Saving..." : `Save ${activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" : "Partial COD"} Rules`}
+                            {saving ? "Saving..." : `Save ${activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" : activeTab === "wallet" ? "Wallet" : activeTab === "gift" ?  "gift" : "Partial COD"} Rules`}
                         </Button>
                     </div>
                 </Card>

@@ -129,10 +129,10 @@ export default function Wishlist() {
     <div className="space-y-8 p-6 mx-auto">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Wishlist
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {isAdmin
               ? "Manage all customer wishlists"
               : "Manage customer wishlists products"}
@@ -142,21 +142,21 @@ export default function Wishlist() {
           <Button
             variant="outline"
             onClick={handleDownload}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-border bg-card text-foreground hover:bg-muted"
           >
             <Download className="h-4 w-4 mr-2" /> Export
           </Button>
         </div>
       </div>
 
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="shadow-sm border border-border bg-card">
         <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
           <div className="relative w-full md:max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               ref={inputRef}
               placeholder="Search by user or product..."
-              className="pl-10"
+              className="pl-10 bg-input border-border text-foreground"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -179,20 +179,19 @@ export default function Wishlist() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm border border-gray-200">
+      <Card className="shadow-sm border border-border bg-card">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold">
+          <CardTitle className="text-lg font-semibold text-foreground">
             Wishlist Items{" "}
-            {/* <span className="text-gray-400 font-normal">({total})</span> */}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-lg border border-gray-200 relative">
+          <div className="overflow-x-auto rounded-lg border border-border relative bg-card">
             {tableLoading && (
-              <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center rounded-lg">
-                <div className="flex items-center gap-2 text-gray-500 text-sm font-medium">
+              <div className="absolute inset-0 bg-card/60 z-10 flex items-center justify-center rounded-lg">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
                   <svg
-                    className="animate-spin h-5 w-5 text-blue-500"
+                    className="animate-spin h-5 w-5 text-primary"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -216,8 +215,8 @@ export default function Wishlist() {
               </div>
             )}
 
-            <table className="w-full text-sm table-fixed">
-              <thead className="bg-gray-50 text-gray-700 text-sm font-medium">
+            <table className="w-full text-sm table-fixed text-foreground">
+              <thead className="bg-table-header text-muted-foreground text-sm font-medium border-b border-border">
                 <tr>
                   {isAdmin && (
                     <th className="p-3 w-10 text-left">
@@ -241,11 +240,11 @@ export default function Wishlist() {
                   <th className="p-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {!tableLoading && wishlists.length === 0 ? (
                   <tr>
                     <td
-                      className="p-6 text-center text-gray-400"
+                      className="p-6 text-center text-muted-foreground"
                       colSpan={isAdmin ? 8 : 7}
                     >
                       No wishlist items found.
@@ -256,7 +255,7 @@ export default function Wishlist() {
                     w.items.map((item) => (
                       <tr
                         key={item._id}
-                        className="border-t hover:bg-gray-50"
+                        className="hover:bg-table-hover transition-colors"
                       >
                         {isAdmin && (
                           <td className="p-3">
@@ -272,16 +271,16 @@ export default function Wishlist() {
                             />
                           </td>
                         )}
-                        <td className="p-3 truncate">{w.user_id?.name || "N/A"}</td>
-                        <td className="p-3 truncate">{w.user_id?.email || "N/A"}</td>
-                        <td className="p-3 truncate">
+                        <td className="p-3 truncate text-foreground">{w.user_id?.name || "N/A"}</td>
+                        <td className="p-3 truncate text-foreground">{w.user_id?.email || "N/A"}</td>
+                        <td className="p-3 truncate text-foreground">
                           {item.product_id?.name || "N/A"}
                         </td>
-                        <td className="p-3">{item.quantity || 1}</td>
-                        <td className="p-3">
+                        <td className="p-3 text-foreground">{item.quantity || 1}</td>
+                        <td className="p-3 text-foreground">
                           ₹{item.variant_id?.price?.toFixed(2) || "0.00"}
                         </td>
-                        <td className="p-3">
+                        <td className="p-3 text-foreground">
                           ₹
                           {(
                             (item.quantity || 1) *
@@ -296,7 +295,7 @@ export default function Wishlist() {
                             onConfirm={() => handleDelete(item._id)}
                             danger
                           >
-                            <button className="text-red-600 hover:bg-red-50 p-1 rounded">
+                            <button className="text-destructive hover:bg-destructive/10 p-1 rounded transition-colors">
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </ConfirmDialog>
@@ -310,7 +309,7 @@ export default function Wishlist() {
                   wishlists.length > 0 && (
                     <tr>
                       <td
-                        className="p-6 text-center text-gray-400"
+                        className="p-6 text-center text-muted-foreground"
                         colSpan={isAdmin ? 8 : 7}
                       >
                         No wishlist items found.
@@ -321,7 +320,7 @@ export default function Wishlist() {
             </table>
           </div>
 
-          <div className="text-right mt-4 font-semibold text-lg">
+          <div className="text-right mt-4 font-semibold text-lg text-foreground">
             Grand Total: ₹{grandTotal.toFixed(2)}
           </div>
 
@@ -332,6 +331,7 @@ export default function Wishlist() {
                 variant="outline"
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
                 disabled={page === 1}
+                className="bg-card border-border text-foreground hover:bg-muted"
               >
                 Prev
               </Button>
@@ -339,7 +339,7 @@ export default function Wishlist() {
                 <button
                   key={i}
                   onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1 rounded ${page === i + 1 ? "bg-blue-600 text-white" : "bg-gray-100"}`}
+                  className={`px-3 py-1 rounded text-sm transition-colors ${page === i + 1 ? "bg-primary text-primary-foreground font-medium" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
                 >
                   {i + 1}
                 </button>
@@ -349,6 +349,7 @@ export default function Wishlist() {
                 variant="outline"
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                 disabled={page === totalPages}
+                className="bg-card border-border text-foreground hover:bg-muted"
               >
                 Next
               </Button>

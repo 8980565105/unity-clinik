@@ -38,8 +38,6 @@ import StoreFormPage from "./pages/Stores/StoreForm";
 import StoreOwnerFormPage from "./pages/StoreOwner/StoreOwnerForm";
 import Pages from "./pages/Pages/Pages";
 import PageFormPage from "./pages/Pages/PagesForm";
-import Warehouse from "./pages/Warehouse/Warehouse";
-import WarehouseFormPage from "./pages/Warehouse/WarehouseForm";
 import Forgatepassword from "./pages/Forgatepassword";
 import Subcategories from "./pages/Subcategories/Subcategories"
 import SubCategoryFormPage from "./pages/Subcategories/SubcategoryForm";
@@ -48,7 +46,6 @@ import Result from "./pages/Result/Result";
 import EmailsFormPage from "./pages/Email/EmailFrom";
 import CustomerReviewsFrom from "./pages/CustomerReviews/CustomerReviewsFrom";
 import EmailsPage from "./pages/Email/Email";
-// import Register from "./pages/Register";
 import SliderPage from "./pages/slider/slider";
 import SlideFormPage from "./pages/slider/sliderFrom";
 import SystemSettings from "./pages/systemseting/systemsetingFrom";
@@ -58,6 +55,12 @@ import PopupFrom from "./pages/popup/poupform";
 import BookConsoltantion from "./pages/bookconsaltantions/book";
 import ConsultationPageForm from "./pages/bookconsaltantions/consaltantionPageFrom";
 import SippingCharge from "./pages/sippingcharge/SippingCharge";
+import ReffrelForm from "./pages/ReffrelSetting/reffrelform";
+import Userswallet from "./pages/userwallet/userwallet";
+import Userviews from "./pages/Users/Userviews";
+import UserWalletView from "./pages/userwallet/userwalletview";
+import Bookview from "./pages/bookconsaltantions/bookview";
+import BookEdit from "./pages/bookconsaltantions/bookedit";
 
 const queryClient = new QueryClient();
 const App = () => (
@@ -96,12 +99,10 @@ const App = () => (
               <Route path="coupons/:id/edit" element={<CouponFormPage />} />
               <Route path="orders" element={<Orders />} />
               <Route path="payments" element={<Payments />} />
-              <Route path="warehouse" element={<Warehouse />} />
-              <Route path="warehouse/add" element={<WarehouseFormPage />} />
-              <Route path="warehouse/:id/edit" element={<WarehouseFormPage />} />
               <Route path="users" element={<Users />} />
               <Route path="users/add" element={<UserFormPage />} />
               <Route path="users/:id/edit" element={<UserFormPage />} />
+              <Route path="users/:id/view" element={<Userviews />} />
               <Route path="customer-reviews" element={<CustomerReviews />} />
               <Route path="customer-reviews/add" element={<CustomerReviewsFrom />} />
               <Route path="customer-reviews/:id/edit" element={<CustomerReviewsFrom />} />
@@ -139,7 +140,12 @@ const App = () => (
               <Route path="store-owners/add" element={<StoreOwnerFormPage />} />
               <Route path="store-owners/:id/edit" element={<StoreOwnerFormPage />} />
               <Route path="system_settings" element={<SystemSettings />} />
+              <Route path="reffrel_settings" element={<ReffrelForm />} />
               <Route path="charge" element={<SippingCharge />} />
+              <Route path="userwallet" element={<Userswallet />} />
+              <Route path="userwallet/:id/view" element={<UserWalletView />} />
+              <Route path="bookConsoltantion/:id/view" element={<Bookview />} />
+              <Route path="consultation-bookings/:id/edit" element={<BookEdit />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Route>

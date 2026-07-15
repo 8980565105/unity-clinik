@@ -19,7 +19,7 @@ interface ConfirmDialogProps {
   confirmText?: string
   cancelText?: string
   onConfirm: () => void
-  children: ReactNode // trigger (button/icon/etc.)
+  children: ReactNode 
   danger?: boolean
 }
 
