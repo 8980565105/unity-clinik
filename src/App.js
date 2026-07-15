@@ -17,7 +17,7 @@ import { HelmetProvider } from "react-helmet-async";
 import Loding from "./components/loding/loding";
 import { fetchCart } from "./features/cart/cartThunk";
 import { Toaster } from "react-hot-toast";
-import HonestReportPage from "./pages/Honest-ReportPage";
+// import HonestReportPage from "./pages/Honest-ReportPage";
 import CouponSidebar from "./components/Coupon/CouponSidebar";
 import ConsultationPage from "./pages/Consultation";
 import Button from "./components/ui/Button";
@@ -25,6 +25,10 @@ import { resolveGuestId } from "./utils/guestId";
 import Analytics from "./services/Analytics";
 import AnnouncementBar from "./components/layout/AnnouncementBar";
 import Wallet from "./pages/wallet";
+import AccountDetails from "./components/AccountDetails/AccountDetails";
+import Address from "./components/Address/Address";
+import { usePageTracking } from "./hooks/usePageTracking";
+import MyBookConsalt from "./pages/mybookconsalt";
 
 const Home = lazy(() => import("./pages/Home"));
 const Allproducts = lazy(() => import("./pages/Allproducts"));
@@ -100,6 +104,16 @@ const RouterWrapper = () => {
   const dispatch = useDispatch();
   const [showConsultBtn, setShowConsultBtn] = useState(false);
   const { info: storeData, errorInfo } = useSelector((state) => state.store);
+
+  usePageTracking();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      sessionStorage.setItem("referralCode", ref.trim().toUpperCase());
+    }
+  }, [location.search]);
 
   useEffect(() => {
     dispatch(fetchStoreInfo());
@@ -191,7 +205,40 @@ const RouterWrapper = () => {
 
   return (
     <>
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            borderRadius: "50px",
+            padding: "12px 20px",
+            fontSize: "14px",
+            fontWeight: 600,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
+          },
+          success: {
+            style: {
+              background: "#16a34a",
+              color: "#fff",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#16a34a",
+            },
+          },
+          error: {
+            style: {
+              background: "#dc2626",
+              color: "#fff",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "#dc2626",
+            },
+          },
+        }}
+      />
       <Analytics />
       <ScrollToTop />
       <AnnouncementBar />
@@ -211,7 +258,12 @@ const RouterWrapper = () => {
           <Route path="/allreviews/:productId" element={<Allreviews />} />
           <Route path="/collections" element={<Collections />} />
           <Route path="/contact-us" element={<ContactUs />} />
-          <Route path="/account-details" element={<MyAccount />} />
+          {/* <Route path="/account-details" element={<MyAccount />} /> */}
+          <Route path="/account-details" element={<MyAccount />}>
+            <Route path="/account-details" element={<AccountDetails />} />
+            <Route path="address" element={<Address />} />
+          </Route>
+
           <Route path="/cart" element={<Cart />}></Route>
           <Route path="/checkout" element={<Checkout />}></Route>
           <Route path="/products/:id" element={<Product />}></Route>
@@ -225,8 +277,9 @@ const RouterWrapper = () => {
           <Route path="/term-Service" element={<TermService />} />
           <Route path="/shipping-policy" element={<ShippingPolicy />} />
           <Route path="/consultation" element={<ConsultationPage />} />
-          <Route path="/honest-report" element={<HonestReportPage />} />
+          {/* <Route path="/honest-report" element={<HonestReportPage />} /> */}
           <Route path="/wallet" element={<Wallet />} />
+          <Route path="/bookconsalt" element={<MyBookConsalt />} />
           <Route
             path="/payment/phonepe/callback"
             element={<PhonePeCallback />}

@@ -4,6 +4,7 @@ import {
   fetchOrder,
   fetchUserOrders,
   cancelOrder,
+  requestReturn,
 } from "./orderThunk";
 
 const initialState = {
@@ -36,9 +37,9 @@ const orderSlice = createSlice({
       .addCase(createOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
 
-    builder
+      // builder
       .addCase(fetchOrder.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -50,9 +51,9 @@ const orderSlice = createSlice({
       .addCase(fetchOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
 
-    builder
+      // builder
       .addCase(fetchUserOrders.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -65,9 +66,9 @@ const orderSlice = createSlice({
       .addCase(fetchUserOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message || action.payload;
-      });
+      })
 
-    builder
+      // builder
       .addCase(cancelOrder.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -83,6 +84,13 @@ const orderSlice = createSlice({
       .addCase(cancelOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(requestReturn.fulfilled, (state, action) => {
+        const updated = action.payload;
+        if (updated?._id) {
+          const idx = state.orders.findIndex((o) => o._id === updated._id);
+          if (idx !== -1) state.orders[idx] = updated;
+        }
       });
   },
 });

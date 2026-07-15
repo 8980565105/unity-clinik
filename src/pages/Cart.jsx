@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import CartProgress from "../components/cart/CartProgress";
 import CartSummary from "../components/cart/CartSummary";
 import Row from "../components/ui/Row";
@@ -16,6 +16,8 @@ import { fetchPageBySlug } from "../features/pages/pagesThunk.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import cart from "../assets/emptycart.webp";
 import { fetchCart } from "../features/cart/cartThunk";
+import Offercount from "../components/cart/Offercount.jsx";
+import api from "../services/api.js";
 export default function Cart() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,49 +85,40 @@ export default function Cart() {
       weight: Number(item?.variant_id?.ProductWeight || 0),
     };
   });
-
   const defaultShipping =
     settingsLoaded && defaultShippingItems.length > 0
       ? calculateShipping(defaultShippingItems, "prepaid", settings)
       : 0;
-
   const totalQuantity = defaultItemsForProgress.reduce(
     (sum, item) => sum + (item.quantity || 1),
     0,
   );
-
   const activePrepaidRules = settings?.productRules?.prepaid || [];
   const defaultRule = activePrepaidRules.find(
     (r) => r.applyTo === "allproducts",
   );
-
   const ruleShippingTypeRaw = String(
     defaultRule?.shippingType || settings?.shippingType || "price",
   )
     .toLowerCase()
     .trim();
-
   const isWeightWise = ruleShippingTypeRaw.includes("weight");
   const isQuantityWise =
     ruleShippingTypeRaw.includes("quantity") ||
-    ruleShippingTypeRaw.includes("quntity") || 
+    ruleShippingTypeRaw.includes("quntity") ||
     ruleShippingTypeRaw.includes("qty");
-
   const freeThreshold = defaultRule?.freeThreshold || 0;
-
   const progressValue = isWeightWise
     ? totalWeight
     : isQuantityWise
       ? totalQuantity
       : subtotal;
-
   const remaining = Math.max(0, freeThreshold - progressValue);
   const progressPercent =
     freeThreshold > 0
       ? Math.min(100, (progressValue / freeThreshold) * 100)
       : 0;
   const isFree = freeThreshold > 0 && progressValue >= freeThreshold;
-
   const applyCouponByCode = (code) => {
     const trimmed = code?.trim().toUpperCase();
     const coupon = coupons.find((c) => c.code === trimmed);
@@ -143,36 +136,115 @@ export default function Cart() {
       type: "success",
     });
   };
-
   const handleApplyCartCoupon = () => applyCouponByCode(cartCouponCode);
-
   const handleSelectCoupon = (code) => {
     setCartCouponCode(code);
     applyCouponByCode(code);
     setTimeout(() => setDrawerOpen(false), 800);
   };
-
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCartCouponCode("");
     setCouponMsg({ text: "", type: "" });
   };
-
   const couponDiscountAmount = appliedCoupon
     ? appliedCoupon.discount_type === "fixed"
       ? appliedCoupon.discount_value
       : Math.round((subtotal * appliedCoupon.discount_value) / 100)
     : 0;
-
   const mrpTotal = items.reduce((sum, item) => {
     const originalPrice = Number(
       item?.original_price || item?.variant_id?.price || 0,
     );
     return sum + originalPrice * (item.quantity || 1);
   }, 0);
-
   const totalSaved = mrpTotal - subtotal + couponDiscountAmount;
   const orderTotal = subtotal - couponDiscountAmount;
+  const itemDiscount = mrpTotal - subtotal;
+
+  const itemMatchesGiftRule = (item, rule) => {
+    const pid = String(item.product_id?._id || item.product_id || "");
+    const subId = String(
+      item.product_id?.subcategory_id?._id ||
+        item.product_id?.subcategory_id ||
+        item.product_id?.category_id?._id ||
+        item.product_id?.category_id ||
+        "",
+    );
+    switch (rule.applyTo) {
+      case "allproducts":
+        return true;
+      case "specificproducts":
+        return rule.products?.some((p) => String(p) === pid);
+      case "specificsubcategory":
+        return rule.subCategories?.some((c) => String(c) === subId);
+      case "Excludeproduct":
+        return !rule.products?.some((p) => String(p) === pid);
+      case "Excludecategories":
+        return !rule.subCategories?.some((c) => String(c) === subId);
+      default:
+        return true;
+    }
+  };
+
+  const eligibleGiftRules = useMemo(() => {
+    if (!settings?.giftRules?.length || !items.length) return [];
+
+    return settings.giftRules
+      .filter((rule) => rule.status)
+      .filter((rule) => {
+        if (rule.applyTo === "allproducts") return true;
+        return items.some((item) => itemMatchesGiftRule(item, rule));
+      })
+      .sort((a, b) => (a.minimumAmount || 0) - (b.minimumAmount || 0));
+  }, [settings, items]);
+
+  const activeGiftRule = useMemo(() => {
+    if (!eligibleGiftRules.length) return null;
+
+    const notUnlocked = eligibleGiftRules.find(
+      (rule) => subtotal < (rule.minimumAmount || 0),
+    );
+    if (notUnlocked) return notUnlocked;
+
+    // all unlocked -> pick highest minimumAmount one that's still within maximumAmount (if any)
+    const unlockedRules = eligibleGiftRules.filter((rule) => {
+      const min = rule.minimumAmount || 0;
+      const max = rule.maximumAmount || Infinity;
+      return subtotal >= min && subtotal <= max;
+    });
+    if (unlockedRules.length > 0) {
+      return unlockedRules[unlockedRules.length - 1];
+    }
+    return eligibleGiftRules[eligibleGiftRules.length - 1];
+  }, [eligibleGiftRules, subtotal]);
+
+  const giftMin = activeGiftRule?.minimumAmount || 0;
+  const giftMax = activeGiftRule?.maximumAmount || 0;
+  const isGiftUnlocked = activeGiftRule
+    ? subtotal >= giftMin && (giftMax === 0 || subtotal <= giftMax)
+    : false;
+  const giftRemaining = Math.max(0, giftMin - subtotal);
+  const giftProgressPercent =
+    giftMin > 0 ? Math.min(100, (subtotal / giftMin) * 100) : 0;
+
+  const [giftProductInfo, setGiftProductInfo] = useState(null);
+  useEffect(() => {
+    if (!activeGiftRule?.giftProduct) {
+      setGiftProductInfo(null);
+      return;
+    }
+    const fetchGiftProduct = async () => {
+      try {
+        const res = await api.get(`/products/${activeGiftRule.giftProduct}`);
+        const product = res.data?.data?.product || res.data?.data || null;
+        setGiftProductInfo(product);
+      } catch {
+        setGiftProductInfo(null);
+      }
+    };
+    fetchGiftProduct();
+  }, [activeGiftRule]);
 
   if (!loading && items.length === 0) {
     return (
@@ -205,7 +277,8 @@ export default function Cart() {
         description={cartPage?.meta_description}
         image={`${process.env.REACT_APP_API_URL_IMAGE}${cartPage?.seo_image}`}
       />
-      <CartProgress currentStep={1} />
+      <Offercount amount={totalSaved} />
+
       <Section>
         <Row className="grid grid-cols-1 custom-lg:grid-cols-[3fr_1fr] gap-[30px] items-start">
           <div className="flex-1 flex flex-col gap-4">
@@ -279,6 +352,63 @@ export default function Cart() {
               </div>
             )}
 
+            {items.length > 0 && activeGiftRule && (
+              <div className="bg-white rounded-[12px] px-[20px] py-[14px] shadow-sm border border-pink-100">
+                <div className="flex justify-between items-center mb-[8px]">
+                  <div className="flex items-center gap-[8px]">
+                    <span className="text-lg">🎁</span>
+                    <span className="text-[13px] md:text-[14px] font-medium text-gray-700">
+                      {isGiftUnlocked ? (
+                        <span className="text-green-600 font-semibold">
+                          🎉 You've unlocked a FREE GIFT
+                          {giftProductInfo?.name
+                            ? `: ${giftProductInfo.name}`
+                            : ""}
+                          !
+                        </span>
+                      ) : (
+                        <>
+                          Add{" "}
+                          <span className="font-bold text-gray-900">
+                            ₹{Math.round(giftRemaining).toLocaleString("en-IN")}
+                          </span>{" "}
+                          more to get{" "}
+                          <span className="font-bold text-pink-600">
+                            {giftProductInfo?.name || "a free gift"}
+                          </span>{" "}
+                          <span className="font-bold text-pink-600">
+                            FREE 🎁
+                          </span>
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <span className="text-[11px] text-gray-400 font-medium tracking-wide">
+                    GOAL: ₹{giftMin.toLocaleString("en-IN")}
+                  </span>
+                </div>
+
+                {activeGiftRule.shortDescription && (
+                  <p className="text-[12px] text-gray-500 mb-2 ml-[26px]">
+                    {activeGiftRule.shortDescription}
+                  </p>
+                )}
+
+                <div className="w-full h-[6px] bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${giftProgressPercent}%`,
+                      background: isGiftUnlocked
+                        ? "#22c55e"
+                        : "linear-gradient(90deg, #ec4899, #f472b6)",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             {items.length > 0 && (
               <div className="p-4 flex items-center gap-3 bg-green-100 rounded-lg">
                 <Truck size={20} className="text-green-600" />
@@ -296,7 +426,14 @@ export default function Cart() {
           </div>
 
           <div className="space-y-4 sticky top-[100px] self-start">
-            <CartSummary appliedCoupon={appliedCoupon} />
+            <CartSummary
+              appliedCoupon={appliedCoupon}
+              mrpTotal={mrpTotal}
+              itemDiscount={itemDiscount}
+              couponDiscount={couponDiscountAmount}
+              subtotal={subtotal}
+              orderTotal={orderTotal}
+            />
           </div>
         </Row>
       </Section>

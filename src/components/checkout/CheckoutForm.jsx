@@ -8,32 +8,52 @@ import {
   ShoppingBag,
   Star,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import { getImageUrl } from "../utils/helper";
 import toast from "react-hot-toast";
 import Button from "../ui/Button";
 import api from "../../services/api";
+
+const getSingleImage = (product, variant) => {
+  const productImages = product?.images;
+  if (Array.isArray(productImages) && productImages.length > 0) {
+    return productImages[0];
+  }
+  if (productImages) return productImages;
+
+  const variantImages = Array.isArray(variant?.images)
+    ? variant.images
+    : variant?.images
+      ? [variant.images]
+      : [];
+  return variantImages[0] || "";
+};
+
 function ProductPopup({ item, onClose }) {
   const navigate = useNavigate();
   if (!item) return null;
-  const originalPrice = Number(
-    item?.original_price || item?.variant_id?.price || 0,
-  );
-  const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
+
+  const product = item.product_data || item.product_id || {};
+  const variant = item.variant_data || item.variant_id || {};
+  const originalPrice = Number(item?.original_price || variant?.price || 0);
+  const offerPrice = Number(item?.price || variant?.offerprice || 0);
   const discountedPrice =
     offerPrice > 0 && offerPrice < originalPrice ? offerPrice : originalPrice;
   const discount =
     originalPrice > discountedPrice
       ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
-      : item?.product_id?.discount_id?.value || 0;
-  const imgSrc =
-    item.variant_id?.images?.length > 0
-      ? getImageUrl(item.variant_id.images[0])
-      : getImageUrl(item.product_id?.images?.[0]);
-  const productId = item.product_id?._id;
-  const categories = item.product_id?.categories || [];
+      : product?.discount_id?.value || 0;
+
+
+
+  const imgSrc = getImageUrl(getSingleImage(product, variant));
+
+  const productId =
+    product?._id ||
+    (typeof item.product_id === "string" ? item.product_id : null);
+  const categories = product?.categories || [];
+
   const handleViewFull = () => {
     onClose();
     navigate(`/products/${productId}`);
@@ -111,22 +131,56 @@ function ProductPopup({ item, onClose }) {
   );
 }
 
-function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
+function AddAddressPopup({
+  onClose,
+  onSaved,
+  existingAddresses,
+  editIndex = null,
+  initialData = null,
+}) {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    fullName: "",
-    phone: "",
-    email: "",
-    house: "",
-    street: "",
-    city: "",
-    state: "",
-    country: "",
-    zip_code: "",
-  });
+
+  const [form, setForm] = useState(
+    initialData || {
+      fullName: "",
+      phone: "",
+      email: "",
+      house: "",
+      street: "",
+      city: "",
+      state: "",
+      country: "",
+      zip_code: "",
+    },
+  );
 
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const fetchLocationFromPincode = async (pincode) => {
+    if (pincode.length !== 6) return;
+
+    try {
+      const res = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`,
+      );
+      const data = await res.json();
+
+      if (data?.[0]?.Status === "Success" && data[0].PostOffice?.length > 0) {
+        const postOffice = data[0].PostOffice[0];
+        setForm((prev) => ({
+          ...prev,
+          city: postOffice.District || prev.city,
+          state: postOffice.State || prev.state,
+          country: postOffice.Country || "India",
+        }));
+      } else {
+        toast.error("Invalid pincode, please check again");
+      }
+    } catch (err) {
+      toast.error("Failed to fetch location. Enter manually.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,23 +188,24 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
     try {
       setLoading(true);
 
-      const updated = [
-        ...(Array.isArray(existingAddresses) ? existingAddresses : []),
-        form,
-      ];
+      const list = Array.isArray(existingAddresses)
+        ? [...existingAddresses]
+        : [];
+      let newIndex;
 
-      if (form.phone.length !== 10) {
-        toast.error("Phone number must be 10 digits");
-        return;
+      if (editIndex !== null && editIndex !== undefined) {
+        list[editIndex] = form;
+        newIndex = editIndex;
+      } else {
+        list.push(form);
+        newIndex = list.length - 1;
       }
 
-      await api.put("/users/me", {
-        addresses: updated,
-      });
+      await api.put("/users/me", { addresses: list });
 
-      toast.success("Address saved!");
+      toast.success(editIndex !== null ? "Address updated!" : "Address saved!");
 
-      onSaved(updated, updated.length - 1);
+      onSaved(list, newIndex);
       onClose();
     } catch (err) {
       toast.error("Failed to save address");
@@ -164,7 +219,7 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
       <div className="bg-white rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[60vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-[18px] font-semibold text-gray-900">
-            Add New Address
+            {editIndex !== null ? "Edit Address" : "Add New Address"}
           </h2>
           <button
             onClick={onClose}
@@ -191,24 +246,31 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
               { name: "email", label: "email", placeholder: "email" },
               {
                 name: "house",
-                label: "house",
+                label: "Address line 1 *",
                 placeholder: "House No & Flat ",
+                required: "required",
               },
               {
                 name: "street",
-                label: "street *",
+                label: "Address line 2 *",
                 placeholder: "Street & Area ",
+                required: "required",
               },
-              { name: "city", label: "city", placeholder: "City" },
+              {
+                name: "city",
+                label: "city *",
+                placeholder: "City",
+                required: "required",
+              },
               {
                 name: "state",
-                label: "state",
+                label: "state *",
                 placeholder: "State",
                 required: "required",
               },
               {
                 name: "zip_code",
-                label: "zip code",
+                label: "zip code *",
                 placeholder: "Zip Code",
                 required: "required",
               },
@@ -225,12 +287,16 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
                     onChange={(e) => {
                       if (name === "phone") {
                         const value = e.target.value.replace(/\D/g, "");
-
                         if (value.length <= 10) {
-                          setForm((prev) => ({
-                            ...prev,
-                            phone: value,
-                          }));
+                          setForm((prev) => ({ ...prev, phone: value }));
+                        }
+                      } else if (name === "zip_code") {
+                        const value = e.target.value.replace(/\D/g, "");
+                        if (value.length <= 6) {
+                          setForm((prev) => ({ ...prev, zip_code: value }));
+                          if (value.length === 6) {
+                            fetchLocationFromPincode(value);
+                          }
                         }
                       } else {
                         handleChange(e);
@@ -265,7 +331,7 @@ function AddAddressPopup({ onClose, onSaved, existingAddresses }) {
   );
 }
 
-function SelectedAddressCard({ address }) {
+function SelectedAddressCard({ address, onEdit }) {
   if (!address) return null;
   return (
     <div className="border-2 border-primary rounded-2xl p-4 mt-3 bg-white shadow-sm">
@@ -303,6 +369,12 @@ function SelectedAddressCard({ address }) {
           </div>
         </div>
       </div>
+      <button
+        onClick={onEdit}
+        className="text-primary font-bold mt-3 hover:underline"
+      >
+        Edit
+      </button>
     </div>
   );
 }
@@ -311,6 +383,8 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
   const [popupItem, setPopupItem] = useState(null);
   const [giftProducts, setGiftProducts] = useState([]);
   const [buyXGetYProducts, setBuyXGetYProducts] = useState([]);
+  const getProduct = (item) => item.product_data || item.product_id || {};
+  const getVariant = (item) => item.variant_data || item.variant_id || {};
 
   useEffect(() => {
     if (!giftItem) {
@@ -436,10 +510,9 @@ function ReviewOrder({ items, quantities, onIncrease, onDecrease, giftItem }) {
             const key = item._id || item.product_id?._id;
             const qty = quantities[key] || 1;
             const { originalPrice, discountedPrice } = getDiscountedPrice(item);
-            const imgSrc =
-              item.variant_id?.images?.length > 0
-                ? getImageUrl(item.product_id?.images)
-                : getImageUrl(item.variant_id.images[0]);
+            const prod = getProduct(item);
+            const vrnt = getVariant(item);
+            const imgSrc = getImageUrl(getSingleImage(prod, vrnt));
 
             return (
               <div
@@ -634,11 +707,27 @@ export default function CheckoutForm({
   onDecrease,
   giftItem,
 }) {
-  const { user } = useSelector((state) => state.auth);
   const [addresses, setAddresses] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [fetchingAddresses, setFetchingAddresses] = useState(true);
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  const syncFormData = useCallback((addrs, index) => {
+    const a = addrs[index];
+    if (!a) return;
+    setFormData((prev) => ({
+      ...prev,
+      firstName: a.fullName?.split(" ")?.[0] || a.fullName || "",
+      lastName: a.fullName?.split(" ")?.slice(1)?.join(" ") || "",
+      address: `${a.house}, ${a.street}`,
+      country: a.country || "India",
+      state: a.state || "",
+      city: a.city || "",
+      pincode: a.zip_code || "",
+      phone: a.phone || "",
+    }));
+  }, [setFormData]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -656,23 +745,7 @@ export default function CheckoutForm({
       }
     };
     fetchProfile();
-  }, []);
-
-  const syncFormData = (addrs, index) => {
-    const a = addrs[index];
-    if (!a) return;
-    setFormData((prev) => ({
-      ...prev,
-      firstName: a.fullName?.split(" ")?.[0] || a.fullName || "",
-      lastName: a.fullName?.split(" ")?.slice(1)?.join(" ") || "",
-      address: `${a.house}, ${a.street}`,
-      country: a.country || "India",
-      state: a.state || "",
-      city: a.city || "",
-      pincode: a.zip_code || "",
-      phone: a.phone || "",
-    }));
-  };
+  }, [syncFormData]);
 
   const handleSelectChange = (e) => {
     const idx = Number(e.target.value);
@@ -690,9 +763,14 @@ export default function CheckoutForm({
   const handleAddAddressClick = () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
     if (!userLS?._id) {
+      setEditingIndex(null);
       setShowLoginPopup(true);
       return;
     }
+    setShowPopup(true);
+  };
+  const handleEditAddressClick = () => {
+    setEditingIndex(selectedIndex);
     setShowPopup(true);
   };
 
@@ -776,7 +854,10 @@ export default function CheckoutForm({
                   ▾
                 </span>
               </div>
-              <SelectedAddressCard address={selectedAddress} />
+              <SelectedAddressCard
+                address={selectedAddress}
+                onEdit={handleEditAddressClick}
+              />
             </>
           )}
         </div>
@@ -791,9 +872,14 @@ export default function CheckoutForm({
 
       {showPopup && (
         <AddAddressPopup
-          onClose={() => setShowPopup(false)}
+          onClose={() => {
+            setShowPopup(false);
+            setEditingIndex(null);
+          }}
           onSaved={handleAddressSaved}
           existingAddresses={addresses}
+          editIndex={editingIndex}
+          initialData={editingIndex !== null ? addresses[editingIndex] : null}
         />
       )}
     </div>

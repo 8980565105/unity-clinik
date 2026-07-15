@@ -92,6 +92,7 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
       const res = await api.post("/auth/google-login", {
         credential: response.credential,
         domain: window.location.origin,
+        referralCode: sessionStorage.getItem("referralCode") || undefined,
       });
       if (res.data?.data?.token) {
         const { token, user } = res.data.data;
@@ -109,6 +110,7 @@ const LoginForm = ({ onClose, onSwitchRegister, onSwitchForget }) => {
 
         dispatch({ type: "auth/loginUser/fulfilled", payload: res.data });
         toast.success("Google login successful!", { position: "top-center" });
+        sessionStorage.removeItem("referralCode");
         setTimeout(() => onClose(), 800);
       }
     } catch (err) {

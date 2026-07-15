@@ -3,15 +3,11 @@ import { Link } from "react-router-dom";
 import Button from "../ui/Button";
 import { useSelector, useDispatch } from "react-redux";
 import { calculateShipping } from "../../utils/shippingCalculator";
-import { fetchShippingCharge } from "../../features/sippingcharge/sippingchargeThunk";
 
 export default function CartSummary({ appliedCoupon }) {
   const { items = [] } = useSelector((state) => state.cart);
   const settings = useSelector((state) => state.sippingcharge.data);
   const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(fetchShippingCharge());
-  }, [dispatch]);
   const getDiscountedPrice = (item) => {
     const originalPrice = Number(
       item?.original_price || item?.variant_id?.price || 0,

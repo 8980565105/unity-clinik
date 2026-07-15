@@ -6,7 +6,7 @@ import defaultimg from "../../assets/default-avatar.webp";
 import { ChevronRight, Heart, ListOrdered, Pencil } from "lucide-react";
 import { uploadProfilePicture } from "../../features/user/userThunk";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Address from "../Address/Address";
 import AccountDetails from "../AccountDetails/AccountDetails";
 import { logout } from "../../features/auth/authSlice";
@@ -14,12 +14,23 @@ import { logout } from "../../features/auth/authSlice";
 export default function UserProfile() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const { user } = useSelector((state) => state.auth);
   const { loading } = useSelector((state) => state.user);
   const fileInputRef = useRef(null);
   const [preview, setPreview] = useState(user?.profile_picture || defaultimg);
 
   const [activeTab, setActiveTab] = useState("account");
+
+  useEffect(() => {
+    if (location.pathname === "/account-details/address") {
+      setActiveTab("address");
+    } else {
+      setActiveTab("account");
+    }
+  }, [location.pathname]);
+
   const { pages, slugLoading } = useSelector((state) => state.pages);
   const accountPage = pages?.find((page) => page.slug === "account");
 
@@ -49,7 +60,7 @@ export default function UserProfile() {
   return (
     <>
       <Section className="bg-theme !pb-[0px] relative">
-        <Row className="flex flex-col md:flex-row justify-between items-center md:items-center gap-x-[10px] md:gap-x-[30px] !max-w-[1122px]">
+        <Row className="flex flex-col md:flex-row justify-between items-center md:items-center gap-x-[10px] md:gap-x-[30px] !max-w-[1122px] !py-5 gap-5">
           <div className="text-start md:text-left flex-1 order-2">
             <p className="text-[24px] md:text-[48px] text-black font-bold mb-[10px] leading">
               Hello {user?.name}
@@ -107,9 +118,25 @@ export default function UserProfile() {
               Logout
             </button>
           </div>
+
+          <div className="order-3 md:hidden ">
+            <button
+              onClick={() => {
+                dispatch(logout());
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                localStorage.removeItem("cart_id");
+                localStorage.removeItem("recently_viewed_products");
+                navigate("/");
+              }}
+              className="px-6 py-3 bg-black text-white w-full rounded-full text-[16px] font-bold hover:bg-gray-800 transition-all"
+            >
+              Logout
+            </button>
+          </div>
         </Row>
 
-        <div className="relative bottom-[-30px] w-[90%] md:w-[90%] lg:max-w-[1440px] left-1/2 -translate-x-1/2 grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="relative bottom-[-30px] w-[90%] md:w-[90%] lg:max-w-[1440px] left-1/2 -translate-x-1/2 grid grid-cols-1 md:grid-cols-5 gap-4 hidden md:grid">
           <button
             onClick={() => setActiveTab("account")}
             className={`flex items-center justify-between px-5 py-5 rounded-xl bg-white shadow-sm border transition-all hover:shadow-md ${
@@ -185,22 +212,6 @@ export default function UserProfile() {
               <ChevronRight />
             </span>
           </button>
-
-          <div className="md:hidden">
-            <button
-              onClick={() => {
-                dispatch(logout());
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-                localStorage.removeItem("cart_id");
-                localStorage.removeItem("recently_viewed_products");
-                navigate("/");
-              }}
-              className="px-6 py-3 bg-black text-white w-full rounded-full text-[16px] font-bold hover:bg-gray-800 transition-all"
-            >
-              Logout
-            </button>
-          </div>
         </div>
       </Section>
 

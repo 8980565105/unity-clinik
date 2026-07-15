@@ -17,6 +17,8 @@ export default function OrderSummary({
   partialCodAdvance,
   settingsLoaded,
   isBuyNowMode,
+  walletBalance = 0,
+  couponPrepaidOnly,
   disabledPaymentTypes = {
     cod: { disabled: false },
     partial_cod: { disabled: false },
@@ -25,6 +27,10 @@ export default function OrderSummary({
 }) {
   const { items = [], loading } = useSelector((state) => state.cart);
   const isPartialCod = selectedPayment === "partial_cod";
+  const walletDeduction = Math.min(walletBalance, total);
+  const remainingAfterWallet = Math.max(total - walletBalance, 0);
+  const isWallet = selectedPayment === "wallet";
+
   if (loading && !isBuyNowMode)
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
@@ -78,6 +84,21 @@ export default function OrderSummary({
       value: "cod",
       label: "Cash on Delivery",
       subLabel: "Pay full amount when order arrives",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <rect x="1" y="3" width="15" height="13" rx="2" />
+          <path d="M16 8h3l4 4v4h-7z" />
+          <circle cx="5.5" cy="18.5" r="2" />
+          <circle cx="18.5" cy="18.5" r="2" />
+        </svg>
+      ),
       disabled: disabledPaymentTypes?.cod?.disabled,
       disabledText: "This product is not COD",
     },
@@ -88,11 +109,54 @@ export default function OrderSummary({
             label: "Partial COD",
             badge: "100% Safe & Trusted",
             subLabel: `₹${partialCodAdvance} NOW | REMAINING ON DELIVERY`,
+            icon: (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <path d="M16 12h5" />
+                <circle cx="17.5" cy="12" r="1" />
+                <circle cx="8" cy="9" r="2" />
+                <circle cx="12" cy="15" r="2" />
+              </svg>
+            ),
             disabled: disabledPaymentTypes?.partial_cod?.disabled,
             disabledText: "This product is not available for Partial COD",
           },
         ]
       : []),
+    {
+      value: "wallet",
+      label: "Unity Wallet",
+      subLabel:
+        walletBalance <= 0
+          ? "No balance available"
+          : remainingAfterWallet > 0
+            ? `₹${walletDeduction} from wallet + ₹${Math.round(remainingAfterWallet)} via Razorpay`
+            : `Full ₹${Math.round(total)} paid from wallet`,
+      badge: "100% Safe & Trusted",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path d="M3 7a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <path d="M16 12h5" />
+          <circle cx="17.5" cy="12" r="1.2" />
+        </svg>
+      ),
+      disabled: walletBalance <= 0,
+      disabledText: "Your wallet balance is ₹0",
+    },
   ];
   return (
     <>
@@ -112,7 +176,6 @@ export default function OrderSummary({
               ₹{Math.round(mrpTotal).toLocaleString("en-IN")}
             </span>
           </div>
-
           {itemDiscount > 0 && (
             <div className="flex items-center justify-between">
               <span className="text-[14px] text-gray-500 font-medium">
@@ -123,7 +186,6 @@ export default function OrderSummary({
               </span>
             </div>
           )}
-
           {appliedCoupon && couponDiscount > 0 && (
             <div className="flex items-center justify-between">
               <span className="text-[14px] text-gray-500 font-medium">
@@ -136,7 +198,6 @@ export default function OrderSummary({
           )}
 
           <div className="border-t border-gray-100 my-1" />
-
           <div className="flex items-center justify-between">
             <span className="text-[18px] font-bold text-gray-800">
               Subtotal
@@ -152,7 +213,6 @@ export default function OrderSummary({
             </span>
             {renderShipping()}
           </div>
-
           {isPartialCod && (
             <>
               <div className="border-t border-gray-100 my-1" />
@@ -175,6 +235,31 @@ export default function OrderSummary({
                     )}
                   </span>
                 </div>
+              </div>
+            </>
+          )}
+          {isWallet && (
+            <>
+              <div className="border-t border-gray-100 my-1" />
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-3 space-y-1.5 text-sm">
+                <p className="font-bold text-purple-800">
+                  Wallet Payment Breakdown
+                </p>
+                <div className="flex justify-between text-purple-700">
+                  <span>From Wallet:</span>
+                  <span className="font-semibold">
+                    ₹{Math.round(walletDeduction).toLocaleString("en-IN")}
+                  </span>
+                </div>
+                {remainingAfterWallet > 0 && (
+                  <div className="flex justify-between text-purple-700">
+                    <span>Pay via Razorpay:</span>
+                    <span className="font-semibold">
+                      ₹
+                      {Math.round(remainingAfterWallet).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCartShopping } from "@fortawesome/free-solid-svg-icons";
 import { faHeart as farHeart } from "@fortawesome/free-regular-svg-icons";
 import {
+  Calendar,
   ChevronDown,
   ChevronRight,
   Heart,
@@ -632,7 +633,6 @@ const Header = () => {
                                 </div>
                               </div>
                               <div className="flex flex-col p-3">
-                                {/* {categories.map((cat) => ( */}
                                 {displayCategories.map((cat) => (
                                   <div
                                     key={cat._id}
@@ -689,7 +689,7 @@ const Header = () => {
                             </div>
 
                             <div className="w-[25%] border-r border-gray-200 overflow-y-auto hide-scrollbar">
-                              <div className="p-2 sticky top-0 bg-white">
+                              <div className="p-2 sticky top-0 bg-white z-20">
                                 <div className="flex justify-between border-b">
                                   <span>Sub Categories</span>
 
@@ -767,7 +767,7 @@ const Header = () => {
                             </div>
 
                             <div className="w-[50%] overflow-y-auto hide-scrollbar">
-                              <div className="p-2 sticky top-0 bg-white">
+                              <div className="p-2 sticky top-0 bg-white z-20">
                                 <div className="flex justify-between border-b">
                                   <span>Products</span>
 
@@ -953,6 +953,17 @@ const Header = () => {
                   </button>
                 </li>
                 <div className="border border-[#989696]"> </div>
+                <li className="p-[17px]">
+                  <button
+                    onClick={() => navigate("/bookconsalt")}
+                    className="flex items-center gap-[15px] w-full"
+                  >
+                    <Calendar size={16} />
+                    <span>My consultation</span>
+                  </button>
+                </li>
+
+                <div className="border border-[#989696]"> </div>
 
                 <li className="p-[17px]">
                   <button
@@ -1042,13 +1053,13 @@ const Header = () => {
       >
         <div className="bg-white w-full absolute top-0 z-20 py-2 flex justify-between px-3">
           <div>
-            <img src={HeaderLogo} alt="logo" className="h-[35px] w-[100px]" />
+            <img src={HeaderLogo} alt="logo" className="h-[40px] w-[150px]" />
           </div>
           <button
-            className=" bg-white  transition-colors text-light border rounded-[3px] p-[5px] border-[#D2AF9F]"
+            className="text-white bg-primary transition-colors border rounded-full px-[6px] border-primary"
             onClick={() => setIsMenuOpen(false)}
           >
-            <XCircleIcon size={22} />
+            <XCircleIcon size={24} />
           </button>
         </div>
         <div className="flex h-full flex-col overflow-y-auto no-scrollbar">
@@ -1326,26 +1337,76 @@ const Header = () => {
               );
             })}
             <div className="text-light">
-              <div className="py-4 px-4 cursor-pointer light-color">
+              <div className="py-4 px-4 cursor-pointer">
                 <button
-                  onClick={() => openProtectedLink("/account-details")}
+                  onClick={() => {
+                    openProtectedLink("/account-details");
+                    setIsMenuOpen(false);
+                  }}
                   className="flex items-center gap-[15px]"
                 >
                   <User /> My Profile
                 </button>
               </div>
-              <div className="py-4 px-4 cursor-pointer">
+
+              <div className="py-4 px-4 cursor-pointer light-color">
                 <button
-                  onClick={() => openProtectedLink("/orders")}
+                  onClick={() => {
+                    openProtectedLink("/account-details/address");
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-[15px]"
+                >
+                  <Package size={20} />
+                  Address
+                </button>
+              </div>
+
+              <div className="py-4 px-4 cursor-pointer ">
+                <button
+                  onClick={() => {
+                    openProtectedLink("/orders");
+                    setIsMenuOpen(false);
+                  }}
                   className="flex items-center gap-[15px]"
                 >
                   <Package size={20} />
                   My Orders
                 </button>
               </div>
+
               <div className="py-4 px-4 cursor-pointer light-color">
                 <button
-                  onClick={() => openProtectedLink("/wishlist")}
+                  onClick={() => {
+                    openProtectedLink("/bookconsalt");
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-[15px]"
+                >
+                  <Calendar size={20} />
+                  My consultation
+                </button>
+              </div>
+
+              <div className="py-4 px-4 cursor-pointer">
+                <button
+                  onClick={() => {
+                    openProtectedLink("/wallet");
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center gap-[15px]"
+                >
+                  <Package size={20} />
+                  Unity Wallet
+                </button>
+              </div>
+
+              <div className="py-4 px-4 cursor-pointer light-color">
+                <button
+                  onClick={() => {
+                    openProtectedLink("/wishlist");
+                    setIsMenuOpen(false);
+                  }}
                   className="flex items-center gap-[15px]"
                 >
                   <FontAwesomeIcon icon={farHeart} /> Wishlist

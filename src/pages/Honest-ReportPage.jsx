@@ -6,9 +6,9 @@ export default function HonestReportPage() {
 
         <>
             <div>
-                <h1>Honest Report</h1>
+                {/* <h1>Honest Report</h1> */}
 
-                <Report />
+                {/* <Report /> */}
 
             </div>
         </>

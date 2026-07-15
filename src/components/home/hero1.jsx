@@ -13,18 +13,14 @@ import { Heart, Star } from "lucide-react";
 export default function Hero1() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { slides, loading, error } = useSelector((state) => state.slides);
-
   useEffect(() => {
     dispatch(fetchSlides());
   }, [dispatch]);
-
   const hero1Data = slides
     .filter((s) => s.section === "hero1" && s.status === "active")
     .flatMap((s) => s.hero1Slides || [])
     .filter((slide) => slide.status === "active");
-
   const settings = {
     dots: true,
     infinite: true,
@@ -40,7 +36,6 @@ export default function Hero1() {
       <div className="w-[40px] h-[3px] bg-white/50 rounded-full transition-all duration-300 slick-dot-bar" />
     ),
   };
-
   if (loading)
     return (
       <div className="h-[800px] flex items-center justify-center">
@@ -54,7 +49,6 @@ export default function Hero1() {
       </div>
     );
   if (!hero1Data.length) return null;
-
   return (
     <>
       <Slider {...settings} className="w-full">
@@ -119,7 +113,6 @@ export default function Hero1() {
                     </div>
                   </div>
                 </div>
-
                 <div className="w-full  flex  flex-col items-end">
                   <div className="z-20 absolute top-3 right-4 text-[40px] text-white">
                     {slide.location}
@@ -135,7 +128,6 @@ export default function Hero1() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-
                     <div className=" absolute bottom-[100px] z-20">
                       <div className="flex justify-center gap-4 items-start">
                         <div className="relative">
@@ -150,7 +142,6 @@ export default function Hero1() {
                             before
                           </p>
                         </div>
-
                         <div className="relative">
                           <img
                             src={getImageUrl(slide.afterImage)}
@@ -189,7 +180,6 @@ export default function Hero1() {
                 </div>
               </div>
             </div>
-
             <div className="block lg:hidden mx-2 my-2">
               <div
                 className="rounded-[20px] overflow-hidden"
@@ -260,9 +250,6 @@ export default function Hero1() {
                     style={{ height: "340px" }}
                   />
                 </div>
-
-
-
                 <div className="flex bg-white rounded-b-[20px] border-b">
                   {[
                     {

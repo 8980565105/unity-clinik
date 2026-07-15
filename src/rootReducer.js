@@ -30,6 +30,10 @@ import aboutReducer from "./features/about/aboutSlice";
 import popupReducer from "./features/popup/popupSlice";
 import consultationPageReducer from "./features/consaltantion/consaltantionSlice";
 import sippingchargeReducer from "./features/sippingcharge/sippingchargeSlice";
+import walletReducer from "./features/wallet/walletSlice";
+import reffrelReducer from "./features/reffrel/reffrelSlice";
+
+
 
 export const rootReducer = {
   auth: authReducer,
@@ -64,4 +68,6 @@ export const rootReducer = {
   popup: popupReducer,
   consultationPage: consultationPageReducer,
   sippingcharge: sippingchargeReducer,
+  wallet: walletReducer,
+  reffrel: reffrelReducer,
 };

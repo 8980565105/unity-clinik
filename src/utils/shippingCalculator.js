@@ -125,6 +125,7 @@ export function calculatePartialCodAdvance(totalAmount, settings) {
 export function getShippingPaymentKey(selectedPayment) {
   if (selectedPayment === "partial_cod") return "partialCod";
   if (selectedPayment === "cod") return "cod";
+  if (selectedPayment === "wallet") return "wallet";
   return "prepaid";
 }
 
@@ -133,6 +134,7 @@ export function getDisabledPaymentTypes(items = [], settings) {
     cod: { disabled: false, products: [] },
     partial_cod: { disabled: false, products: [] },
     prepaid: { disabled: false, products: [] },
+    wallet: { disabled: false, products: [] },
   };
 
   if (!settings?.productRules || !items.length) return result;
@@ -141,6 +143,7 @@ export function getDisabledPaymentTypes(items = [], settings) {
     ...(settings.productRules.cod || []),
     ...(settings.productRules.prepaid || []),
     ...(settings.productRules.partialCod || []),
+    ...(settings.productRules.wallet || []),
   ];
 
   items.forEach((item) => {
@@ -160,7 +163,9 @@ export function getDisabledPaymentTypes(items = [], settings) {
           ? "cod"
           : pType === "prepaid"
             ? "prepaid"
-            : null;
+            : pType === "wallet"
+              ? "wallet"
+              : null;
 
     if (!key) return;
 

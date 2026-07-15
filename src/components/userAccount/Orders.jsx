@@ -16,7 +16,11 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchUserOrders, cancelOrder } from "../../features/orders/orderThunk";
+import {
+  fetchUserOrders,
+  cancelOrder,
+  requestReturn,
+} from "../../features/orders/orderThunk";
 import { addReview } from "../../features/reivews/reviewsThunk";
 import { resetReviewStatus } from "../../features/reivews/reviewsSlice";
 import toast from "react-hot-toast";
@@ -32,6 +36,7 @@ import { fetchPageBySlug } from "../../features/pages/pagesThunk";
 import SEO from "../seo/seo";
 import ImageUpload from "../ui/ImageUpload";
 import { fetchProductById } from "../../features/products/productsThunk";
+import VideoUpload from "../ui/videoupload";
 
 const STATUS_CONFIG = {
   pending: {
@@ -126,6 +131,21 @@ const STATUS_CONFIG = {
   },
 };
 
+const getSingleImage = (product, variant) => {
+  const productImages = product?.images;
+  if (Array.isArray(productImages) && productImages.length > 0) {
+    return productImages[0];
+  }
+  if (productImages) return productImages;
+
+  const variantImages = Array.isArray(variant?.images)
+    ? variant.images
+    : variant?.images
+      ? [variant.images]
+      : [];
+  return variantImages[0] || "";
+};
+
 const getStatus = (status) =>
   STATUS_CONFIG[status] || {
     label: status?.toUpperCase() || "UNKNOWN",
@@ -166,22 +186,60 @@ const PaymentBadge = ({ method }) => {
   );
 };
 
-const OrderCard = ({ order, onReview, onTrack, onReorder, baseUrl = "" }) => {
+const CANCELLABLE_STATUSES = [
+  "pending",
+  "processing",
+  "packed",
+  "ready_to_ship",
+];
+
+const getCancelEligibility = (order) => {
+  if (!CANCELLABLE_STATUSES.includes(order.status)) {
+    return { canCancel: false, msg: "Cannot cancel at this stage" };
+  }
+  const hoursSince = (Date.now() - new Date(order.createdAt).getTime()) / 36e5;
+  if (hoursSince > 24) {
+    return { canCancel: false, msg: "Cancellation window expired (24 hrs)" };
+  }
+  return { canCancel: true, msg: "" };
+};
+
+const getReturnEligibility = (order) => {
+  if (order.status !== "completed") return { canReturn: false };
+  if (order.return_status && order.return_status !== "none")
+    return { canReturn: false, status: order.return_status };
+  const deliveredAt = order.courier?.delivered_at;
+  if (!deliveredAt) return { canReturn: false };
+  const hoursSince = (Date.now() - new Date(deliveredAt).getTime()) / 36e5;
+  return { canReturn: hoursSince <= 24 };
+};
+
+const OrderCard = ({
+  order,
+  onReview,
+  onTrack,
+  onReorder,
+  onReturn,
+  onCancel,
+  baseUrl = "",
+}) => {
   const firstItem = order.items?.[0];
+  const [actionMenu, setActionMenu] = useState(null);
   const product = firstItem?.product;
   const variant = firstItem?.variant;
-  const productImage = variant?.images?.[0] || product?.images?.[0];
-  const imgSrc = productImage
-    ? `${baseUrl}${productImage}`
-    : "https://via.placeholder.com/80x80?text=Product";
+  const productImage = product?.images;
+  const imgSrc = `${baseUrl}${productImage}`;
 
   const statusCfg = getStatus(order.status);
   const StatusIcon = statusCfg.Icon;
 
+  const { canCancel, msg } = getCancelEligibility(order);
+  const { canReturn, status: returnStatus } = getReturnEligibility(order);
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="hidden lg:flex min-h-[100px]">
-        <div className={`w-1 flex-shrink-0 ${statusCfg.leftBar}`} />
+        <div className={`w-1 flex-shrink-0 my-1 ${statusCfg.leftBar}`} />
         <div
           className={`flex items-center gap-3 px-4 py-4 min-w-[240px] ${statusCfg.bgcolor}`}
         >
@@ -204,31 +262,44 @@ const OrderCard = ({ order, onReview, onTrack, onReorder, baseUrl = "" }) => {
             </span>
           </div>
         </div>
+        <div className="flex-1 min-w-0 px-5 py-4">
+          {order.items?.map((item, index) => {
+            const product = item.product || item.product_id;
+            const variant = item.variant || item.variant_id;
 
-        <div className="flex items-center gap-3 px-5 py-4 flex-1 min-w-0">
-          <Link to={`/products/${product?._id}`} className="flex-shrink-0">
-            <img
-              src={imgSrc}
-              alt={product?.name || "product"}
-              className="w-[72px] h-[72px] object-cover rounded-xl border border-gray-100"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/80x80?text=Product";
-              }}
-            />
-          </Link>
-          <div className="min-w-0">
-            <Link to={`/products/${product?._id}`}>
-              <h3 className="font-semibold text-gray-800 text-sm leading-snug line-clamp-2 hover:text-[#1B4F8A] transition-colors">
-                {product?.name || "Product"}
-              </h3>
-            </Link>
-            <p className="text-xs text-gray-500 mt-1 text-nowrap">
-              Qty: {firstItem?.quantity || 1}
-            </p>
-            <p className="text-sm font-bold text-[#1B4F8A] mt-0.5">
-              ₹{firstItem?.price_at_order?.toLocaleString("en-IN") || "0"}.00
-            </p>
-          </div>
+            const imgSrc = `${baseUrl}${getSingleImage(product, variant)}`;
+
+            return (
+              <div
+                key={item._id || index}
+                className="flex items-center gap-3 mb-4 last:mb-0"
+              >
+                <Link
+                  to={`/products/${product?._id}`}
+                  className="flex-shrink-0"
+                >
+                  <img
+                    src={imgSrc}
+                    alt={product?.name || "product"}
+                    className="w-[72px] h-[72px] object-cover rounded-xl border border-gray-100"
+                  />
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link to={`/products/${product?._id}`}>
+                    <h3 className="font-semibold text-gray-800 text-sm line-clamp-2 hover:text-[#1B4F8A]">
+                      {product?.name}
+                    </h3>
+                  </Link>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Qty : {item.quantity}
+                  </p>
+                  <p className="text-sm font-bold text-[#1B4F8A]">
+                    ₹{item.price_at_order?.toLocaleString("en-IN")}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex flex-col justify-center items-start gap-1.5 px-5 py-4 min-w-[140px] border-l border-gray-200">
@@ -246,9 +317,77 @@ const OrderCard = ({ order, onReview, onTrack, onReorder, baseUrl = "" }) => {
           <Button variant="common" onClick={() => onTrack(order)}>
             Track
           </Button>
-          <Button variant="common" onClick={() => onReorder(order)}>
-            Re Order
-          </Button>
+          <div className="relative">
+            <Button
+              variant="common"
+              onClick={() =>
+                setActionMenu(actionMenu === order._id ? null : order._id)
+              }
+              className="!z-10"
+            >
+              Action
+            </Button>
+
+            {actionMenu === order._id && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl !z-20">
+                <button
+                  onClick={() => {
+                    setActionMenu(null);
+                    onReorder(order);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-100"
+                >
+                  <RotateCcw size={16} />
+                  Re Order
+                </button>
+
+                {canReturn && (
+                  <button
+                    onClick={() => {
+                      setActionMenu(null);
+                      onReturn(order);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50"
+                  >
+                    <RotateCcw size={16} />
+                    Return Order
+                  </button>
+                )}
+                {returnStatus === "requested" && (
+                  <span className="block px-4 py-2 text-xs text-yellow-600">
+                    Return requested — pending approval
+                  </span>
+                )}
+                {/* {order.status !== "cancelled" && (
+                  <button
+                    onClick={() => {
+                      setActionMenu(null);
+                      onCancel(order);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 size={16} />
+                    Cancel Order
+                  </button>
+                )} */}
+                {order.status !== "cancelled" && (
+                  <button
+                    disabled={!canCancel}
+                    onClick={() => canCancel && onCancel(order)}
+                    title={!canCancel ? msg : ""}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm ${
+                      canCancel
+                        ? "text-red-500 hover:bg-red-50"
+                        : "text-gray-300 cursor-not-allowed"
+                    }`}
+                  >
+                    <Trash2 size={16} />
+                    Cancel Order
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -279,32 +418,47 @@ const OrderCard = ({ order, onReview, onTrack, onReorder, baseUrl = "" }) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 px-3 py-3 border-t border-gray-100">
-          <Link to={`/products/${product?._id}`} className="flex-shrink-0">
-            <img
-              src={imgSrc}
-              alt={product?.name || "product"}
-              className="w-[72px] h-[72px] object-cover rounded-xl border border-gray-100"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/80x80?text=Product";
-              }}
-            />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <Link to={`/products/${product?._id}`}>
-              <h3 className="font-semibold text-gray-800 text-sm leading-snug line-clamp-2">
-                {product?.name || "Product"}
-              </h3>
-            </Link>
-            <div className="flex items-center lg:justify-between mt-1 sm:gap-2">
-              <p className="text-xs text-gray-500">
-                Qty: {firstItem?.quantity || 1}
-              </p>
-              <p className="text-sm font-bold text-[#1B4F8A]">
-                ₹{firstItem?.price_at_order?.toLocaleString("en-IN") || "0"}.00
-              </p>
-            </div>
-          </div>
+        <div className="border-t border-gray-100">
+          {order.items?.map((item, index) => {
+            const product = item.product || item.product_id;
+            const variant = item.variant || item.variant_id;
+            const imgSrc = `${baseUrl}${getSingleImage(product, variant)}`;
+            return (
+              <div
+                key={item._id || `${product?._id}-${index}`}
+                className="flex items-center gap-3 px-3 py-3 border-b last:border-b-0 border-gray-100"
+              >
+                <Link
+                  to={`/products/${product?._id}`}
+                  className="flex-shrink-0"
+                >
+                  <img
+                    src={imgSrc}
+                    alt={product?.name || "product"}
+                    className="w-[72px] h-[72px] object-cover rounded-xl border border-gray-100"
+                  />
+                </Link>
+
+                <div className="flex-1 min-w-0">
+                  <Link to={`/products/${product?._id}`}>
+                    <h3 className="font-semibold text-gray-800 text-sm line-clamp-2">
+                      {product?.name}
+                    </h3>
+                  </Link>
+
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-gray-500">
+                      Qty: {item.quantity}
+                    </p>
+
+                    <p className="text-sm font-bold text-[#1B4F8A]">
+                      ₹{item.price_at_order?.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         <div className="flex items-center justify-between px-3 py-2.5 border-t border-gray-100 ">
@@ -318,24 +472,108 @@ const OrderCard = ({ order, onReview, onTrack, onReorder, baseUrl = "" }) => {
         </div>
 
         <div className="flex items-center gap-2 px-3 py-3 border-t border-gray-100">
-          <button
+          <Button
             onClick={() => onReview(order)}
-            className="flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            variant="common"
+            // className="flex-1 py-2.5 px-3 text-xs font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
           >
             Rate Item
-          </button>
-          <button
+          </Button>
+
+          {/* <button
             onClick={() => onTrack(order)}
             className="flex-1 py-2.5 px-3 text-xs font-semibold text-white bg-[#1B4F8A] rounded-xl hover:bg-[#163f6e] transition-colors"
           >
             Track Order
-          </button>
-          <button
-            onClick={() => onReorder(order)}
-            className="flex-1 py-2.5 px-3 text-xs font-semibold text-white bg-[#1B4F8A] rounded-xl hover:bg-[#163f6e] transition-colors"
-          >
-            Re Order
-          </button>
+          </button> */}
+          <div className="relative">
+            <Button
+              variant="common"
+              onClick={() =>
+                setActionMenu(actionMenu === order._id ? null : order._id)
+              }
+              className="!z-10"
+            >
+              Action
+            </Button>
+
+            {actionMenu === order._id && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border rounded-xl shadow-xl !z-20">
+                <button
+                  onClick={() => {
+                    setActionMenu(null);
+                    onReorder(order);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-100"
+                >
+                  <RotateCcw size={16} />
+                  Re Order
+                </button>
+
+                <button
+                  onClick={() => onTrack(order)}
+                  // className="flex-1 py-2.5 px-3 text-xs font-semibold text-white bg-[#1B4F8A] rounded-xl hover:bg-[#163f6e] transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-100"
+                >
+                  Track Order
+                </button>
+
+                {/* <button className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-gray-100">
+                  return
+                </button> */}
+
+                {canReturn && (
+                  <button
+                    onClick={() => {
+                      setActionMenu(null);
+                      onReturn(order);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50"
+                  >
+                    <RotateCcw size={16} />
+                    Return Order
+                  </button>
+                )}
+                {returnStatus === "requested" && (
+                  <span className="block px-4 py-2 text-xs text-yellow-600">
+                    Return requested — pending approval
+                  </span>
+                )}
+                {/*                 
+                {order.status !== "cancelled" && (
+                  <button
+                    onClick={() => {
+                      setActionMenu(null);
+                      onCancel(order);
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50"
+                  >
+                    <Trash2 size={16} />
+                    Cancel Order
+                  </button>
+                )} */}
+                {order.status !== "cancelled" && (
+                  <button
+                    disabled={!canCancel}
+                    onClick={() => {
+                      if (!canCancel) return;
+                      setActionMenu(null);
+                      onCancel(order);
+                    }}
+                    title={!canCancel ? msg : ""}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-sm ${
+                      canCancel
+                        ? "text-red-500 hover:bg-red-50"
+                        : "text-gray-300 cursor-not-allowed"
+                    }`}
+                  >
+                    <Trash2 size={16} />
+                    Cancel Order
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -356,6 +594,12 @@ export default function Orders() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
   const [trackingOrder, setTrackingOrder] = useState(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [isReturnOpen, setIsReturnOpen] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [returnLoading, setReturnLoading] = useState(false);
+
   const [reviewData, setReviewData] = useState({
     rating: 5,
     title: "",
@@ -363,6 +607,12 @@ export default function Orders() {
     beforeImage: null,
     afterImage: null,
     product_id: "",
+  });
+  const [returnData, setReturnData] = useState({
+    type: "",
+    reason: "",
+    images: [],
+    videos: [],
   });
   const { pages, slugLoading } = useSelector((state) => state.pages);
   const homePage = pages?.find((page) => page.slug === "order");
@@ -503,10 +753,20 @@ export default function Orders() {
             offerPrice > 0 && offerPrice < originalPrice
               ? offerPrice
               : originalPrice;
+          const safeProduct = {
+            ...product,
+            images: product.images || "",
+          };
+          const safeVariant = {
+            ...variant,
+            images: Array.isArray(variant.images) ? variant.images : [],
+          };
 
           return {
-            product_id: product,
-            variant_id: variant,
+            product_id: product?._id || productId,
+            variant_id: variant?._id || variantId || null,
+            product_data: product,
+            variant_data: variant,
             quantity: i.quantity || 1,
             pack_of: Number(i.pack_of || 1),
             price: finalPrice,
@@ -515,6 +775,11 @@ export default function Orders() {
         }),
     );
 
+    if (!checkoutItems.length) {
+      toast.error("No valid items to reorder");
+      return;
+    }
+
     navigate("/checkout", {
       state: {
         buyNow: true,
@@ -522,6 +787,47 @@ export default function Orders() {
       },
     });
   };
+
+  // const openReturnModal = (order) => {
+  //   setSelectedOrder(order);
+  //   setIsReturnOpen(true);
+  // };
+
+  // const closeReturnModal = () => {
+  //   setSelectedOrder(null);
+  //   setIsReturnOpen(false);
+  //   setReturnReason("");
+  // };
+
+  // const handleReturnSubmit = async () => {
+  //   if (!returnReason.trim()) {
+  //     toast.error("Please enter a return reason");
+  //     return;
+  //   }
+  //   if (!selectedOrder?._id) return;
+
+  //   setReturnLoading(true);
+  //   try {
+  //     const result = await dispatch(
+  //       requestReturn({
+  //         orderId: selectedOrder._id,
+  //         reason: returnReason.trim(),
+  //       }),
+  //     );
+
+  //     if (requestReturn.fulfilled.match(result)) {
+  //       toast.success("Return request submitted successfully");
+  //       dispatch(fetchUserOrders({ page, limit }));
+  //       closeReturnModal();
+  //     } else {
+  //       toast.error(result.payload || "Failed to submit return request");
+  //     }
+  //   } catch (err) {
+  //     toast.error("Something went wrong");
+  //   } finally {
+  //     setReturnLoading(false);
+  //   }
+  // };
 
   const openReviewModal = (order) => {
     const productId =
@@ -584,6 +890,91 @@ export default function Orders() {
     setSelectedOrder(null);
     setIsViewOpen(false);
     setIsCancelOpen(false);
+    setCancelReason("");
+  };
+
+  const handleCancelSubmit = async () => {
+    if (!cancelReason.trim()) {
+      toast.error("Please enter a cancellation reason");
+      return;
+    }
+    if (!selectedOrder?._id) return;
+
+    setCancelLoading(true);
+    try {
+      const result = await dispatch(
+        cancelOrder({
+          orderId: selectedOrder._id,
+          reason: cancelReason.trim(),
+        }),
+      );
+
+      if (cancelOrder.fulfilled.match(result)) {
+        toast.success("Order cancelled successfully");
+        dispatch(fetchUserOrders({ page, limit }));
+        closeModal();
+        setCancelReason("");
+      } else {
+        toast.error(result.payload || "Failed to cancel order");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const openReturnModal = (order) => {
+    setSelectedOrder(order);
+    setReturnData({ type: "", reason: "", images: [], videos: [] });
+    setIsReturnOpen(true);
+  };
+
+  const closeReturnModal = () => {
+    setSelectedOrder(null);
+    setIsReturnOpen(false);
+    setReturnData({ type: "", reason: "", images: [], videos: [] });
+  };
+
+  const handleReturnSubmit = async () => {
+    if (!returnData.type) {
+      toast.error("Please select a return reason (Wrong / Damaged Product)");
+      return;
+    }
+    if (!returnData.reason.trim()) {
+      toast.error("Please describe the issue");
+      return;
+    }
+    if (returnData.images.length === 0 && returnData.videos.length === 0) {
+      toast.error("Please upload at least one image or video as proof");
+      return;
+    }
+    if (!selectedOrder?._id) return;
+
+    setReturnLoading(true);
+    try {
+      const result = await dispatch(
+        requestReturn({
+          orderId: selectedOrder._id,
+          type: returnData.type,
+          reason: returnData.reason.trim(),
+          images: returnData.images,
+          videos: returnData.videos,
+        }),
+      );
+
+      if (requestReturn.fulfilled.match(result)) {
+        toast.success("Return request submitted successfully");
+        dispatch(fetchUserOrders({ page, limit }));
+        closeReturnModal();
+      } else {
+        toast.error(result.payload || "Failed to submit return request");
+      }
+    } catch (err) {
+      toast.error("Something went wrong");
+    } finally {
+      setReturnLoading(false);
+    }
   };
 
   if (loading) return <Loding className="!h-[500px]" />;
@@ -633,118 +1024,6 @@ export default function Orders() {
                   </button>
                 )}
               </div>
-              {/* <div className="flex justify-between gap-2 items-center">
-                <div>
-                  <button
-                    onClick={() => {
-                      setIsFilterOpen(!isFilterOpen);
-                      setIsSortOpen(false);
-                    }}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap w-full ${
-                      statusFilter !== "all"
-                        ? "bg-[#163f6e] text-white ring-2 ring-[#1B4F8A]/30"
-                        : "bg-[#1B4F8A] text-white hover:bg-[#163f6e]"
-                    }`}
-                  >
-                    <Filter size={15} />
-                    <span>Filter</span>
-                    {statusFilter !== "all" && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                    )}
-                  </button>
-                  {isFilterOpen && (
-                    <div className="absolute mt-2 w-52 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden">
-                      <div className="p-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">
-                          Filter by Status
-                        </p>
-                        <button
-                          onClick={() => {
-                            setStatusFilter("all");
-                            setIsFilterOpen(false);
-                            setPage(1);
-                          }}
-                          className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                            statusFilter === "all"
-                              ? "bg-blue-50 text-[#1B4F8A] font-semibold"
-                              : "text-gray-600 hover:bg-gray-50"
-                          }`}
-                        >
-                          All Status
-                        </button>
-                        {statusOptions.map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              setStatusFilter(status);
-                              setIsFilterOpen(false);
-                              setPage(1);
-                            }}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors capitalize ${
-                              statusFilter === status
-                                ? "bg-blue-50 text-[#1B4F8A] font-semibold"
-                                : "text-gray-600 hover:bg-gray-50"
-                            }`}
-                          >
-                            {status.replace(/_/g, " ")}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <button
-                    onClick={() => {
-                      setIsSortOpen(!isSortOpen);
-                      setIsFilterOpen(false);
-                    }}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap w-full ${
-                      paymentFilter !== "all"
-                        ? "bg-[#163f6e] text-white ring-2 ring-[#1B4F8A]/30"
-                        : "bg-[#1B4F8A] text-white hover:bg-[#163f6e]"
-                    }`}
-                  >
-                    <ArrowUpDown size={15} />
-                    <span>Sort</span>
-                    {paymentFilter !== "all" && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
-                    )}
-                  </button>
-                  {isSortOpen && (
-                    <div className="absolute mt-2 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden">
-                      <div className="p-2">
-                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-3 py-2">
-                          Sort by Payment
-                        </p>
-                        {[
-                          { value: "all", label: "All Orders" },
-                          { value: "Online", label: "Online Payment" },
-                          { value: "COD", label: "Cash on Delivery" },
-                        ].map(({ value, label }) => (
-                          <button
-                            key={value}
-                            onClick={() => {
-                              setPaymentFilter(value);
-                              setIsSortOpen(false);
-                              setPage(1);
-                            }}
-                            className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
-                              paymentFilter === value
-                                ? "bg-blue-50 text-[#1B4F8A] font-semibold"
-                                : "text-gray-600 hover:bg-gray-50"
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-              </div> */}
             </div>
           </div>
         </Row>
@@ -753,11 +1032,12 @@ export default function Orders() {
             {filteredOrders.length > 0 ? (
               filteredOrders.map((order) => (
                 <OrderCard
-                  key={order._id}
                   order={order}
                   onReview={openReviewModal}
                   onTrack={openTracking}
                   onReorder={handleReorder}
+                  onReturn={openReturnModal}
+                  onCancel={openCancelModal}
                   baseUrl={baseUrl}
                 />
               ))
@@ -820,89 +1100,87 @@ export default function Orders() {
           )}
         </Row>
       </Section>
-
-        {isViewOpen && selectedOrder && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-            <div className="bg-white w-full max-w-[560px] rounded-2xl shadow-2xl overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b">
-                <h3 className="text-lg font-bold text-gray-800">Order Details</h3>
-                <button
-                  onClick={closeModal}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <X size={20} className="text-gray-500" />
-                </button>
+      {isViewOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white w-full max-w-[560px] rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-bold text-gray-800">Order Details</h3>
+              <button
+                onClick={closeModal}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+            <div className="p-6 grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Order ID</p>
+                <p className="font-semibold text-sm text-gray-800 break-all">
+                  {selectedOrder.order_id || selectedOrder._id}
+                </p>
               </div>
-              <div className="p-6 grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Order ID</p>
-                  <p className="font-semibold text-sm text-gray-800 break-all">
-                    {selectedOrder.order_id || selectedOrder._id}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Status</p>
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded-full ${
-                      getStatus(selectedOrder.status).bg
-                    } ${getStatus(selectedOrder.status).text}`}
-                  >
-                    {getStatus(selectedOrder.status).label}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Total Price</p>
-                  <p className="font-bold text-gray-800">
-                    ₹{selectedOrder.total_price?.toLocaleString("en-IN")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Tax (10%)</p>
-                  <p className="font-bold text-gray-800">
-                    ₹{(selectedOrder.total_price * 0.1).toLocaleString("en-IN")}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Payment Method</p>
-                  <p className="text-sm text-gray-700">
-                    {selectedOrder.payment_method || "N/A"}
-                  </p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-xs text-gray-400 mb-0.5">Shipping Address</p>
-                  <p className="text-sm text-gray-700">
-                    {selectedOrder.shippingAddress?.address ||
-                      "No address provided"}
-                  </p>
-                </div>
-              </div>
-              <div className="px-6 py-4 border-t flex justify-end gap-2">
-                {selectedOrder.status !== "cancelled" && (
-                  <button
-                    onClick={() => {
-                      closeModal();
-                      openCancelModal(selectedOrder);
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
-                  >
-                    Cancel Order
-                  </button>
-                )}
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Status</p>
+                <span
+                  className={`text-xs font-bold px-2 py-1 rounded-full ${
+                    getStatus(selectedOrder.status).bg
+                  } ${getStatus(selectedOrder.status).text}`}
                 >
-                  Close
-                </button>
+                  {getStatus(selectedOrder.status).label}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Total Price</p>
+                <p className="font-bold text-gray-800">
+                  ₹{selectedOrder.total_price?.toLocaleString("en-IN")}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Tax (10%)</p>
+                <p className="font-bold text-gray-800">
+                  ₹{(selectedOrder.total_price * 0.1).toLocaleString("en-IN")}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Payment Method</p>
+                <p className="text-sm text-gray-700">
+                  {selectedOrder.payment_method || "N/A"}
+                </p>
+              </div>
+              <div className="col-span-2">
+                <p className="text-xs text-gray-400 mb-0.5">Shipping Address</p>
+                <p className="text-sm text-gray-700">
+                  {selectedOrder.shippingAddress?.address ||
+                    "No address provided"}
+                </p>
               </div>
             </div>
+            <div className="px-6 py-4 border-t flex justify-end gap-2">
+              {selectedOrder.status !== "cancelled" && (
+                <button
+                  onClick={() => {
+                    closeModal();
+                    openCancelModal(selectedOrder);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-red-500 border border-red-200 rounded-xl hover:bg-red-50 transition-colors"
+                >
+                  Cancel Order
+                </button>
+              )}
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        )}
-
+        </div>
+      )}
       {isReviewOpen && (
         <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center px-4">
-          <div className="bg-white w-full max-w-[600px] max-h-[90vh] rounded-3xl overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
+          <div className="bg-white w-full max-w-[600px] max-h-[85vh] rounded-3xl overflow-y-auto no-scrollbar">
+            <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-3xl font-bold">Write Review</h2>
               <button
                 onClick={() => setIsReviewOpen(false)}
@@ -911,8 +1189,7 @@ export default function Orders() {
                 <X size={18} />
               </button>
             </div>
-
-            <form onSubmit={handleReviewSubmit} className="p-6">
+            <form onSubmit={handleReviewSubmit} className="p-2 md:p-4 lg:p-6">
               <div className="mb-6">
                 <h4 className="font-bold text-xl mb-4">Rate this Product</h4>
                 <div className="flex gap-2">
@@ -964,7 +1241,6 @@ export default function Orders() {
                     Review Description
                   </label>
                   <textarea
-                    rows={5}
                     placeholder="Share your experience with this product"
                     value={reviewData.comment}
                     onChange={(e) =>
@@ -973,7 +1249,7 @@ export default function Orders() {
                         comment: e.target.value,
                       }))
                     }
-                    className="w-full border border-gray-200 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-[#1B4F8A] focus:border-transparent transition-all resize-none"
+                    className="w-full h-[95px] border border-gray-200 rounded-xl p-4 text-sm outline-none focus:ring-2 focus:ring-[#1B4F8A] focus:border-transparent transition-all resize-none"
                   />
                 </div>
               </div>
@@ -1012,7 +1288,7 @@ export default function Orders() {
                 </div>
               </div>
 
-              <div className="flex  gap-4 mt-6">
+              <div className="flex  gap-4 mt-6 justify-center">
                 <Button
                   variant="outline"
                   type="button"
@@ -1059,7 +1335,6 @@ export default function Orders() {
           </div>
         </div>
       )}
-
       {isTrackingOpen && trackingOrder && (
         <OrderTracking
           order={trackingOrder}
@@ -1068,6 +1343,187 @@ export default function Orders() {
             setTrackingOrder(null);
           }}
         />
+      )}
+      {isCancelOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white w-full max-w-[480px] rounded-2xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-bold text-gray-800">
+                Cancel Order — {selectedOrder.order_number || selectedOrder._id}
+              </h3>
+              <button
+                onClick={closeModal}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Are you sure you want to cancel this order? Stock will be
+                restored.
+              </p>
+
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Reason <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={4}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Enter cancellation reason..."
+                className="w-full border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition-all resize-none"
+              />
+            </div>
+
+            <div className="px-6 py-4 border-t flex justify-end gap-2">
+              <button
+                onClick={closeModal}
+                disabled={cancelLoading}
+                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleCancelSubmit}
+                disabled={cancelLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {cancelLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Cancelling...
+                  </>
+                ) : (
+                  "Cancel Order"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isReturnOpen && selectedOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white w-full max-w-[480px] rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between px-6 py-4 border-b sticky top-0 bg-white z-10">
+              <h3 className="text-lg font-bold text-gray-800">
+                Return Order — {selectedOrder.order_number || selectedOrder._id}
+              </h3>
+              <button
+                onClick={closeReturnModal}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                Return request will only be processed after admin approval, and
+                the refund will be added to the wallet.
+              </p>
+
+              <div className="mb-4 space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">
+                  What is the issue? <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="border border-gray-300 rounded-xl w-full p-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-400"
+                  value={returnData.type}
+                  onChange={(e) =>
+                    setReturnData((prev) => ({ ...prev, type: e.target.value }))
+                  }
+                >
+                  <option value="">Select reason</option>
+                  <option value="wrong_product">Wrong Product</option>
+                  <option value="damage_product">Damaged Product</option>
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Upload Product Images{" "}
+                  <span className="text-gray-400 font-normal">(max 5)</span>
+                </label>
+                <ImageUpload
+                  value={returnData.images}
+                  onChange={(urls) =>
+                    setReturnData((prev) => ({ ...prev, images: urls || [] }))
+                  }
+                  multiple
+                  maxFiles={5}
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Upload Product Videos{" "}
+                  <span className="text-gray-400 font-normal">(max 5)</span>
+                </label>
+                <VideoUpload
+                  value={returnData.videos}
+                  onChange={(urls) =>
+                    setReturnData((prev) => ({ ...prev, videos: urls || [] }))
+                  }
+                  multiple
+                  maxFiles={5}
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Upload clear images or short video showing product issue.
+                </p>
+              </div>
+
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Reason Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                rows={4}
+                value={returnData.reason}
+                onChange={(e) =>
+                  setReturnData((prev) => ({ ...prev, reason: e.target.value }))
+                }
+                placeholder="Describe what's wrong with the product..."
+                className="w-full border border-gray-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent transition-all resize-none"
+              />
+            </div>
+
+            <div className="px-6 py-4 border-t flex justify-end gap-2 sticky bottom-0 bg-white">
+              <button
+                onClick={closeReturnModal}
+                disabled={returnLoading}
+                className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleReturnSubmit}
+                disabled={returnLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-xl hover:bg-orange-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {returnLoading ? "Submitting..." : "Submit Return Request"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -123,7 +123,7 @@ const RecommendedSection = ({ setShowLoginPopup, productLabels }) => {
   return (
     <Section>
       <Row>
-        <Heading title={"Recommended For You"} />
+        <Heading title={"Recommended For You"} className="mb-5"/>
 
         {!isCenter && ready && (
           <div className="flex items-center justify-end gap-3 mb-4">

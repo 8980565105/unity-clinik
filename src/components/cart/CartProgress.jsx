@@ -4,7 +4,6 @@ import Row from "../ui/Row";
 import Section from "../ui/Section";
 import { useSelector } from "react-redux";
 
-const FREE_SHIPPING_GOAL = 1000;
 
 export default function CartProgress({ currentStep = 1 }) {
   const { items = [] } = useSelector((state) => state.cart);
@@ -16,8 +15,9 @@ export default function CartProgress({ currentStep = 1 }) {
   ];
   return (
     <>
-      <Section>
-        <Row className="flex justify-between items-center w-full !max-w-[677px] px-4 md:px-0 relative">
+      <Section className="!pt-8">
+
+        <Row className="flex justify-between items-center w-full !max-w-[677px] px-4 md:px-0 relative mt-5">
           {steps.map((s, i) => {
             const completed = s.step < currentStep;
             const active = s.step === currentStep;

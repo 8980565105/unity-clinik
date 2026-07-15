@@ -4,9 +4,7 @@ import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import LoginForm from "./Login.jsx";
 import SEO from "../components/seo/seo.js";
 import Hero1 from "../components/home/hero1.jsx";
-// import Section from "../components/ui/Section.jsx";
 import Loding from "../components/loding/loding.jsx";
-// import { getImageUrl } from "../components/utils/helper.js";
 import { ConstaltationPopup } from "../components/popup/constaltantionpopup.jsx";
 import Honest from "../components/home/honest.jsx";
 import HolisticApproach from "../components/home/HolisticApproach.jsx";
@@ -20,43 +18,29 @@ const CategoriesSection = lazy(
 const FeaturedProducts = lazy(
   () => import("../components/home/FeaturedProducts"),
 );
-
 const TrendingClothes = lazy(
   () => import("../components/home/TrendingClothes"),
 );
-
 const Bestsellers = lazy(() => import("../components/home/Bestsellers"));
-
 const RecommendedSection = lazy(
   () => import("../components/home/RecommendedSection"),
 );
-
 const FeatureSection = lazy(
   () => import("../components/home/FeatureSection.jsx"),
 );
-
 const Customerreviews = lazy(
   () => import("../components/home/Customerreviews.jsx"),
 );
-
 const ShortBanner = lazy(() => import("../components/home/shortbanner.jsx"));
-
 const ContactHome = lazy(() => import("../components/home/ContactHome.jsx"));
-
 const Countsection = lazy(() => import("../components/home/Countsection.jsx"));
-
 const Topdoctor = lazy(() => import("../components/home/Topdoctor.jsx"));
-
 const BannerSlider = lazy(() => import("../components/home/SliderBanner.jsx"));
-
 const Banner4 = lazy(() => import("../components/home/banner4.jsx"));
-
 const SuccessStorySection = lazy(
   () => import("../components/home/SuccessStory.jsx"),
 );
-
 const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
-
 const Home = () => {
   const dispatch = useDispatch();
   const [showLoginPopup, setShowLoginPopup] = useState(false);
@@ -65,11 +49,8 @@ const Home = () => {
   const { pages, slugLoading } = useSelector((state) => state.pages);
   const { data: popupData } = useSelector((state) => state.popup);
   const homePage = pages?.find((page) => page.slug === "home");
-  // const { slides } = useSelector((state) => state.slides);
-  // const { productLabels = [] } = useSelector((state) => state.productLabels);
-
   const sectionMap = {
-    hero: <Hero1 />,
+    hero: <Hero1 id="hero1" />,
     honest: <Honest />,
     holisticapproach: <HolisticApproach />,
     timelineresult: <TimelineResult />,
@@ -91,17 +72,14 @@ const Home = () => {
     customerreviews: <Customerreviews />,
     featuresection: <FeatureSection />,
   };
-
   useEffect(() => {
     if (!slugLoading) {
       setIsHomeLoaded(true);
     }
   }, [slugLoading]);
-
   useEffect(() => {
     dispatch(fetchPageBySlug("home"));
   }, [dispatch]);
-
   useEffect(() => {
     const hasSeen = localStorage.getItem("hasSeenConsultationPopup");
     const consultation = popupData?.consultation;
@@ -117,7 +95,6 @@ const Home = () => {
       return () => clearTimeout(timer);
     }
   }, [popupData, isHomeLoaded]);
-
   useEffect(() => {
     if (isConsultationPopupOpen) {
       document.body.style.overflow = "hidden";
@@ -133,7 +110,6 @@ const Home = () => {
     localStorage.setItem("hasSeenConsultationPopup", "true");
     setIsConsultationPopupOpen(false);
   };
-
   return (
     <>
       {slugLoading && (
@@ -158,7 +134,6 @@ const Home = () => {
             ))}
         </Suspense>
       </div>
-
       {isConsultationPopupOpen && (
         <ConstaltationPopup
           isOpen={isConsultationPopupOpen}
@@ -179,5 +154,4 @@ const Home = () => {
     </>
   );
 };
-
 export default Home;

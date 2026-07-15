@@ -71,3 +71,21 @@ export const fetchOrderTracking = createAsyncThunk(
     }
   },
 );
+
+export const requestReturn = createAsyncThunk(
+  "orders/requestReturn",
+  async ({ orderId, reason }, { rejectWithValue }) => {
+    try {
+      const res = await api.put(
+        `${ROUTES.orders.getAll}/${orderId}/request-return`,
+        {
+          reason,
+        },
+      );
+      if (res.data.success) return res.data.data;
+      return rejectWithValue(res.data.message || "Failed to request return");
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  },
+);

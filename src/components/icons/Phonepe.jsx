@@ -5,7 +5,6 @@
 //     viewBox="0 0 512 512"
 //     fill-rule="evenodd"
 //     clip-rule="evenodd"
-//     stroke-linejoin="round"
 //     stroke-miterlimit="2"
 //     height="24"
 //     width="24"

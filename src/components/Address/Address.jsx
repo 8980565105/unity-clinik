@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Button from "../ui/Button";
 import { Plus } from "lucide-react";
-// import axios from "axios";
 import toast from "react-hot-toast";
 import api from "../../services/api";
 
@@ -10,6 +9,7 @@ function Address() {
   const [editIndex, setEditIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [addresses, setAddresses] = useState([]);
+  const [pincodeLoading, setPincodeLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -23,14 +23,41 @@ function Address() {
     zip_code: "",
   });
 
+  const fetchLocationFromPincode = async (pincode) => {
+    if (pincode.length !== 6) return;
+
+    setPincodeLoading(true);
+    try {
+      const res = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`,
+      );
+      const data = await res.json();
+
+      if (data?.[0]?.Status === "Success" && data[0].PostOffice?.length > 0) {
+        const postOffice = data[0].PostOffice[0];
+        setFormData((prev) => ({
+          ...prev,
+          city: postOffice.District || prev.city,
+          state: postOffice.State || prev.state,
+          country: postOffice.Country || "India",
+        }));
+      } else {
+        toast.error("Invalid pincode, please check again");
+      }
+    } catch (err) {
+      console.error("Pincode fetch error:", err);
+      toast.error("Failed to fetch location. Enter manually.");
+    } finally {
+      setPincodeLoading(false);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
       const res = await api.get("/users/me");
 
       setAddresses(res.data.data.user.addresses || []);
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   const saveAddressesToDB = async (updatedAddresses) => {
@@ -80,8 +107,6 @@ function Address() {
     setEditIndex(null);
   };
 
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -118,7 +143,6 @@ function Address() {
   };
 
   return (
-    // <div className="space-y- md:space-y-5">
     <>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-2xl font-semibold">Saved Addresses</h2>
@@ -239,7 +263,7 @@ function Address() {
                 </div>
 
                 <div className="flex flex-col">
-                  <label>House No </label>
+                  <label>Address line 1 </label>
                   <input
                     name="house"
                     placeholder="House No"
@@ -250,7 +274,7 @@ function Address() {
                 </div>
 
                 <div className="flex flex-col">
-                  <label>Street</label>
+                  <label>Address line 2</label>
                   <input
                     name="street"
                     placeholder="Street"
@@ -264,10 +288,11 @@ function Address() {
                   <label>City </label>
                   <input
                     name="city"
-                    placeholder="City"
+                    placeholder="City (auto-filled from pincode)"
                     value={formData.city}
                     onChange={handleChange}
-                    className="border p-3 rounded-lg"
+                    className="border p-3 rounded-lg bg-gray-50"
+                    readOnly
                   />
                 </div>
 
@@ -275,13 +300,15 @@ function Address() {
                   <label>State *</label>
                   <input
                     name="state"
-                    placeholder="State"
+                    placeholder="State (auto-filled from pincode)"
                     value={formData.state}
                     onChange={handleChange}
-                    className="border p-3 rounded-lg"
+                    className="border p-3 rounded-lg bg-gray-50"
+                    readOnly
                     required
                   />
                 </div>
+
                 <div className="flex flex-col">
                   <label>cuntry</label>
                   <input
@@ -299,8 +326,17 @@ function Address() {
                     name="zip_code"
                     placeholder="Zip Code"
                     value={formData.zip_code}
-                    onChange={handleChange}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 6) {
+                        setFormData((prev) => ({ ...prev, zip_code: value }));
+                        if (value.length === 6) {
+                          fetchLocationFromPincode(value);
+                        }
+                      }
+                    }}
                     className="border p-3 rounded-lg"
+                    maxLength={6}
                     required
                   />
                 </div>
@@ -324,7 +360,6 @@ function Address() {
         </div>
       )}
     </>
-    // </div>
   );
 }
 

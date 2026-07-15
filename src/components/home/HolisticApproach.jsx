@@ -48,7 +48,7 @@ export default function HolisticApproach() {
             {cards.map((item, idx) => (
               <div
                 key={item._id || idx}
-                className="relative flex-shrink-0 overflow-hidden rounded-[20px] bg-[#F6F0DE] w-[360px] md:w-[480px] lg:w-[450px] h-[180px] lg:h-[250px] shadow-sm"
+                className="relative flex-shrink-0 overflow-hidden rounded-[20px] bg-[#F6F0DE] w-[300px] md:w-[450px] lg:w-[440px] h-[180px] lg:h-[250px] shadow-sm"
               >
                 <div className="w-[55%] p-6 lg:p-6 z-10">
                   <h3 className="text-[18px] lg:text-[28px] text-left font-semibold text-[#222] leading-tight">

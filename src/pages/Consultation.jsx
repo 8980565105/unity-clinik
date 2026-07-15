@@ -17,7 +17,7 @@ import Row from "../components/ui/Row.jsx";
 import { useDispatch, useSelector } from "react-redux";
 import HeaderLogo from "../assets/logo.webp";
 import { fetchConsultationPage } from "../features/consaltantion/consaltantionThunk.js";
-import { fetchPublicPopup } from "../features/popup/popupThunk.js"; // ← Redux thunk
+import { fetchPublicPopup } from "../features/popup/popupThunk.js"; 
 import { getImageUrl } from "../components/utils/helper.js";
 import Heading from "../components/ui/Heading.jsx";
 import Description from "../components/ui/Description.jsx";

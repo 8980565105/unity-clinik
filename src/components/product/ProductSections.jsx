@@ -609,7 +609,7 @@ export function SectionRenderer({ section, productLabels }) {
         h-full
         bg-[#eef3f7]
         rounded-[32px]
-        p-8
+        p-4 md:p-8
         transition-all
         duration-300
         hover:-translate-y-1

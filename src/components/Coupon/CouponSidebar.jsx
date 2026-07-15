@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPublicPopup } from "../../features/popup/popupThunk";
-// import Button from "../ui/Button";
 import LoginForm from "../../pages/Login";
 import RegistrationForm from "../../pages/RegistrationForm";
 import ForgetForm from "../../pages/ForgetForm";
@@ -14,29 +13,40 @@ export default function CouponSidebar() {
   const { data: popupData, loading } = useSelector((state) => state.popup);
   const [open, setOpen] = useState(false);
   const [visible, setVisible] = useState(false);
-
+  const [hasScrolledPastHero, setHasScrolledPastHero] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isForgetOpen, setIsForgetOpen] = useState(false);
-
   const CLOSE_STORAGE_KEY = "couponPopupClosedAt";
-  // const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2 hours
-  const COOLDOWN_MS = 10 * 60 * 1000; 
+  const COOLDOWN_MS = 10 * 60 * 1000;
   const TRIGGER_PATHS = ["/cart", "/checkout"];
-
   const [closedAt, setClosedAt] = useState(() =>
     localStorage.getItem(CLOSE_STORAGE_KEY),
   );
-
   const isCooldownActive = (value) => {
     if (!value) return false;
     return Date.now() - Number(value) < COOLDOWN_MS;
   };
+  useEffect(() => {
+    const checkScroll = () => {
+      const heroSection =
+        document.querySelector(".hero-section") ||
+        document.querySelector("#hero1");
+      if (heroSection) {
+        const heroBottom = heroSection.getBoundingClientRect().bottom;
+        setHasScrolledPastHero(heroBottom <= 0);
+      } else {
+        setHasScrolledPastHero(window.scrollY > window.innerHeight * 0.8);
+      }
+    };
+    checkScroll();
+    window.addEventListener("scroll", checkScroll);
+    return () => window.removeEventListener("scroll", checkScroll);
+  }, [location.pathname]);
 
   useEffect(() => {
     dispatch(fetchPublicPopup());
   }, [dispatch]);
-
   useEffect(() => {
     const isTriggerPage = TRIGGER_PATHS.some((path) =>
       location.pathname.toLowerCase().startsWith(path),
@@ -84,22 +94,18 @@ export default function CouponSidebar() {
 
   useEffect(() => {
     if (!closedAt) return;
-
     const elapsed = Date.now() - Number(closedAt);
     const remaining = COOLDOWN_MS - elapsed;
-
     const reveal = () => {
       localStorage.removeItem(CLOSE_STORAGE_KEY);
       setClosedAt(null);
       setVisible(true);
       setOpen(true);
     };
-
     if (remaining <= 0) {
       reveal();
       return;
     }
-
     const timer = setTimeout(reveal, remaining);
     return () => clearTimeout(timer);
   }, [closedAt]);
@@ -146,7 +152,11 @@ export default function CouponSidebar() {
   const coupon = popupData?.coupon;
   const couponData = popupData?.coupon?.coupon;
   if (!isCoupon || !coupon) return null;
+
   if (!visible) return null;
+  if (location.pathname === "/" || location.pathname === "/home") {
+    if (!hasScrolledPastHero) return null;
+  }
 
   return (
     <>

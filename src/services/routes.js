@@ -176,7 +176,15 @@ export const ROUTES = {
     getPublic: "/consultationpage/public",
   },
   sippingcharge: {
-      getPublic: "/sippingcharge/public",
-  }
+    getPublic: "/sippingcharge/public",
+  },
+  wallet: {
+    getBalance: "/wallet/balance",
+    getHistory: "/wallet/history",
+    addMoney: "/wallet/add-money",
+    debit: "/wallet/debit",
+  },
+  reffrel: {
+    getSettings: "/reffrel/referral-settings",
+  },
 };
-

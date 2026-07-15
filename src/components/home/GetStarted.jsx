@@ -46,7 +46,7 @@ export default function GetStarted() {
             {steps.map((item, idx) => (
               <div
                 key={item._id || idx}
-                className="relative flex-shrink-0 overflow-hidden rounded-[20px] bg-[#F7F7F7] w-[360px] md:w-[480px] lg:w-[450px] h-[180px] lg:h-[250px] shadow-sm"
+                className="relative flex-shrink-0 overflow-hidden rounded-[20px] bg-[#F7F7F7] w-[300px] md:w-[450px] lg:w-[440px] h-[180px] lg:h-[250px] shadow-sm"
               >
                 <div className="w-[55%] p-6 lg:p-4 z-10 flex flex-col items-start">
                   <span className="inline-flex items-center justify-center rounded-xl bg-white px-2 py-1 text-[14px] font-semibold shadow-sm">
@@ -57,7 +57,7 @@ export default function GetStarted() {
                     {item.title}
                   </h3>
 
-                  <p className="mt-5 text-[13px] lg:text-[18px] text-[#555] text-left">
+                  <p className="mt-2 text-[13px] lg:text-[18px] text-[#555] text-left">
                     {item.description}
                   </p>
                 </div>

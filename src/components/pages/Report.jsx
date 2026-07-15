@@ -7,7 +7,7 @@ const Customerreviews = lazy(() => import("../home/Customerreviews"));
 export default function Report() {
   return (
     <>
-      <Section>
+      {/* <Section>
         <Row>
           {" "}
           <div>Your Treatment @₹2196</div>
@@ -20,16 +20,16 @@ export default function Report() {
             <span>1000</span>
           </div>
         </Row>
-      </Section>
+      </Section> */}
 
-      <ReportCard />
+      {/* <ReportCard /> */}
 
-      <div className="mb-5">
+      {/* <div className="mb-5">
         {" "}
         <Suspense>
           <Customerreviews />
         </Suspense>
-      </div>
+      </div> */}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Upload, X } from "lucide-react";
 import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
@@ -12,10 +12,10 @@ function ImageUpload({
 }) {
   const IMAGE_BASE_URL = process.env.REACT_APP_API_URL_IMAGE || "";
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
 
-  const handleFileChange = async (e) => {
-    const files = e.target.files;
-
+  const uploadFiles = async (files) => {
     if (!files || files.length === 0) return;
 
     const formData = new FormData();
@@ -59,6 +59,62 @@ function ImageUpload({
     }
   };
 
+  const handleFileChange = async (e) => {
+    await uploadFiles(e.target.files);
+    // allow re-selecting same file again
+    e.target.value = "";
+  };
+
+  const filterImageFiles = (fileList) => {
+    return Array.from(fileList).filter((file) =>
+      file.type.startsWith("image/"),
+    );
+  };
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current += 1;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current -= 1;
+    if (dragCounter.current <= 0) {
+      setIsDragging(false);
+      dragCounter.current = 0;
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+
+    if (uploading) return;
+
+    const files = e.dataTransfer.files;
+    const imageFiles = filterImageFiles(files);
+
+    if (imageFiles.length === 0) return;
+
+    const filesToUpload = multiple ? imageFiles : [imageFiles[0]];
+
+    const dt = new DataTransfer();
+    filesToUpload.forEach((file) => dt.items.add(file));
+    await uploadFiles(dt.files);
+  };
+
   const removeImage = (index) => {
     if (multiple && Array.isArray(value) && index !== undefined) {
       const newValues = [...value];
@@ -70,6 +126,12 @@ function ImageUpload({
       onChange(null);
     }
   };
+
+  const dropZoneBaseClass =
+    "flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer transition-colors";
+  const dropZoneStateClass = isDragging
+    ? "border-blue-500 bg-blue-50"
+    : "hover:border-gray-500";
 
   if (multiple) {
     return (
@@ -107,16 +169,24 @@ function ImageUpload({
           ))}
 
         <label
-          className={`flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:border-gray-500 ${className}`}
+          className={`${dropZoneBaseClass} ${dropZoneStateClass} ${className}`}
           style={{
             width: size,
             height: size,
           }}
+          onDragEnter={handleDragEnter}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <Upload className="h-6 w-6 mb-1" />
 
-          <span className="text-sm">
-            {uploading ? "Uploading..." : "Upload Images"}
+          <span className="text-sm text-center px-1">
+            {uploading
+              ? "Uploading..."
+              : isDragging
+                ? "Drop images here"
+                : "Upload Images"}
           </span>
 
           <input
@@ -161,16 +231,24 @@ function ImageUpload({
     </div>
   ) : (
     <label
-      className={`flex flex-col items-center justify-center border-2 border-dashed rounded cursor-pointer hover:border-gray-500 ${className}`}
+      className={`${dropZoneBaseClass} ${dropZoneStateClass} ${className}`}
       style={{
         width: size,
         height: size,
       }}
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <Upload className="h-6 w-6 mb-1" />
 
-      <span className="text-sm">
-        {uploading ? "Uploading..." : "Upload Image"}
+      <span className="text-sm text-center px-1">
+        {uploading
+          ? "Uploading..."
+          : isDragging
+            ? "Drop image here"
+            : "Upload Image"}
       </span>
 
       <input

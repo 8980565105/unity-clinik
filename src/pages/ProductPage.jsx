@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { fetchProductById } from "../features/products/productsThunk";
 import { fetchProductReviews } from "../features/reivews/reviewsThunk";
 import Section from "../components/ui/Section";
@@ -28,18 +28,74 @@ const SimilarProducts = lazy(
   () => import("../components/product/SimilarProducts"),
 );
 export default function Product() {
+  // const { id } = useParams();
+  // const dispatch = useDispatch();
+  // const { product, products, error } = useSelector((state) => state.products);
+  // const [selectedVariant, setSelectedVariant] = useState(null);
+  // const [selectedColor, setSelectedColor] = useState(null);
+  // const [showLoginPopup, setShowLoginPopup] = useState(false);
+  // const [showStickyBar, setShowStickyBar] = useState(false);
+  // const [priceData, setPriceData] = useState({});
+  // const [addingToCart, setAddingToCart] = useState(false);
+  // const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
+  // const [handleAddToWishlistFn, setHandleAddToWishlistFn] = useState(null);
+  // const [addedToCart, setAddedToCart] = useState(false);
+  // const [activeVariantState, setActiveVariantState] = useState(null);
+  // const [selectedPackState, setSelectedPackState] = useState(null);
+
+  // const [isAddedToCart, setIsAddedToCart] = useState(false);
+  // const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
+  // const [addingToCart, setAddingToCart] = useState(false);
+
+  // useEffect(() => {
+  //   if (id) dispatch(fetchProductById(id));
+  // }, [id, dispatch]);
+
+  // useEffect(() => {
+  //   if (product && product._id) {
+  //     addRecentlyViewed(product);
+  //     dispatch(
+  //       fetchProductReviews({ productId: product._id, page: 1, limit: 50 }),
+  //     );
+  //   }
+  // }, [product?._id, dispatch]);
+
+  // const handleGoToCart = () => {
+  //   const userLS = JSON.parse(localStorage.getItem("user"));
+  //   if (!userLS?._id) {
+  //     setShowLoginPopup(true);
+  //     return;
+  //   }
+  //   navigate("/cart");
+  // };
+
+  // if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
+  // if (!product) return <Loding />;
+
+  // const otherRecommendedSection = product?.sections?.find(
+  //   (section) =>
+  //     section.type === "Other Recommended Solutions" &&
+  //     section?.data?.status === true,
+  // );
+
+  // const remainingSections = product?.sections?.filter(
+  //   (section) => section.type !== "Other Recommended Solutions",
+  // );
+
   const { id } = useParams();
+  const navigate = useNavigate(); // ✅ navu
   const dispatch = useDispatch();
   const { product, products, error } = useSelector((state) => state.products);
+
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [priceData, setPriceData] = useState({});
-  const [addingToCart, setAddingToCart] = useState(false);
-  const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(false); // ✅ ek j vaar
+  const [handleAddToCartFn, setHandleAddToCartFn] = useState(null); // ✅ ek j vaar
   const [handleAddToWishlistFn, setHandleAddToWishlistFn] = useState(null);
-  const [addedToCart, setAddedToCart] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false); // ✅ ek j state - isAddedToCart hatavyu
   const [activeVariantState, setActiveVariantState] = useState(null);
   const [selectedPackState, setSelectedPackState] = useState(null);
 
@@ -55,6 +111,16 @@ export default function Product() {
       );
     }
   }, [product?._id, dispatch]);
+
+  // ✅ Navu function - login check + navigate
+  const handleGoToCart = () => {
+    const userLS = JSON.parse(localStorage.getItem("user"));
+    if (!userLS?._id) {
+      setShowLoginPopup(true);
+      return;
+    }
+    navigate("/cart");
+  };
 
   if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
   if (!product) return <Loding />;
@@ -86,6 +152,22 @@ export default function Product() {
             />
           </div>
           <div className="min-w-0">
+            {/* <ProductInfo
+              product={product}
+              setSelectedVariant={setSelectedVariant}
+              selectedColor={selectedColor}
+              setSelectedColor={setSelectedColor}
+              setShowLoginPopup={setShowLoginPopup}
+              setShowStickyBar={setShowStickyBar}
+              setPriceData={setPriceData}
+              setAddingToCart={setAddingToCart}
+              setHandleAddToCartFn={setHandleAddToCartFn}
+              setHandleAddToWishlistFn={setHandleAddToWishlistFn}
+              setSelectedPack={setSelectedPackState}
+              setActiveVariant={setActiveVariantState}
+              setIsAddedToCartFn={setIsAddedToCart}
+              setIsAddedToCartFn={setAddedToCart}
+            /> */}
             <ProductInfo
               product={product}
               setSelectedVariant={setSelectedVariant}
@@ -99,9 +181,8 @@ export default function Product() {
               setHandleAddToWishlistFn={setHandleAddToWishlistFn}
               setSelectedPack={setSelectedPackState}
               setActiveVariant={setActiveVariantState}
+              setIsAddedToCartFn={setAddedToCart}
             />
-
-            <div className="border-dashed border-b-[2px] light-border my-5"></div>
 
             <ProductTabs product={product} selectedVariant={selectedVariant} />
           </div>
@@ -172,7 +253,7 @@ export default function Product() {
                 className="!w-[200px]"
               />
 
-              <Button
+              {/* <Button
                 variant="common"
                 onClick={async () => {
                   await handleAddToCartFn?.();
@@ -182,9 +263,28 @@ export default function Product() {
                 className="px-10 !w-[400px] h-[55px] flex gap-2 justify-center items-center text-nowrap rounded-lg bg-[var(--theme-color)] text-white font-semibold"
               >
                 <Handbag size={22} />
+                {addingToCart ? "Adding..." : "Add To Cart"}
+              </Button> */}
+              <Button
+                variant="common"
+                onClick={async () => {
+                  if (addedToCart) {
+                    handleGoToCart();
+                  } else {
+                    await handleAddToCartFn?.();
+                    setAddedToCart(true);
+                  }
+                }}
+                disabled={addingToCart}
+                className="px-10 !w-[400px] h-[55px] flex gap-2 justify-center items-center text-nowrap rounded-lg bg-[var(--theme-color)] text-white font-semibold"
+              >
+                <Handbag size={22} />
+
                 {addingToCart
                   ? "Adding..."
-                  : "Add To Cart"}
+                  : addedToCart
+                    ? "Go To Cart"
+                    : "Add To Cart"}
               </Button>
             </div>
           </div>
@@ -198,7 +298,7 @@ export default function Product() {
               className="!bg-black !text-white !rounded-[0px]"
             />
 
-            <button
+            {/* <button
               onClick={() => {
                 handleAddToCartFn?.();
               }}
@@ -207,6 +307,26 @@ export default function Product() {
             >
               <Handbag size={22} />
               {addingToCart ? "Adding..." : "Add To Cart"}
+            </button> */}
+            <button
+              onClick={async () => {
+                if (addedToCart) {
+                  handleGoToCart();
+                } else {
+                  await handleAddToCartFn?.();
+                  setAddedToCart(true);
+                }
+              }}
+              disabled={addingToCart}
+              className="flex items-center justify-center gap-2 bg-[var(--theme-color)] text-white font-semibold"
+            >
+              <Handbag size={22} />
+
+              {addingToCart
+                ? "Adding..."
+                : addedToCart
+                  ? "Go To Cart"
+                  : "Add To Cart"}
             </button>
           </div>
         </div>

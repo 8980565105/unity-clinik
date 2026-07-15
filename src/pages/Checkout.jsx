@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import CheckoutForm from "../components/checkout/CheckoutForm";
 import OrderSummary from "../components/checkout/OrderSummary";
 import Section from "../components/ui/Section";
 import Row from "../components/ui/Row";
-import CartProgress from "../components/cart/CartProgress";
 import SEO from "../components/seo/seo";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -19,12 +18,12 @@ import {
   verifyRazorpayPayment,
   createPhonePeOrder,
   verifyPhonePePayment,
+  markPaymentFailed,
 } from "../features/payments/paymentThunk";
 import { createOrder } from "../features/orders/orderThunk";
 import {
   calculateShipping,
   calculatePartialCodAdvance,
-  getShippingPaymentKey,
   getDisabledPaymentTypes,
 } from "../utils/shippingCalculator";
 import { deleteCartItem, fetchCart } from "../features/cart/cartThunk";
@@ -32,6 +31,24 @@ import LoginForm from "./Login";
 import CouponDrawer from "../components/cart/Coupondrawer";
 import { fetchCoupons } from "../features/coupons/couponsThunk";
 import { fetchShippingCharge } from "../features/sippingcharge/sippingchargeThunk";
+import { fetchBalance } from "../features/wallet/walletThunk";
+import Offercount from "../components/cart/Offercount";
+import api from "../services/api";
+
+const getDiscountedPrice = (item) => {
+  const originalPrice = Number(
+    item?.original_price || item?.variant_id?.price || 0,
+  );
+  const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
+  if (offerPrice > 0 && offerPrice < originalPrice)
+    return { originalPrice, discountedPrice: offerPrice };
+  const discount = item?.product_id?.discount_id?.value || 0;
+  const discountedPrice =
+    discount > 0
+      ? originalPrice - (originalPrice * discount) / 100
+      : originalPrice;
+  return { originalPrice, discountedPrice };
+};
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -41,13 +58,15 @@ export default function Checkout() {
   const buyNowItem = location.state?.item;
   const buyNowItems = location.state?.items;
   const { items = [], loading } = useSelector((state) => state.cart);
-
-  const baseItems = buyNowMode
-    ? buyNowItems?.length
-      ? buyNowItems
-      : [buyNowItem]
-    : items;
-
+  const { balance: walletBalance } = useSelector((state) => state.wallet);
+  const { user } = useSelector((state) => state.auth);
+  const baseItems = useMemo(() => {
+    return buyNowMode
+      ? buyNowItems?.length
+        ? buyNowItems
+        : [buyNowItem]
+      : items;
+  }, [buyNowMode, buyNowItems, buyNowItem, items]);
   const [consultationGift, setConsultationGift] = useState(null);
   const [quantities, setQuantities] = useState(() =>
     Object.fromEntries(
@@ -72,13 +91,14 @@ export default function Checkout() {
       [key]: Math.max(1, (prev[key] || 1) - 1),
     }));
   };
-  const checkoutItems = (baseItems || []).map((item) => {
-    const key = item._id || item.product_id?._id;
-    return { ...item, quantity: quantities[key] || item.quantity || 1 };
-  });
+  const checkoutItems = useMemo(() => {
+    return (baseItems || []).map((item) => {
+      const key = item._id || item.product_id?._id;
+      return { ...item, quantity: quantities[key] || item.quantity || 1 };
+    });
+  }, [baseItems, quantities]);
   const { pages } = useSelector((state) => state.pages);
   const { loading: paymentLoading } = useSelector((state) => state.payments);
-  const { user } = useSelector((state) => state.auth);
   const settings = useSelector((state) => state.sippingcharge.data);
   const checkoutPage = pages?.find((page) => page.slug === "checkout");
   const [showLoginPopup, setShowLoginPopup] = useState(false);
@@ -97,9 +117,7 @@ export default function Checkout() {
   const clearCartItems = async () => {
     const cart_id = localStorage.getItem("cart_id");
     if (!cart_id || buyNowMode) return;
-
     dispatch(clearCart());
-
     try {
       for (const item of items) {
         await dispatch(deleteCartItem({ cart_id, item_id: item._id })).unwrap();
@@ -132,6 +150,9 @@ export default function Checkout() {
     };
     fetchOrderCount();
   }, [user?._id]);
+  useEffect(() => {
+    if (user?._id) dispatch(fetchBalance());
+  }, [dispatch, user?._id]);
   useEffect(() => {
     if (!user?._id) return;
     const fetchGift = async () => {
@@ -168,7 +189,6 @@ export default function Checkout() {
     }
     const isFirstOrderOnly =
       coupon.coupon_type === "first_order" || coupon.coupon_type === "referral";
-
     if (isFirstOrderOnly) {
       if (!user?._id) {
         setCouponMsg({
@@ -312,10 +332,10 @@ export default function Checkout() {
           const product = item?.product_id;
           const subCatId = String(
             product?.category_id?._id ||
-              product?.category_id ||
-              product?.subcategory_id?._id ||
-              product?.subcategory_id ||
-              "",
+            product?.category_id ||
+            product?.subcategory_id?._id ||
+            product?.subcategory_id ||
+            "",
           );
           return !coupon.subcategories?.some(
             (sub) => String(sub?._id || sub) === subCatId,
@@ -358,12 +378,11 @@ export default function Checkout() {
   useEffect(() => {
     if (!checkoutItems.length) return;
     dispatch(fetchCoupons({ status: "active" }));
-  }, [dispatch, items.length]);
+  }, [dispatch, checkoutItems.length]);
   useEffect(() => {
     const cart_id = localStorage.getItem("cart_id");
     if (user && cart_id) dispatch(fetchCart(cart_id));
   }, [dispatch, user]);
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const phonePeTxn = params.get("phonepe_txn");
@@ -379,167 +398,195 @@ export default function Checkout() {
         if (verifyPhonePePayment.fulfilled.match(verifyRes)) {
           await clearCartItems();
           localStorage.removeItem("applied_coupon");
-          toast("PhonePe Payment Successful ✅");
+          toast.success("PhonePe Payment Successful ✅");
           navigate("/ordercompleted");
         } else {
-          toast("PhonePe Payment Verification Failed ❌");
+          toast.error("PhonePe Payment Verification Failed ❌");
+          const userLS = JSON.parse(localStorage.getItem("user"));
+          const userId = userLS?._id || user?._id;
+          if (userId) {
+            await dispatch(
+              markPaymentFailed({
+                order_id: phonePeOrderId,
+                user_id: userId,
+                payment_method: "PhonePe",
+                type: "order",
+              }),
+            );
+          }
         }
       })();
     }
   }, []);
-  const getDiscountedPrice = (item) => {
-    const originalPrice = Number(
-      item?.original_price || item?.variant_id?.price || 0,
+  const mrpTotal = useMemo(() => {
+    return checkoutItems.reduce(
+      (sum, item) =>
+        sum + getDiscountedPrice(item).originalPrice * (item.quantity || 1),
+      0,
     );
-    const offerPrice = Number(item?.price || item?.variant_id?.offerprice || 0);
-    if (offerPrice > 0 && offerPrice < originalPrice)
-      return { originalPrice, discountedPrice: offerPrice };
-    const discount = item?.product_id?.discount_id?.value || 0;
-    const discountedPrice =
-      discount > 0
-        ? originalPrice - (originalPrice * discount) / 100
-        : originalPrice;
-    return { originalPrice, discountedPrice };
-  };
-  const mrpTotal = checkoutItems.reduce(
-    (sum, item) =>
-      sum + getDiscountedPrice(item).originalPrice * (item.quantity || 1),
-    0,
-  );
-  const offerPriceTotal = checkoutItems.reduce(
-    (sum, item) =>
-      sum + getDiscountedPrice(item).discountedPrice * (item.quantity || 1),
-    0,
-  );
+  }, [checkoutItems]);
+  const offerPriceTotal = useMemo(() => {
+    return checkoutItems.reduce(
+      (sum, item) =>
+        sum + getDiscountedPrice(item).discountedPrice * (item.quantity || 1),
+      0,
+    );
+  }, [checkoutItems]);
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCartCouponCode("");
     setCouponMsg({ text: "", type: "" });
     setGiftItem(null);
   };
-  let couponDiscount = 0;
-  if (appliedCoupon) {
-    couponDiscount =
+  const couponDiscount = useMemo(() => {
+    if (!appliedCoupon) return 0;
+    let discount =
       appliedCoupon.discount_type === "fixed"
         ? appliedCoupon.discount_value
         : (offerPriceTotal * appliedCoupon.discount_value) / 100;
     if (appliedCoupon.max_discount_amount)
-      couponDiscount = Math.min(
-        couponDiscount,
-        appliedCoupon.max_discount_amount,
-      );
-  }
+      discount = Math.min(discount, appliedCoupon.max_discount_amount);
+    return discount;
+  }, [appliedCoupon, offerPriceTotal]);
   const subtotal = offerPriceTotal - couponDiscount;
-  const getPaymentType = (method) => {
-    switch (method) {
-      case "cod":
-      case "partial_cod":
-        return "cod";
-      default:
-        return "prepaid";
-    }
-  };
-  const overrideItems = checkoutItems.filter((item) => {
-    const t = item?.variant_id?.shippingChargeType;
-    return t && t !== "null";
-  });
-  const defaultItems = checkoutItems.filter((item) => {
-    const t = item?.variant_id?.shippingChargeType;
-    return !t || t === "null";
-  });
+  const overrideItems = useMemo(() => {
+    return checkoutItems.filter((item) => {
+      const t = item?.variant_id?.shippingChargeType;
+      return t && t !== "null";
+    });
+  }, [checkoutItems]);
+  const defaultItems = useMemo(() => {
+    return checkoutItems.filter((item) => {
+      const t = item?.variant_id?.shippingChargeType;
+      return !t || t === "null";
+    });
+  }, [checkoutItems]);
 
-  const overrideShipping = overrideItems.reduce((sum, item) => {
-    const type = item.variant_id.shippingChargeType;
-    const qty = item.quantity || 1;
-
-    if (type === "free") return sum;
-
-    if (type === "fixed") {
-      const value = Number(item.variant_id.shippingChargeValue || 0);
-      return sum + value * qty;
-    }
-
-    if (type === "percentage") {
-      const { discountedPrice } = getDiscountedPrice(item);
-      const value = Number(item.variant_id.shippingChargeValue || 0);
-      return sum + Math.round((discountedPrice * qty * value) / 100);
-    }
-    return sum;
-  }, 0);
-  const defaultSubtotal = defaultItems.reduce((sum, item) => {
-    const { discountedPrice } = getDiscountedPrice(item);
-    return sum + discountedPrice * (item.quantity || 1);
-  }, 0);
-
-  const totalWeight = defaultItems.reduce((sum, item) => {
-    const weight = Number(item?.variant_id?.ProductWeight || 0);
-    return sum + weight * (item.quantity || 1);
-  }, 0);
+  const overrideShipping = useMemo(() => {
+    return overrideItems.reduce((sum, item) => {
+      const type = item.variant_id.shippingChargeType;
+      const qty = item.quantity || 1;
+      if (type === "free") return sum;
+      if (type === "fixed") {
+        const value = Number(item.variant_id.shippingChargeValue || 0);
+        return sum + value * qty;
+      }
+      if (type === "percentage") {
+        const { discountedPrice } = getDiscountedPrice(item);
+        const value = Number(item.variant_id.shippingChargeValue || 0);
+        return sum + Math.round((discountedPrice * qty * value) / 100);
+      }
+      return sum;
+    }, 0);
+  }, [overrideItems]);
   const settingsLoaded = !!settings;
-  const shippingPaymentKey = getShippingPaymentKey(selectedPayment);
-  const defaultShippingItems = defaultItems.map((item) => {
-    const { discountedPrice } = getDiscountedPrice(item);
-    return {
-      productId: item.product_id?._id || item.product_id,
-      subCategoryId:
-        item.product_id?.subcategory_id?._id ||
-        item.product_id?.subcategory_id ||
-        item.product_id?.category_id?._id ||
-        item.product_id?.category_id,
-      price: discountedPrice,
-      quantity: item.quantity || 1,
-      weight: Number(item?.variant_id?.ProductWeight || 0),
-      name: item.product_id?.name || item.product_id?.title || "",
-    };
-  });
-  const disabledPaymentTypes = settingsLoaded
-    ? getDisabledPaymentTypes(defaultShippingItems, settings)
-    : {
+  const defaultShippingItems = useMemo(() => {
+    return defaultItems.map((item) => {
+      const { discountedPrice } = getDiscountedPrice(item);
+      return {
+        productId: item.product_id?._id || item.product_id,
+        subCategoryId:
+          item.product_id?.subcategory_id?._id ||
+          item.product_id?.subcategory_id ||
+          item.product_id?.category_id?._id ||
+          item.product_id?.category_id,
+        price: discountedPrice,
+        quantity: item.quantity || 1,
+        weight: Number(item?.variant_id?.ProductWeight || 0),
+        name: item.product_id?.name || item.product_id?.title || "",
+      };
+    });
+  }, [defaultItems]);
+  const couponPrepaidOnly = appliedCoupon?.is_prepaid_only === true;
+  const finalDisabledPaymentTypes = useMemo(() => {
+    const disabledPaymentTypes = settingsLoaded
+      ? getDisabledPaymentTypes(defaultShippingItems, settings)
+      : {
         cod: { disabled: false, products: [] },
         partial_cod: { disabled: false, products: [] },
         prepaid: { disabled: false, products: [] },
+        wallet: { disabled: false, products: [] },
       };
+    return couponPrepaidOnly
+      ? {
+        ...disabledPaymentTypes,
+        cod: { ...disabledPaymentTypes.cod, disabled: true },
+        partial_cod: { ...disabledPaymentTypes.partial_cod, disabled: true },
+      }
+      : disabledPaymentTypes;
+  }, [settingsLoaded, defaultShippingItems, settings, couponPrepaidOnly]);
   useEffect(() => {
     if (!settingsLoaded) return;
     const isPrepaidMethod =
       selectedPayment === "razorpay" || selectedPayment === "PhonePe";
     const isDisabledNow =
-      (isPrepaidMethod && disabledPaymentTypes.prepaid.disabled) ||
-      (selectedPayment === "cod" && disabledPaymentTypes.cod.disabled) ||
+      (isPrepaidMethod && finalDisabledPaymentTypes.prepaid.disabled) ||
+      (selectedPayment === "cod" && finalDisabledPaymentTypes.cod.disabled) ||
       (selectedPayment === "partial_cod" &&
-        disabledPaymentTypes.partial_cod.disabled);
+        finalDisabledPaymentTypes.partial_cod.disabled);
     if (isDisabledNow) {
-      if (!disabledPaymentTypes.prepaid.disabled)
+      if (!finalDisabledPaymentTypes.prepaid.disabled)
         setSelectedPayment("razorpay");
-      else if (!disabledPaymentTypes.cod.disabled) setSelectedPayment("cod");
-      else if (!disabledPaymentTypes.partial_cod.disabled)
+      else if (!finalDisabledPaymentTypes.cod.disabled)
+        setSelectedPayment("cod");
+      else if (!finalDisabledPaymentTypes.partial_cod.disabled)
         setSelectedPayment("partial_cod");
+      else if (!finalDisabledPaymentTypes.wallet.disabled)
+        setSelectedPayment("wallet");
     }
-  }, [settingsLoaded, disabledPaymentTypes, selectedPayment]);
+  }, [settingsLoaded, finalDisabledPaymentTypes, selectedPayment]);
+
+  const getShippingPaymentType = (method) => {
+    switch (method) {
+      case "cod":
+        return "cod";
+      case "partial_cod":
+        return "partialCod";
+      case "wallet":
+        return "wallet";
+      case "razorpay":
+      case "PhonePe":
+      default:
+        return "prepaid";
+    }
+  };
+  const shippingPaymentType = getShippingPaymentType(selectedPayment);
+  // const defaultShipping =
+  //   settingsLoaded && defaultShippingItems.length > 0
+  //     ? calculateShipping(defaultShippingItems, "prepaid", settings)
+  //     : 0;
   const defaultShipping =
     settingsLoaded && defaultShippingItems.length > 0
-      ? calculateShipping(defaultShippingItems, shippingPaymentKey, settings)
+      ? calculateShipping(defaultShippingItems, shippingPaymentType, settings)
       : 0;
-
+  // const shipping = overrideShipping + defaultShipping;
   const shipping = overrideShipping + defaultShipping;
+
 
   const total = Number((subtotal + shipping).toFixed(0));
   const partialCodAdvance = calculatePartialCodAdvance(total, settings);
   const isPartialCod = selectedPayment === "partial_cod";
+
   const getBackendPaymentMethod = (method) => {
-    if (method === "partial_cod" || method === "cod") return "COD";
+    if (method === "partial_cod") return "partial_cod";
+    if (method === "cod") return "COD";
+    if (method === "wallet") {
+      const remaining = Math.max(total - walletBalance, 0);
+      return remaining > 0 ? "Online" : "Wallet";
+    }
     return "Online";
   };
   const totalSaved = mrpTotal - subtotal + couponDiscount;
 
   const itemDiscount = mrpTotal - offerPriceTotal;
-  const validateForm = (userLS) => {
+
+  const validateForm = async (userLS) => {
     if (!userLS || !userLS._id) {
       setShowLoginPopup(true);
       return false;
     }
     const requiredFields = {
-      firstName: "First Name",
+      firstName: "address",
       address: "Address",
       state: "State",
       city: "City",
@@ -547,16 +594,30 @@ export default function Checkout() {
     };
     for (const [key, label] of Object.entries(requiredFields)) {
       if (!formData[key] || formData[key].trim() === "") {
-        toast(`Please enter ${label}`);
+        toast.error(`Please enter ${label}`);
         return false;
       }
     }
+    try {
+      const res = await api.post("/pincode/check", {
+        pincode: formData.pincode,
+      });
+      if (!res.data.success || !res.data.data?.serviceable) {
+        toast.error("Service not available in your pincode");
+        return false;
+      }
+    } catch (err) {
+      toast.error("Unable to verify pincode. Please try again.");
+      return false;
+    }
+
     if (!selectedPayment) {
       toast("Select a payment method");
       return false;
     }
     return true;
   };
+
   const createNewOrder = async (userLS) => {
     let giftItems = [];
 
@@ -593,7 +654,22 @@ export default function Checkout() {
         }));
       }
     }
-    const finalItems = [...checkoutItems, ...giftItems];
+    const finalItems = [...checkoutItems, ...giftItems].map((item) => ({
+      product_id:
+        typeof item.product_id === "object"
+          ? item.product_id?._id
+          : item.product_id,
+      variant_id:
+        typeof item.variant_id === "object"
+          ? item.variant_id?._id
+          : item.variant_id,
+      quantity: item.quantity,
+      pack_of: item.pack_of || 1,
+      price: item.price,
+      original_price: item.original_price,
+      is_gift: item.is_gift || false,
+      is_buy_x_get_y: item.is_buy_x_get_y || false,
+    }));
     const orderData = {
       user_id: userLS._id,
       items: finalItems,
@@ -603,6 +679,7 @@ export default function Checkout() {
       total_price: total,
       coupon_id: appliedCoupon?._id || null,
       payment_method: getBackendPaymentMethod(selectedPayment),
+      advance_amount: selectedPayment === "partial_cod" ? partialCodAdvance : 0,
       shippingAddress: {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -636,11 +713,15 @@ export default function Checkout() {
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
+
   const handleRazorpayAmount = async (
     userLS,
     orderId,
     amount,
     paymentMethod = selectedPayment,
+    onFailOrCancel = null,
+    walletAmountToUse = 0,
+    orderData = null,
   ) => {
     const loaded = await loadRazorpay();
     if (!loaded) {
@@ -652,13 +733,26 @@ export default function Checkout() {
     );
     if (!createRazorpayOrder.fulfilled.match(razorRes)) {
       toast(razorRes.payload || "Razorpay order failed");
+      if (onFailOrCancel) await onFailOrCancel();
       return;
     }
     const razorOrder = razorRes.payload;
     if (!razorOrder) {
       toast("Razorpay initialization failed ❌");
+      if (onFailOrCancel) await onFailOrCancel();
       return;
     }
+
+    let failureHandled = false;
+    const safeOnFailOrCancel = async (
+      transactionId = "",
+      razorpayOrderId = "",
+    ) => {
+      if (failureHandled) return;
+      failureHandled = true;
+      if (onFailOrCancel) await onFailOrCancel(transactionId, razorpayOrderId);
+    };
+
     const options = {
       key: razorpayKey,
       amount: razorOrder.amount,
@@ -677,30 +771,30 @@ export default function Checkout() {
             razorpay_signature: response.razorpay_signature,
             order_id: orderId,
             user_id: userLS._id,
+            wallet_amount: walletAmountToUse,
+            orderData,
           }),
         );
         if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) {
           toast("Payment verification failed ❌");
+          await safeOnFailOrCancel();
           return;
         }
-        await dispatch(
-          createPayment({
-            user_id: userLS._id,
-            order_id: orderId,
-            amount_paid: amount,
-            payment_method: paymentMethod,
-            status: paymentMethod === "partial_cod" ? "partial" : "completed",
-            transaction_id: response.razorpay_payment_id,
-          }),
-        );
+
         await clearCartItems();
         localStorage.removeItem("applied_coupon");
-        toast(
+        toast.success(
           paymentMethod === "partial_cod"
             ? `Advance ₹${amount} paid! Remaining ₹${Math.round(total - amount)} COD ✅`
             : "Payment Successful ✅",
         );
         navigate("/ordercompleted");
+      },
+      modal: {
+        ondismiss: async function () {
+          toast.error("Payment Cancelled ❌");
+          await safeOnFailOrCancel();
+        },
       },
       prefill: {
         name: `${formData.firstName} ${formData.lastName}`,
@@ -709,12 +803,18 @@ export default function Checkout() {
       },
       theme: { color: "#1d4ed8" },
     };
+
     const rzp = new window.Razorpay(options);
-    rzp.on("payment.failed", (response) => {
+    rzp.on("payment.failed", async (response) => {
       toast(`Payment failed: ${response.error.description} ❌`);
+
+      const failedPaymentId = response.error?.metadata?.payment_id || "";
+      const failedOrderId = response.error?.metadata?.order_id || "";
+      await safeOnFailOrCancel(failedPaymentId, failedOrderId);
     });
     rzp.open();
   };
+
   const handleCOD = async (userLS, orderId) => {
     if (isPartialCod && partialCodAdvance > 0) {
       await handleRazorpayAmount(
@@ -734,7 +834,7 @@ export default function Checkout() {
         shipping,
         coupon_discount: couponDiscount,
         total,
-        amount_paid: 0,
+        amount_paid: total,
         payment_method: "cod",
         status: "pending",
       }),
@@ -744,6 +844,7 @@ export default function Checkout() {
     toast("Order placed successfully! 🎉");
     navigate("/ordercompleted");
   };
+
   const handlePhonePe = async (userLS, orderId) => {
     const phonePeRes = await dispatch(
       createPhonePeOrder({
@@ -777,32 +878,311 @@ export default function Checkout() {
         status: "pending",
       }),
     );
-    toast("Redirecting to PhonePe... 📱");
     window.location.href = paymentUrl;
   };
+
+
   const handlePlaceOrder = async () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
-    if (!validateForm(userLS)) return;
+    if (!(await validateForm(userLS))) return;
+    if (selectedPayment === "wallet" && walletBalance <= 0) {
+      toast.error("No wallet balance available");
+      return;
+    }
     const isPrepaidMethod =
       selectedPayment === "razorpay" || selectedPayment === "PhonePe";
     if (
-      (isPrepaidMethod && disabledPaymentTypes.prepaid.disabled) ||
-      (selectedPayment === "cod" && disabledPaymentTypes.cod.disabled) ||
+      (isPrepaidMethod && finalDisabledPaymentTypes.prepaid.disabled) ||
+      (selectedPayment === "cod" && finalDisabledPaymentTypes.cod.disabled) ||
       (selectedPayment === "partial_cod" &&
-        disabledPaymentTypes.partial_cod.disabled)
+        finalDisabledPaymentTypes.partial_cod.disabled) ||
+      (selectedPayment === "wallet" &&
+        finalDisabledPaymentTypes.wallet.disabled)
     ) {
       toast.error(
         "Selected payment method is not available for some products in your cart",
       );
       return;
     }
+
+    const remaining = Math.max(total - walletBalance, 0);
+    const isSplitWallet = selectedPayment === "wallet" && remaining > 0;
+    const isRazorpayFull = selectedPayment === "razorpay";
+    const isPartialCod = selectedPayment === "partial_cod";
+
+    const isDeferredOrderCreation = isRazorpayFull || isPartialCod || isSplitWallet;
+
+    if (isDeferredOrderCreation) {
+      let giftItems = [];
+      if (giftItem) {
+        if (giftItem.type === "buy_x_get_y" && giftItem.items?.length > 0) {
+          giftItems = giftItem.items.map((gi) => ({
+            product_id:
+              typeof gi.product_id === "object"
+                ? gi.product_id._id
+                : gi.product_id,
+            variant_id: gi.variant_id || null,
+            quantity: gi.quantity,
+            price: 0,
+            original_price: gi.original_price || 0,
+            pack_of: 1,
+            is_gift: true,
+            is_buy_x_get_y: true,
+          }));
+        } else if (giftItem.type === "free_gift") {
+          const ids =
+            giftItem.product_ids?.length > 0
+              ? giftItem.product_ids
+              : giftItem.product_id
+                ? [giftItem.product_id]
+                : [];
+          giftItems = ids.map((pid) => ({
+            product_id: typeof pid === "object" ? pid._id : pid,
+            variant_id: null,
+            quantity: 1,
+            price: 0,
+            original_price: 0,
+            pack_of: 1,
+            is_gift: true,
+          }));
+        }
+      }
+      const finalItems = [...checkoutItems, ...giftItems].map((item) => ({
+        product_id:
+          typeof item.product_id === "object"
+            ? item.product_id?._id
+            : item.product_id,
+        variant_id:
+          typeof item.variant_id === "object"
+            ? item.variant_id?._id
+            : item.variant_id,
+        quantity: item.quantity,
+        pack_of: item.pack_of || 1,
+        price: item.price,
+        original_price: item.original_price,
+        is_gift: item.is_gift || false,
+        is_buy_x_get_y: item.is_buy_x_get_y || false,
+      }));
+      const orderData = {
+        user_id: userLS._id,
+        items: finalItems,
+        subtotal,
+        shipping_charge: shipping,
+        coupon_discount: couponDiscount,
+        total_price: total,
+        coupon_id: appliedCoupon?._id || null,
+        payment_method: getBackendPaymentMethod(selectedPayment),
+        advance_amount: selectedPayment === "partial_cod" ? partialCodAdvance : 0,
+        shippingAddress: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          address: formData.address,
+          state: formData.state,
+          city: formData.city,
+          pincode: formData.pincode,
+          phone: formData.phone,
+        },
+      };
+
+      const tempOrderId = `temp_${Date.now()}`;
+      if (selectedPayment === "wallet") {
+        await handleRazorpayAmount(
+          userLS,
+          tempOrderId,
+          remaining,
+          "wallet",
+          null,
+          walletBalance,
+          orderData,
+        );
+      } else if (selectedPayment === "partial_cod") {
+        await handleRazorpayAmount(
+          userLS,
+          tempOrderId,
+          partialCodAdvance,
+          "partial_cod",
+          async () => {
+            toast.error("Razorpay payment failed. Redirecting to PhonePe for advance payment...");
+
+            // 1. Create the order in the database first
+            const orderAction = await dispatch(createOrder(orderData));
+            if (!createOrder.fulfilled.match(orderAction)) {
+              toast.error("Order creation failed ❌");
+              return;
+            }
+            const orderId = orderAction.payload?.data?._id || orderAction.payload?._id;
+            if (!orderId) {
+              toast.error("Order ID missing ❌");
+              return;
+            }
+
+            // 2. Initiate PhonePe payment for the partialCodAdvance
+            const phonePeRes = await dispatch(
+              createPhonePeOrder({
+                amount: partialCodAdvance,
+                order_id: orderId,
+                user_id: userLS._id,
+                redirect_url: `${window.location.origin}/payment/phonepe/callback?order_id=${orderId}`,
+              }),
+            );
+
+            if (!createPhonePeOrder.fulfilled.match(phonePeRes)) {
+              toast.error("PhonePe initialization failed ❌");
+              await dispatch(
+                markPaymentFailed({
+                  order_id: orderId,
+                  user_id: userLS._id,
+                  payment_method: "PhonePe",
+                  amount: partialCodAdvance,
+                  type: "order",
+                })
+              );
+              await clearCartItems();
+              localStorage.removeItem("applied_coupon");
+              navigate("/ordercompleted");
+              return;
+            }
+
+            const paymentUrl = phonePeRes.payload?.data?.paymentUrl || phonePeRes.payload?.paymentUrl;
+            if (!paymentUrl) {
+              toast.error("PhonePe payment URL missing ❌");
+              return;
+            }
+
+            // 3. Create a pending Payment record for PhonePe
+            await dispatch(
+              createPayment({
+                user_id: userLS._id,
+                order_id: orderId,
+                items: checkoutItems,
+                subtotal,
+                shipping,
+                coupon_discount: couponDiscount,
+                total,
+                amount_paid: partialCodAdvance,
+                payment_method: "PhonePe",
+                status: "pending",
+              }),
+            );
+
+            // 4. Redirect the user to PhonePe
+            window.location.href = paymentUrl;
+          },
+          0,
+          orderData,
+        );
+      } else {
+        await handleRazorpayAmount(
+          userLS,
+          tempOrderId,
+          total,
+          "razorpay",
+          null,
+          0,
+          orderData,
+        );
+      }
+      return;
+    }
+
     const orderId = await createNewOrder(userLS);
     if (!orderId) return;
-    if (selectedPayment === "PhonePe") await handlePhonePe(userLS, orderId);
-    else if (selectedPayment === "cod" || selectedPayment === "partial_cod")
+
+    if (selectedPayment === "wallet") {
+      await clearCartItems();
+      localStorage.removeItem("applied_coupon");
+      toast.success(`₹${total} paid from wallet ✅`);
+      navigate("/ordercompleted");
+    } else if (selectedPayment === "PhonePe") {
+      await handlePhonePe(userLS, orderId);
+    } else if (selectedPayment === "cod") {
       await handleCOD(userLS, orderId);
-    else await handleRazorpayAmount(userLS, orderId, total, selectedPayment);
+    }
   };
+
+  const itemMatchesGiftRule = (item, rule) => {
+    const pid = String(item.product_id?._id || item.product_id || "");
+    const subId = String(
+      item.product_id?.subcategory_id?._id ||
+      item.product_id?.subcategory_id ||
+      item.product_id?.category_id?._id ||
+      item.product_id?.category_id ||
+      "",
+    );
+    switch (rule.applyTo) {
+      case "allproducts":
+        return true;
+      case "specificproducts":
+        return rule.products?.some((p) => String(p) === pid);
+      case "specificsubcategory":
+        return rule.subCategories?.some((c) => String(c) === subId);
+      case "Excludeproduct":
+        return !rule.products?.some((p) => String(p) === pid);
+      case "Excludecategories":
+        return !rule.subCategories?.some((c) => String(c) === subId);
+      default:
+        return true;
+    }
+  };
+
+  const eligibleGiftRules = useMemo(() => {
+    if (!settings?.giftRules?.length || !items.length) return [];
+
+    return settings.giftRules
+      .filter((rule) => rule.status)
+      .filter((rule) => {
+        if (rule.applyTo === "allproducts") return true;
+        return items.some((item) => itemMatchesGiftRule(item, rule));
+      })
+      .sort((a, b) => (a.minimumAmount || 0) - (b.minimumAmount || 0));
+  }, [settings, items]);
+
+  const activeGiftRule = useMemo(() => {
+    if (!eligibleGiftRules.length) return null;
+
+    const notUnlocked = eligibleGiftRules.find(
+      (rule) => subtotal < (rule.minimumAmount || 0),
+    );
+    if (notUnlocked) return notUnlocked;
+
+    const unlockedRules = eligibleGiftRules.filter((rule) => {
+      const min = rule.minimumAmount || 0;
+      const max = rule.maximumAmount || Infinity;
+      return subtotal >= min && subtotal <= max;
+    });
+    if (unlockedRules.length > 0) {
+      return unlockedRules[unlockedRules.length - 1];
+    }
+    return eligibleGiftRules[eligibleGiftRules.length - 1];
+  }, [eligibleGiftRules, subtotal]);
+
+  const giftMin = activeGiftRule?.minimumAmount || 0;
+  const giftMax = activeGiftRule?.maximumAmount || 0;
+  const isGiftUnlocked = activeGiftRule
+    ? subtotal >= giftMin && (giftMax === 0 || subtotal <= giftMax)
+    : false;
+  const giftRemaining = Math.max(0, giftMin - subtotal);
+  const giftProgressPercent =
+    giftMin > 0 ? Math.min(100, (subtotal / giftMin) * 100) : 0;
+
+  const [giftProductInfo, setGiftProductInfo] = useState(null);
+  useEffect(() => {
+    if (!activeGiftRule?.giftProduct) {
+      setGiftProductInfo(null);
+      return;
+    }
+    const fetchGiftProduct = async () => {
+      try {
+        const res = await api.get(`/products/${activeGiftRule.giftProduct}`);
+        const product = res.data?.data?.product || res.data?.data || null;
+        setGiftProductInfo(product);
+      } catch {
+        setGiftProductInfo(null);
+      }
+    };
+    fetchGiftProduct();
+  }, [activeGiftRule]);
+
   if (!loading && checkoutItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -833,10 +1213,72 @@ export default function Checkout() {
           description={checkoutPage?.meta_description}
           image={`${process.env.REACT_APP_API_URL_IMAGE}${checkoutPage?.seo_image}`}
         />
-        <CartProgress currentStep={2} />
+
+        <Offercount amount={totalSaved} />
+
         <Section>
           <Row className="grid grid-cols-1 custom-lg:grid-cols-[1.4fr_1fr] gap-[30px] items-start">
             <div className="space-y-4">
+              {items.length > 0 && activeGiftRule && (
+                <div className="bg-white rounded-[12px] px-[20px] py-[14px] shadow-sm border border-pink-100">
+                  <div className="flex justify-between items-center mb-[8px]">
+                    <div className="flex items-center gap-[8px]">
+                      <span className="text-lg">🎁</span>
+                      <span className="text-[13px] md:text-[14px] font-medium text-gray-700">
+                        {isGiftUnlocked ? (
+                          <span className="text-green-600 font-semibold">
+                            🎉 You've unlocked a FREE GIFT
+                            {giftProductInfo?.name
+                              ? `: ${giftProductInfo.name}`
+                              : ""}
+                            !
+                          </span>
+                        ) : (
+                          <>
+                            Add{" "}
+                            <span className="font-bold text-gray-900">
+                              ₹
+                              {Math.round(giftRemaining).toLocaleString(
+                                "en-IN",
+                              )}
+                            </span>{" "}
+                            more to get{" "}
+                            <span className="font-bold text-pink-600">
+                              {giftProductInfo?.name || "a free gift"}
+                            </span>{" "}
+                            <span className="font-bold text-pink-600">
+                              FREE 🎁
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+
+                    <span className="text-[11px] text-gray-400 font-medium tracking-wide">
+                      GOAL: ₹{giftMin.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  {activeGiftRule.shortDescription && (
+                    <p className="text-[12px] text-gray-500 mb-2 ml-[26px]">
+                      {activeGiftRule.shortDescription}
+                    </p>
+                  )}
+
+                  <div className="w-full h-[6px] bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${giftProgressPercent}%`,
+                        background: isGiftUnlocked
+                          ? "#22c55e"
+                          : "linear-gradient(90deg, #ec4899, #f472b6)",
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {items.length > 0 && (
                 <div className="p-4 flex items-center gap-3 bg-green-100 rounded-lg">
                   <Truck size={20} className="text-green-600" />
@@ -849,6 +1291,7 @@ export default function Checkout() {
                   </span>
                 </div>
               )}
+
               <CheckoutForm
                 formData={formData}
                 setFormData={setFormData}
@@ -946,7 +1389,9 @@ export default function Checkout() {
                 partialCodAdvance={partialCodAdvance}
                 settingsLoaded={settingsLoaded}
                 isBuyNowMode={buyNowMode}
-                disabledPaymentTypes={disabledPaymentTypes}
+                disabledPaymentTypes={finalDisabledPaymentTypes}
+                walletBalance={walletBalance}
+                couponPrepaidOnly={couponPrepaidOnly}
               />
             </div>
           </Row>
@@ -1060,13 +1505,14 @@ export default function Checkout() {
           });
         }}
       />
+
       {showLoginPopup && (
         <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center">
           <div className="bg-white max-w-md w-full rounded-lg">
             <LoginForm
               onClose={() => setShowLoginPopup(false)}
-              onSwitchRegister={() => {}}
-              onSwitchForget={() => {}}
+              onSwitchRegister={() => { }}
+              onSwitchForget={() => { }}
             />
           </div>
         </div>

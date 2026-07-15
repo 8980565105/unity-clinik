@@ -8,6 +8,7 @@ import {
   createRazorpayOrder,
   verifyRazorpayPayment,
   updateBookingSlot,
+  markPaymentFailed,
 } from "../../features/payments/paymentThunk";
 import { useNavigate } from "react-router-dom";
 import { BookSlotPopup } from "./BookSlotPopup";
@@ -144,6 +145,23 @@ export function BookConsultationPopup({
       const d = String(date.getDate()).padStart(2, "0");
       const slot_date = `${y}-${m}-${d}`;
 
+      const userLS = JSON.parse(localStorage.getItem("user") || "null");
+
+      let failureAlreadyRecorded = false;
+
+      const handleFailure = async () => {
+        if (failureAlreadyRecorded) return; 
+        failureAlreadyRecorded = true;
+        await dispatch(
+          markPaymentFailed({
+            user_id: userLS?._id,
+            payment_method: "Razorpay",
+            amount: selectedPrice,
+            type: "book_consultation",
+          }),
+        );
+      };
+
       const options = {
         key: process.env.REACT_APP_RAZORPAY_KEY,
         amount: razorOrder.amount,
@@ -162,6 +180,8 @@ export function BookConsultationPopup({
             );
             if (!verifyRazorpayPayment.fulfilled.match(verifyRes)) {
               toast.error("Payment verification failed");
+              await handleFailure();
+              setIsProcessing(false);
               return;
             }
 
@@ -177,9 +197,7 @@ export function BookConsultationPopup({
                 amount: selectedPrice,
                 product_id: product_id || null,
                 product_title: productTitle || null,
-                user_id:
-                  JSON.parse(localStorage.getItem("user") || "null")?._id ||
-                  null,
+                user_id: userLS?._id || null,
                 slot_date,
                 slot_time: time,
                 slot_duration: durationMinutes,
@@ -266,6 +284,7 @@ export function BookConsultationPopup({
         modal: {
           ondismiss: () => {
             setIsProcessing(false);
+            handleFailure(); 
           },
         },
       };
@@ -274,6 +293,7 @@ export function BookConsultationPopup({
       rzp.on("payment.failed", (response) => {
         toast.error(`Payment failed: ${response.error.description}`);
         setIsProcessing(false);
+        handleFailure();
       });
       rzp.open();
     } catch (err) {
@@ -303,7 +323,6 @@ export function BookConsultationPopup({
               />
             </button>
 
-            {/* <div className="bg-[#0b0c0e] h-[175px] px-6 pt-6 pb-4 relative flex justify-between "> */}
             <div className="bg-[#FAF3ED] h-[175px] px-6 pt-6 pb-4 relative flex justify-between">
               <div className="z-20 flex flex-col justify-start max-w-[50%]">
                 <h2 className="text-black text-xl md:text-2xl font-black tracking-tight leading-none uppercase">
@@ -321,9 +340,7 @@ export function BookConsultationPopup({
                 </p>
               </div>
 
-              {/* <div className="absolute left-1/2 -translate-x-1/2 bottom-[-12px] z-10 pointer-events-none"> */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-
                 <img
                   src={getImageUrl(imageUrl)}
                   alt={productTitle}
@@ -494,7 +511,6 @@ export function BookConsultationPopup({
                 >
                   NEXT: CHOOSE DATE & SLOT
                 </button>
-
                 <span className="text-[9px] md:text-[10px] text-gray-400 font-black tracking-widest text-center mt-3.5 uppercase">
                   100% Secure Checkout • Instant Confirmation
                 </span>

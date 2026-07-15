@@ -56,7 +56,7 @@ export default function OrderTracking({ order, onClose }) {
         }));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center
+    <div className="fixed inset-0 z-50 flex items-center sm:items-center
                     justify-center bg-black/50 px-4">
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl
                       overflow-hidden max-h-[90vh] flex flex-col">
@@ -69,7 +69,7 @@ export default function OrderTracking({ order, onClose }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            {/* <button
               onClick={fetchTracking}
               disabled={loading}
               className="flex items-center gap-1.5 text-xs bg-blue-50
@@ -78,33 +78,33 @@ export default function OrderTracking({ order, onClose }) {
             >
               <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
               {loading ? "Loading..." : "Refresh"}
-            </button>
+            </button> */}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 bg-gray-100 rounded-full"
             >
               <X size={18} className="text-gray-500" />
             </button>
           </div>
         </div>
 
-        {order.courier?.awb_number && (
+        {/* {order.courier?.awb_number && (
           <div className="px-5 py-3 bg-blue-50 border-b flex
-                          items-center justify-between flex-wrap gap-2">
-            <div>
+                          items-center justify-between flex-wrap gap-2"> */}
+            {/* <div>
               <p className="text-xs text-blue-500 font-medium">AWB Number</p>
               <p className="text-sm font-bold text-blue-800 font-mono">
                 {order.courier.awb_number}
               </p>
-            </div>
-            <div className="flex items-center gap-3">
+            </div> */}
+            {/* <div className="flex items-center gap-3">
               {isIthink && liveData?.current_status && (
                 <span className="text-xs bg-blue-600 text-white px-3
                                  py-1 rounded-full font-semibold">
                   {liveData.current_status}
                 </span>
-              )}
-              {order.courier.tracking_url && (
+              )} */}
+              {/* {order.courier.tracking_url && (
                 
                  <a href={order.courier.tracking_url}
                   target="_blank"
@@ -113,10 +113,10 @@ export default function OrderTracking({ order, onClose }) {
                 >
                   Track on ithink →
                 </a>
-              )}
-            </div>
-          </div>
-        )}
+              )} */}
+            {/* </div>
+          </div> */}
+        {/* )} */}
 
         {liveData?.expected_delivery_date && (
           <div className="px-5 py-2 bg-green-50 border-b">

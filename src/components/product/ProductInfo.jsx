@@ -50,6 +50,7 @@ export default function ProductInfo({
   setAddingToCart,
   setHandleAddToCartFn,
   setHandleAddToWishlistFn,
+  setIsAddedToCartFn,
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -136,6 +137,11 @@ export default function ProductInfo({
     return () => observer.disconnect();
   }, [setShowStickyBar]);
 
+  useEffect(() => {
+    setIsAddedToCart(false);
+    setIsAddedToCartFn?.(false);
+  }, [activeVariantState, selectedPackState]);
+
   const getPriceData = () => {
     const originalPrice =
       selectedPackState?.price || activeVariantState?.price || 0;
@@ -171,6 +177,57 @@ export default function ProductInfo({
           : 0,
     });
   }, [selectedPackState, activeVariantState]);
+
+  const handleGoToCart = () => {
+    const userLS = JSON.parse(localStorage.getItem("user"));
+    if (!userLS?._id) {
+      setShowLoginPopup(true);
+      return;
+    }
+    navigate("/cart");
+  };
+
+  // const handleAddToCart = async () => {
+  //   if (activeVariantState?.stock_quantity === 0) {
+  //     toast.error("This product is out of stock!");
+  //     return;
+  //   }
+
+  //   setAddingToCartstat(true);
+
+  //   try {
+  //     let cartId = cart?._id || localStorage.getItem("cart_id");
+
+  //     if (!cartId) {
+  //       const newCart = await dispatch(createCart()).unwrap();
+  //       cartId = newCart._id;
+  //       if (cartId) {
+  //         localStorage.setItem("cart_id", cartId);
+  //       }
+  //     }
+
+  //     const payload = {
+  //       cart_id: cartId,
+  //       product_id: product._id,
+  //       variant_id: activeVariantState._id,
+  //       quantity: 1,
+  //       pack_of: Number(selectedPackState?.badge || 1),
+  //       price: Number(selectedPackState?.offerprice || 0),
+  //       original_price: Number(selectedPackState?.price || 0),
+  //     };
+
+  //     await dispatch(addToCart(payload)).unwrap();
+  //     await dispatch(fetchCart());
+
+  //     toast.success("cart updated successfully!");
+  //     setIsAddedToCart(true);
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to add to cart");
+  //   } finally {
+  //     setAddingToCartstat(false);
+  //   }
+  // };
 
   const handleAddToCart = async () => {
     if (activeVariantState?.stock_quantity === 0) {
@@ -209,6 +266,7 @@ export default function ProductInfo({
 
       toast.success("cart updated successfully!");
       setIsAddedToCart(true);
+      setIsAddedToCartFn?.(true);
     } catch (err) {
       console.error(err);
       toast.error("Failed to add to cart");
@@ -216,6 +274,10 @@ export default function ProductInfo({
       setAddingToCartstat(false);
     }
   };
+
+  useEffect(() => {
+    setIsAddedToCart(false);
+  }, [activeVariantState, selectedPackState]);
 
   const { handleAddToWishlist } = useAddToWishlist(setShowLoginPopup);
 
@@ -523,6 +585,9 @@ export default function ProductInfo({
         selectedPackState={selectedPackState}
         setShowLoginPopup={setShowLoginPopup}
       />
+
+      <div className="border-dashed border-b-[2px] light-border my-5"></div>
+
       <div className="mt-[15px] space-y-[28px]">
         <div key={currentProductId}>{renderSteps()}</div>
 
@@ -539,7 +604,7 @@ export default function ProductInfo({
             Wishlist
           </Button>
 
-          <Button
+          {/* <Button
             variant="common"
             className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px] hidden lg:flex"
             onClick={async () => {
@@ -552,6 +617,28 @@ export default function ProductInfo({
               <Handbag size={22} />
               {addingToCartstate ? "Adding..." : "Add To Cart"}
             </span>
+          </Button> */}
+          <Button
+            variant="common"
+            className="w-full !text-[22px] flex items-center gap-[10px] !py-[10px] hidden lg:flex"
+            onClick={async () => {
+              if (isAddedToCart) {
+                handleGoToCart();
+              } else {
+                await handleAddToCart();
+              }
+            }}
+            aria-label="add to cart"
+            disabled={addingToCartstate}
+          >
+            <span className="flex items-center gap-[10px]">
+              <Handbag size={22} />
+              {addingToCartstate
+                ? "Adding..."
+                : isAddedToCart
+                  ? "Go to Cart"
+                  : "Add To Cart"}
+            </span>
           </Button>
         </div>
         <BuyNowButton
@@ -561,6 +648,8 @@ export default function ProductInfo({
           className="!mt-2 hidden lg:flex"
         />
       </div>
+
+      <div className="border-dashed border-b-[2px] light-border my-5"></div>
     </div>
   );
 }

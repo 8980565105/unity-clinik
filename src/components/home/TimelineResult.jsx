@@ -34,12 +34,12 @@ export default function TimelineResult() {
 
   return (
     <Section className="py-20">
-      <Row className="rounded-[30px] bg-[#FBF7E8] px-[25px] py-[20px]">
-        <div className="inline-flex rounded-xl bg-[#F2E5A4] p-1 mb-10">
+      <Row className="rounded-[30px] bg-[var(--ef3a96-9)] px-[25px] py-[20px]">
+        <div className="inline-flex rounded-xl bg-primary p-1 mb-10">
           <button
             onClick={() => setActive("male")}
             className={`px-10 py-2 rounded-lg font-semibold transition ${
-              active === "male" ? "bg-white shadow" : "text-gray-700"
+              active === "male" ? "bg-white shadow" : "text-white"
             }`}
           >
             MALE
@@ -47,7 +47,7 @@ export default function TimelineResult() {
           <button
             onClick={() => setActive("female")}
             className={`px-10 py-2 rounded-lg font-semibold transition ${
-              active === "female" ? "bg-white shadow" : "text-gray-700"
+              active === "female" ? "bg-white shadow" : "text-white"
             }`}
           >
             FEMALE
@@ -55,7 +55,7 @@ export default function TimelineResult() {
         </div>
         <Description Description="When will you see results?"className="!text-[16px]" />
         <div className="relative">
-          <div className="absolute top-[87px] left-0 right-0 h-[1px] bg-[#6D5B2E]" />
+          <div className="absolute top-[87px] left-0 right-0 h-[1px] bg-primary" />
           <div
             ref={TimelineResultScroll.ref}
             {...TimelineResultScroll.handlers}
@@ -71,7 +71,7 @@ export default function TimelineResult() {
                     decoding="async"
                     className="w-16 h-16 object-contain mb-5 rounded-[10px]"
                   />
-                  <div className="w-[8px] h-[8px] rounded-full bg-[#6D5B2E] mb-5"></div>
+                  <div className="w-[8px] h-[8px] rounded-full bg-primary mb-5"></div>
                   <h4 className="text-3xl font-semibold">{item.month}</h4>
                   <p className="mt-2 text-gray-700">{item.title}</p>
                 </div>

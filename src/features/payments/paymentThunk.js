@@ -56,6 +56,7 @@ export const createPayment = createAsyncThunk(
   },
 );
 
+
 export const createPhonePeOrder = createAsyncThunk(
   "payments/createPhonePeOrder",
   async ({ amount, order_id, user_id, redirect_url }, { rejectWithValue }) => {
@@ -66,6 +67,12 @@ export const createPhonePeOrder = createAsyncThunk(
         user_id,
         redirect_url,
       });
+
+      // ⬅️ NEW
+      if (!res.data.success) {
+        return rejectWithValue(res.data.message || "PhonePe order failed");
+      }
+
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -81,6 +88,13 @@ export const verifyPhonePePayment = createAsyncThunk(
         merchantTransactionId,
         order_id,
       });
+
+      if (!res.data.success) {
+        return rejectWithValue(
+          res.data.message || "Payment verification failed",
+        );
+      }
+
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -100,8 +114,6 @@ export const createConsultationBooking = createAsyncThunk(
   },
 );
 
-// ---- Save/confirm a booking's date+time slot ----
-// (duplicate removed — only ONE definition now)
 export const updateBookingSlot = createAsyncThunk(
   "payments/updateBookingSlot",
   async (
@@ -114,7 +126,6 @@ export const updateBookingSlot = createAsyncThunk(
         slot_time,
         slot_duration,
       });
-      // backend sendResponse(res, 200, true, "...", booking)
       return res.data.data ?? res.data;
     } catch (err) {
       return rejectWithValue(
@@ -124,7 +135,6 @@ export const updateBookingSlot = createAsyncThunk(
   },
 );
 
-// ---- NEW: fetch already-booked times for a given date + consultation type ----
 export const fetchBookedSlots = createAsyncThunk(
   "payments/fetchBookedSlots",
   async ({ date, type }, { rejectWithValue }) => {
@@ -132,12 +142,39 @@ export const fetchBookedSlots = createAsyncThunk(
       const res = await api.get(`/bookconsaltans/slots`, {
         params: { date, type },
       });
-      // backend sendResponse(res, 200, true, "...", { date, type, bookedTimes })
       return res.data.data ?? res.data;
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.message || "Failed to fetch booked slots",
       );
+    }
+  },
+);
+
+export const fetchMyBookings = createAsyncThunk(
+  "payments/fetchMyBookings",
+  async ({ user_id, phone } = {}, { rejectWithValue }) => {
+    try {
+      const res = await api.get("/bookconsaltans/my-bookings", {
+        params: { user_id, phone },
+      });
+      return res.data.data ?? res.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch bookings",
+      );
+    }
+  },
+);
+
+export const markPaymentFailed = createAsyncThunk(
+  "payments/markPaymentFailed",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/payments/mark-failed", data);
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
   },
 );

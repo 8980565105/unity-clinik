@@ -4,6 +4,7 @@ import {
   createRazorpayOrder,
   verifyRazorpayPayment,
   createConsultationBooking,
+  markPaymentFailed,
 } from "./paymentThunk";
 
 const initialState = {
@@ -63,6 +64,15 @@ const paymentSlice = createSlice({
       })
       .addCase(createConsultationBooking.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(markPaymentFailed.pending, (state) => {
+        state.loading = false;
+      })
+      .addCase(markPaymentFailed.fulfilled, (state, action) => {
+        state.failedPayment = action.payload;
+      })
+      .addCase(markPaymentFailed.rejected, (state, action) => {
         state.error = action.payload;
       });
   },
