@@ -7,6 +7,8 @@ import {
   updateBookingSlot,
 } from "../features/payments/paymentThunk";
 import { BookSlotPopup } from "../components/popup/BookSlotPopup";
+import { useNavigate } from "react-router-dom";
+import Button from "../components/ui/Button";
 
 function isUpcoming(booking) {
   if (!booking.slot_date || booking.slot_status !== "confirmed") return true;
@@ -19,6 +21,7 @@ function isUpcoming(booking) {
 
 export default function MyBookConsalt() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [rescheduleBooking, setRescheduleBooking] = useState(null);
@@ -89,6 +92,9 @@ export default function MyBookConsalt() {
       <div className="flex flex-col items-center justify-center py-20 text-gray-400">
         <Calendar size={32} className="mb-3" />
         <p className="font-bold text-sm">No consultations booked yet</p>
+        <Button onClick={() => navigate("/consultation")} variant="common">
+          Book consultation
+        </Button>
       </div>
     );
   }
@@ -173,16 +179,6 @@ export default function MyBookConsalt() {
         );
       })}
 
-      {/* <BookSlotPopup
-        isOpen={!!rescheduleBooking}
-        onClose={() => !isSubmitting && setRescheduleBooking(null)}
-        onSubmit={handleRescheduleSubmit}
-        consultationType={
-          rescheduleBooking?.type === "video call" ? "video" : "voice"
-        }
-        isSubmitting={isSubmitting}
-        price={null}
-      /> */}
       <BookSlotPopup
         isOpen={!!rescheduleBooking}
         onClose={() => !isSubmitting && setRescheduleBooking(null)}

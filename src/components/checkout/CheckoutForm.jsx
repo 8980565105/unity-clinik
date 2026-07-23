@@ -45,8 +45,6 @@ function ProductPopup({ item, onClose }) {
       ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
       : product?.discount_id?.value || 0;
 
-
-
   const imgSrc = getImageUrl(getSingleImage(product, variant));
 
   const productId =
@@ -170,7 +168,7 @@ function AddAddressPopup({
         const postOffice = data[0].PostOffice[0];
         setForm((prev) => ({
           ...prev,
-          city: postOffice.District || prev.city,
+          city: postOffice.Name || prev.city,
           state: postOffice.State || prev.state,
           country: postOffice.Country || "India",
         }));
@@ -257,6 +255,12 @@ function AddAddressPopup({
                 required: "required",
               },
               {
+                name: "zip_code",
+                label: "zip code *",
+                placeholder: "Zip Code",
+                required: "required",
+              },
+              {
                 name: "city",
                 label: "city *",
                 placeholder: "City",
@@ -268,12 +272,7 @@ function AddAddressPopup({
                 placeholder: "State",
                 required: "required",
               },
-              {
-                name: "zip_code",
-                label: "zip code *",
-                placeholder: "Zip Code",
-                required: "required",
-              },
+
               { name: "country", label: "country", placeholder: "Country" },
             ].map(({ name, placeholder, required, label }) => (
               <>
@@ -713,21 +712,24 @@ export default function CheckoutForm({
   const [fetchingAddresses, setFetchingAddresses] = useState(true);
   const [editingIndex, setEditingIndex] = useState(null);
 
-  const syncFormData = useCallback((addrs, index) => {
-    const a = addrs[index];
-    if (!a) return;
-    setFormData((prev) => ({
-      ...prev,
-      firstName: a.fullName?.split(" ")?.[0] || a.fullName || "",
-      lastName: a.fullName?.split(" ")?.slice(1)?.join(" ") || "",
-      address: `${a.house}, ${a.street}`,
-      country: a.country || "India",
-      state: a.state || "",
-      city: a.city || "",
-      pincode: a.zip_code || "",
-      phone: a.phone || "",
-    }));
-  }, [setFormData]);
+  const syncFormData = useCallback(
+    (addrs, index) => {
+      const a = addrs[index];
+      if (!a) return;
+      setFormData((prev) => ({
+        ...prev,
+        firstName: a.fullName?.split(" ")?.[0] || a.fullName || "",
+        lastName: a.fullName?.split(" ")?.slice(1)?.join(" ") || "",
+        address: `${a.house}, ${a.street}`,
+        country: a.country || "India",
+        state: a.state || "",
+        city: a.city || "",
+        pincode: a.zip_code || "",
+        phone: a.phone || "",
+      }));
+    },
+    [setFormData],
+  );
 
   useEffect(() => {
     const fetchProfile = async () => {

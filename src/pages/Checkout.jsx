@@ -332,10 +332,10 @@ export default function Checkout() {
           const product = item?.product_id;
           const subCatId = String(
             product?.category_id?._id ||
-            product?.category_id ||
-            product?.subcategory_id?._id ||
-            product?.subcategory_id ||
-            "",
+              product?.category_id ||
+              product?.subcategory_id?._id ||
+              product?.subcategory_id ||
+              "",
           );
           return !coupon.subcategories?.some(
             (sub) => String(sub?._id || sub) === subCatId,
@@ -391,7 +391,7 @@ export default function Checkout() {
       (async () => {
         const verifyRes = await dispatch(
           verifyPhonePePayment({
-            transaction_id: phonePeTxn,
+             merchantTransactionId: phonePeTxn,
             order_id: phonePeOrderId,
           }),
         );
@@ -502,17 +502,17 @@ export default function Checkout() {
     const disabledPaymentTypes = settingsLoaded
       ? getDisabledPaymentTypes(defaultShippingItems, settings)
       : {
-        cod: { disabled: false, products: [] },
-        partial_cod: { disabled: false, products: [] },
-        prepaid: { disabled: false, products: [] },
-        wallet: { disabled: false, products: [] },
-      };
+          cod: { disabled: false, products: [] },
+          partial_cod: { disabled: false, products: [] },
+          prepaid: { disabled: false, products: [] },
+          wallet: { disabled: false, products: [] },
+        };
     return couponPrepaidOnly
       ? {
-        ...disabledPaymentTypes,
-        cod: { ...disabledPaymentTypes.cod, disabled: true },
-        partial_cod: { ...disabledPaymentTypes.partial_cod, disabled: true },
-      }
+          ...disabledPaymentTypes,
+          cod: { ...disabledPaymentTypes.cod, disabled: true },
+          partial_cod: { ...disabledPaymentTypes.partial_cod, disabled: true },
+        }
       : disabledPaymentTypes;
   }, [settingsLoaded, defaultShippingItems, settings, couponPrepaidOnly]);
   useEffect(() => {
@@ -551,17 +551,11 @@ export default function Checkout() {
     }
   };
   const shippingPaymentType = getShippingPaymentType(selectedPayment);
-  // const defaultShipping =
-  //   settingsLoaded && defaultShippingItems.length > 0
-  //     ? calculateShipping(defaultShippingItems, "prepaid", settings)
-  //     : 0;
   const defaultShipping =
     settingsLoaded && defaultShippingItems.length > 0
       ? calculateShipping(defaultShippingItems, shippingPaymentType, settings)
       : 0;
-  // const shipping = overrideShipping + defaultShipping;
   const shipping = overrideShipping + defaultShipping;
-
 
   const total = Number((subtotal + shipping).toFixed(0));
   const partialCodAdvance = calculatePartialCodAdvance(total, settings);
@@ -732,13 +726,13 @@ export default function Checkout() {
       createRazorpayOrder({ amount, order_id: orderId }),
     );
     if (!createRazorpayOrder.fulfilled.match(razorRes)) {
-      toast(razorRes.payload || "Razorpay order failed");
+      toast.error("Razorpay order failed");
       if (onFailOrCancel) await onFailOrCancel();
       return;
     }
     const razorOrder = razorRes.payload;
     if (!razorOrder) {
-      toast("Razorpay initialization failed ❌");
+      toast.error("Razorpay initialization failed ❌");
       if (onFailOrCancel) await onFailOrCancel();
       return;
     }
@@ -757,7 +751,7 @@ export default function Checkout() {
       key: razorpayKey,
       amount: razorOrder.amount,
       currency: "INR",
-      name: "ZYFolixo",
+      name: "Zyfolixo (unity clinic )",
       description:
         paymentMethod === "partial_cod"
           ? `Advance Payment ₹${amount}`
@@ -803,7 +797,6 @@ export default function Checkout() {
       },
       theme: { color: "#1d4ed8" },
     };
-
     const rzp = new window.Razorpay(options);
     rzp.on("payment.failed", async (response) => {
       toast(`Payment failed: ${response.error.description} ❌`);
@@ -814,7 +807,6 @@ export default function Checkout() {
     });
     rzp.open();
   };
-
   const handleCOD = async (userLS, orderId) => {
     if (isPartialCod && partialCodAdvance > 0) {
       await handleRazorpayAmount(
@@ -844,7 +836,6 @@ export default function Checkout() {
     toast("Order placed successfully! 🎉");
     navigate("/ordercompleted");
   };
-
   const handlePhonePe = async (userLS, orderId) => {
     const phonePeRes = await dispatch(
       createPhonePeOrder({
@@ -855,13 +846,13 @@ export default function Checkout() {
       }),
     );
     if (!createPhonePeOrder.fulfilled.match(phonePeRes)) {
-      toast("PhonePe initialization failed ❌");
+      toast.error("PhonePe initialization failed ❌");
       return;
     }
     const paymentUrl =
       phonePeRes.payload?.data?.paymentUrl || phonePeRes.payload?.paymentUrl;
     if (!paymentUrl) {
-      toast("PhonePe payment URL missing ❌");
+      toast.error("PhonePe payment URL missing ❌");
       return;
     }
     await dispatch(
@@ -880,8 +871,6 @@ export default function Checkout() {
     );
     window.location.href = paymentUrl;
   };
-
-
   const handlePlaceOrder = async () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
     if (!(await validateForm(userLS))) return;
@@ -904,14 +893,12 @@ export default function Checkout() {
       );
       return;
     }
-
     const remaining = Math.max(total - walletBalance, 0);
     const isSplitWallet = selectedPayment === "wallet" && remaining > 0;
     const isRazorpayFull = selectedPayment === "razorpay";
     const isPartialCod = selectedPayment === "partial_cod";
-
-    const isDeferredOrderCreation = isRazorpayFull || isPartialCod || isSplitWallet;
-
+    const isDeferredOrderCreation =
+      isRazorpayFull || isPartialCod || isSplitWallet;
     if (isDeferredOrderCreation) {
       let giftItems = [];
       if (giftItem) {
@@ -972,7 +959,8 @@ export default function Checkout() {
         total_price: total,
         coupon_id: appliedCoupon?._id || null,
         payment_method: getBackendPaymentMethod(selectedPayment),
-        advance_amount: selectedPayment === "partial_cod" ? partialCodAdvance : 0,
+        advance_amount:
+          selectedPayment === "partial_cod" ? partialCodAdvance : 0,
         shippingAddress: {
           firstName: formData.firstName,
           lastName: formData.lastName,
@@ -983,7 +971,6 @@ export default function Checkout() {
           phone: formData.phone,
         },
       };
-
       const tempOrderId = `temp_${Date.now()}`;
       if (selectedPayment === "wallet") {
         await handleRazorpayAmount(
@@ -1001,22 +988,25 @@ export default function Checkout() {
           tempOrderId,
           partialCodAdvance,
           "partial_cod",
-          async () => {
-            toast.error("Razorpay payment failed. Redirecting to PhonePe for advance payment...");
-
-            // 1. Create the order in the database first
+          async (transactionId, razorpayOrderId) => {
+            if (!transactionId) {
+              toast.error("Payment cancelled. Order not placed.");
+              return;
+            }
+            toast.error(
+              "Razorpay payment failed. Redirecting to PhonePe for advance payment...",
+            );
             const orderAction = await dispatch(createOrder(orderData));
             if (!createOrder.fulfilled.match(orderAction)) {
               toast.error("Order creation failed ❌");
               return;
             }
-            const orderId = orderAction.payload?.data?._id || orderAction.payload?._id;
+            const orderId =
+              orderAction.payload?.data?._id || orderAction.payload?._id;
             if (!orderId) {
               toast.error("Order ID missing ❌");
               return;
             }
-
-            // 2. Initiate PhonePe payment for the partialCodAdvance
             const phonePeRes = await dispatch(
               createPhonePeOrder({
                 amount: partialCodAdvance,
@@ -1025,7 +1015,6 @@ export default function Checkout() {
                 redirect_url: `${window.location.origin}/payment/phonepe/callback?order_id=${orderId}`,
               }),
             );
-
             if (!createPhonePeOrder.fulfilled.match(phonePeRes)) {
               toast.error("PhonePe initialization failed ❌");
               await dispatch(
@@ -1035,21 +1024,20 @@ export default function Checkout() {
                   payment_method: "PhonePe",
                   amount: partialCodAdvance,
                   type: "order",
-                })
+                }),
               );
               await clearCartItems();
               localStorage.removeItem("applied_coupon");
               navigate("/ordercompleted");
               return;
             }
-
-            const paymentUrl = phonePeRes.payload?.data?.paymentUrl || phonePeRes.payload?.paymentUrl;
+            const paymentUrl =
+              phonePeRes.payload?.data?.paymentUrl ||
+              phonePeRes.payload?.paymentUrl;
             if (!paymentUrl) {
               toast.error("PhonePe payment URL missing ❌");
               return;
             }
-
-            // 3. Create a pending Payment record for PhonePe
             await dispatch(
               createPayment({
                 user_id: userLS._id,
@@ -1064,8 +1052,6 @@ export default function Checkout() {
                 status: "pending",
               }),
             );
-
-            // 4. Redirect the user to PhonePe
             window.location.href = paymentUrl;
           },
           0,
@@ -1099,15 +1085,14 @@ export default function Checkout() {
       await handleCOD(userLS, orderId);
     }
   };
-
   const itemMatchesGiftRule = (item, rule) => {
     const pid = String(item.product_id?._id || item.product_id || "");
     const subId = String(
       item.product_id?.subcategory_id?._id ||
-      item.product_id?.subcategory_id ||
-      item.product_id?.category_id?._id ||
-      item.product_id?.category_id ||
-      "",
+        item.product_id?.subcategory_id ||
+        item.product_id?.category_id?._id ||
+        item.product_id?.category_id ||
+        "",
     );
     switch (rule.applyTo) {
       case "allproducts":
@@ -1124,7 +1109,6 @@ export default function Checkout() {
         return true;
     }
   };
-
   const eligibleGiftRules = useMemo(() => {
     if (!settings?.giftRules?.length || !items.length) return [];
 
@@ -1136,7 +1120,6 @@ export default function Checkout() {
       })
       .sort((a, b) => (a.minimumAmount || 0) - (b.minimumAmount || 0));
   }, [settings, items]);
-
   const activeGiftRule = useMemo(() => {
     if (!eligibleGiftRules.length) return null;
 
@@ -1155,7 +1138,6 @@ export default function Checkout() {
     }
     return eligibleGiftRules[eligibleGiftRules.length - 1];
   }, [eligibleGiftRules, subtotal]);
-
   const giftMin = activeGiftRule?.minimumAmount || 0;
   const giftMax = activeGiftRule?.maximumAmount || 0;
   const isGiftUnlocked = activeGiftRule
@@ -1164,7 +1146,6 @@ export default function Checkout() {
   const giftRemaining = Math.max(0, giftMin - subtotal);
   const giftProgressPercent =
     giftMin > 0 ? Math.min(100, (subtotal / giftMin) * 100) : 0;
-
   const [giftProductInfo, setGiftProductInfo] = useState(null);
   useEffect(() => {
     if (!activeGiftRule?.giftProduct) {
@@ -1182,7 +1163,6 @@ export default function Checkout() {
     };
     fetchGiftProduct();
   }, [activeGiftRule]);
-
   if (!loading && checkoutItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
@@ -1213,9 +1193,7 @@ export default function Checkout() {
           description={checkoutPage?.meta_description}
           image={`${process.env.REACT_APP_API_URL_IMAGE}${checkoutPage?.seo_image}`}
         />
-
         <Offercount amount={totalSaved} />
-
         <Section>
           <Row className="grid grid-cols-1 custom-lg:grid-cols-[1.4fr_1fr] gap-[30px] items-start">
             <div className="space-y-4">
@@ -1505,14 +1483,13 @@ export default function Checkout() {
           });
         }}
       />
-
       {showLoginPopup && (
         <div className="fixed inset-0 bg-black/60 z-[9999] flex items-center justify-center">
           <div className="bg-white max-w-md w-full rounded-lg">
             <LoginForm
               onClose={() => setShowLoginPopup(false)}
-              onSwitchRegister={() => { }}
-              onSwitchForget={() => { }}
+              onSwitchRegister={() => {}}
+              onSwitchForget={() => {}}
             />
           </div>
         </div>

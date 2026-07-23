@@ -433,7 +433,7 @@ export function SectionRenderer({ section, productLabels }) {
 
             {selectedItem && (
               <div className="fixed inset-0 z-[999] bg-black/50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-[30px] w-full max-w-[480px] relative p-10">
+                <div className="bg-white rounded-[30px] w-full max-w-[480px] relative p-5 lg:p-10">
                   <button
                     onClick={() => setSelectedItem(null)}
                     className="
@@ -457,11 +457,11 @@ export function SectionRenderer({ section, productLabels }) {
                     />
                   )}
 
-                  <h2 className="text-center text-[48px] font-bold mb-4">
+                  <h2 className="text-center text-[24px] lg:text-[48px] font-bold mb-4">
                     {selectedItem.name}
                   </h2>
 
-                  <p className="text-center text-[#6b7280] text-[22px] leading-[1.7]">
+                  <p className="text-center text-[#6b7280] text-[14px] lg:text-[22px]">
                     {selectedItem.description}
                   </p>
                 </div>

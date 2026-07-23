@@ -221,7 +221,7 @@ const OrderCard = ({
   onReorder,
   onReturn,
   onCancel,
-  baseUrl = "",
+  baseUrl,
 }) => {
   const firstItem = order.items?.[0];
   const [actionMenu, setActionMenu] = useState(null);
@@ -358,18 +358,7 @@ const OrderCard = ({
                     Return requested — pending approval
                   </span>
                 )}
-                {/* {order.status !== "cancelled" && (
-                  <button
-                    onClick={() => {
-                      setActionMenu(null);
-                      onCancel(order);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50"
-                  >
-                    <Trash2 size={16} />
-                    Cancel Order
-                  </button>
-                )} */}
+
                 {order.status !== "cancelled" && (
                   <button
                     disabled={!canCancel}
@@ -624,6 +613,7 @@ export default function Orders() {
   const limit = 10;
   const dispatch = useDispatch();
   const baseUrl = process.env.REACT_APP_API_URL_IMAGE || "";
+  // const baseUrl = "";
 
   const {
     orders = [],
@@ -680,7 +670,6 @@ export default function Orders() {
       statusFilter === "all" || order.status === statusFilter;
     return matchesSearch && matchesPayment && matchesStatus;
   });
-
   const statusOptions = [
     "pending",
     "processing",
@@ -691,24 +680,27 @@ export default function Orders() {
     "completed",
     "cancelled",
   ];
-
   const handleReorder = async (order) => {
     if (!order?.items?.length) {
       toast.error("No items found in this order");
       return;
     }
-
+    const reorderableItems = order.items.filter(
+      (i) => !i.is_gift && !i.is_buy_x_get_y,
+    );
+    if (!reorderableItems.length) {
+      toast.error("No purchasable items found to reorder");
+      return;
+    }
     const outOfStockItems = order.items.filter(
       (i) => i.variant?.stock_quantity === 0 || i.product?.stock_quantity === 0,
     );
-
-    if (outOfStockItems.length === order.items.length) {
+    if (outOfStockItems.length === reorderableItems.length) {
       toast.error("All items in this order are out of stock!");
       return;
     }
-
     const checkoutItems = await Promise.all(
-      order.items
+      reorderableItems
         .filter(
           (i) =>
             i.variant?.stock_quantity !== 0 && i.product?.stock_quantity !== 0,
@@ -787,47 +779,6 @@ export default function Orders() {
       },
     });
   };
-
-  // const openReturnModal = (order) => {
-  //   setSelectedOrder(order);
-  //   setIsReturnOpen(true);
-  // };
-
-  // const closeReturnModal = () => {
-  //   setSelectedOrder(null);
-  //   setIsReturnOpen(false);
-  //   setReturnReason("");
-  // };
-
-  // const handleReturnSubmit = async () => {
-  //   if (!returnReason.trim()) {
-  //     toast.error("Please enter a return reason");
-  //     return;
-  //   }
-  //   if (!selectedOrder?._id) return;
-
-  //   setReturnLoading(true);
-  //   try {
-  //     const result = await dispatch(
-  //       requestReturn({
-  //         orderId: selectedOrder._id,
-  //         reason: returnReason.trim(),
-  //       }),
-  //     );
-
-  //     if (requestReturn.fulfilled.match(result)) {
-  //       toast.success("Return request submitted successfully");
-  //       dispatch(fetchUserOrders({ page, limit }));
-  //       closeReturnModal();
-  //     } else {
-  //       toast.error(result.payload || "Failed to submit return request");
-  //     }
-  //   } catch (err) {
-  //     toast.error("Something went wrong");
-  //   } finally {
-  //     setReturnLoading(false);
-  //   }
-  // };
 
   const openReviewModal = (order) => {
     const productId =

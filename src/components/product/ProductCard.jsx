@@ -217,7 +217,7 @@ export default function ProductCard({
   return (
     <>
       <Link to={`/products/${product._id}`} aria-label="View product">
-        <div className="border border-1 p-1 md:p-3 w-full transition-all group bg-white h-full">
+        <div className="border border-1 p-1 md:p-3 w-full transition-all group bg-white h-full flex flex-col justify-between">
           <div className="relative">
             {labelData && (
               <div
@@ -239,7 +239,7 @@ export default function ProductCard({
             />
           </div>
 
-          <div className="mt-3 flex flex-col flex-grow">
+          <div className="mt-3 flex flex-col flex-grow justify-end">
             <p className="text-[12px] md:text-[16px] font-semibold line-clamp-2 h-[40px] leading-[20px] text-left">
               {product.name}
             </p>

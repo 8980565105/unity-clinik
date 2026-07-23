@@ -8,10 +8,12 @@ import {
   ChevronDown,
   ChevronRight,
   Heart,
+  MapPin,
   Menu,
   Package,
   Search,
   User,
+  Wallet,
   XCircleIcon,
 } from "lucide-react";
 import ShopIcon from "../icons/shop";
@@ -41,7 +43,8 @@ const FIXED_NAV_ITEMS = [
   {
     name: "Home",
     path: "/home",
-    icon: <ShopIcon className="w-5 h-6 hidden custom-lg:block" />,
+    // icon: <ShopIcon className="w-5 h-6 hidden custom-lg:block" />,
+    icon: <ShopIcon size={16} />,
   },
   {
     name: "All Products",
@@ -1357,7 +1360,7 @@ const Header = () => {
                   }}
                   className="flex items-center gap-[15px]"
                 >
-                  <Package size={20} />
+                  <MapPin size={20} />
                   Address
                 </button>
               </div>
@@ -1396,7 +1399,7 @@ const Header = () => {
                   }}
                   className="flex items-center gap-[15px]"
                 >
-                  <Package size={20} />
+                  <Wallet size={20} />
                   Unity Wallet
                 </button>
               </div>

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPageBySlug } from "../features/pages/pagesThunk";
 import Section from "../components/ui/Section";
@@ -9,6 +9,8 @@ import { getImageUrl } from "../components/utils/helper";
 import SEO from "../components/seo/seo.js";
 import Loding from "../components/loding/loding.jsx";
 import SuccessStorySection from "../components/home/SuccessStory.jsx";
+const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
+
 export default function AboutPage() {
   const dispatch = useDispatch();
   const { pages, slugLoading } = useSelector((state) => state.pages);
@@ -37,6 +39,9 @@ export default function AboutPage() {
       <AboutBanner />
       <AboutContent />
       <SuccessStorySection />
+      <Suspense>
+        <ReportCard />
+      </Suspense>
     </>
   );
 }

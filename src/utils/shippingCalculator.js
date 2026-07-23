@@ -137,6 +137,16 @@ export function getDisabledPaymentTypes(items = [], settings) {
     wallet: { disabled: false, products: [] },
   };
 
+   if (!settings) return result;
+
+
+
+    const ms = settings.methodStatus || {};
+  if (ms.cod === false) result.cod.disabled = true;
+  if (ms.prepaid === false) result.prepaid.disabled = true;
+  if (ms.partialCod === false) result.partial_cod.disabled = true;
+  if (ms.wallet === false) result.wallet.disabled = true;
+
   if (!settings?.productRules || !items.length) return result;
 
   const allRules = [
@@ -154,18 +164,12 @@ export function getDisabledPaymentTypes(items = [], settings) {
     if (pType === "all" || pType === "") return;
 
     const key =
-      pType === "partial" ||
-      pType === "partial cod" ||
-      pType === "partial_cod" ||
-      pType === "partialcod"
+      pType === "partial" || pType === "partial cod" || pType === "partial_cod" || pType === "partialcod"
         ? "partial_cod"
-        : pType === "cod"
-          ? "cod"
-          : pType === "prepaid"
-            ? "prepaid"
-            : pType === "wallet"
-              ? "wallet"
-              : null;
+        : pType === "cod" ? "cod"
+        : pType === "prepaid" ? "prepaid"
+        : pType === "wallet" ? "wallet"
+        : null;
 
     if (!key) return;
 

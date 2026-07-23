@@ -17,7 +17,6 @@ import { HelmetProvider } from "react-helmet-async";
 import Loding from "./components/loding/loding";
 import { fetchCart } from "./features/cart/cartThunk";
 import { Toaster } from "react-hot-toast";
-// import HonestReportPage from "./pages/Honest-ReportPage";
 import CouponSidebar from "./components/Coupon/CouponSidebar";
 import ConsultationPage from "./pages/Consultation";
 import Button from "./components/ui/Button";
@@ -104,6 +103,10 @@ const RouterWrapper = () => {
   const dispatch = useDispatch();
   const [showConsultBtn, setShowConsultBtn] = useState(false);
   const { info: storeData, errorInfo } = useSelector((state) => state.store);
+
+  const hideFooterPages = ["/wallet"];
+
+  const shouldHideFooter = hideFooterPages.includes(location.pathname);
 
   usePageTracking();
 
@@ -335,6 +338,7 @@ const RouterWrapper = () => {
     </>
   );
 };
+
 function App() {
   return (
     <>

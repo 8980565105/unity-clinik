@@ -37,7 +37,7 @@ function Address() {
         const postOffice = data[0].PostOffice[0];
         setFormData((prev) => ({
           ...prev,
-          city: postOffice.District || prev.city,
+          city: postOffice.Name || prev.city,
           state: postOffice.State || prev.state,
           country: postOffice.Country || "India",
         }));
@@ -285,42 +285,6 @@ function Address() {
                 </div>
 
                 <div className="flex flex-col">
-                  <label>City </label>
-                  <input
-                    name="city"
-                    placeholder="City (auto-filled from pincode)"
-                    value={formData.city}
-                    onChange={handleChange}
-                    className="border p-3 rounded-lg bg-gray-50"
-                    readOnly
-                  />
-                </div>
-
-                <div className="flex flex-col">
-                  <label>State *</label>
-                  <input
-                    name="state"
-                    placeholder="State (auto-filled from pincode)"
-                    value={formData.state}
-                    onChange={handleChange}
-                    className="border p-3 rounded-lg bg-gray-50"
-                    readOnly
-                    required
-                  />
-                </div>
-
-                <div className="flex flex-col">
-                  <label>cuntry</label>
-                  <input
-                    name="country"
-                    placeholder="cuntry"
-                    value={formData.country}
-                    onChange={handleChange}
-                    className="border p-3 rounded-lg"
-                  />
-                </div>
-
-                <div className="flex flex-col">
                   <label>Pin Code *</label>
                   <input
                     name="zip_code"
@@ -338,6 +302,63 @@ function Address() {
                     className="border p-3 rounded-lg"
                     maxLength={6}
                     required
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label>City </label>
+                  {/* <input
+                    name="city"
+                    placeholder="City (auto-filled from pincode)"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg bg-gray-50"
+                    readOnly
+                  /> */}
+                  <input
+                    name="city"
+                    placeholder="City"
+                    value={formData.city}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label>State *</label>
+                  {/* <input
+                    name="state"
+                    placeholder="State (auto-filled from pincode)"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg bg-gray-50"
+                    readOnly
+                    required
+                  /> */}
+                  <input
+                    name="state"
+                    placeholder="State"
+                    value={formData.state}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label>cuntry</label>
+                  {/* <input
+                    name="country"
+                    placeholder="cuntry"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
+                  /> */}
+                  <input
+                    name="country"
+                    placeholder="Country"
+                    value={formData.country}
+                    onChange={handleChange}
+                    className="border p-3 rounded-lg"
                   />
                 </div>
               </div>

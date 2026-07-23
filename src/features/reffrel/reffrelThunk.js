@@ -3,16 +3,16 @@ import api from "../../services/api";
 import { ROUTES } from "../../services/routes";
 
 export const fetchReferralSettings = createAsyncThunk(
-  "reffrel/fetchSettings",
-  async (_params, { rejectWithValue }) => {
+  "reffrel/fetchReferralSettings",
+  async (_, { rejectWithValue }) => {
     try {
-      const res = await api.get(ROUTES.reffrel.getSettings); 
+      const res = await api.get(ROUTES.reffrel.getSettings);
       if (!res.data.success) return rejectWithValue(res.data.message);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch offers",
+        err.response?.data?.message || "Failed to fetch referral settings"
       );
     }
-  },
+  }
 );

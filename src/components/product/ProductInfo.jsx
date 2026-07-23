@@ -187,47 +187,6 @@ export default function ProductInfo({
     navigate("/cart");
   };
 
-  // const handleAddToCart = async () => {
-  //   if (activeVariantState?.stock_quantity === 0) {
-  //     toast.error("This product is out of stock!");
-  //     return;
-  //   }
-
-  //   setAddingToCartstat(true);
-
-  //   try {
-  //     let cartId = cart?._id || localStorage.getItem("cart_id");
-
-  //     if (!cartId) {
-  //       const newCart = await dispatch(createCart()).unwrap();
-  //       cartId = newCart._id;
-  //       if (cartId) {
-  //         localStorage.setItem("cart_id", cartId);
-  //       }
-  //     }
-
-  //     const payload = {
-  //       cart_id: cartId,
-  //       product_id: product._id,
-  //       variant_id: activeVariantState._id,
-  //       quantity: 1,
-  //       pack_of: Number(selectedPackState?.badge || 1),
-  //       price: Number(selectedPackState?.offerprice || 0),
-  //       original_price: Number(selectedPackState?.price || 0),
-  //     };
-
-  //     await dispatch(addToCart(payload)).unwrap();
-  //     await dispatch(fetchCart());
-
-  //     toast.success("cart updated successfully!");
-  //     setIsAddedToCart(true);
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to add to cart");
-  //   } finally {
-  //     setAddingToCartstat(false);
-  //   }
-  // };
 
   const handleAddToCart = async () => {
     if (activeVariantState?.stock_quantity === 0) {
@@ -299,21 +258,8 @@ export default function ProductInfo({
           (step) => step?.status === true || step?.status === undefined,
         ),
       );
-    const displayOrder = {
-      "Text with img": 1,
-      Text: 2,
-      "Upgrade Product": 3,
-      Pack: 4,
-    };
 
-    const sortedSteps = [...allSteps].sort((a, b) => {
-      return (
-        (displayOrder[a.display_type] || 999) -
-        (displayOrder[b.display_type] || 999)
-      );
-    });
-
-    return sortedSteps.map((step, stepIdx) => {
+    return allSteps.map((step, stepIdx) => {
       const uiType = step?.display_type || "Text";
 
       return (

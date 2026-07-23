@@ -130,6 +130,7 @@ export default function OrderSummary({
           },
         ]
       : []),
+
     {
       value: "wallet",
       label: "Unity Wallet",
@@ -154,8 +155,10 @@ export default function OrderSummary({
           <circle cx="17.5" cy="12" r="1.2" />
         </svg>
       ),
-      disabled: walletBalance <= 0,
-      disabledText: "Your wallet balance is ₹0",
+      disabled: disabledPaymentTypes?.wallet?.disabled || walletBalance <= 0,
+      disabledText: disabledPaymentTypes?.wallet?.disabled
+        ? "This product is not available for Wallet payment"
+        : "Your wallet balance is ₹0",
     },
   ];
   return (

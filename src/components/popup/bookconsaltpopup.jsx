@@ -166,7 +166,7 @@ export function BookConsultationPopup({
         key: process.env.REACT_APP_RAZORPAY_KEY,
         amount: razorOrder.amount,
         currency: "INR",
-        name: "Consultation Booking",
+        name: "Zyfolixo (unity clinic )",
         description: `${consultationType === "voice" ? "Voice" : "Video"} Consultation`,
         order_id: razorOrder.id,
         handler: async function (response) {
