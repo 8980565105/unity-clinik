@@ -254,7 +254,7 @@ export default function Products() {
   }, [sortMode]);
 
   const handleReorder = async (newList: any[]) => {
-    setLocalProducts(newList); // optimistic UI update
+    setLocalProducts(newList);
     try {
       await dispatch(
         reorderProducts(
@@ -263,7 +263,7 @@ export default function Products() {
       ).unwrap();
     } catch (err: any) {
       toast.error(err || "Failed to update order");
-      loadSortData(); // revert on failure
+      loadSortData();
     }
   };
 
@@ -588,7 +588,6 @@ export default function Products() {
                         <th className="p-3 text-left">Image</th>
                         <th className="p-3 text-left">Product</th>
                         <th className="p-3 text-center">Price / Stock</th>
-                        {/* <th className="p-3 text-center">Order</th> */}
                         <th className="p-3 w-32 text-center">Status</th>
                         <th className="p-3 w-32 text-right">Actions</th>
                       </tr>
@@ -633,7 +632,8 @@ export default function Products() {
 
                                 <td className="p-3">
                                   <img
-                                    src={`${BASE_URL}${product?.images}`}
+                                    // src={`${BASE_URL}${product?.images}`}
+                                    src={`${product?.images}`}
                                     alt={product?.name}
                                     className="w-10 h-10 object-cover"
                                   />

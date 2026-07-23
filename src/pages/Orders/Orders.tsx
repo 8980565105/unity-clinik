@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/store";
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ConfirmDialog } from "@/components/ui/confirmDialog";
-import { toast } from "sonner";
-import { Trash2, Download, Search, X, Package, Truck, CheckCircle } from "lucide-react";
+import { Download, Package, Truck, CheckCircle, X } from "lucide-react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { toast } from "sonner";
+import { useBasePath } from "@/hooks/useBasePath";
+import { GenericTable } from "@/components/ui/adminTable";
 import {
   fetchOrders,
   deleteOrder,
@@ -26,22 +25,9 @@ import {
   refundOrder,
   decideReturn,
 } from "@/features/orders/ordersThunk";
-import { clearSelectedOrder } from "@/features/orders/ordersSlice";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Order } from "@/features/orders/ordersSlice";
 import api from "@/services/api";
 import { ROUTES } from "@/services/routes";
-import { Order, OrderStatus } from "@/features/orders/ordersSlice";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "New Order",
@@ -71,8 +57,6 @@ const STATUS_COLOR: Record<string, string> = {
   refunded: "bg-gray-100 text-gray-600",
 };
 
-const COURIERS = ["Delhivery", "Blue Dart", "DTDC", "Shiprocket", "ithink", "Custom"];
-
 const StatusBadge = ({ status }: { status: string }) => (
   <span className={`px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${STATUS_COLOR[status] || "bg-gray-100 text-gray-600"}`}>
     {STATUS_LABEL[status] || status}
@@ -85,12 +69,9 @@ const downloadPDF = async (url: string, filename: string) => {
   saveAs(blob, filename);
 };
 
-
-const Modal = ({ title, onClose, children, wide = false }: {
-  title: string; onClose: () => void; children: React.ReactNode; wide?: boolean;
-}) => (
+const Modal = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
-    <div className={`bg-white rounded-2xl shadow-2xl w-full ${wide ? "max-w-3xl" : "max-w-lg"} my-4`}>
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg my-4">
       <div className="flex justify-between items-center px-6 py-4 border-b">
         <h2 className="text-base font-semibold text-gray-800">{title}</h2>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
@@ -100,141 +81,39 @@ const Modal = ({ title, onClose, children, wide = false }: {
   </div>
 );
 
-interface AdvancedFilters {
-  products: string[]; users: string[]; colors: string[]; sizes: string[];
-  minPrice?: number; maxPrice?: number; startDate: string; endDate: string;
-}
-const DEFAULT_ADVANCED: AdvancedFilters = {
-  products: [], users: [], colors: [], sizes: [],
-  minPrice: undefined, maxPrice: undefined, startDate: "", endDate: "",
-};
-
-function MultiSelectPopover({ label, options, selected, setSelected }: {
-  label: string; options: { value: string; label: string }[];
-  selected: string[]; setSelected: React.Dispatch<React.SetStateAction<string[]>>;
-}) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="w-full text-left text-xs">
-          {selected.length ? selected.map((s) => options.find((o) => o.value === s)?.label).join(", ") : label}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 max-h-64 overflow-y-auto">
-        {options.length === 0 ? <p className="text-sm text-gray-400 p-2">No options available</p> : (
-          options.map((o) => (
-            <div key={o.value} className="flex items-center space-x-2 py-1 px-1">
-              <Checkbox
-                checked={selected.includes(o.value)}
-                onCheckedChange={(checked) => {
-                  if (checked) setSelected((prev) => [...prev, o.value]);
-                  else setSelected((prev) => prev.filter((s) => s !== o.value));
-                }}
-              />
-              <span className="text-sm">{o.label}</span>
-            </div>
-          ))
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-interface Warehouse {
-  _id: string;
-  name: string;
-  status: string;
-}
-
-
-const RETURN_TYPE_LABEL: Record<string, string> = {
-  wrong_product: "Wrong Product",
-  damage_product: "Damaged Product",
-};
-
-const baseUrl = `${import.meta.env.VITE_API_URL_IMAGE}` || "";
 export default function Orders() {
   const dispatch = useDispatch<AppDispatch>();
+  const basePath = useBasePath();
+  const { actionLoading } = useSelector((state: RootState) => state.orders);
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  const { orders, total, loading, actionLoading, selectedOrder } = useSelector((state: RootState) => state.orders);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [expandedRows, setExpandedRows] = useState<string[]>([]);
-  const [tableLoading, setTableLoading] = useState(false);
-  const [appliedFilters, setAppliedFilters] = useState({ status: "all", advanced: { ...DEFAULT_ADVANCED } });
-  type ModalType = "detail" | "confirm" | "cancel" | "pack" | "courier" | "ship" | "addAwb" | "tracking" | "deliver" | "rto" | "returnRequest" | "refund" | null
+  const [refreshKey, setRefreshKey] = useState(0);
+  const triggerRefresh = () => setRefreshKey((k) => k + 1);
 
+  type ModalType = "confirm" | "cancel" | "pack" | "ship" | "addAwb" | "deliver" | "rto" | "refund" | null;
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [targetOrder, setTargetOrder] = useState<Order | null>(null);
+
   const [adminNote, setAdminNote] = useState("");
   const [cancelReason, setCancelReason] = useState("");
-  const [warehouseName, setWarehouseName] = useState("");
-  const [courierForm, setCourierForm] = useState({ partner: "Delhivery", courier_name: "", awb_number: "", pickup_date: "" });
-  const [trackingUrl, setTrackingUrl] = useState("");
+  const [courierForm, setCourierForm] = useState({ courier_name: "", awb_number: "" });
   const [rtoForm, setRtoForm] = useState({ type: "rto" as "rto" | "returned" | "refunded", reason: "" });
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [warehouseLoading, setWarehouseLoading] = useState(false);
-
-  const [returnDecisionNote, setReturnDecisionNote] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
   const [refundNote, setRefundNote] = useState("");
-
-  const limit = 10;
-  useEffect(() => {
-    const handler = setTimeout(() => { setDebouncedQuery(searchQuery); setPage(1); }, 500);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
-
-  useEffect(() => {
-    const load = async () => {
-      setTableLoading(true);
-      const { status, advanced } = appliedFilters;
-      try {
-        await dispatch(fetchOrders({
-          page, limit,
-          search: debouncedQuery || undefined,
-          status: status === "all" ? undefined : status,
-          product: advanced.products.length ? advanced.products.join(",") : undefined,
-          user: advanced.users.length ? advanced.users.join(",") : undefined,
-          color: advanced.colors.length ? advanced.colors.join(",") : undefined,
-          size: advanced.sizes.length ? advanced.sizes.join(",") : undefined,
-          minPrice: advanced.minPrice, maxPrice: advanced.maxPrice,
-          startDate: advanced.startDate || undefined, endDate: advanced.endDate || undefined,
-        })).unwrap();
-      } catch { toast.error("Failed to fetch orders."); }
-      finally { setTableLoading(false); }
-    };
-    load();
-  }, [debouncedQuery, page, appliedFilters, dispatch]);
-
-
-  const openModal = async (type: ModalType, order: Order) => {
+  const isAdmin = user?.role === "admin";
+  const openModal = (type: ModalType, order: Order) => {
     setTargetOrder(order);
     setActiveModal(type);
     setAdminNote("");
     setCancelReason("");
-    setWarehouseName("");
-    setCourierForm({ partner: "Delhivery", courier_name: "", awb_number: "", pickup_date: "" });
-    setTrackingUrl("");
+    setCourierForm({ courier_name: "", awb_number: "" });
     setRtoForm({ type: "rto", reason: "" });
-    setReturnDecisionNote("");
     setRefundAmount(String(order.total_price || ""));
     setRefundNote("");
   };
   const closeModal = () => {
     setActiveModal(null);
     setTargetOrder(null);
-    dispatch(clearSelectedOrder());
-  };
-
-  const refreshOrders = () => {
-    const { status, advanced } = appliedFilters;
-    dispatch(fetchOrders({
-      page, limit, search: debouncedQuery || undefined,
-      status: status === "all" ? undefined : status,
-    }));
   };
 
   const handleConfirm = async () => {
@@ -242,7 +121,7 @@ export default function Orders() {
     try {
       await dispatch(confirmOrder({ id: targetOrder._id, admin_note: adminNote })).unwrap();
       toast.success("Order confirmed! Packing record created.");
-      refreshOrders(); closeModal();
+      triggerRefresh(); closeModal();
     } catch (err: any) { toast.error(err || "Failed to confirm order"); }
   };
 
@@ -251,63 +130,30 @@ export default function Orders() {
     try {
       await dispatch(cancelOrder({ id: targetOrder._id, reason: cancelReason })).unwrap();
       toast.success("Order cancelled.");
-      refreshOrders(); closeModal();
+      triggerRefresh(); closeModal();
     } catch (err: any) { toast.error(err || "Failed to cancel order"); }
   };
 
-  const handlePack = async () => {
-    if (!targetOrder || !warehouseName) return;
-    try {
-      await dispatch(packOrder({ id: targetOrder._id, warehouse_name: warehouseName })).unwrap();
-      toast.success("Order packed.");
-      refreshOrders(); closeModal();
-    } catch (err: any) { toast.error(err || "Failed to pack order"); }
-  };
-
-
-  const handleAssignCourier = async () => {
+  const handleAddAwb = async () => {
     if (!targetOrder) return;
     try {
-      await dispatch(assignCourier({ id: targetOrder._id, ...courierForm })).unwrap();
-      toast.success("Courier assigned. Order is ready to ship.");
-      refreshOrders(); closeModal();
-    } catch (err: any) { toast.error(err || "Failed to assign courier"); }
+      await dispatch(addTrackingAWB({
+        id: targetOrder._id,
+        awb_number: courierForm.awb_number,
+        courier_name: courierForm.courier_name,
+      })).unwrap();
+      toast.success("AWB added. Tracking started!");
+      triggerRefresh(); closeModal();
+    } catch (err: any) { toast.error(err || "Failed to add AWB"); }
   };
 
   const handleShip = async () => {
     if (!targetOrder) return;
     try {
       await dispatch(shipOrder(targetOrder._id)).unwrap();
-      toast.success("Order shipped! Customer will be notified.");
-      refreshOrders(); closeModal();
+      toast.success("Order shipped!");
+      triggerRefresh(); closeModal();
     } catch (err: any) { toast.error(err || "Failed to ship order"); }
-  };
-
-  const handleAddAwb = async () => {
-    if (!targetOrder) return;
-    try {
-      await dispatch(
-        addTrackingAWB({
-          id: targetOrder._id,
-          awb_number: courierForm.awb_number,
-          courier_name: courierForm.courier_name,
-        }),
-      ).unwrap();
-      toast.success("AWB added. Tracking started!");
-      refreshOrders();
-      closeModal();
-    } catch (err: any) {
-      toast.error(err || "Failed to add AWB");
-    }
-  };
-
-  const handleTracking = async () => {
-    if (!targetOrder) return;
-    try {
-      await dispatch(updateTracking({ id: targetOrder._id, tracking_url: trackingUrl })).unwrap();
-      toast.success("Tracking updated.");
-      refreshOrders(); closeModal();
-    } catch (err: any) { toast.error(err || "Failed to update tracking"); }
   };
 
   const handleDeliver = async () => {
@@ -315,7 +161,7 @@ export default function Orders() {
     try {
       await dispatch(markDelivered(targetOrder._id)).unwrap();
       toast.success("Order marked as delivered.");
-      refreshOrders(); closeModal();
+      triggerRefresh(); closeModal();
     } catch (err: any) { toast.error(err || "Failed"); }
   };
 
@@ -324,52 +170,19 @@ export default function Orders() {
     try {
       await dispatch(markRTO({ id: targetOrder._id, ...rtoForm })).unwrap();
       toast.success(`Order marked as ${rtoForm.type}`);
-      refreshOrders(); closeModal();
+      triggerRefresh(); closeModal();
     } catch (err: any) { toast.error(err || "Failed"); }
-  };
-  const handleDecideReturn = async (decision: "approved" | "rejected") => {
-    if (!targetOrder) return;
-    try {
-      await dispatch(decideReturn({ id: targetOrder._id, decision, note: returnDecisionNote })).unwrap();
-      toast.success(decision === "approved" ? "Return approved & stock restored" : "Return rejected");
-      refreshOrders();
-      closeModal();
-    } catch (err: any) {
-      toast.error(err || "Failed to process return");
-    }
   };
 
   const handleRefund = async () => {
     if (!targetOrder) return;
     const amt = Number(refundAmount);
-    if (!amt || amt <= 0) {
-      toast.error("Enter a valid refund amount");
-      return;
-    }
+    if (!amt || amt <= 0) { toast.error("Enter a valid refund amount"); return; }
     try {
       await dispatch(refundOrder({ id: targetOrder._id, amount: amt, note: refundNote })).unwrap();
       toast.success(`₹${amt} refunded to customer's wallet`);
-      refreshOrders();
-      closeModal();
-    } catch (err: any) {
-      toast.error(err || "Failed to refund");
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await dispatch(deleteOrder(id)).unwrap();
-      toast.success("Order deleted.");
-    } catch (err: any) { toast.error(err?.message || "Failed to delete order."); }
-  };
-
-  const handleBulkDelete = async () => {
-    if (!selectedIds.length) return;
-    try {
-      await dispatch(bulkDeleteOrders(selectedIds)).unwrap();
-      toast.success(`${selectedIds.length} orders deleted.`);
-      setSelectedIds([]);
-    } catch (err: any) { toast.error(err?.message || "Failed."); }
+      triggerRefresh(); closeModal();
+    } catch (err: any) { toast.error(err || "Failed to refund"); }
   };
 
   const handleDownload = async () => {
@@ -393,21 +206,8 @@ export default function Orders() {
     } catch { toast.error("Download failed."); }
   };
 
-  const toggleExpand = (id: string) =>
-    setExpandedRows((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
-
-  const totalPages = Math.ceil(total / limit);
-  const renderActionButtons = (order: Order) => {
-    const buttons = [];
-
-    if (order.return_status === "requested") {
-      buttons.push(
-        <button key="return" onClick={() => openModal("returnRequest", order)}
-          className="px-2 py-1 text-xs rounded bg-pink-100 text-pink-700 hover:bg-pink-200 font-medium">
-          Return Request
-        </button>
-      );
-    }
+  const renderFlowActions = (order: Order) => {
+    const buttons: React.ReactNode[] = [];
 
     if (order.payment_status !== "refunded" &&
       ["returned", "cancelled"].includes(order.status) &&
@@ -441,9 +241,9 @@ export default function Orders() {
       case "shipped":
       case "in_transit":
         buttons.push(
-          <button key="deliver" onClick={() => openModal("deliver", order)} className="px-2 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200 font-medium">
-            <CheckCircle size={11} className="inline mr-1" />Delivered
-          </button>
+          // <button key="deliver" onClick={() => openModal("deliver", order)} className="px-2 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200 font-medium">
+          //   <CheckCircle size={11} className="inline mr-1" />Delivered
+          // </button>
         );
         break;
       case "completed":
@@ -454,293 +254,107 @@ export default function Orders() {
         break;
     }
 
-    return buttons;
+    if (["packed", "ready_to_ship", "shipped", "in_transit", "completed"].includes(order.status)) {
+      buttons.push(
+        <button key="slip" onClick={() => downloadPDF(ROUTES.orders.packingSlip(order._id), `slip-${order.order_number}.pdf`)}
+          className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 font-medium">Slip</button>
+      );
+    }
+
+    return <div className="flex items-center gap-1 flex-wrap">{buttons}</div>;
   };
+
+  const columns = [
+    { key: "order_number", label: "Order No.", render: (item: Order) => <span className="font-medium text-primary">{item.order_number}</span> },
+    { key: "customer", label: "Customer", render: (item: Order) => item.user?.name || "—" },
+    { key: "phone", label: "Mobile", render: (item: Order) => item.shippingAddress?.phone || "—" },
+    {
+      key: "address", label: "Address", render: (item: Order) => (
+        <span className="text-xs text-muted-foreground max-w-[180px] block truncate">
+          {item.shippingAddress?.address}, {item.shippingAddress?.city}, {item.shippingAddress?.state} - {item.shippingAddress?.pincode}
+        </span>
+      )
+    },
+    { key: "total_price", label: "Amount", render: (item: Order) => <span className="font-semibold">₹{item.total_price}</span> },
+    {
+      key: "payment_method", label: "Payment", render: (item: Order) => (
+        <span className={`text-xs px-2 py-1 rounded-full font-medium ${item.payment_status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+          {item.payment_method}
+        </span>
+      )
+    },
+    { key: "status", label: "Status", render: (item: Order) => <StatusBadge status={item.status} /> },
+    { key: "flow_actions", label: "Order Actions", render: (item: Order) => renderFlowActions(item) },
+  ];
+
   return (
-    <div className="mx-auto p-6 space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Orders</h1>
-          <p className="text-sm text-muted-foreground">Manage all customer orders and track their flow.</p>
-        </div>
-        <div className="flex">
-          <Button onClick={handleDownload} variant="outline" className="flex items-center gap-2 border-border bg-card text-foreground hover:bg-muted">
+    <>
+      <GenericTable
+        key={refreshKey}
+        title="Orders"
+        columns={columns}
+        rowKey="_id"
+        searchEnabled
+        statusToggleEnabled={false}
+        viewEnabled={true}
+        viewPath={(item: any) => `${basePath}/orders/${item._id}/view`}
+        editEnabled={false}
+        // editEnabled={true}
+        // editPath={(item: any) => `${basePath}/orders/${item._id}/edit`}
+        filters={[
+          { label: "New Order", value: "pending" },
+          { label: "Order Confirmed", value: "processing" },
+          { label: "Packed", value: "packed" },
+          { label: "Ready to Ship", value: "ready_to_ship" },
+          { label: "Shipped", value: "shipped" },
+          { label: "In Transit", value: "in_transit" },
+          { label: "Delivered", value: "completed" },
+          { label: "Cancelled", value: "cancelled" },
+          { label: "Returned", value: "returned" },
+          { label: "Refunded", value: "refunded" },
+        ]}
+        fetchData={async ({ page, limit, search, status }) => {
+          try {
+            const res = await dispatch(
+              fetchOrders({ page, limit, search, status: status || undefined })
+            ).unwrap();
+            return { data: res.orders, total: res.total };
+          } catch (err: any) {
+            throw new Error(err || "Failed to load orders");
+          }
+        }}
+        deleteItem={async (id) => {
+          try {
+            await dispatch(deleteOrder(id)).unwrap();
+          } catch (err: any) {
+            throw new Error(err?.message || "Failed to delete order");
+          }
+        }}
+        bulkDeleteItems={async (ids) => {
+          try {
+            await dispatch(bulkDeleteOrders(ids)).unwrap();
+          } catch (err: any) {
+            throw new Error(err?.message || "Failed to delete orders");
+          }
+        }}
+        headerActions={
+          <Button onClick={handleDownload} variant="outline" className="flex items-center gap-2">
             <Download className="h-4 w-4" /> Export Excel
           </Button>
-          {selectedIds.length > 0 && (
-            <ConfirmDialog title="Delete Selected Orders" description={`Delete ${selectedIds.length} orders?`} confirmText="Delete All" onConfirm={handleBulkDelete} danger>
-              <Button variant="destructive" className="flex items-center gap-2">
-                <Trash2 className="h-4 w-4" /> Delete selected
-              </Button>
-            </ConfirmDialog>
-          )}
-        </div>
-      </div>
-
-
-
-      <Card className="border border-border bg-card shadow-sm">
-        <CardContent className="p-4 flex flex-col md:flex-row md:items-center gap-3 flex-wrap">
-          <div className="relative w-full md:max-w-sm">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search order number, status..." value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-input border-border text-foreground" />
-          </div>
-          <Select value={appliedFilters.status}
-            onValueChange={(v) => { setPage(1); setAppliedFilters((p) => ({ ...p, status: v })); }}>
-            <SelectTrigger className="w-[200px] bg-input border-border text-foreground"><SelectValue placeholder="Filter by status" /></SelectTrigger>
-            <SelectContent className="bg-popover border-border text-popover-foreground">
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">New Order</SelectItem>
-              <SelectItem value="processing">Order Confirmed</SelectItem>
-              <SelectItem value="packed">Packed</SelectItem>
-              <SelectItem value="ready_to_ship">Ready to Ship</SelectItem>
-              <SelectItem value="shipped">Shipped</SelectItem>
-              <SelectItem value="in_transit">In Transit</SelectItem>
-              <SelectItem value="completed">Delivered</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-              {/* <SelectItem value="rto">RTO</SelectItem> */}
-              <SelectItem value="returned">Returned</SelectItem>
-              <SelectItem value="refunded">Refunded</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-      <Card className="border border-border bg-card shadow-sm rounded-lg overflow-hidden">
-        <CardHeader className="bg-table-header px-4 py-3 border-b border-border">
-          <CardTitle className="text-base font-semibold text-foreground">
-            Orders
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto relative">
-            {tableLoading && (
-              <div className="absolute inset-0 bg-card/70 z-10 flex items-center justify-center">
-                <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <svg className="animate-spin h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  Loading...
-                </div>
-              </div>
-            )}
-            <table className="w-full text-sm text-foreground">
-              <thead className="bg-table-header border-b border-border text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th className="p-3 text-left w-10">
-                    <Checkbox
-                      checked={selectedIds.length === orders.length && orders.length > 0}
-                      onCheckedChange={(c) => setSelectedIds(c ? orders.map((o) => o._id) : [])}
-                    />
-                  </th>
-                  <th className="p-3 text-left">#</th>
-                  <th className="p-3 text-left">Order No.</th>
-                  <th className="p-3 text-left">Customer</th>
-                  <th className="p-3 text-left">Mobile</th>
-                  <th className="p-3 text-left">Address</th>
-                  <th className="p-3 text-left">Amount</th>
-                  <th className="p-3 text-left">Payment</th>
-                  <th className="p-3 text-left">Status</th>
-                  <th className="p-3 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {!tableLoading && orders.length === 0 ? (
-                  <tr><td colSpan={10} className="p-10 text-center text-muted-foreground">No orders found.</td></tr>
-                ) : (
-                  orders.map((order, index) => {
-                    const isExpanded = expandedRows.includes(order._id);
-                    return (
-                      <React.Fragment key={order._id}>
-                        <tr className="hover:bg-table-hover transition-colors">
-                          <td className="p-3">
-                            <Checkbox checked={selectedIds.includes(order._id)} onCheckedChange={() => setSelectedIds((p) => p.includes(order._id) ? p.filter((i) => i !== order._id) : [...p, order._id])} />
-                          </td>
-                          <td className="p-3 font-bold text-muted-foreground">#{(page - 1) * limit + index + 1}</td>
-                          <td className="p-3 font-medium text-primary">{order.order_number}</td>
-                          <td className="p-3">{order.user?.name || "—"}</td>
-                          <td className="p-3">{order.shippingAddress?.phone || "—"}</td>
-                          <td className="p-3 text-xs text-muted-foreground max-w-[180px] truncate">
-                            {order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
-                          </td>
-                          <td className="p-3 font-semibold">₹{order.total_price}</td>
-                          <td className="p-3">
-                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${order.payment_status === "paid" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-                              {order.payment_method}
-                            </span>
-                          </td>
-                          <td className="p-3"><StatusBadge status={order.status} /></td>
-                          <td className="p-3">
-                            <div className="flex items-center gap-1 flex-wrap justify-end">
-                              <button onClick={() => toggleExpand(order._id)}
-                                className="px-2 py-1 text-xs rounded bg-muted text-muted-foreground hover:bg-muted/80 font-medium transition-colors">View</button>
-
-                              {["packed", "ready_to_ship", "shipped", "in_transit", "completed"].includes(order.status) && (
-                                <button onClick={() => downloadPDF(ROUTES.orders.packingSlip(order._id), `slip-${order.order_number}.pdf`)}
-                                  className="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-700 hover:bg-yellow-200 font-medium">Slip</button>
-                              )}
-                              {renderActionButtons(order)}
-                              <ConfirmDialog title="Delete Order" description={`Delete order "${order.order_number}"?`} confirmText="Delete" onConfirm={() => handleDelete(order._id)} danger>
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:bg-destructive/10">
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </ConfirmDialog>
-                            </div>
-                          </td>
-                        </tr>
-
-                        {isExpanded && (
-                          <tr className="bg-muted/20">
-                            <td colSpan={10} className="p-0">
-                              <div className="p-4 border-t border-border">
-                                <p className="text-sm font-semibold text-foreground mb-3">Order Items</p>
-                                <table className="w-full text-sm text-foreground">
-                                  <thead>
-                                    <tr className="text-xs text-muted-foreground border-b border-border bg-muted/40">
-                                      <th className="px-3 py-2 text-left">Product</th>
-                                      <th className="px-3 py-2 text-left">type</th>
-                                      <th className="px-3 py-2 text-left">Sku</th>
-                                      <th className="px-3 py-2 text-center">Qty</th>
-                                      <th className="px-3 py-2 text-right">Price</th>
-                                      <th className="px-3 py-2 text-right">Subtotal</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-border">
-                                    {order.items?.map((item: any) => (
-                                      <tr key={item._id} className="hover:bg-card transition-colors">
-                                        <td className="px-3 py-2 font-medium">{item.product?.name || "Product"}</td>
-                                        <td className="px-3 py-2">
-                                          {item.is_gift ? (
-                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-pink-100 text-pink-700">
-                                              {item.is_consultation_gift ? "🎁 Consultation Gift" : "🎁 Gift"}
-                                            </span>
-                                          ) : (
-                                            <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                                              Paid
-                                            </span>
-                                          )}
-                                        </td>
-                                        <td className="px-3 py-2">{item.variant?.sku}</td>
-                                        <td className="px-3 py-2 text-center">{item.quantity}</td>
-                                        <td className="px-3 py-2 text-right">₹{item.price_at_order?.toFixed(2)}</td>
-                                        <td className="px-3 py-2 text-right font-semibold">₹{(item.price_at_order * item.quantity)?.toFixed(2)}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-
-                                {order.courier?.awb_number && (
-                                  <div className="mt-3 p-3 bg-muted/50 border border-border rounded-lg text-sm">
-                                    <p className="font-semibold text-primary mb-1">Shipping Info</p>
-                                    <p>Courier: <strong>{order.courier.name || order.courier.partner}</strong></p>
-                                    <p>AWB: <strong>{order.courier.awb_number}</strong></p>
-                                    {order.courier.tracking_url && (
-                                      <a href={order.courier.tracking_url} target="_blank" rel="noreferrer" className="text-primary underline text-xs">Track Shipment →</a>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-end gap-2 p-4 border-t border-border bg-card">
-              <Button size="sm"
-                variant="outline"
-                onClick={() => setPage((p) => Math.max(p - 1, 1))}
-                disabled={page === 1}
-                className="bg-card border-border text-foreground hover:bg-muted"
-                >
-                Prev
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button key={i}
-                  onClick={() => setPage(i + 1)}
-                  className={`px-3 py-1 rounded text-sm transition-colors ${page === i + 1
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    }`}>
-                  {i + 1}
-                </button>
-              ))}
-              <Button size="sm"
-                variant="outline"
-                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-                disabled={page === totalPages}
-                className="bg-card border-border text-foreground hover:bg-muted"
-              >
-                Next
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {activeModal === "detail" && selectedOrder && (
-        <Modal title={`Order Detail — ${(selectedOrder as any).order?.order_number || (selectedOrder as any).order_number}`} onClose={closeModal} wide>
-          <div className="space-y-4 text-sm">
-            <div className="flex items-center gap-3">
-              <StatusBadge status={(selectedOrder as any).order?.status || (selectedOrder as any).status} />
-              <span className="text-gray-400 text-xs">{new Date((selectedOrder as any).order?.createdAt || (selectedOrder as any).createdAt).toLocaleString("en-IN")}</span>
-            </div>
-            {((selectedOrder as any).order?.courier?.awb_number) && (
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <p className="font-semibold text-blue-700 mb-1">Courier</p>
-                <p>Partner: {(selectedOrder as any).order?.courier?.name}</p>
-                <p>AWB: {(selectedOrder as any).order?.courier?.awb_number}</p>
-                {(selectedOrder as any).order?.courier?.tracking_url && (
-                  <a href={(selectedOrder as any).order?.courier?.tracking_url} target="_blank" rel="noreferrer" className="text-blue-600 underline text-xs">Track →</a>
-                )}
-              </div>
-            )}
-            {((selectedOrder as any).order?.status_history?.length > 0) && (
-              <div>
-                <p className="font-semibold text-gray-700 mb-2">Status History</p>
-                <div className="space-y-2 border-l-2 border-blue-100 pl-3">
-                  {[...((selectedOrder as any).order?.status_history || [])].reverse().map((h: any, i: number) => (
-                    <div key={i} className="flex gap-2 items-start">
-                      <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">{STATUS_LABEL[h.status] || h.status}</p>
-                        <p className="text-xs text-gray-400">{new Date(h.changed_at).toLocaleString("en-IN")} · {h.changed_by}{h.note ? ` — ${h.note}` : ""}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={closeModal}>Close</Button>
-            </div>
-          </div>
-        </Modal>
-      )}
+        }
+      />
 
       {activeModal === "confirm" && targetOrder && (
         <Modal title={`Confirm Order — ${targetOrder.order_number}`} onClose={closeModal}>
           <p className="text-sm text-gray-600 mb-1">Verify payment and stock, then confirm this order.</p>
           <p className="text-xs text-indigo-600 mb-3">✓ A Packing record will be auto-created once confirmed.</p>
-          <div className="space-y-3">
-            <div className="p-3 bg-gray-50 rounded-lg text-sm">
-              <p><strong>Customer:</strong> {targetOrder.user?.name}</p>
-              <p><strong>Amount:</strong> ₹{targetOrder.total_price} · {targetOrder.payment_method}</p>
-              <p><strong>Address:</strong> {targetOrder.shippingAddress?.city}, {targetOrder.shippingAddress?.state}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Admin Note (optional)</label>
-              <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                value={adminNote} onChange={(e) => setAdminNote(e.target.value)} placeholder="Add a note..." />
-            </div>
+          <div className="p-3 bg-gray-50 rounded-lg text-sm mb-3">
+            <p><strong>Customer:</strong> {targetOrder.user?.name}</p>
+            <p><strong>Amount:</strong> ₹{targetOrder.total_price} · {targetOrder.payment_method}</p>
           </div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Admin Note (optional)</label>
+          <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            value={adminNote} onChange={(e) => setAdminNote(e.target.value)} placeholder="Add a note..." />
           <div className="flex gap-3 mt-4">
             <Button disabled={actionLoading} onClick={handleConfirm} className="flex-1 bg-indigo-600 hover:bg-indigo-700">
               {actionLoading ? "Confirming..." : "Confirm Order"}
@@ -750,11 +364,23 @@ export default function Orders() {
         </Modal>
       )}
 
+      {activeModal === "cancel" && targetOrder && (
+        <Modal title={`Cancel Order — ${targetOrder.order_number}`} onClose={closeModal}>
+          <p className="text-sm text-gray-600 mb-3">Are you sure you want to cancel this order? Stock will be restored.</p>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Reason <span className="text-red-500">*</span></label>
+          <textarea rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+            value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Enter cancellation reason..." />
+          <div className="flex gap-3 mt-4">
+            <Button disabled={actionLoading || !cancelReason.trim()} onClick={handleCancel} className="flex-1 bg-red-600 hover:bg-red-700">
+              {actionLoading ? "Cancelling..." : "Cancel Order"}
+            </Button>
+            <Button variant="outline" onClick={closeModal} className="flex-1">Go Back</Button>
+          </div>
+        </Modal>
+      )}
+
       {activeModal === "addAwb" && targetOrder && (
         <Modal title={`Add AWB — ${targetOrder.order_number}`} onClose={closeModal}>
-          <p className="text-sm text-gray-600 mb-3">
-            iThink dashboard ma order create thai gayo chhe. Tya thi courier select karya pachi malela AWB number ahiya enter karo.
-          </p>
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Courier Name</label>
@@ -768,7 +394,7 @@ export default function Orders() {
               <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm"
                 value={courierForm.awb_number}
                 onChange={(e) => setCourierForm({ ...courierForm, awb_number: e.target.value })}
-                placeholder="Enter AWB number from iThink dashboard" />
+                placeholder="Enter AWB number" />
             </div>
           </div>
           <div className="flex gap-3 mt-4">
@@ -780,131 +406,12 @@ export default function Orders() {
         </Modal>
       )}
 
-      {activeModal === "cancel" && targetOrder && (
-        <Modal title={`Cancel Order — ${targetOrder.order_number}`} onClose={closeModal}>
-          <p className="text-sm text-gray-600 mb-3">Are you sure you want to cancel this order? Stock will be restored.</p>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Reason <span className="text-red-500">*</span></label>
-            <textarea rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
-              value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} placeholder="Enter cancellation reason..." />
-          </div>
-          <div className="flex gap-3 mt-4">
-            <Button disabled={actionLoading || !cancelReason.trim()} onClick={handleCancel} className="flex-1 bg-red-600 hover:bg-red-700">
-              {actionLoading ? "Cancelling..." : "Cancel Order"}
-            </Button>
-            <Button variant="outline" onClick={closeModal} className="flex-1">Go Back</Button>
-          </div>
-        </Modal>
-      )}
-
-      {activeModal === "pack" && targetOrder && (
-        <Modal title={`Pack Order — ${targetOrder.order_number}`} onClose={closeModal}>
-          <p className="text-sm text-gray-600 mb-4">Select a warehouse to pack this order.</p>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Warehouse <span className="text-red-500">*</span>
-            </label>
-
-            {warehouseLoading ? (
-              <div className="flex items-center gap-2 py-3 px-3 border rounded-lg bg-gray-50 text-sm text-gray-500">
-                <svg className="animate-spin h-4 w-4 text-yellow-500 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                </svg>
-                Loading warehouses...
-              </div>
-            ) : warehouses.length === 0 ? (
-              <p className="text-sm text-red-500 py-2">No active warehouses found. Please add a warehouse first.</p>
-            ) : (
-              <select
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
-                value={warehouseName}
-                onChange={(e) => setWarehouseName(e.target.value)}
-              >
-                <option value="">— Select a warehouse —</option>
-                {warehouses.map((w) => (
-                  <option key={w._id} value={w.name}>{w.name}</option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          <div className="flex gap-3 mt-5">
-            <Button
-              disabled={actionLoading || warehouseLoading || !warehouseName}
-              onClick={handlePack}
-              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white"
-            >
-              {actionLoading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                  </svg>
-                  Packing...
-                </span>
-              ) : (
-                <><Package size={14} className="mr-1" />Mark as Packed</>
-              )}
-            </Button>
-            <Button variant="outline" onClick={closeModal} className="flex-1" disabled={actionLoading}>
-              Cancel
-            </Button>
-          </div>
-        </Modal>
-      )}
-      {activeModal === "courier" && targetOrder && (
-        <Modal title={`Assign Courier — ${targetOrder.order_number}`} onClose={closeModal}>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Courier Partner <span className="text-red-500">*</span></label>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                value={courierForm.partner} onChange={(e) => setCourierForm({ ...courierForm, partner: e.target.value })}>
-                {COURIERS.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            {courierForm.partner === "Custom" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Custom Courier Name</label>
-                <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  value={courierForm.courier_name} onChange={(e) => setCourierForm({ ...courierForm, courier_name: e.target.value })} placeholder="Enter courier name" />
-              </div>
-            )}
-
-            {courierForm.partner === "ithink" ? (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
-                ⚡ AWB number automatically iThink Logistics thi generate thase.
-              </div>
-            ) : (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">AWB / Tracking Number <span className="text-red-500">*</span></label>
-                <input type="text" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  value={courierForm.awb_number} onChange={(e) => setCourierForm({ ...courierForm, awb_number: e.target.value })} placeholder="Enter AWB number" />
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Date</label>
-              <input type="date" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                value={courierForm.pickup_date} onChange={(e) => setCourierForm({ ...courierForm, pickup_date: e.target.value })} />
-            </div>
-          </div>
-          <div className="flex gap-3 mt-4">
-            <Button disabled={actionLoading || (courierForm.partner !== "ithink" && !courierForm.awb_number)} onClick={handleAssignCourier} className="flex-1 bg-orange-500 hover:bg-orange-600 text-white">
-              <Truck size={14} className="mr-1" />{actionLoading ? "Assigning..." : "Assign & Ready to Ship"}
-            </Button>
-            <Button variant="outline" onClick={closeModal} className="flex-1">Cancel</Button>
-          </div>
-        </Modal>
-      )}
-
       {activeModal === "ship" && targetOrder && (
         <Modal title={`Dispatch Order — ${targetOrder.order_number}`} onClose={closeModal}>
           <div className="p-3 bg-purple-50 rounded-lg text-sm mb-4">
             <p><strong>Courier:</strong> {targetOrder.courier?.name || targetOrder.courier?.partner}</p>
             <p><strong>AWB:</strong> {targetOrder.courier?.awb_number}</p>
-            {targetOrder.courier?.tracking_url && <p><strong>Tracking:</strong> <a href={targetOrder.courier.tracking_url} target="_blank" rel="noreferrer" className="text-blue-500 underline">Link</a></p>}
           </div>
-          <p className="text-xs text-yellow-600 mb-4">⚡ Customer will be notified via SMS/Email after dispatch.</p>
           <div className="flex gap-3">
             <Button disabled={actionLoading} onClick={handleShip} className="flex-1 bg-purple-600 hover:bg-purple-700">
               {actionLoading ? "Dispatching..." : "Confirm Dispatch"}
@@ -914,31 +421,15 @@ export default function Orders() {
         </Modal>
       )}
 
-      {activeModal === "tracking" && targetOrder && (
-        <Modal title={`Update Tracking — ${targetOrder.order_number}`} onClose={closeModal}>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Tracking URL (optional)</label>
-            <input type="url" className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              value={trackingUrl} onChange={(e) => setTrackingUrl(e.target.value)} placeholder="https://..." />
-          </div>
-          <div className="flex gap-3 mt-4">
-            <Button disabled={actionLoading} onClick={handleTracking} className="flex-1 bg-cyan-600 hover:bg-cyan-700">
-              {actionLoading ? "Updating..." : "Mark In Transit"}
-            </Button>
-            <Button variant="outline" onClick={closeModal} className="flex-1">Cancel</Button>
-          </div>
-        </Modal>
-      )}
-
       {activeModal === "deliver" && targetOrder && (
         <Modal title={`Mark as Delivered — ${targetOrder.order_number}`} onClose={closeModal}>
-          <p className="text-sm text-gray-600 mb-2">Confirm that this order has been delivered to the customer.</p>
+          <p className="text-sm text-gray-600 mb-2">Confirm that this order has been delivered.</p>
           {targetOrder.payment_method === "COD" && (
-            <p className="text-xs text-green-600 mb-3 p-2 bg-green-50 rounded">✓ COD payment of ₹{targetOrder.total_price} will be marked as collected.</p>
+            <p className="text-xs text-green-600 mb-3 p-2 bg-green-50 rounded">✓ COD ₹{targetOrder.total_price} will be marked as collected.</p>
           )}
           <div className="flex gap-3">
             <Button disabled={actionLoading} onClick={handleDeliver} className="flex-1 bg-green-600 hover:bg-green-700">
-              <CheckCircle size={14} className="mr-1" />{actionLoading ? "Marking..." : "Mark as Delivered"}
+              {actionLoading ? "Marking..." : "Mark as Delivered"}
             </Button>
             <Button variant="outline" onClick={closeModal} className="flex-1">Cancel</Button>
           </div>
@@ -948,20 +439,14 @@ export default function Orders() {
       {activeModal === "rto" && targetOrder && (
         <Modal title={`Return / RTO — ${targetOrder.order_number}`} onClose={closeModal}>
           <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-              <select className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-                value={rtoForm.type} onChange={(e) => setRtoForm({ ...rtoForm, type: e.target.value as any })}>
-                <option value="rto">RTO — Return to Origin</option>
-                <option value="returned">Returned by Customer</option>
-                <option value="refunded">Refunded</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
-              <textarea rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
-                value={rtoForm.reason} onChange={(e) => setRtoForm({ ...rtoForm, reason: e.target.value })} placeholder="Enter reason..." />
-            </div>
+            <select className="w-full border rounded-lg px-3 py-2 text-sm"
+              value={rtoForm.type} onChange={(e) => setRtoForm({ ...rtoForm, type: e.target.value as any })}>
+              <option value="rto">RTO — Return to Origin</option>
+              <option value="returned">Returned by Customer</option>
+              <option value="refunded">Refunded</option>
+            </select>
+            <textarea rows={3} className="w-full border rounded-lg px-3 py-2 text-sm"
+              value={rtoForm.reason} onChange={(e) => setRtoForm({ ...rtoForm, reason: e.target.value })} placeholder="Enter reason..." />
           </div>
           <div className="flex gap-3 mt-4">
             <Button disabled={actionLoading} onClick={handleRTO} className="flex-1 bg-rose-600 hover:bg-rose-700">
@@ -972,192 +457,27 @@ export default function Orders() {
         </Modal>
       )}
 
-      {/* {activeModal === "returnRequest" && targetOrder && (
-        <Modal title={`Return Request — ${targetOrder.order_number}`} onClose={closeModal}>
-          <div className="p-3 bg-pink-50 rounded-lg text-sm mb-4">
-            <p><strong>Customer reason:</strong> {targetOrder.return_reason || "—"}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Requested: {targetOrder.return_requested_at ? new Date(targetOrder.return_requested_at).toLocaleString("en-IN") : "—"}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Admin Note (optional)</label>
-            <textarea rows={3} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
-              value={returnDecisionNote} onChange={(e) => setReturnDecisionNote(e.target.value)} placeholder="Add a note..." />
-          </div>
-          <div className="flex gap-3 mt-4">
-            <Button disabled={actionLoading} onClick={() => handleDecideReturn("approved")} className="flex-1 bg-green-600 hover:bg-green-700">
-              {actionLoading ? "Processing..." : "Approve Return"}
-            </Button>
-            <Button disabled={actionLoading} onClick={() => handleDecideReturn("rejected")} variant="destructive" className="flex-1">
-              Reject
-            </Button>
-            <Button variant="outline" onClick={closeModal} className="flex-1">Close</Button>
-          </div>
-        </Modal>
-      )} */}
-
-      {activeModal === "returnRequest" && targetOrder && (
-        <Modal title={`Return Request — ${targetOrder.order_number}`} onClose={closeModal} wide>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 p-3 bg-pink-50 rounded-lg text-sm">
-              <div>
-                <p className="text-xs text-gray-500">Return Type</p>
-                <p className="font-semibold text-pink-700">
-                  {RETURN_TYPE_LABEL[(targetOrder as any).return_type] || "—"}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Requested At</p>
-                <p className="font-medium">
-                  {targetOrder.return_requested_at
-                    ? new Date(targetOrder.return_requested_at).toLocaleString("en-IN")
-                    : "—"}
-                </p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-xs text-gray-500">Customer Reason</p>
-                <p className="font-medium">{targetOrder.return_reason || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Customer</p>
-                <p className="font-medium">{(targetOrder as any).user?.name || "—"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Order Total</p>
-                <p className="font-medium">₹{targetOrder.total_price}</p>
-              </div>
-            </div>
-
-            {/* Proof images */}
-            {(targetOrder as any).return_media?.images?.length > 0 && (
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Images ({(targetOrder as any).return_media.images.length})
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(targetOrder as any).return_media.images.map((url: string, i: number) => {
-                    const src = url.startsWith("http") ? url : `${baseUrl}${url}`;
-                    return (
-                      <a key={i} href={src} target="_blank" rel="noreferrer">
-                        <img
-                          src={src}
-                          alt={`return-proof-${i}`}
-                          className="w-24 h-24 object-cover rounded-lg border border-gray-200 hover:opacity-80 transition"
-                        />
-                      </a>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Proof videos */}
-            {(targetOrder as any).return_media?.videos?.length > 0 && (
-              <div>
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Videos ({(targetOrder as any).return_media.videos.length})
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {(targetOrder as any).return_media.videos.map((url: string, i: number) => {
-                    const src = url.startsWith("http") ? url : `${baseUrl}${url}`;
-                    return (
-                      <video
-                        key={i}
-                        src={src}
-                        controls
-                        className="w-40 h-28 rounded-lg border border-gray-200 bg-black"
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {(!((targetOrder as any).return_media?.images?.length) &&
-              !((targetOrder as any).return_media?.videos?.length)) && (
-                <p className="text-xs text-gray-400">No proof media uploaded.</p>
-              )}
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Admin Note (optional)
-              </label>
-              <textarea
-                rows={3}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-pink-400"
-                value={returnDecisionNote}
-                onChange={(e) => setReturnDecisionNote(e.target.value)}
-                placeholder="Add a note..."
-              />
-            </div>
-
-            <p className="text-xs text-indigo-600">
-              ✓ Approving will restock the product and automatically create an
-              iThink reverse pickup. Customer will see reverse tracking on their
-              order page once generated.
-            </p>
-          </div>
-
-          <div className="flex gap-3 mt-4">
-            <Button
-              disabled={actionLoading}
-              onClick={() => handleDecideReturn("approved")}
-              className="flex-1 bg-green-600 hover:bg-green-700"
-            >
-              {actionLoading ? "Processing..." : "Approve Return"}
-            </Button>
-            <Button
-              disabled={actionLoading}
-              onClick={() => handleDecideReturn("rejected")}
-              variant="destructive"
-              className="flex-1"
-            >
-              Reject
-            </Button>
-            <Button variant="outline" onClick={closeModal} className="flex-1">
-              Close
-            </Button>
-          </div>
-        </Modal>
-      )}
-
       {activeModal === "refund" && targetOrder && (
         <Modal title={`Refund to Wallet — ${targetOrder.order_number}`} onClose={closeModal}>
           <div className="p-3 bg-teal-50 rounded-lg text-sm mb-4">
             <p><strong>Customer:</strong> {targetOrder.user?.name}</p>
             <p><strong>Order Total:</strong> ₹{targetOrder.total_price}</p>
-            <p><strong>Status:</strong> {STATUS_LABEL[targetOrder.status] || targetOrder.status}</p>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Refund Amount <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={targetOrder.total_price}
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              value={refundAmount}
-              onChange={(e) => setRefundAmount(e.target.value)}
-              placeholder="Enter amount to refund"
-            />
-            <p className="text-xs text-gray-400 mt-1">Max: ₹{targetOrder.total_price}</p>
-          </div>
-          <div className="mt-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Note (optional)</label>
-            <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
-              value={refundNote} onChange={(e) => setRefundNote(e.target.value)} placeholder="e.g. Product returned in good condition" />
-          </div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Refund Amount <span className="text-red-500">*</span></label>
+          <input type="number" min={1} max={targetOrder.total_price}
+            className="w-full border rounded-lg px-3 py-2 text-sm"
+            value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} placeholder="Enter amount" />
+          <label className="block text-sm font-medium text-gray-700 mb-1 mt-3">Note (optional)</label>
+          <textarea rows={2} className="w-full border rounded-lg px-3 py-2 text-sm"
+            value={refundNote} onChange={(e) => setRefundNote(e.target.value)} placeholder="Note..." />
           <div className="flex gap-3 mt-4">
             <Button disabled={actionLoading || !refundAmount} onClick={handleRefund} className="flex-1 bg-teal-600 hover:bg-teal-700">
-              {actionLoading ? "Refunding..." : `Refund ₹${refundAmount || 0} to Wallet`}
+              {actionLoading ? "Refunding..." : `Refund ₹${refundAmount || 0}`}
             </Button>
             <Button variant="outline" onClick={closeModal} className="flex-1">Cancel</Button>
           </div>
         </Modal>
       )}
-
-    </div>
+    </>
   );
 }

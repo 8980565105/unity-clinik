@@ -224,7 +224,7 @@ export default function VelzonDashboard() {
     },
     {
       title: "Total Revenue",
-      value: `$${totalRevenue.toLocaleString()}`,
+      value: `₹${totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       bgClass: "stat-card-warning",
       ...revenueChange,
@@ -445,7 +445,7 @@ export default function VelzonDashboard() {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">
-                          ${order.total_price}
+                          ₹{order.total_price}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {new Date(order.createdAt).toLocaleDateString()}

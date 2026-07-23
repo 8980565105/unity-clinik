@@ -27,7 +27,7 @@ export default function PaymentsPage() {
       key: "amount_paid",
       label: "Amount",
       width: "w-30",
-      render: (item: any) => `$${item?.amount_paid?.toFixed(2) || "0.00"}`,
+      render: (item: any) => `₹${item?.amount_paid?.toFixed(2) || "0.00"}`,
     },
     {
       key: "type",

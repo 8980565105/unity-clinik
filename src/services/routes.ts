@@ -105,6 +105,9 @@ export const ROUTES = {
     addAwb: (id: string) => `/orders/${id}/add-awb`,
     decideReturn: (id: string) => `orders/${id}/decide-return`,
     refund: (id: string) => `orders/${id}/refund`,
+    shippingDetails: (id: string) => `/orders/${id}/shipping-details`,
+    pushIthink: (id: string) => `/orders/${id}/push-ithink`,
+    getTracking: (id: string) => `/orders/${id}/tracking-live`,
   },
   payments: {
     getAll: "/payments",

@@ -96,17 +96,22 @@ interface ContactSection {
     buttonLink: string;
 
 }
+interface FeaturesCard {
+    title: string;
+    description: string;
+    imageUrl: string | null;
+}
 
 type SectionType =
     | ""
     | "hero1" | "banner1" | "topDoctor" | "banner2" | "banner3" | "banner4"
     | "shoppage" | "successStory" | "reportCard"
-    | "honestExpectations" | "getStarted" | "timelineResult" | "holisticApproach" | "contactSection";
+    | "honestExpectations" | "getStarted" | "timelineResult" | "holisticApproach" | "contactSection" | "featuressection";
 
 const ALL_SECTIONS: Exclude<SectionType, "">[] = [
     "hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4",
     "shoppage", "successStory", "reportCard",
-    "honestExpectations", "getStarted", "timelineResult", "holisticApproach", "contactSection",
+    "honestExpectations", "getStarted", "timelineResult", "holisticApproach", "contactSection", "featuressection",
 ];
 
 const SECTION_LABELS: Record<string, string> = {
@@ -119,6 +124,7 @@ const SECTION_LABELS: Record<string, string> = {
     timelineResult: "Timeline Result (Month wise)",
     holisticApproach: "Holistic Approach (Cards)",
     contactSection: "Contact Section",
+    featuressection: "features Section"
 };
 
 
@@ -128,7 +134,7 @@ const defaultReportCardSlide = (): ReportCardSlide => ({
     stage: "", title: "", description: "",
     name: "", age: "", rating: "",
 });
-
+const defaultFeaturesCard = (): FeaturesCard => ({ title: "", description: "", imageUrl: null });
 
 const defaultHero1Slide = (): Hero1Slide => ({
     title: "", description: "", button_name: "", button_link: "",
@@ -490,7 +496,7 @@ export default function SlideFormPage() {
     const [timelineFemaleStages, setTimelineFemaleStages] = useState<TimelineStageItem[]>([defaultTimelineStage()]);
     const [holisticCards, setHolisticCards] = useState<HolisticCard[]>([defaultHolisticCard()]);
     const [contactSection, setContactSection] = useState(defaultContactSection());
-
+    const [featuresCards, setFeaturesCards] = useState<FeaturesCard[]>([defaultFeaturesCard()]);
     const slidesState = useSelector((state: any) => state.slides);
     const allSlides: any[] = Array.isArray(slidesState)
         ? slidesState
@@ -627,6 +633,11 @@ export default function SlideFormPage() {
                     })
 
                 }
+                if (doc.section === "featuressection" && Array.isArray(doc.featuresCards)) {
+                    setFeaturesCards(doc.featuresCards.map((s: any) => ({
+                        title: s.title ?? "", description: s.description ?? "", imageUrl: s.image ?? null,
+                    })));
+                }
             })
             .catch(() => { toast.error("Failed to load slide data"); navigate(`${basePath}/slider`); })
             .finally(() => setPageLoading(false));
@@ -753,6 +764,10 @@ export default function SlideFormPage() {
                 buttonLink: contactSection.buttonLink
             }
 
+        } else if (selectedSection === "featuressection") {
+            payload.slides = featuresCards.map(s => ({
+                title: s.title, description: s.description, image: s.imageUrl,
+            }));
         }
 
 
@@ -923,6 +938,51 @@ export default function SlideFormPage() {
                                     </CardContent>
                                 </Card>
                             ))}
+                        </div>
+                    )}
+                    {selectedSection === "featuressection" && (
+                        <div className="space-y-4">
+                            {featuresCards.map((card, index) => (
+                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <CardTitle className="text-base font-semibold text-gray-700">Feature {index + 1}</CardTitle>
+                                            {featuresCards.length > 1 && (
+                                                <Button type="button" variant="destructive" size="sm"
+                                                    onClick={() => removeSlideItem(setFeaturesCards, index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <Label>Title <span className="text-red-500">*</span></Label>
+                                            <Input placeholder="e.g. Shipping Worldwide" value={card.title}
+                                                onChange={e => updateField(setFeaturesCards, index, "title", e.target.value)}
+                                                required className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Subtitle / Description</Label>
+                                            <Textarea placeholder="e.g. We deliver to all the locations across the world." value={card.description}
+                                                onChange={e => updateField(setFeaturesCards, index, "description", e.target.value)}
+                                                className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Icon / Image</Label>
+                                            <div className="mt-1">
+                                                <ImageUpload value={card.imageUrl}
+                                                    onChange={url => updateField(setFeaturesCards, index, "imageUrl", url as string | null)}
+                                                    size={130} />
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            <button type="button" onClick={() => addSlideItem(setFeaturesCards, defaultFeaturesCard)}
+                                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 text-sm font-medium">
+                                + Add Feature
+                            </button>
                         </div>
                     )}
 

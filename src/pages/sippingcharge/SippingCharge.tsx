@@ -11,6 +11,7 @@ import { fetchShippingCharge, saveShippingCharge } from "@/features/sippingcharg
 import { fetchsubCategories } from "@/features/subcategories/subcategoriesThunk";
 import { fetchProducts } from "@/features/products/productsThunk";
 import ReactSelect from "react-select";
+import { Switch } from "@/components/ui/switch";
 
 type Range = {
     from: string;
@@ -339,25 +340,6 @@ const RuleCard = ({
                             onChange={(e) => patch({ freeThreshold: e.target.value })}
                         />
                     </div>
-                    <div className="space-y-2">
-                        <Label>Payment Type *</Label>
-                        <Select
-                            value={rule.paymentType}
-                            onValueChange={(val) => patch({ paymentType: val as PaymentType })}
-                        >
-                            <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select payment Type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">all</SelectItem>
-                                <SelectItem value="cod">cod</SelectItem>
-                                <SelectItem value="partial">partial cod</SelectItem>
-                                <SelectItem value="prepaid">prepaid</SelectItem>
-                                <SelectItem value="wallet">wallet</SelectItem>
-
-                            </SelectContent>
-                        </Select>
-                    </div>
                 </div>
                 <p className="text-sm font-semibold">Ranges</p>
                 {rule.ranges.map((range, i) => (
@@ -554,6 +536,12 @@ export default function SippingCharge() {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [methodStatus, setMethodStatus] = useState({
+        cod: true,
+        prepaid: true,
+        partialCod: true,
+        wallet: true,
+    });
     const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
     const productOptions: Option[] = useMemo(
         () => products.map((p) => ({ value: p._id, label: p.name })),
@@ -563,6 +551,7 @@ export default function SippingCharge() {
         () => subCategories.map((c) => ({ value: c._id, label: c.name })),
         [subCategories]
     );
+
 
     const [giftRules, setGiftRules] = useState<GiftRule[]>([]);
 
@@ -591,6 +580,13 @@ export default function SippingCharge() {
                     setPcodValue(
                         data?.partialCod?.value !== undefined ? String(data.partialCod.value) : ""
                     );
+                    setMethodStatus({
+                        cod: data?.methodStatus?.cod ?? true,
+                        prepaid: data?.methodStatus?.prepaid ?? true,
+                        partialCod: data?.methodStatus?.partialCod ?? true,
+                        wallet: data?.methodStatus?.wallet ?? true,
+                    });
+
                     setCodRules(mapRulesFromApi(data?.productRules?.cod, loadedProducts, loadedSubCategories));
                     setPrepaidRules(mapRulesFromApi(data?.productRules?.prepaid, loadedProducts, loadedSubCategories));
                     setPartialRules(mapRulesFromApi(data?.productRules?.partialCod, loadedProducts, loadedSubCategories));
@@ -610,7 +606,8 @@ export default function SippingCharge() {
 
     const getRules = (tab: TabKey) =>
         tab === "cod" ? codRules : tab === "prepaid" ? prepaidRules : tab === "wallet" ? walletRules : partialRules;
-
+    const getStatusKey = (tab: TabKey) =>
+        tab === "cod" ? "cod" : tab === "prepaid" ? "prepaid" : tab === "wallet" ? "wallet" : "partialCod";
 
     const addRule = (tab: TabKey) => {
         const setter = getRulesSetter(tab);
@@ -769,6 +766,7 @@ export default function SippingCharge() {
 
         const payload: any = {
             shippingType: "price",
+            methodStatus,
         };
 
         if (activeTab === "cod") {
@@ -786,9 +784,6 @@ export default function SippingCharge() {
         } else if (activeTab === "gift") {
             payload.giftRules = giftRules.map(toApiGiftRule);
         }
-
-        // const tabLabel =
-        //     activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" : activeTab === "wallet" ? "Wallet" : "Partial COD";
 
         const tabLabel =
             activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" :
@@ -895,7 +890,17 @@ export default function SippingCharge() {
                         <Card>
                             <CardHeader><CardTitle>COD Rules</CardTitle></CardHeader>
                             <CardContent className="space-y-6">
-                                {renderTabRules("cod", "cod")}
+                                <div className="flex flex-col space-y-6">
+                                    <Label>{methodStatus.cod ? "cod is Active" : "cod is Inactive"}</Label>
+                                    <Switch
+                                        id="cod-status"
+                                        checked={methodStatus.cod}
+                                        onCheckedChange={(val) => setMethodStatus((prev) => ({ ...prev, cod: val }))}
+                                    />
+                                </div>
+                                {methodStatus.cod ? renderTabRules("cod", "cod") : (
+                                    <p className="text-sm text-gray-500">cod payment is currently disabled for all customers.</p>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -904,6 +909,31 @@ export default function SippingCharge() {
                             <CardHeader><CardTitle>Partial COD Rules</CardTitle></CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+
+
+                                    {/* <div className="flex flex-col space-y-6">
+                                        <Label>{status === true ? "partial is Active" : "partial is Inactive"}</Label>
+
+                                        <Switch
+                                            id="status"
+                                            checked={status}
+                                            onCheckedChange={setStatus}
+                                        />
+                                    </div> */}
+
+
+
+                                    <div className="flex flex-col space-y-6">
+                                        <Label>{methodStatus.partialCod ? "partial Cod is Active" : "partial Cod is Inactive"}</Label>
+                                        <Switch
+                                            id="partial-status"
+                                            checked={methodStatus.partialCod}
+                                            onCheckedChange={(val) => setMethodStatus((prev) => ({ ...prev, partialCod: val }))}
+                                        />
+                                    </div>
+
+
+
                                     <div className="space-y-2">
                                         <Label>Partial COD Type *</Label>
                                         <Select value={pcodType} onValueChange={(val) => setPcodType(val as "fixed" | "percentage")}>
@@ -929,7 +959,12 @@ export default function SippingCharge() {
                                         )}
                                     </div>
                                 </div>
-                                {renderTabRules("partial", "partial")}
+
+                                {/* {status === true ? (renderTabRules("partial", "partial")) : ""} */}
+                                {methodStatus.partialCod ? renderTabRules("partial", "partial") : (
+                                    <p className="text-sm text-gray-500">partial Cod  payment is currently disabled for all customers.</p>
+                                )}
+                                {/* {renderTabRules("partial", "partial")} */}
                             </CardContent>
                         </Card>
                     )}
@@ -937,7 +972,18 @@ export default function SippingCharge() {
                         <Card>
                             <CardHeader><CardTitle>Prepaid Rules</CardTitle></CardHeader>
                             <CardContent className="space-y-6">
-                                {renderTabRules("prepaid", "prepaid")}
+                                <div className="flex flex-col space-y-6">
+                                    <Label>{methodStatus.prepaid ? "prepaid is Active" : "prepaid is Inactive"}</Label>
+                                    <Switch
+                                        id="prepaid-status"
+                                        checked={methodStatus.prepaid}
+                                        onCheckedChange={(val) => setMethodStatus((prev) => ({ ...prev, prepaid: val }))}
+                                    />
+                                </div>
+                                {methodStatus.prepaid ? renderTabRules("prepaid", "prepaid") : (
+                                    <p className="text-sm text-gray-500">prepaid payment is currently disabled for all customers.</p>
+                                )}
+
                             </CardContent>
                         </Card>
                     )}
@@ -945,7 +991,17 @@ export default function SippingCharge() {
                         <Card>
                             <CardHeader><CardTitle>Wallet Rules</CardTitle></CardHeader>
                             <CardContent className="space-y-6">
-                                {renderTabRules("wallet", "wallet")}
+                                <div className="flex flex-col space-y-6">
+                                    <Label>{methodStatus.wallet ? "Wallet is Active" : "Wallet is Inactive"}</Label>
+                                    <Switch
+                                        id="wallet-status"
+                                        checked={methodStatus.wallet}
+                                        onCheckedChange={(val) => setMethodStatus((prev) => ({ ...prev, wallet: val }))}
+                                    />
+                                </div>
+                                {methodStatus.wallet ? renderTabRules("wallet", "wallet") : (
+                                    <p className="text-sm text-gray-500">Wallet payment is currently disabled for all customers.</p>
+                                )}
                             </CardContent>
                         </Card>
                     )}
@@ -978,7 +1034,7 @@ export default function SippingCharge() {
                 <Card className="w-[25%] !h-fit p-4 sticky top-5 space-y-3">
                     <div className="flex flex-col gap-2">
                         <Button onClick={handleSave} disabled={saving}>
-                            {saving ? "Saving..." : `Save ${activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" : activeTab === "wallet" ? "Wallet" : activeTab === "gift" ?  "gift" : "Partial COD"} Rules`}
+                            {saving ? "Saving..." : `Save ${activeTab === "cod" ? "COD" : activeTab === "prepaid" ? "Prepaid" : activeTab === "wallet" ? "Wallet" : activeTab === "gift" ? "gift" : "Partial COD"} Rules`}
                         </Button>
                     </div>
                 </Card>

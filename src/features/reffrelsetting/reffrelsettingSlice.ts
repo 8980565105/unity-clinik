@@ -21,7 +21,6 @@ const referralSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // fetch
       .addCase(fetchReferralSettings.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -37,7 +36,6 @@ const referralSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      // update
       .addCase(updateReferralSettings.pending, (state) => {
         state.saving = true;
         state.error = null;

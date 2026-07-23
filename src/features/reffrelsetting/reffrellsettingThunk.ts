@@ -9,12 +9,30 @@ export interface ReferralSettings {
 export interface WalletOffer {
   minAmount: number;
   bonusPoints: number;
+  chargeType: "fixed" | "percentage" | "free_shipping";
+  charge: number;
 }
-
+export interface WalletBox {
+  amount: number;
+  chargeType: "fixed" | "percentage";
+  charge: number;
+  badge?: string;
+}
+export interface faqs {
+  question: string;
+  answer: string;
+}
+export interface WalletPoint {
+  image: string;
+  text: string;
+}
 export interface ReferralSettings {
   referrerPoints: number;
   refereePoints: number;
   walletOffers: WalletOffer[];
+  walletbox: WalletBox[];
+  points: WalletPoint[];
+  faqs: faqs[];
 }
 
 export const fetchReferralSettings = createAsyncThunk(

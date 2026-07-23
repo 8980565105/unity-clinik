@@ -294,94 +294,6 @@ export function DraggableImageList({ images, onChange, onAddMore, apiUrlImage = 
     </div>
   );
 }
-
-// export function DraggableVideoList({ videos, onChange, apiUrlImage = "" }: any) {
-//   const dragIdx = useRef<number | null>(null);
-//   const [dragOver, setDragOver] = useState<number | null>(null);
-//   const [uploading, setUploading] = useState(false);
-
-//   const handleDragStart = (e: any, idx: number) => {
-//     dragIdx.current = idx;
-//     e.dataTransfer.effectAllowed = "move";
-//   };
-
-//   const handleDragOver = (e: any, idx: number) => {
-//     e.preventDefault();
-//     setDragOver(idx);
-//   };
-
-//   const handleDrop = (e: any, dropIdx: number) => {
-//     e.preventDefault();
-//     if (dragIdx.current === null || dragIdx.current === dropIdx) { setDragOver(null); return; }
-//     const updated = [...videos];
-//     const [moved] = updated.splice(dragIdx.current, 1);
-//     updated.splice(dropIdx, 0, moved);
-//     onChange(updated);
-//     dragIdx.current = null;
-//     setDragOver(null);
-//   };
-
-//   const removeVideo = (idx: number) => {
-//     const u = [...videos];
-//     u.splice(idx, 1);
-//     onChange(u);
-//   };
-
-//   const addVideo = (url: string) => {
-//     if (!url) return;
-//     onChange([...(videos || []), url]);
-//   };
-
-//   return (
-//     <div className="space-y-3">
-//       <div className="flex flex-wrap gap-3">
-//         {(videos || []).map((vid: string, idx: number) => {
-//           const src = vid.startsWith("http") ? vid : `${apiUrlImage}${vid}`;
-//           return (
-//             <div
-//               key={idx}
-//               draggable
-//               onDragStart={(e) => handleDragStart(e, idx)}
-//               onDragOver={(e) => handleDragOver(e, idx)}
-//               onDrop={(e) => handleDrop(e, idx)}
-//               onDragLeave={() => setDragOver(null)}
-//               onDragEnd={() => { dragIdx.current = null; setDragOver(null); }}
-//               className={`relative group cursor-grab active:cursor-grabbing rounded-lg border-2 transition-all ${dragOver === idx ? "border-blue-500 scale-105" : "border-gray-200"}`}
-//               style={{ width: 140, height: 110 }}
-//             >
-//               <video
-//                 src={src}
-//                 className="w-full h-full object-cover rounded-lg"
-//                 muted
-//               />
-//               <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs rounded px-1">
-//                 {idx + 1}
-//               </div>
-//               <button
-//                 type="button"
-//                 onClick={() => removeVideo(idx)}
-//                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 z-10"
-//               >
-//                 ×
-//               </button>
-//             </div>
-//           );
-//         })}
-//       </div>
-
-//       <div style={{ width: 200 }}>
-//         <VideoUpload
-//           value={null}
-//           uploading={uploading}
-//           onChange={(url: string) => {
-//             addVideo(url);
-//           }}
-//           onUploadingChange={(loading: boolean) => setUploading(loading)}
-//         />
-//       </div>
-//     </div>
-//   );
-// }
 export function DraggableVideoList({ videos, onChange, apiUrlImage = "", multiple = true }: any) {
   const dragIdx = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
@@ -417,7 +329,6 @@ export function DraggableVideoList({ videos, onChange, apiUrlImage = "", multipl
   const addVideo = (url: string) => {
     if (!url) return;
     if (!multiple) {
-      // single mode: always replace with the new one
       onChange([url]);
       return;
     }
@@ -482,7 +393,6 @@ export function DraggableVideoList({ videos, onChange, apiUrlImage = "", multipl
 function useDragList(list: any[], setList: any) {
   const dragIdx = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
-
   const onDragStart = (idx: number) => { dragIdx.current = idx; };
   const onDragOver = (e: any, idx: number) => { e.preventDefault(); setDragOver(idx); };
   const onDrop = (e: any, dropIdx: number) => {
@@ -497,14 +407,12 @@ function useDragList(list: any[], setList: any) {
   };
   const onDragLeave = () => setDragOver(null);
   const onDragEnd = () => { dragIdx.current = null; setDragOver(null); };
-
   return { dragOver, onDragStart, onDragOver, onDrop, onDragLeave, onDragEnd };
 }
 
 function DraggableItemList({ items, onReorder, renderItem, onRemove, onAdd, addLabel = "Add Item", itemLabel = "Item" }: any) {
   const dragIdx = useRef<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
-
   const handleDragStart = (e: any, idx: number) => { dragIdx.current = idx; e.dataTransfer.effectAllowed = "move"; };
   const handleDragOver = (e: any, idx: number) => { e.preventDefault(); setDragOver(idx); };
   const handleDrop = (e: any, dropIdx: number) => {
@@ -554,7 +462,6 @@ function DraggableItemList({ items, onReorder, renderItem, onRemove, onAdd, addL
   );
 }
 
-
 function InsertBetweenSectionButton({ insertAfterIdx, onInsert }: any) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -586,24 +493,71 @@ function InsertBetweenSectionButton({ insertAfterIdx, onInsert }: any) {
   );
 }
 
+// function AddFirstSectionButton({ onAdd }: any) {
+//   const [open, setOpen] = useState(false);
+//   const ref = useRef<HTMLDivElement>(null);
+
+//   useEffect(() => {
+//     const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+//     document.addEventListener("mousedown", handler);
+//     return () => document.removeEventListener("mousedown", handler);
+//   }, []);
+
+//   return (
+//     <div ref={ref} className="relative flex justify-center mt-4">
+//       {open && (
+//         <div className="absolute bottom-12 z-50 w-72 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto">
+//           {SECTION_TYPES.map((sType) => (
+//             <div key={sType} className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+//               onClick={() => { onAdd(sType); setOpen(false); }}>
+//               {sType}
+//             </div>
+//           ))}
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
+
 function AddFirstSectionButton({ onAdd }: any) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   return (
-    <div ref={ref} className="relative flex justify-center mt-4">
+    <div ref={ref} className="relative flex justify-center mt-5">
+
+      <Button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2"
+      >
+        <Plus className="w-4 h-4" />
+        Add Section
+      </Button>
+
       {open && (
-        <div className="absolute bottom-12 z-50 w-72 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto">
-          {SECTION_TYPES.map((sType) => (
-            <div key={sType} className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-              onClick={() => { onAdd(sType); setOpen(false); }}>
-              {sType}
+        <div className="absolute top-12 w-80 bg-white border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
+          {SECTION_TYPES.map((type) => (
+            <div
+              key={type}
+              onClick={() => {
+                onAdd(type);
+                setOpen(false);
+              }}
+              className="px-4 py-3 hover:bg-gray-100 cursor-pointer"
+            >
+              {type}
             </div>
           ))}
         </div>
@@ -611,7 +565,6 @@ function AddFirstSectionButton({ onAdd }: any) {
     </div>
   );
 }
-
 
 function CommonHeader({
   sType,
@@ -763,6 +716,16 @@ const SectionRenderer = React.memo(function SectionRenderer({
     });
   }, [setSections, idx]);
 
+  const reorderSteps = useCallback((newSteps: any[]) => {
+    setSections((prev) => {
+      const u = prev.map((s, i) => {
+        if (i !== idx) return s;
+        return { ...s, data: { ...s.data, steps: newSteps } };
+      });
+      return u;
+    });
+  }, [setSections, idx]);
+
   const addStep = useCallback(() => {
     setSections((prev) => {
       const u = prev.map((s, i) => {
@@ -885,85 +848,105 @@ const SectionRenderer = React.memo(function SectionRenderer({
           onDescriptionChange={(val) => updateSectionField("description", val)}
         />
         <div className="space-y-6">
-          {(data.steps || []).map((step: any, stepIdx: number) => (
-            <div key={stepIdx} className="border rounded-xl p-4 bg-slate-50">
-              <div className="flex justify-between mb-4">
-                <h3 className="font-bold text-lg">Step {stepIdx + 1}</h3>
+          <DraggableItemList
+            items={data.steps || []}
+            onReorder={reorderSteps}
+            itemLabel="Step"
+            addLabel="Add Step"
+            onAdd={addStep}
+            onRemove={removeStep}
+            renderItem={(step: any, stepIdx: number) => (
+              <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Label>Step Status</Label>
                   <Switch checked={step?.status !== false} onCheckedChange={(checked) => updateStepField(stepIdx, "status", checked)} />
-                  <Button type="button" variant="destructive" onClick={() => removeStep(stepIdx)}><Trash2 className="w-4 h-4" /></Button>
                 </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div><Label>Step Title</Label><Input value={step.title} placeholder="e.g. Select your scalp type" onChange={(e) => updateStepField(stepIdx, "title", e.target.value)} /></div>
-                <div><Label>Description</Label><Input value={step.description} placeholder="description" onChange={(e) => updateStepField(stepIdx, "description", e.target.value)} /></div>
-                <div>
-                  <Label>Display Type</Label>
-                  <Select value={step.display_type || "Text"} onValueChange={(value) => updateStepField(stepIdx, "display_type", value)}>
-                    <SelectTrigger><SelectValue placeholder="Select display type" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Text">Text</SelectItem>
-                      <SelectItem value="Text with img">Text with img</SelectItem>
-                      <SelectItem value="Upgrade Product">Upgrade Product</SelectItem>
-                      <SelectItem value="Pack">Pack</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-3 gap-4">
+                  <div><Label>Step Title</Label><Input value={step.title} placeholder="e.g. Select your scalp type" onChange={(e) => updateStepField(stepIdx, "title", e.target.value)} /></div>
+                  <div><Label>Description</Label><Input value={step.description} placeholder="description" onChange={(e) => updateStepField(stepIdx, "description", e.target.value)} /></div>
+                  <div>
+                    <Label>Display Type</Label>
+                    <Select value={step.display_type || "Text"} onValueChange={(value) => updateStepField(stepIdx, "display_type", value)}>
+                      <SelectTrigger><SelectValue placeholder="Select display type" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Text">Text</SelectItem>
+                        <SelectItem value="Text with img">Text with img</SelectItem>
+                        <SelectItem value="Upgrade Product">Upgrade Product</SelectItem>
+                        <SelectItem value="Pack">Pack</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-4 mt-4">
-                <DraggableItemList
-                  items={step.variants || []}
-                  onReorder={(newVariants: any[]) => updateStepField(stepIdx, "variants", newVariants)}
-                  itemLabel="Variant"
-                  addLabel="Add Option"
-                  onAdd={() => addVariantToStep(stepIdx)}
-                  onRemove={(variantIdx: number) => removeVariantFromStep(stepIdx, variantIdx)}
-                  renderItem={(variant: any, variantIdx: number) => (
-                    <div>
-                      {step.display_type === "Pack" ? (
-                        <div className="grid grid-cols-2 gap-4">
-                          <div><Label>Original Price</Label><Input type="number" value={variant.price || ""} placeholder="MRP" onChange={(e) => updateVariantField(stepIdx, variantIdx, "price", e.target.value)} /></div>
-                          <div><Label>Offer Price</Label><Input type="number" value={variant.offerprice || ""} placeholder="Offer Price" onChange={(e) => updateVariantField(stepIdx, variantIdx, "offerprice", e.target.value)} /></div>
-                          <div><Label>Pack of</Label><Input value={variant.badge || ""} placeholder="e.g 1, 2, 3" onChange={(e) => updateVariantField(stepIdx, variantIdx, "badge", e.target.value)} /></div>
-                          <div>
-                            <Label>Upload Image</Label>
-                            <ImageUpload value={variant.image} onChange={(val: any) => { const url = typeof val === "string" ? val : Array.isArray(val) ? val[0] : ""; updateVariantField(stepIdx, variantIdx, "image", url); }} multiple={false} />
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-3 gap-4">
-                          <div><Label>Title</Label><Input value={variant.title || ""} placeholder="e.g. Stage 1 (Receding Hairline)" onChange={(e) => updateVariantField(stepIdx, variantIdx, "title", e.target.value)} /></div>
-                          <div>
-                            <Label>Select Product</Label>
-                            <Select value={variant.product_id || ""} onValueChange={(val) => updateVariantField(stepIdx, variantIdx, "product_id", val)}>
-                              <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
-                              <SelectContent>{(products || []).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label>Slug</Label>
-                            <Input value={variant.slug || ""} placeholder="auto-generated-slug"
-                              onChange={(e) => handleSlugManualEdit(stepIdx, variantIdx, e.target.value)}
-                              readOnly
-                            />
-                            {variant.slug && <p className="text-xs text-gray-400 mt-1">/products/<span className="text-blue-500">{variant.slug}</span></p>}
-                          </div>
-                          {step.display_type !== "Text" && (
-                            <div className="col-span-3">
+                <div className="space-y-4 mt-4">
+                  <DraggableItemList
+                    items={step.variants || []}
+                    onReorder={(newVariants: any[]) => updateStepField(stepIdx, "variants", newVariants)}
+                    itemLabel="Variant"
+                    addLabel="Add Option"
+                    onAdd={() => addVariantToStep(stepIdx)}
+                    onRemove={(variantIdx: number) => removeVariantFromStep(stepIdx, variantIdx)}
+                    renderItem={(variant: any, variantIdx: number) => (
+                      <div>
+                        {step.display_type === "Pack" ? (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div><Label>Original Price</Label><Input type="number" value={variant.price || ""} placeholder="MRP" onChange={(e) => updateVariantField(stepIdx, variantIdx, "price", e.target.value)} /></div>
+                            <div><Label>Offer Price</Label><Input type="number" value={variant.offerprice || ""} placeholder="Offer Price" onChange={(e) => updateVariantField(stepIdx, variantIdx, "offerprice", e.target.value)} /></div>
+                            <div><Label>Pack of</Label><Input value={variant.badge || ""} placeholder="e.g 1, 2, 3" onChange={(e) => updateVariantField(stepIdx, variantIdx, "badge", e.target.value)} /></div>
+                            <div>
                               <Label>Upload Image</Label>
                               <ImageUpload value={variant.image} onChange={(val: any) => { const url = typeof val === "string" ? val : Array.isArray(val) ? val[0] : ""; updateVariantField(stepIdx, variantIdx, "image", url); }} multiple={false} />
                             </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                />
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 gap-4">
+                            <div><Label>Title</Label><Input value={variant.title || ""} placeholder="e.g. Stage 1 (Receding Hairline)" onChange={(e) => updateVariantField(stepIdx, variantIdx, "title", e.target.value)} /></div>
+                            {/* <div>
+                              <Label>Select Product</Label>
+                              <Select value={variant.product_id || ""} onValueChange={(val) => updateVariantField(stepIdx, variantIdx, "product_id", val)}>
+                                <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
+                                <SelectContent>{(products || []).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
+                              </Select>
+                            </div> */}
+                            <div>
+                              <Label>Select Product</Label>
+                              <Select
+                                value={variant.product_id || "none"}
+                                onValueChange={(val) =>
+                                  updateVariantField(stepIdx, variantIdx, "product_id", val === "none" ? "" : val)
+                                }
+                              >
+                                <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">None</SelectItem>
+                                  {(products || []).map((p: any) => (
+                                    <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label>Slug</Label>
+                              <Input value={variant.slug || ""} placeholder="auto-generated-slug"
+                                onChange={(e) => handleSlugManualEdit(stepIdx, variantIdx, e.target.value)}
+                                readOnly
+                              />
+                              {variant.slug && <p className="text-xs text-gray-400 mt-1">/products/<span className="text-blue-500">{variant.slug}</span></p>}
+                            </div>
+                            {step.display_type !== "Text" && (
+                              <div className="col-span-3">
+                                <Label>Upload Image</Label>
+                                <ImageUpload value={variant.image} onChange={(val: any) => { const url = typeof val === "string" ? val : Array.isArray(val) ? val[0] : ""; updateVariantField(stepIdx, variantIdx, "image", url); }} multiple={false} />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
-          <Button type="button" onClick={addStep}>Add Step</Button>
+            )}
+          />
         </div>
       </div>
     );
@@ -1262,11 +1245,24 @@ const SectionRenderer = React.memo(function SectionRenderer({
 
               <div>
                 <Label>Select Product</Label>
-                <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
+                {/* <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
                   <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
                   <SelectContent>{(products || []).filter((p: any) => p._id !== id).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
+                </Select> */}
+                <Select
+                  value={item.product_id || "none"}
+                  onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val === "none" ? "" : val)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {(products || []).filter((p: any) => p._id !== id).map((p: any) => (
+                      <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
+
             </div>
           )}
         />
@@ -1298,9 +1294,22 @@ const SectionRenderer = React.memo(function SectionRenderer({
               <div><Label>Description</Label><Input value={item.description || ""} placeholder="Enter Description" onChange={(e) => updateSectionItem(itemIdx, "description", e.target.value)} /></div>
               <div>
                 <Label>Select Product</Label>
-                <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
+                {/* <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
                   <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
                   <SelectContent>{(products || []).filter((p: any) => p._id !== id).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div> */}
+                <Select
+                  value={item.product_id || "none"}
+                  onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val === "none" ? "" : val)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {(products || []).filter((p: any) => p._id !== id).map((p: any) => (
+                      <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </div>
             </div>
@@ -1657,18 +1666,13 @@ const SectionRenderer = React.memo(function SectionRenderer({
           }
           onRemove={removeSectionItem}
           renderItem={(item, itemIdx) => (
-
-
-
             <div className="grid grid-cols-3 gap-4">
-
-
               <div><Label>Title</Label><Input value={item.title || ""} placeholder="Enter Title" onChange={(e) => updateSectionItem(itemIdx, "title", e.target.value)} /></div>
               <div><Label>Description</Label><Input value={item.description || ""} placeholder="Enter Description" onChange={(e) => updateSectionItem(itemIdx, "description", e.target.value)} /></div>
               <div>
                 <Label>Select Product</Label>
 
-                <Select
+                {/* <Select
                   value={item.product_id || ""}
                   onValueChange={(val) =>
                     updateSectionItem(
@@ -1693,6 +1697,18 @@ const SectionRenderer = React.memo(function SectionRenderer({
                           {p.name}
                         </SelectItem>
                       ))}
+                  </SelectContent>
+                </Select> */}
+                <Select
+                  value={item.product_id || "none"}
+                  onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val === "none" ? "" : val)}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {(products || []).filter((p: any) => p._id !== id).map((p: any) => (
+                      <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1904,8 +1920,6 @@ export default function ProductFormPage() {
       status: "active", is_featured: false, is_best_seller: false, is_trending: false,
       description: "", steps: "",
       videos: [] as string[],
-      // shippingChargeType: "null",
-      // shippingChargeValue: "0",
     },
   ]);
   const [sections, setSections] = useState<any[]>([]);
@@ -1967,8 +1981,6 @@ export default function ProductFormPage() {
               steps: v.steps || "",
               description: v.description || "",
               videos: Array.isArray(v.videos) ? v.videos : [],
-              // shippingChargeType: v.shippingChargeType || "null",
-              // shippingChargeValue: v.shippingChargeValue ?? "0",
             })));
           }
 
@@ -2133,58 +2145,7 @@ export default function ProductFormPage() {
     }
   }, [dispatch, id, isEditMode]);
 
-  useEffect(() => {
-    const firstVariant = variants?.[0];
-    if (!firstVariant) return;
 
-    setSections((prevSections) => {
-      const updatedSections = [...prevSections];
-      let msIdx = updatedSections.findIndex((s) => s.type === "Multi Step Selection");
-
-      if (msIdx === -1) {
-        updatedSections.push({
-          type: "Multi Step Selection",
-          data: {
-            title: "Pack Selection",
-            steps: [{
-              title: "Choose Pack",
-              display_type: "Pack",
-              variants: [{
-                badge: 1,
-                price: firstVariant.price || "",
-                offerprice: firstVariant.offerprice || "",
-                image: firstVariant.images?.[0] || "",
-                auto_created: true,
-              }],
-            }],
-          },
-        });
-        return updatedSections;
-      }
-
-      const firstStep = updatedSections[msIdx]?.data?.steps?.[0];
-      if (!firstStep) return updatedSections;
-
-      firstStep.display_type = "Pack";
-      if (!firstStep.variants) firstStep.variants = [];
-
-      const packOneIdx = firstStep.variants.findIndex((v: any) => Number(v.badge) === 1);
-      const packOneData = {
-        badge: 1,
-        price: firstVariant.price || "",
-        offerprice: firstVariant.offerprice || "",
-        image: firstVariant.images?.[0] || "",
-        auto_created: true,
-      };
-
-      if (packOneIdx === -1) {
-        firstStep.variants.unshift(packOneData);
-      } else {
-        firstStep.variants[packOneIdx] = { ...firstStep.variants[packOneIdx], ...packOneData };
-      }
-      return updatedSections;
-    });
-  }, [variants]);
 
   const handleVariantChange = (index: number, field: string, value: any) => {
     const updatedVariants = [...variants];
@@ -2255,8 +2216,6 @@ export default function ProductFormPage() {
       if (!v.type_id) {
         return toast.error(`Type field is required.`);
       }
-
-
 
       if (!v.price) {
         return toast.error(`Price field is required.`);
@@ -2344,8 +2303,6 @@ export default function ProductFormPage() {
               steps: v.steps || "",
               description: v.description || "",
               videos: Array.isArray(v.videos) ? v.videos : [],
-              // shippingChargeType: v.shippingChargeType || "null",
-              // shippingChargeValue: v.shippingChargeValue ?? "0",
             })));
           }
           dispatch(fetchProducts({ page: 1, limit: 100, status: "active" }) as any);
@@ -2471,52 +2428,6 @@ export default function ProductFormPage() {
                     <div><Label>Product Width (cms) </Label><Input type="number" value={v.ProductWidth} onChange={(e) => handleVariantChange(idx, "ProductWidth", e.target.value)} /></div>
                     <div><Label>Product Height (cms) </Label><Input type="number" value={v.ProductHeight} onChange={(e) => handleVariantChange(idx, "ProductHeight", e.target.value)} /></div>
                     <div><Label>Product Weight (g)* </Label><Input type="number" value={v.ProductWeight} onChange={(e) => handleVariantChange(idx, "ProductWeight", e.target.value)} /></div>
-
-
-
-                    {/* <div>
-                      <Label>Shipping Charge Type</Label>
-                      <Select
-                        value={v.shippingChargeType || "null"}
-                        onValueChange={(value) => {
-                          handleVariantChange(idx, "shippingChargeType", value);
-                          if (value === "null" || value === "free") {
-                            handleVariantChange(idx, "shippingChargeValue", "0");
-                          }
-                        }}
-                      >
-                        <SelectTrigger><SelectValue placeholder="Select shipping charge type" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="null">Default (Global Settings)</SelectItem>
-                          <SelectItem value="free">Always Free</SelectItem>
-                          <SelectItem value="fixed">Fixed (₹ per unit)</SelectItem>
-                          <SelectItem value="percentage">Percentage (%)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {(v.shippingChargeType === "fixed" || v.shippingChargeType === "percentage") && (
-                      <div>
-                        <Label>
-                          {v.shippingChargeType === "percentage" ? "Charge (%)" : "Charge (₹ per unit)"}
-                        </Label>
-                        <Input
-                          type="number"
-                          value={v.shippingChargeValue || ""}
-                          placeholder={v.shippingChargeType === "percentage" ? "e.g. 5" : "e.g. 50"}
-                          onChange={(e) => handleVariantChange(idx, "shippingChargeValue", e.target.value)}
-                        />
-                      </div>
-                    )} */}
-
-
-
-
-
-
-
-
-
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -2537,10 +2448,6 @@ export default function ProductFormPage() {
                         apiUrlImage={import.meta.env.VITE_API_URL_IMAGE}
                       />
                     </div>
-
-
-
-
                     <div className="col-span-2 mt-4">
                       <Label className="font-semibold text-gray-700">
                         Videos <span className="text-gray-400 font-normal text-xs">(Max 15MB)</span>
@@ -2552,15 +2459,11 @@ export default function ProductFormPage() {
                         multiple={true}
                       />
                     </div>
-
-
-
                     <div className="col-span-2">
                       <Label>Variant Labels</Label>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {(productLabels as any[]).map((label) => (
                           <label key={label._id} className="inline-flex items-center gap-2 cursor-pointer">
-
                             <input
                               type="checkbox"
                               checked={v.labels?.[0] === label._id}
@@ -2579,7 +2482,6 @@ export default function ProductFormPage() {
               ))}
             </CardContent>
           </Card>
-
           {!createdId ? (
             <div className="flex justify-center">
               <Button
@@ -2597,11 +2499,6 @@ export default function ProductFormPage() {
                 <CardTitle className="text-lg font-semibold">Page Section Builder</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {sections.length === 0 && (
-                  <div className="text-center py-8 text-gray-400 text-sm">
-                    No sections yet. Click "Add Section" to get started.
-                  </div>
-                )}
 
                 {sections.map((section, idx) => (
                   <div key={`${section.type}-${idx}`}>
@@ -2625,7 +2522,6 @@ export default function ProductFormPage() {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-
                       <SectionRenderer
                         section={section}
                         idx={idx}
@@ -2634,26 +2530,25 @@ export default function ProductFormPage() {
                         id={createdId}
                       />
                     </div>
-
                     <InsertBetweenSectionButton
                       insertAfterIdx={idx}
                       onInsert={(type: string) => addSection(type, idx)}
                     />
                   </div>
                 ))}
+                {sections.length === 0 && (
+                  <AddFirstSectionButton onAdd={(type: string) => addSection(type, -1)} />
+                )}
 
-                <AddFirstSectionButton onAdd={(type: string) => addSection(type, -1)} />
               </CardContent>
             </Card>
           )}
         </div>
-
         <div className="w-[25%]">
           <Card className="sticky top-5 flex flex-col gap-3">
             <CardHeader>
               <CardTitle className="text-lg font-semibold">Status</CardTitle>
             </CardHeader>
-
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between mt-2">
                 <Label htmlFor="status">Active</Label>
@@ -2667,19 +2562,6 @@ export default function ProductFormPage() {
                   onCheckedChange={setIsHidden}
                 />
               </div>
-              {/* <div className="space-y-2">
-                <Label>Order</Label>
-                <Input
-                  value={order}
-                  min={0}
-                  type="number"
-                  placeholder="Enter order"
-                  onChange={(e) =>
-                    setOrder(e.target.value)
-                  }
-                />
-              </div> */}
-
               <div className="flex">
                 <Button type="submit" className="flex-1">
                   {effectiveEditMode ? "Update Product" : "Create Product"}
@@ -2688,7 +2570,6 @@ export default function ProductFormPage() {
                   variant="outline"
                   className="w-full">Cancel</Button>
               </div>
-
               {isEditMode && (
                 <>
                   <div className="flex gap-3">
@@ -2698,7 +2579,6 @@ export default function ProductFormPage() {
                     </Button>
                   </div>
                 </>
-
               )}
             </CardContent>
           </Card>

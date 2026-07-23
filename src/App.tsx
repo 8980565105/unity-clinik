@@ -61,6 +61,8 @@ import Userviews from "./pages/Users/Userviews";
 import UserWalletView from "./pages/userwallet/userwalletview";
 import Bookview from "./pages/bookconsaltantions/bookview";
 import BookEdit from "./pages/bookconsaltantions/bookedit";
+// import OrderEdit from "./pages/Orders/OrderEdit";
+import OrderView from "./pages/Orders/OrderView";
 
 const queryClient = new QueryClient();
 const App = () => (
@@ -98,6 +100,8 @@ const App = () => (
               <Route path="coupons/add" element={<CouponFormPage />} />
               <Route path="coupons/:id/edit" element={<CouponFormPage />} />
               <Route path="orders" element={<Orders />} />
+              <Route path="orders/:id/view" element={<OrderView />} />
+              {/* <Route path="orders/:id/edit" element={<OrderEdit />} /> */}
               <Route path="payments" element={<Payments />} />
               <Route path="users" element={<Users />} />
               <Route path="users/add" element={<UserFormPage />} />

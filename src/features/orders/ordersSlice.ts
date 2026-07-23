@@ -17,8 +17,9 @@ import {
   addTrackingAWB,
   decideReturn,
   refundOrder,
+  updateOrderShippingDetails,
+  pushOrderToIthink,
 } from "./ordersThunk";
-
 export interface OrderItem {
   _id: string;
   product: { name: string; price: number; sku?: string };
@@ -29,7 +30,6 @@ export interface OrderItem {
   quantity: number;
   price_at_order: number;
 }
-
 export interface ShippingAddress {
   firstName: string;
   lastName: string;
@@ -39,7 +39,6 @@ export interface ShippingAddress {
   pincode: string;
   phone: string;
 }
-
 export type OrderStatus =
   | "pending"
   | "processing"
@@ -52,7 +51,6 @@ export type OrderStatus =
   | "rto"
   | "returned"
   | "refunded";
-
 export interface Order {
   _id: string;
   order_number: string;
@@ -97,7 +95,7 @@ interface OrdersState {
   loading: boolean;
   actionLoading: boolean;
   error: string | null;
-  selectedOrder?: Order | null;
+  selectedOrder?: Order | { order: Order; items: any[] } | null;
 }
 
 const initialState: OrdersState = {
@@ -109,7 +107,6 @@ const initialState: OrdersState = {
   selectedOrder: null,
 };
 
-// ─── Helper: update order in list ────────────────────────────────────────────
 const updateInList = (orders: Order[], updated: Order) => {
   const idx = orders.findIndex((o) => o._id === updated._id);
   if (idx !== -1) orders[idx] = updated;
@@ -127,7 +124,6 @@ const ordersSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    // fetchOrders
     builder
       .addCase(fetchOrders.pending, (state) => {
         state.loading = true;
@@ -142,8 +138,6 @@ const ordersSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       });
-
-    // getOrderById
     builder
       .addCase(getOrderById.pending, (state) => {
         state.loading = true;
@@ -151,32 +145,26 @@ const ordersSlice = createSlice({
       })
       .addCase(getOrderById.fulfilled, (state, action) => {
         state.loading = false;
-        state.selectedOrder = action.payload?.order || action.payload;
+        state.selectedOrder = action.payload;
       })
       .addCase(getOrderById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
-
-    // updateOrder
     builder.addCase(updateOrder.fulfilled, (state, action) => {
       updateInList(state.orders, action.payload);
-      if (state.selectedOrder?._id === action.payload._id)
+      if ((state.selectedOrder as any)?._id === action.payload._id)
         state.selectedOrder = action.payload;
     });
-
-    // updateOrderStatus
     builder.addCase(updateOrderStatus.fulfilled, (state, action) => {
       updateInList(state.orders, action.payload);
     });
 
-    // deleteOrder
     builder.addCase(deleteOrder.fulfilled, (state, action) => {
       state.orders = state.orders.filter((o) => o._id !== action.payload);
       state.total -= 1;
     });
 
-    // bulkDeleteOrders
     builder.addCase(bulkDeleteOrders.fulfilled, (state, action) => {
       state.orders = state.orders.filter(
         (o) => !action.payload.includes(o._id),
@@ -184,7 +172,56 @@ const ordersSlice = createSlice({
       state.total -= action.payload.length;
     });
 
-    // ─── Flow actions — all share same pattern ───────────────────────────────
+    builder
+      .addCase(updateOrderShippingDetails.pending, (state) => {
+        state.actionLoading = true;
+        state.error = null;
+      })
+      .addCase(updateOrderShippingDetails.fulfilled, (state, action) => {
+        state.actionLoading = false;
+        const updated = action.payload?.order;
+        if (updated?._id) {
+          updateInList(state.orders, updated);
+          if (state.selectedOrder) {
+            (state.selectedOrder as any).order = updated;
+            (state.selectedOrder as any).items =
+              action.payload?.items || (state.selectedOrder as any).items;
+          }
+        }
+      })
+      .addCase(updateOrderShippingDetails.rejected, (state, action) => {
+        state.actionLoading = false;
+        state.error = action.payload as string;
+      });
+
+    builder
+      .addCase(pushOrderToIthink.pending, (state) => {
+        state.actionLoading = true;
+        state.error = null;
+      })
+
+      .addCase(pushOrderToIthink.fulfilled, (state, action) => {
+        state.actionLoading = false;
+        const updated = action.payload;
+        if (updated?._id) {
+          updateInList(state.orders, updated);
+          if (
+            (state.selectedOrder as any)?._id === updated._id || // ⭐ cast add karo
+            (state.selectedOrder as any)?.order?._id === updated._id
+          ) {
+            if ((state.selectedOrder as any)?.order) {
+              (state.selectedOrder as any).order = updated;
+            } else {
+              state.selectedOrder = updated;
+            }
+          }
+        }
+      })
+      .addCase(pushOrderToIthink.rejected, (state, action) => {
+        state.actionLoading = false;
+        state.error = action.payload as string;
+      });
+
     const flowThunks = [
       confirmOrder,
       cancelOrder,
@@ -205,12 +242,21 @@ const ordersSlice = createSlice({
         })
         .addCase(thunk.fulfilled, (state, action) => {
           state.actionLoading = false;
-          // response can be { order, packing } or just order
           const updated = action.payload?.order || action.payload;
           if (updated?._id) {
             updateInList(state.orders, updated);
-            if (state.selectedOrder?._id === updated._id)
-              state.selectedOrder = updated;
+
+            const selOrderId =
+              (state.selectedOrder as any)?.order?._id ||
+              (state.selectedOrder as any)?._id;
+
+            if (selOrderId === updated._id) {
+              if ((state.selectedOrder as any)?.order) {
+                (state.selectedOrder as any).order = updated;
+              } else {
+                state.selectedOrder = updated;
+              }
+            }
           }
         })
         .addCase(thunk.rejected, (state, action) => {

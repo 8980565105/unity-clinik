@@ -64,7 +64,7 @@ function SortableRow({ category }: any) {
       <td className="p-3">
         {category.image_url ? (
           <img
-            src={`${import.meta.env.VITE_API_URL_IMAGE}${category.image_url}`}
+            src={`${category.image_url}`}
             alt={category.name}
             className="h-10 w-10 rounded-md object-cover border"
           />
@@ -159,7 +159,7 @@ export default function CategoriesPage() {
   }, [sortMode]);
 
   const handleReorder = async (newList: any[]) => {
-    setLocalCategories(newList); 
+    setLocalCategories(newList);
     try {
       await dispatch(
         reorderCategories(
@@ -168,7 +168,7 @@ export default function CategoriesPage() {
       ).unwrap();
     } catch (err: any) {
       toast.error(err || "Failed to update order");
-      loadSortData(); 
+      loadSortData();
     }
   };
 
@@ -179,7 +179,8 @@ export default function CategoriesPage() {
       render: (item: any) =>
         item.image_url ? (
           <img
-            src={`${import.meta.env.VITE_API_URL_IMAGE}${item.image_url}`}
+            // src={`${import.meta.env.VITE_API_URL_IMAGE}${item.image_url}`}
+            src={`${item.image_url}`}
             alt={item.name}
             className="h-10 w-10 rounded-md object-cover border"
           />

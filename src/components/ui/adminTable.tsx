@@ -168,38 +168,6 @@ export function GenericTable<T extends Record<string, any>>({
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           {headerActions}
-          <Button
-            variant="outline"
-            onClick={async () => {
-              try {
-                const result = await fetchData({ isDownload: true });
-                const exportData = (result.data || []).map((item: any) =>
-                  columns.reduce(
-                    (acc, col) => {
-                      acc[col.label] = col.exportValue
-                        ? col.exportValue(item)
-                        : col.render
-                          ? item[col.key]
-                          : item[col.key];
-                      return acc;
-                    },
-                    {} as Record<string, any>
-                  )
-                );
-
-                const ws = XLSX.utils.json_to_sheet(exportData);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, title);
-                const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-                saveAs(new Blob([buf]), `${title}_${Date.now()}.xlsx`);
-                toast.success("Exported successfully");
-              } catch (err: any) {
-                toast.error(err?.message || "Export failed");
-              }
-            }}
-          >
-            Export
-          </Button>
 
           {bulkDeleteItems && selectedIds.length > 0 && (
             <ConfirmDialog
@@ -326,7 +294,7 @@ export function GenericTable<T extends Record<string, any>>({
                   )}
                   {showActionsColumn && (
                     <td className="p-3 text-right whitespace-nowrap">
-                    
+
                       {rowActions ? (
                         rowActions(item)
                       ) : (
