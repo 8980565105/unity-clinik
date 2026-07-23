@@ -127,6 +127,10 @@ const orderSchema = new mongoose.Schema(
     return_reason: { type: String, default: "" },
     return_requested_at: { type: Date, default: null },
     return_decided_at: { type: Date, default: null },
+    shipment_weight: { type: Number, default: 0 },
+    shipment_length: { type: Number, default: 0 },
+    shipment_width: { type: Number, default: 0 },
+    shipment_height: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

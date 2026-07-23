@@ -15,11 +15,19 @@ const getTransporter = () => {
   }
 
   _transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.SMTP_PORT) || 587,
-    secure: false,
+    // host: process.env.SMTP_HOST || "smtp.gmail.com",
+    // port: parseInt(process.env.SMTP_PORT) || 587,
+    // secure: false,
+    // auth: { user, pass },
+    // tls: { rejectUnauthorized: false },
+    host: process.env.SMTP_HOST || "smtp.zoho.in",
+    port: parseInt(process.env.SMTP_PORT) || 465,
+    secure: parseInt(process.env.SMTP_PORT) === 465, // 465 → true
     auth: { user, pass },
     tls: { rejectUnauthorized: false },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000,
   });
 
   _transporter.verify((err) => {
@@ -41,7 +49,20 @@ const send = async (to, subject, html) => {
   const transport = getTransporter();
   if (!transport) return;
   try {
-    await transport.sendMail({ from: FROM(), to, subject, html });
+    // await transport.sendMail({
+    //   from: FROM(),
+    //   to: to || process.env.ADMIN_EMAIL,
+    //   cc: process.env.CC_EMAIL,
+    //   subject,
+    //   html,
+    // });
+    const info = await transport.sendMail({
+      from: FROM(),
+      to: process.env.ADMIN_EMAIL,
+      cc: process.env.CC_EMAIL,
+      subject,
+      html,
+    });
   } catch (err) {
     console.error("[Email] ❌ Send failed:", err.message);
   }

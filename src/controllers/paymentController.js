@@ -30,50 +30,8 @@ const createRazorpayOrder = async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // RAZORPAY - VERIFY PAYMENT
 // ═══════════════════════════════════════════════════════════════════════════════
-// const verifyRazorpayPayment = async (req, res) => {
-//   try {
-//     const {
-//       razorpay_order_id,
-//       razorpay_payment_id,
-//       razorpay_signature,
-//       order_id,
-//       user_id,
-//     } = req.body;
-
-//     if (!razorpay_payment_id) {
-//       return sendResponse(res, false, null, "razorpay_payment_id missing");
-//     }
-//     const body = razorpay_order_id + "|" + razorpay_payment_id;
-//     const expectedSignature = crypto
-//       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-//       .update(body)
-//       .digest("hex");
-
-//     if (expectedSignature !== razorpay_signature) {
-//       return sendResponse(res, false, null, "Invalid signature");
-//     }
-
-//     await Order.findByIdAndUpdate(order_id, {
-//       payment_status: "paid",
-//       transaction_id: razorpay_payment_id,
-//     });
-
-//     const existingPayment = await Payment.findOne({ order_id });
-//     if (existingPayment) {
-//       await Payment.findByIdAndUpdate(existingPayment._id, {
-//         transaction_id: razorpay_payment_id,
-//         status: "completed",
-//       });
-//     }
-
-//     sendResponse(res, true, { razorpay_payment_id }, "Payment verified");
-//   } catch (err) {
-//     sendResponse(res, false, null, err?.error?.description || err.message);
-//   }
-// };
 
 const verifyRazorpayPayment = async (req, res) => {
-  const session = await mongoose.startSession();
   try {
     const {
       razorpay_order_id,
@@ -98,34 +56,28 @@ const verifyRazorpayPayment = async (req, res) => {
       return sendResponse(res, false, null, "Invalid signature");
     }
 
-    session.startTransaction();
-
     let targetOrderId = order_id;
     let order;
 
     if (orderData) {
       const { saveNewOrder } = require("./orderController");
-      order = await saveNewOrder(orderData, session);
+      order = await saveNewOrder(orderData);
       targetOrderId = order._id;
     } else {
-      order = await Order.findById(order_id).session(session);
+      order = await Order.findById(order_id);
     }
 
     if (!order) {
-      await session.abortTransaction();
       return sendResponse(res, false, null, "Order not found");
     }
 
     const { activateOrder } = require("./orderController");
-    order = await activateOrder(targetOrderId, razorpay_payment_id, session);
+    order = await activateOrder(targetOrderId, razorpay_payment_id); // session hatavi
 
     if (Number(wallet_amount) > 0) {
-      const wallet = await Wallet.findOne({ userId: order.user_id }).session(
-        session,
-      );
+      const wallet = await Wallet.findOne({ userId: order.user_id });
 
       if (!wallet || wallet.balance < Number(wallet_amount)) {
-        await session.abortTransaction();
         return sendResponse(
           res,
           false,
@@ -143,42 +95,39 @@ const verifyRazorpayPayment = async (req, res) => {
         orderId: targetOrderId,
         transaction_id: razorpay_payment_id,
       });
-      await wallet.save({ session });
+      await wallet.save();
     }
 
-    const existingPayment = await Payment.findOne({ order_id: targetOrderId }).session(
-      session,
-    );
+    const existingPayment = await Payment.findOne({ order_id: targetOrderId });
     if (existingPayment) {
-      await Payment.findByIdAndUpdate(
-        existingPayment._id,
-        { transaction_id: razorpay_payment_id, status: "completed" },
-        { session },
-      );
+      await Payment.findByIdAndUpdate(existingPayment._id, {
+        transaction_id: razorpay_payment_id,
+        status: "completed",
+      });
     } else {
-      await Payment.create(
-        [
-          {
-            order_id: targetOrderId,
-            user_id: order.user_id,
-            payment_method: orderData ? (orderData.payment_method || "Razorpay") : "Razorpay",
-            amount_paid: order.payment_method === "partial_cod" ? (order.advance_amount || order.total_price) : order.total_price,
-            transaction_id: razorpay_payment_id,
-            status: "completed",
-            type: "order",
-          },
-        ],
-        { session },
-      );
+      await Payment.create({
+        order_id: targetOrderId,
+        user_id: order.user_id,
+        payment_method: orderData
+          ? orderData.payment_method || "Razorpay"
+          : "Razorpay",
+        amount_paid:
+          order.payment_method === "partial_cod"
+            ? order.advance_amount || order.total_price
+            : order.total_price,
+        transaction_id: razorpay_payment_id,
+        status: "completed",
+        type: "order",
+      });
     }
 
-    await session.commitTransaction();
-    session.endSession();
-
-    sendResponse(res, true, { razorpay_payment_id, order_id: targetOrderId }, "Payment verified");
+    sendResponse(
+      res,
+      true,
+      { razorpay_payment_id, order_id: targetOrderId },
+      "Payment verified",
+    );
   } catch (err) {
-    await session.abortTransaction().catch(() => {});
-    session.endSession();
     sendResponse(res, false, null, err?.error?.description || err.message);
   }
 };
@@ -218,86 +167,84 @@ const razorpayWebhook = async (req, res) => {
   }
 };
 
+let phonePeToken = { value: null, expiresAt: 0 };
+
+const getPhonePeToken = async () => {
+  if (phonePeToken.value && Date.now() < phonePeToken.expiresAt - 60000) {
+    return phonePeToken.value;
+  }
+  const isProduction = process.env.PHONEPE_ENV === "production";
+  const tokenUrl = isProduction
+    ? "https://api.phonepe.com/apis/identity-manager/v1/oauth/token"
+    : "https://api-preprod.phonepe.com/apis/pg-sandbox/v1/oauth/token";
+
+  const params = new URLSearchParams({
+    client_id: process.env.PHONEPE_CLIENT_ID,
+    client_version: process.env.PHONEPE_CLIENT_VERSION,
+    client_secret: process.env.PHONEPE_CLIENT_SECRET,
+    grant_type: "client_credentials",
+  });
+
+  const res = await axios.post(tokenUrl, params, {
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  });
+
+  phonePeToken = {
+    value: res.data.access_token,
+    expiresAt: res.data.expires_at * 1000,
+  };
+  return phonePeToken.value;
+};
+
 const createPhonePePayment = async (req, res) => {
   try {
     const { amount, order_id, user_id, redirect_url } = req.body;
-
     if (!amount || !order_id || !user_id || !redirect_url) {
       return sendResponse(res, false, null, "Missing required fields");
     }
 
-    const merchantId = process.env.PHONEPE_MERCHANT_ID;
-    const saltKey = process.env.PHONEPE_SALT_KEY;
-    const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
     const isProduction = process.env.PHONEPE_ENV === "production";
+    const payUrl = isProduction
+      ? "https://api.phonepe.com/apis/pg/checkout/v2/pay"
+      : "https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/pay";
 
-    const amountInPaisa = Math.round(amount * 100);
-
-    const merchantTransactionId = `MT${Date.now()}`;
+    const merchantOrderId = `MO${Date.now()}`;
+    const token = await getPhonePeToken();
 
     const payload = {
-      merchantId,
-      merchantTransactionId,
-      merchantUserId: `MU${user_id.toString().slice(-12)}`,
-      amount: amountInPaisa,
-      redirectUrl: redirect_url,
-      redirectMode: "REDIRECT",
-      callbackUrl: `${process.env.BACKEND_URL}/api/payments/phonepe/callback`,
-      paymentInstrument: { type: "PAY_PAGE" },
+      merchantOrderId,
+      amount: Math.round(amount * 100),
+      expireAfter: 1200,
+      metaInfo: { udf1: order_id.toString(), udf2: user_id.toString() },
+      paymentFlow: {
+        type: "PG_CHECKOUT",
+        message: "Order Payment",
+        merchantUrls: { redirectUrl: redirect_url },
+      },
     };
 
-    const base64Payload = Buffer.from(JSON.stringify(payload)).toString(
-      "base64",
-    );
-    const checksumString = base64Payload + "/pg/v1/pay" + saltKey;
-    const sha256Hash = crypto
-      .createHash("sha256")
-      .update(checksumString)
-      .digest("hex");
-    const checksum = sha256Hash + "###" + saltKeyIndex;
-
-    const phonePeUrl = isProduction
-      ? "https://api.phonepe.com/apis/hermes/pg/v1/pay"
-      : "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
-
-    const response = await axios.post(
-      phonePeUrl,
-      { request: base64Payload },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "X-VERIFY": checksum,
-          accept: "application/json",
-        },
+    const response = await axios.post(payUrl, payload, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `O-Bearer ${token}`,
       },
-    );
+    });
 
-    if (!response.data.success) {
-      return sendResponse(
-        res,
-        false,
-        null,
-        response.data.message || "PhonePe initiation failed",
-      );
+    if (!response.data.redirectUrl) {
+      return sendResponse(res, false, null, "PhonePe initiation failed");
     }
 
-    const paymentUrl =
-      response.data?.data?.instrumentResponse?.redirectInfo?.url;
-
-    if (!paymentUrl) {
-      return sendResponse(res, false, null, "PhonePe payment URL missing");
-    }
-
-    const updatedOrder = await Order.findByIdAndUpdate(
-      order_id,
-      { merchant_transaction_id: merchantTransactionId },
-      { returnDocument: "after" },
-    );
+    await Order.findByIdAndUpdate(order_id, {
+      merchant_transaction_id: merchantOrderId,
+    });
 
     sendResponse(
       res,
       true,
-      { paymentUrl, merchantTransactionId },
+      {
+        paymentUrl: response.data.redirectUrl,
+        merchantTransactionId: merchantOrderId,
+      },
       "PhonePe order created",
     );
   } catch (err) {
@@ -312,67 +259,44 @@ const verifyPhonePePayment = async (req, res) => {
       const order = await Order.findById(order_id).select(
         "merchant_transaction_id",
       );
-
-      if (!order) {
-        return sendResponse(res, false, null, "Order not found");
-      }
-
-      if (!order.merchant_transaction_id) {
+      if (!order) return sendResponse(res, false, null, "Order not found");
+      if (!order.merchant_transaction_id)
         return sendResponse(
           res,
           false,
           null,
-          `merchant_transaction_id missing in order ${order_id}`,
+          "merchant_transaction_id missing",
         );
-      }
-
       merchantTransactionId = order.merchant_transaction_id;
     }
-
-    if (!merchantTransactionId) {
+    if (!merchantTransactionId)
       return sendResponse(res, false, null, "merchantTransactionId required");
-    }
-    const merchantId = process.env.PHONEPE_MERCHANT_ID;
-    const saltKey = process.env.PHONEPE_SALT_KEY;
-    const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
+
     const isProduction = process.env.PHONEPE_ENV === "production";
-
-    const checksumString =
-      `/pg/v1/status/${merchantId}/${merchantTransactionId}` + saltKey;
-    const sha256Hash = crypto
-      .createHash("sha256")
-      .update(checksumString)
-      .digest("hex");
-    const checksum = sha256Hash + "###" + saltKeyIndex;
-
     const statusUrl = isProduction
-      ? `https://api.phonepe.com/apis/hermes/pg/v1/status/${merchantId}/${merchantTransactionId}`
-      : `https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/${merchantId}/${merchantTransactionId}`;
+      ? `https://api.phonepe.com/apis/pg/checkout/v2/order/${merchantTransactionId}/status`
+      : `https://api-preprod.phonepe.com/apis/pg-sandbox/checkout/v2/order/${merchantTransactionId}/status`;
 
+    const token = await getPhonePeToken();
     const response = await axios.get(statusUrl, {
-      headers: {
-        "Content-Type": "application/json",
-        "X-VERIFY": checksum,
-        "X-MERCHANT-ID": merchantId,
-        accept: "application/json",
-      },
+      headers: { Authorization: `O-Bearer ${token}` },
     });
 
-    const paymentData = response.data?.data;
-    const paymentSuccess =
-      response.data?.success && paymentData?.responseCode === "SUCCESS";
+    const data = response.data;
+    const paymentSuccess = data?.state === "COMPLETED";
 
     if (!paymentSuccess) {
       return sendResponse(
         res,
         false,
         null,
-        `PhonePe payment not successful: ${paymentData?.responseCode}`,
+        `PhonePe payment not successful: ${data?.state}`,
       );
     }
 
-    const transactionId = paymentData?.transactionId || merchantTransactionId;
-    const amountPaid = paymentData?.amount ? paymentData.amount / 100 : 0;
+    const transactionId =
+      data?.paymentDetails?.[0]?.transactionId || merchantTransactionId;
+    const amountPaid = data?.amount ? data.amount / 100 : 0;
 
     const { activateOrder } = require("./orderController");
     await activateOrder(order_id, transactionId);
@@ -409,70 +333,77 @@ const verifyPhonePePayment = async (req, res) => {
   }
 };
 
-const phonePeCallback = async (req, res) => {
+const phonePeWebhook = async (req, res) => {
   try {
-    const { response: encodedResponse } = req.body;
+    const authHeader = req.headers["authorization"] || "";
 
-    if (!encodedResponse) {
-      return res.status(400).send("No response from PhonePe");
-    }
-
-    const decoded = JSON.parse(
-      Buffer.from(encodedResponse, "base64").toString("utf-8"),
-    );
-
-    const saltKey = process.env.PHONEPE_SALT_KEY;
-    const saltKeyIndex = process.env.PHONEPE_SALT_INDEX || "1";
-    const crypto = require("crypto");
-
-    const receivedChecksum = req.headers["x-verify"];
-    const computedHash = crypto
+    const expectedHash = crypto
       .createHash("sha256")
-      .update(encodedResponse + saltKey)
+      .update(
+        `${process.env.PHONEPE_WEBHOOK_USERNAME}:${process.env.PHONEPE_WEBHOOK_PASSWORD}`,
+      )
       .digest("hex");
-    const computedChecksum = computedHash + "###" + saltKeyIndex;
 
-    if (receivedChecksum !== computedChecksum) {
-      return res.status(400).send("Invalid checksum");
+    if (authHeader !== expectedHash) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Invalid signature" });
     }
 
-    if (decoded?.code === "PAYMENT_SUCCESS") {
-      const txnId = decoded?.data?.transactionId;
-      const merchantTxnId = decoded?.data?.merchantTransactionId;
-      const amountPaid = decoded?.data?.amount ? decoded.data.amount / 100 : 0;
+    const event = req.body;
+    const payload = event?.payload;
+    const merchantOrderId = payload?.merchantOrderId;
+    const state = payload?.state;
 
-      const order = await Order.findOne({
-        merchant_transaction_id: merchantTxnId,
-      });
+    if (!merchantOrderId) {
+      return res.status(200).json({ success: true });
+    }
 
-      if (order) {
-        const { activateOrder } = require("./orderController");
-        await activateOrder(order._id, txnId);
+    const order = await Order.findOne({
+      merchant_transaction_id: merchantOrderId,
+    });
 
-        const existingPayment = await Payment.findOne({ order_id: order._id });
-        if (existingPayment) {
-          await Payment.findByIdAndUpdate(existingPayment._id, {
-            status: "completed",
-            transaction_id: txnId,
-            amount_paid: amountPaid,
-          });
-        } else {
-          await Payment.create({
-            order_id: order._id,
-            user_id: order.user_id,
-            payment_method: "PhonePe",
-            amount_paid: amountPaid,
-            transaction_id: txnId,
-            status: "completed",
-            type: "order",
-          });
-        }
+    if (!order) {
+      return res.status(200).json({ success: true });
+    }
+
+    if (state === "COMPLETED") {
+      const transactionId =
+        payload?.paymentDetails?.[0]?.transactionId || merchantOrderId;
+      const amountPaid = payload?.amount ? payload.amount / 100 : 0;
+
+      const { activateOrder } = require("./orderController");
+      await activateOrder(order._id, transactionId);
+
+      const existingPayment = await Payment.findOne({ order_id: order._id });
+      if (existingPayment) {
+        await Payment.findByIdAndUpdate(existingPayment._id, {
+          status: "completed",
+          transaction_id: transactionId,
+          amount_paid: amountPaid,
+        });
+      } else {
+        await Payment.create({
+          order_id: order._id,
+          user_id: order.user_id,
+          payment_method: "PhonePe",
+          amount_paid: amountPaid,
+          transaction_id: transactionId,
+          status: "completed",
+          type: "order",
+        });
       }
+    } else if (state === "FAILED") {
+      await Payment.findOneAndUpdate(
+        { order_id: order._id },
+        { status: "failed" },
+      );
     }
 
-    res.status(200).send("OK");
+    res.status(200).json({ success: true });
   } catch (err) {
-    res.status(500).send("Callback error");
+    console.error("PhonePe webhook error:", err.message);
+    res.status(200).json({ success: true });
   }
 };
 
@@ -638,9 +569,9 @@ const markPaymentFailed = async (req, res) => {
       amount,
       type,
       reason,
-      transaction_id, 
+      transaction_id,
       razorpay_order_id,
-      error_code, 
+      error_code,
     } = req.body;
 
     let finalAmount = amount;
@@ -655,26 +586,41 @@ const markPaymentFailed = async (req, res) => {
       return sendResponse(res, false, null, "user_id and amount are required");
     }
 
-    if (transaction_id) {
-      const existing = await Payment.findOne({
-        transaction_id,
-        status: "failed",
+    let payment;
+    if (order_id) {
+      const existingPayment = await Payment.findOne({
+        order_id,
+        status: "pending",
       });
-      if (existing) {
-        return sendResponse(res, true, existing, "Already recorded");
+      if (existingPayment) {
+        existingPayment.status = "failed";
+        if (transaction_id) existingPayment.transaction_id = transaction_id;
+        payment = await existingPayment.save();
       }
     }
 
-    const payment = await Payment.create({
-      order_id: order_id || null,
-      booking_id: booking_id || null,
-      user_id,
-      payment_method: payment_method || "Razorpay",
-      amount_paid: finalAmount,
-      status: "failed",
-      transaction_id: transaction_id || "",
-      type: type || "order",
-    });
+    if (!payment) {
+      if (transaction_id) {
+        const existing = await Payment.findOne({
+          transaction_id,
+          status: "failed",
+        });
+        if (existing) {
+          return sendResponse(res, true, existing, "Already recorded");
+        }
+      }
+
+      payment = await Payment.create({
+        order_id: order_id || null,
+        booking_id: booking_id || null,
+        user_id,
+        payment_method: payment_method || "Razorpay",
+        amount_paid: finalAmount,
+        status: "failed",
+        transaction_id: transaction_id || "",
+        type: type || "order",
+      });
+    }
 
     if (order_id) {
       const order = await Order.findById(order_id);
@@ -703,7 +649,7 @@ module.exports = {
   verifyRazorpayPayment,
   createPhonePePayment,
   verifyPhonePePayment,
-  phonePeCallback,
+  phonePeWebhook,
   getPayments,
   getPaymentById,
   createPayment,

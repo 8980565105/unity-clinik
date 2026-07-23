@@ -25,6 +25,8 @@ const {
   markDelivered,
   markRTO,
   generateInvoice,
+  updateOrderShippingDetails,
+  pushOrderToIthink,
   refundOrder,
 } = require("../controllers/orderController");
 
@@ -64,4 +66,11 @@ router.get("/:id/packing-slip", authorizeMinRole("admin"), generatePackingSlip);
 router.get("/:id/invoice", authorizeMinRole("admin"), generateInvoice);
 router.get("/:id/tracking", authMiddleware, getOrderTracking);
 router.put("/:id/refund", authorizeMinRole("admin"), refundOrder);
+router.patch(
+  "/:id/shipping-details",
+  authorizeMinRole("admin"),
+  updateOrderShippingDetails,
+);
+router.put("/:id/push-ithink", authorizeMinRole("admin"), pushOrderToIthink);
+
 module.exports = router;

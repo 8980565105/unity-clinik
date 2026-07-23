@@ -8,6 +8,7 @@ const toNumber = (v, fallback = 0) => {
 
 const defaultSettings = () => ({
   shippingType: "price",
+  methodStatus: { cod: true, prepaid: true, partialCod: true, wallet: true },
   partialCod: { codType: "fixed", value: 0 },
   productRules: { cod: [], prepaid: [], partialCod: [], wallet: [] },
   giftRules: [],
@@ -218,6 +219,33 @@ const saveShippingCharge = async (req, res) => {
 
     const payload = {
       shippingType,
+
+      methodStatus: body?.methodStatus
+        ? {
+            cod:
+              body.methodStatus.cod !== undefined
+                ? Boolean(body.methodStatus.cod)
+                : (settings?.methodStatus?.cod ?? true),
+            prepaid:
+              body.methodStatus.prepaid !== undefined
+                ? Boolean(body.methodStatus.prepaid)
+                : (settings?.methodStatus?.prepaid ?? true),
+            partialCod:
+              body.methodStatus.partialCod !== undefined
+                ? Boolean(body.methodStatus.partialCod)
+                : (settings?.methodStatus?.partialCod ?? true),
+            wallet:
+              body.methodStatus.wallet !== undefined
+                ? Boolean(body.methodStatus.wallet)
+                : (settings?.methodStatus?.wallet ?? true),
+          }
+        : settings?.methodStatus || {
+            cod: true,
+            prepaid: true,
+            partialCod: true,
+            wallet: true,
+          },
+
       partialCod: body?.partialCod
         ? {
             codType: ["fixed", "percentage"].includes(body.partialCod.codType)
@@ -226,6 +254,7 @@ const saveShippingCharge = async (req, res) => {
             value: toNumber(body.partialCod.value),
           }
         : settings?.partialCod || { codType: "fixed", value: 0 },
+
       productRules: {
         cod: body?.productRules?.cod
           ? codRules

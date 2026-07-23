@@ -1,79 +1,95 @@
 const axios = require("axios");
 
-const BASE_URL = "https://my.ithinklogistics.com/api_v3/order/add.json";
+const BASE_URL = "https://my.ithinklogistics.com/api_v3";
 const ACCESS_TOKEN = process.env.ITHINK_ACCESS_TOKEN;
 const SECRET_KEY = process.env.ITHINK_SECRET_KEY;
-const PICKUP_ADDRESS_ID = process.env.ITHINK_PICKUP_ADDRESS_ID;
-const RETURN_ADDRESS_ID =
-  process.env.ITHINK_RETURN_ADDRESS_ID || PICKUP_ADDRESS_ID;
-const LOGISTICS_PARTNER = process.env.ITHINK_LOGISTICS_PARTNER;
-const fmtDate = (d) => {
+
+const fmtDateTime = (d) => {
   const dt = d ? new Date(d) : new Date();
   const dd = String(dt.getDate()).padStart(2, "0");
   const mm = String(dt.getMonth() + 1).padStart(2, "0");
   const yyyy = dt.getFullYear();
-  return `${dd}-${mm}-${yyyy}`;
+  const hh = String(dt.getHours()).padStart(2, "0");
+  const min = String(dt.getMinutes()).padStart(2, "0");
+  const ss = String(dt.getSeconds()).padStart(2, "0");
+  return `${dd}-${mm}-${yyyy} ${hh}:${min}:${ss}`;
 };
-const getItemWeight = (item) => {
-  const w = Number(item.variant_id?.ProductWeight) || 0;
-  return w > 0 ? w : 0.01;
-};
+
+// ═══════════════════════════════════════════════════════
+// SYNC ORDER TO ITHINK DASHBOARD (auto on order placed)
+// ═══════════════════════════════════════════════════════
 const syncOrderToIthink = async ({ order, orderItems }) => {
-  if (!ACCESS_TOKEN || !SECRET_KEY || !PICKUP_ADDRESS_ID) {
+  console.log("\n========== ITHINK SYNC START ==========");
+  console.log("Order Number:", order.order_number);
+
+  if (!ACCESS_TOKEN || !SECRET_KEY) {
+    console.log("❌ ITHINK credentials missing in .env");
     throw new Error("iThink credentials missing. Check .env file");
   }
+
   const addr = order.shippingAddress || {};
   const customerName =
     `${addr.firstName || ""} ${addr.lastName || ""}`.trim() || "Customer";
   const items = orderItems || [];
-  const totalWeightKg = items.reduce(
-    (sum, item) => sum + getItemWeight(item) * (item.quantity || 1),
-    0,
-  );
-  const maxLength = Math.max(
-    ...items.map((i) => Number(i.variant_id?.ProductLength)),
-    10,
-  );
-  const maxWidth = Math.max(
-    ...items.map((i) => Number(i.variant_id?.ProductWidth)),
-    10,
-  );
-  const totalHeight = items.reduce(
-    (sum, i) =>
-      sum + (Number(i.variant_id?.ProductHeight) || 5) * (i.quantity || 1),
-    0,
-  );
+
   const isCOD = order.payment_method === "COD";
-  const paymentMode = isCOD ? "COD" : "Prepaid";
   const codAmount = isCOD ? String(order.total_price) : "0";
-  const products = items.map((item) => ({
-    product_name: item.product_id?.name || "Product",
-    product_sku: item.variant_id?.sku || item.product_id?.sku || "",
-    product_quantity: String(item.quantity || 1),
-    product_price: String(item.price_at_order ?? 0),
-    product_tax_rate: String(item.product_id?.tax_rate || 0),
-    product_hsn_code: item.product_id?.hsn_code || "",
-    product_discount: "0",
-    product_img_url:
-      item.variant_id?.images?.[0] || item.product_id?.images || "",
-  }));
+
+  // const products = items
+  //   .filter((it) => !it.is_gift)
+  //   .map((item) => ({
+  //     product_name: item.product_id?.name || "Product",
+  //     product_sku: item.variant_id?.sku || "",
+  //     product_quantity: String(item.quantity || 1),
+  //     product_price: String(item.price_at_order ?? 0),
+  //     product_tax_rate: "0",
+  //     product_hsn_code: "",
+  //     product_discount: "0",
+  //   }));
+
+  // if (!products.length) {
+  //   products.push({
+  //     product_name: "Order Item",
+  //     product_sku: "",
+  //     product_quantity: "1",
+  //     product_price: String(order.total_price || 0),
+  //     product_tax_rate: "0",
+  //     product_hsn_code: "",
+  //     product_discount: "0",
+  //   });
+  // }
+
+  const products = items
+    .filter((it) => !it.is_gift)
+    .map((item) => ({
+      product_name: item.product_id?.name || "Product",
+      product_sku: item.variant_id?.sku || "NA",
+      product_quantity: String(item.quantity || 1),
+      product_price: String(item.price_at_order ?? 0),
+      product_tax_rate: "0",
+
+      product_hsn_code: item.product_id?.hsn_code
+        ? String(item.product_id.hsn_code)
+        : "9999",
+      product_discount: "0",
+    }));
+
   if (!products.length) {
     products.push({
       product_name: "Order Item",
-      product_sku: "",
+      product_sku: "NA",
       product_quantity: "1",
       product_price: String(order.total_price || 0),
       product_tax_rate: "0",
-      product_hsn_code: "",
+      product_hsn_code: "9999",
       product_discount: "0",
-      product_img_url: "",
     });
   }
+
   const shipment = {
-    waybill: "",
     order: order.order_number,
-    sub_order: "A",
-    order_date: fmtDate(order.createdAt),
+    sub_order: "",
+    order_date: fmtDateTime(order.createdAt),
     total_amount: String(order.total_price),
     name: customerName,
     company_name: "",
@@ -86,7 +102,7 @@ const syncOrderToIthink = async ({ order, orderItems }) => {
     country: "India",
     phone: String(addr.phone || ""),
     alt_phone: String(addr.phone || ""),
-    email: order.email || order.user_id?.email || "",
+    email: order.user_id?.email || order.email || "",
     is_billing_same_as_shipping: "yes",
     billing_name: customerName,
     billing_company_name: "",
@@ -99,59 +115,84 @@ const syncOrderToIthink = async ({ order, orderItems }) => {
     billing_country: "India",
     billing_phone: String(addr.phone || ""),
     billing_alt_phone: String(addr.phone || ""),
-    billing_email: order.email || order.user_id?.email || "",
+    billing_email: order.user_id?.email || order.email || "",
     products,
-    shipment_length: String(maxLength),
-    shipment_width: String(maxWidth),
-    shipment_height: String(totalHeight || 5),
-    weight: totalWeightKg.toFixed(2),
-    shipment_service_type: order.shipment_service_type || "forward",
+    shipment_length: String(order.shipment_length || 0.1),
+    shipment_width: String(order.shipment_width || 0.1),
+    shipment_height: String(order.shipment_height || 0.1),
+    weight: String(order.shipment_weight || 0.1),
     shipping_charges: String(order.shipping_charge || 0),
     giftwrap_charges: "0",
     transaction_charges: "0",
     total_discount: String(order.coupon_discount || 0),
     first_attemp_discount: "0",
     cod_charges: "0",
-    advance_amount: "0",
+    advance_amount: String(order.advance_amount || 0),
     cod_amount: codAmount,
-    payment_mode: paymentMode,
+    payment_mode: isCOD ? "COD" : "Prepaid",
     reseller_name: "",
     eway_bill_number: "",
     gst_number: "",
-    what3words: "",
-    return_address_id: String(RETURN_ADDRESS_ID),
-    api_source: "0",
-    store_id: process.env.ITHINK_STORE_ID || "1",
   };
+
   const payload = {
     data: {
       shipments: [shipment],
-      pickup_address_id: String(PICKUP_ADDRESS_ID),
       access_token: ACCESS_TOKEN,
       secret_key: SECRET_KEY,
-      logistics: LOGISTICS_PARTNER,
-      s_type: "",
-      order_type: "",
     },
   };
-  const response = await axios.post(`${BASE_URL}/order/add.json`, payload, {
-    headers: { "Content-Type": "application/json" },
-    timeout: 20000,
-  });
-  const data = response.data;
-  const result = data?.data?.["1"];
-  if (!result || result.status !== "Success") {
+
+  console.log("REQUEST PAYLOAD:");
+  console.dir(payload, { depth: null });
+
+  let response;
+  try {
+    response = await axios.post(`${BASE_URL}/order/sync.json`, payload, {
+      headers: { "Content-Type": "application/json" },
+      timeout: 20000,
+    });
+    console.log("✅ ITHINK SYNC SUCCESS RESPONSE:");
+    console.dir(response.data, { depth: null });
+  } catch (err) {
+    console.log("❌ ITHINK SYNC ERROR");
+    console.log("STATUS:", err.response?.status);
+    console.dir(err.response?.data, { depth: null });
+    console.log("MESSAGE:", err.message);
+    console.log("========== ITHINK SYNC END (FAILED) ==========\n");
     throw new Error(
-      result?.remark || data?.html_message || "iThink order creation failed",
+      err.response?.data?.message ||
+        err.response?.data?.html_message ||
+        err.message ||
+        "iThink sync API request failed",
     );
   }
-  return { pushed: true };
+
+  const data = response.data;
+  const result = Object.values(data?.data || {})[0];
+
+  if (!result || (result.status && result.status !== "Success")) {
+    const errorMsg =
+      result?.remark ||
+      data?.html_message ||
+      data?.message ||
+      (data ? JSON.stringify(data) : "");
+    console.log("❌ ITHINK returned failure:", errorMsg);
+    console.log("========== ITHINK SYNC END (FAILED) ==========\n");
+    throw new Error(errorMsg || "iThink order sync failed");
+  }
+
+  console.log("✅ Order successfully pushed to iThink dashboard");
+  console.log("========== ITHINK SYNC END ==========\n");
+
+  return { pushed: true, raw: result };
 };
 
-// ═══════════════════════════════════════════════════════════════
-// 2. TRACK AWB
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// TRACK AWB (unchanged — already correct)
+// ═══════════════════════════════════════════════════════
 const trackIthinkAWB = async (awb) => {
+  console.log("\n---- ITHINK TRACK AWB:", awb, "----");
   const payload = {
     data: {
       awb_number_list: awb,
@@ -159,21 +200,24 @@ const trackIthinkAWB = async (awb) => {
       secret_key: SECRET_KEY,
     },
   };
-
-  const { data } = await axios.post(`${BASE_URL}/order/track.json`, payload, {
-    headers: { "Content-Type": "application/json" },
-    timeout: 20000,
-  });
-
-  const info = data?.data?.[awb];
-  if (!info) throw new Error("Tracking info not found");
-
-  return {
-    current_status: info.current_status,
-    expected_delivery_date: info.expected_delivery_date || null,
-    last_scan_details: info.last_scan_details || null,
-    scan_details: info.scan_details || info.tracking_data || [],
-  };
+  try {
+    const { data } = await axios.post(`${BASE_URL}/order/track.json`, payload, {
+      headers: { "Content-Type": "application/json" },
+      timeout: 20000,
+    });
+    console.log("TRACK RESPONSE:", JSON.stringify(data));
+    const info = data?.data?.[awb];
+    if (!info) throw new Error("Tracking info not found");
+    return {
+      current_status: info.current_status,
+      expected_delivery_date: info.expected_delivery_date || null,
+      last_scan_details: info.last_scan_details || null,
+      scan_details: info.scan_details || info.tracking_data || [],
+    };
+  } catch (err) {
+    console.log("❌ TRACK ERROR:", err.response?.data || err.message);
+    throw err;
+  }
 };
 
 const mapIthinkStatus = (ithinkStatus = "") => {
@@ -187,77 +231,21 @@ const mapIthinkStatus = (ithinkStatus = "") => {
   return null;
 };
 
-const verifyIthinkSignature = (rawBody, signature) => {
-  if (!signature) return false;
-  const crypto = require("crypto");
-  const expected = crypto
-    .createHmac("sha256", SECRET_KEY || "")
-    .update(rawBody)
-    .digest("hex");
-  return expected === signature;
-};
-
-// const checkPincodeServiceability = async (pincode) => {
-//   try {
-//     const response = await axios.post(
-//       "https://my.ithinklogistics.com/api_v3/pincode/check.json",
-//       {
-//         data: {
-//           pincode: String(pincode),
-//           access_token: process.env.ITHINK_ACCESS_TOKEN,
-//           secret_key: process.env.ITHINK_SECRET_KEY,
-//         },
-//       },
-//       { headers: { "Content-Type": "application/json" } },
-//     );
-
-//     const deliveryCodes = response.data?.data?.delivery_codes;
-
-//     if (!deliveryCodes || deliveryCodes.length === 0) {
-//       return { serviceable: false };
-//     }
-
-//     const postalCode = deliveryCodes[0]?.postal_code;
-//     const isServiceable =
-//       postalCode?.cash === "Y" || postalCode?.pre_paid === "Y";
-
-//     return {
-//       serviceable: isServiceable,
-//       cod: postalCode?.cash === "Y",
-//       prepaid: postalCode?.pre_paid === "Y",
-//       district: postalCode?.district || "",
-//       state_code: postalCode?.state_code || "",
-//     };
-//   } catch (err) {
-//     console.error(
-//       "iThink pincode check error:",
-//       err?.response?.data || err.message,
-//     );
-//     // API fail thay to bhi service unavailable j maano (safe default)
-//     return { serviceable: false, error: true };
-//   }
-// };
-
 const checkPincodeServiceability = async (pincode) => {
   try {
     const response = await axios.post(
-      "https://my.ithinklogistics.com/api_v3/pincode/check.json",
+      `${BASE_URL}/pincode/check.json`,
       {
         data: {
           pincode: String(pincode),
-          access_token: process.env.ITHINK_ACCESS_TOKEN,
-          secret_key: process.env.ITHINK_SECRET_KEY,
+          access_token: ACCESS_TOKEN,
+          secret_key: SECRET_KEY,
         },
       },
       { headers: { "Content-Type": "application/json" } },
     );
-
     const pincodeData = response.data?.data?.[String(pincode)];
-
-    if (!pincodeData) {
-      return { serviceable: false };
-    }
-
+    if (!pincodeData) return { serviceable: false };
     const metaKeys = [
       "remark",
       "state_name",
@@ -266,20 +254,15 @@ const checkPincodeServiceability = async (pincode) => {
       "state_id",
     ];
     const courierEntries = Object.keys(pincodeData)
-      .filter((key) => !metaKeys.includes(key))
-      .map((key) => pincodeData[key]);
-
+      .filter((k) => !metaKeys.includes(k))
+      .map((k) => pincodeData[k]);
     const isServiceable = courierEntries.some(
-      (courier) => courier?.cod === "Y" || courier?.prepaid === "Y",
+      (c) => c?.cod === "Y" || c?.prepaid === "Y",
     );
-
-    const codAvailable = courierEntries.some((c) => c?.cod === "Y");
-    const prepaidAvailable = courierEntries.some((c) => c?.prepaid === "Y");
-
     return {
       serviceable: isServiceable,
-      cod: codAvailable,
-      prepaid: prepaidAvailable,
+      cod: courierEntries.some((c) => c?.cod === "Y"),
+      prepaid: courierEntries.some((c) => c?.prepaid === "Y"),
       district: pincodeData.city_name || "",
       state_code: pincodeData.state_name || "",
       remark: pincodeData.remark || "",
@@ -292,10 +275,10 @@ const checkPincodeServiceability = async (pincode) => {
     return { serviceable: false, error: true };
   }
 };
+
 module.exports = {
   syncOrderToIthink,
   trackIthinkAWB,
   mapIthinkStatus,
-  verifyIthinkSignature,
   checkPincodeServiceability,
 };

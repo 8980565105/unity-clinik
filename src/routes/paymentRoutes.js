@@ -12,8 +12,8 @@ const {
   razorpayWebhook,
   createPhonePePayment,
   verifyPhonePePayment,
-  phonePeCallback,
   markPaymentFailed,
+  phonePeWebhook,
 } = require("../controllers/paymentController");
 
 const {
@@ -27,7 +27,7 @@ router.post("/webhook", razorpayWebhook);
 
 router.post("/phonepe/initiate", createPhonePePayment);
 router.post("/phonepe/verify", verifyPhonePePayment);
-router.post("/phonepe/callback", phonePeCallback);
+// router.post("/phonepe/callback", phonePeWebhook);
 
 router.use(authMiddleware);
 

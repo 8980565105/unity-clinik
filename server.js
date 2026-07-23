@@ -42,7 +42,8 @@ const walletRoutes = require("./src/routes/walletRoutes");
 const reffrelRoutes = require("./src/routes/reffrelRoutes");
 const sitemapRoutes = require("./src/routes/sitemapRoutes");
 const trackingRoutes = require("./src/routes/trackingRoutes");
-const pincodeeRoutes = require("./src/routes/pincodeRoutes")
+const pincodeeRoutes = require("./src/routes/pincodeRoutes");
+const { phonePeWebhook } = require("./src/controllers/paymentController");
 const helmet = require("helmet");
 
 connectDB();
@@ -145,6 +146,7 @@ app.use("/api/bookconsaltans", bookconsaltansRoutes);
 app.use("/api/guest", guestRoutes);
 app.use("/api/sippingcharge", sippingchargeRoutes);
 app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
+app.post("/hook/phonepe", express.json(), phonePeWebhook);
 app.use("/api/wallet", walletRoutes);
 app.use("/api/reffrel", reffrelRoutes);
 app.use("/api/track", trackingRoutes);

@@ -597,14 +597,22 @@ const saveNewOrder = async (orderData, session = null) => {
     if (variant.stock_quantity < item.quantity)
       throw new Error(`Not enough stock for ${variant.sku}`);
     let price = variant.price;
-    const discount_id = variant.product_id.discount_id;
-    if (discount_id) {
-      const discount = await Discount.findById(discount_id).session(session);
-      if (isDiscountValid(discount)) {
-        if (discount.type === "percentage")
-          price = price - (price * discount.value) / 100;
-        else if (discount.type === "fixed") price = price - discount.value;
-        if (price < 0) price = 0;
+    if (
+      variant.offerprice &&
+      variant.offerprice > 0 &&
+      variant.offerprice < price
+    ) {
+      price = variant.offerprice;
+    } else {
+      const discount_id = variant.product_id.discount_id;
+      if (discount_id) {
+        const discount = await Discount.findById(discount_id).session(session);
+        if (isDiscountValid(discount)) {
+          if (discount.type === "percentage")
+            price = price - (price * discount.value) / 100;
+          else if (discount.type === "fixed") price = price - discount.value;
+          if (price < 0) price = 0;
+        }
       }
     }
     calculatedProductTotal += price * item.quantity;
@@ -683,7 +691,10 @@ const saveNewOrder = async (orderData, session = null) => {
     await wallet.save({ session });
   }
 
-  if (consultationGiftBooking && (payment_method === "COD" || payment_method === "Wallet")) {
+  if (
+    consultationGiftBooking &&
+    (payment_method === "COD" || payment_method === "Wallet")
+  ) {
     consultationGiftBooking.is_redeemed = true;
     consultationGiftBooking.redeemed_order_id = savedOrder._id;
     await consultationGiftBooking.save({ session });
@@ -696,124 +707,55 @@ const saveNewOrder = async (orderData, session = null) => {
 };
 
 const createOrder = async (req, res) => {
-  const session = await mongoose.startSession();
   try {
-    session.startTransaction();
-    const savedOrder = await saveNewOrder(req.body, session);
-
-    if (savedOrder.payment_method === "COD" || savedOrder.payment_method === "Wallet") {
-      const orderItems = await OrderItem.find({ order_id: savedOrder._id }).session(session);
+    const savedOrder = await saveNewOrder(req.body);
+    if (
+      savedOrder.payment_method === "COD" ||
+      savedOrder.payment_method === "Wallet"
+    ) {
+      const orderItems = await OrderItem.find({ order_id: savedOrder._id });
       for (const item of orderItems) {
         if (item.is_gift) continue;
         if (!item.variant_id) continue;
-        const variant = await ProductVariant.findById(item.variant_id).session(session);
+        const variant = await ProductVariant.findById(item.variant_id);
         if (variant) {
           variant.stock_quantity -= item.quantity;
-          await variant.save({ session });
+          await variant.save();
         }
       }
-
-      if (savedOrder.coupon_id) {
-        const Coupon = require("../models/Coupon");
-        const couponDoc = await Coupon.findById(savedOrder.coupon_id).session(session);
-        if (couponDoc) {
-          const userEntry = (couponDoc.user_usage || []).find(
-            (u) => u.user_id.toString() === savedOrder.user_id.toString(),
-          );
-          if (userEntry) {
-            await Coupon.updateOne(
-              { _id: savedOrder.coupon_id, "user_usage.user_id": savedOrder.user_id },
-              { $inc: { used_count: 1, "user_usage.$.count": 1 } },
-              { session }
-            );
-          } else {
-            await Coupon.updateOne(
-              { _id: savedOrder.coupon_id },
-              { $inc: { used_count: 1 }, $push: { user_usage: { user_id: savedOrder.user_id, count: 1 } } },
-              { session }
-            );
-          }
-        }
-      }
-
-      const Payment = require("../models/Payment");
-      if (savedOrder.payment_method === "COD") {
-        await Payment.create(
-          [
-            {
-              order_id: savedOrder._id,
-              user_id: savedOrder.user_id,
-              payment_method: "COD",
-              amount_paid: 0,
-              status: "pending",
-              type: "order",
-            },
-          ],
-          { session },
-        );
-      } else if (savedOrder.payment_method === "Wallet") {
-        await Payment.create(
-          [
-            {
-              order_id: savedOrder._id,
-              user_id: savedOrder.user_id,
-              payment_method: "Wallet",
-              amount_paid: savedOrder.total_price,
-              transaction_id: "wallet_" + savedOrder._id,
-              status: "completed",
-              type: "order",
-            },
-          ],
-          { session },
-        );
-      }
-
       try {
-        const populatedOrder = await Order.findById(savedOrder._id).populate("user_id").session(session);
-        const populatedItems = await OrderItem.find({ order_id: savedOrder._id })
-          .populate("product_id")
-          .populate("variant_id")
-          .session(session);
-
+        const populatedOrder = await Order.findById(savedOrder._id).populate(
+          "user_id",
+        );
+        const populatedItems = await OrderItem.find({
+          order_id: savedOrder._id,
+        })
+          .populate("product_id", "name")
+          .populate("variant_id", "sku");
         await syncOrderToIthink({
           order: populatedOrder,
           orderItems: populatedItems,
         });
-
         savedOrder.status_history.push({
           status: "pending",
           changed_by: "system",
-          note: "Order pushed to iThink dashboard — awaiting courier assignment",
+          note: "Order synced to iThink dashboard — awaiting AWB/courier assignment",
           changed_at: new Date(),
         });
-        await savedOrder.save({ session });
+        await savedOrder.save();
       } catch (err) {
-        console.error("iThink push error:", err.message);
+        console.error("iThink sync error (createOrder):", err.message);
         savedOrder.status_history.push({
           status: "pending",
           changed_by: "system",
-          note: "iThink push failed: " + err.message,
+          note: "iThink sync failed: " + err.message,
           changed_at: new Date(),
         });
-        await savedOrder.save({ session });
+        await savedOrder.save();
       }
     }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    if (savedOrder.payment_method === "COD" || savedOrder.payment_method === "Wallet") {
-      const populatedForEmail = await Order.findById(savedOrder._id).populate("user_id", "name email");
-      const { email: placedEmail, name: placedName } = getCustomerInfo(populatedForEmail || savedOrder);
-      const emailItems = await getEmailItems(savedOrder._id);
-      sendOrderPlaced(populatedForEmail || savedOrder, placedEmail, placedName, emailItems);
-      sendAdminNewOrder(populatedForEmail || savedOrder, placedName, placedEmail, emailItems);
-    }
-
     sendResponse(res, true, savedOrder, "Order created successfully");
   } catch (err) {
-    await session.abortTransaction().catch(() => {});
-    session.endSession();
     sendResponse(res, false, null, err.message);
   }
 };
@@ -832,19 +774,25 @@ const activateOrder = async (orderId, transactionId = "", session = null) => {
   }
   await order.save({ session });
 
-  const orderItems = await OrderItem.find({ order_id: orderId }).session(session);
+  const orderItems = await OrderItem.find({ order_id: orderId }).session(
+    session,
+  );
 
   for (const item of orderItems) {
     if (item.is_gift) continue;
     if (!item.variant_id) continue;
-    const variant = await ProductVariant.findById(item.variant_id).session(session);
+    const variant = await ProductVariant.findById(item.variant_id).session(
+      session,
+    );
     if (variant) {
       variant.stock_quantity -= item.quantity;
       await variant.save({ session });
     }
   }
 
-  const hasConsultationGift = orderItems.some((item) => item.is_consultation_gift);
+  const hasConsultationGift = orderItems.some(
+    (item) => item.is_consultation_gift,
+  );
   if (hasConsultationGift && order.user_id) {
     await Bookconsaltion.findOneAndUpdate(
       {
@@ -854,7 +802,7 @@ const activateOrder = async (orderId, transactionId = "", session = null) => {
         product_id: { $ne: null },
       },
       { $set: { is_redeemed: true, redeemed_order_id: order._id } },
-      { sort: { createdAt: 1 } }
+      { sort: { createdAt: 1 } },
     ).session(session);
   }
 
@@ -873,7 +821,7 @@ const activateOrder = async (orderId, transactionId = "", session = null) => {
               used_count: 1,
               "user_usage.$.count": 1,
             },
-          }
+          },
         ).session(session);
       } else {
         await Coupon.updateOne(
@@ -881,14 +829,16 @@ const activateOrder = async (orderId, transactionId = "", session = null) => {
           {
             $inc: { used_count: 1 },
             $push: { user_usage: { user_id: order.user_id, count: 1 } },
-          }
+          },
         ).session(session);
       }
     }
   }
 
   try {
-    const populatedOrder = await Order.findById(order._id).populate("user_id").session(session);
+    const populatedOrder = await Order.findById(order._id)
+      .populate("user_id")
+      .session(session);
     const populatedItems = await OrderItem.find({ order_id: order._id })
       .populate("product_id")
       .populate("variant_id")
@@ -916,7 +866,6 @@ const activateOrder = async (orderId, transactionId = "", session = null) => {
     });
     await order.save({ session });
   }
-
   try {
     const populatedForEmail = await Order.findById(order._id)
       .populate("user_id", "name email")
@@ -925,13 +874,13 @@ const activateOrder = async (orderId, transactionId = "", session = null) => {
       populatedForEmail || order,
     );
     const emailItems = await getEmailItems(order._id);
-    sendOrderPlaced(
+    await sendOrderPlaced(
       populatedForEmail || order,
       placedEmail,
       placedName,
       emailItems,
     );
-    sendAdminNewOrder(
+    await sendAdminNewOrder(
       populatedForEmail || order,
       placedName,
       placedEmail,
@@ -944,9 +893,6 @@ const activateOrder = async (orderId, transactionId = "", session = null) => {
   return order;
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// 4. CONFIRM ORDER → creates Packing record automatically
-// ═══════════════════════════════════════════════════════════════════════════════
 
 const confirmOrder = async (req, res) => {
   try {
@@ -1541,9 +1487,12 @@ const assignCourier = async (req, res) => {
           "sku ProductWeight ProductHeight ProductWidth ProductLength images",
         );
       const result = await syncOrderToIthink({ order, orderItems });
-      awb_number = result.awb_number;
-      tracking_url = result.tracking_url;
-      label_url = result.label_url;
+      return {
+        pushed: true,
+        awb_number: result.awb_number,
+        tracking_url: result.tracking_url,
+        label_url: result.label_url,
+      };
     } else {
       if (!awb_number) {
         return sendResponse(res, false, null, "AWB number required");
@@ -1897,14 +1846,22 @@ const updateOrder = async (req, res) => {
         );
 
       let price = variant.price;
-      const discount_id = variant.product_id.discount_id;
-      if (discount_id) {
-        const discount = await Discount.findById(discount_id);
-        if (isDiscountValid(discount)) {
-          if (discount.type === "percentage")
-            price = price - (price * discount.value) / 100;
-          else if (discount.type === "fixed") price = price - discount.value;
-          if (price < 0) price = 0;
+      if (
+        variant.offerprice &&
+        variant.offerprice > 0 &&
+        variant.offerprice < price
+      ) {
+        price = variant.offerprice;
+      } else {
+        const discount_id = variant.product_id.discount_id;
+        if (discount_id) {
+          const discount = await Discount.findById(discount_id);
+          if (isDiscountValid(discount)) {
+            if (discount.type === "percentage")
+              price = price - (price * discount.value) / 100;
+            else if (discount.type === "fixed") price = price - discount.value;
+            if (price < 0) price = 0;
+          }
         }
       }
 
@@ -2303,14 +2260,12 @@ const refundOrder = async (req, res) => {
         `Refund amount cannot exceed order total (₹${order.total_price})`,
       );
     }
-
     await walletService.creditWallet(
       order.user_id._id || order.user_id,
       refundAmount,
       `Refund for Order #${order.order_number}${note ? " — " + safeString(note) : ""}`,
       { orderId: order._id },
     );
-
     order.payment_status = "refunded";
     pushHistory(
       order,
@@ -2320,7 +2275,6 @@ const refundOrder = async (req, res) => {
         (note ? ` — ${safeString(note)}` : ""),
     );
     await order.save();
-
     const { email, name } = getCustomerInfo(order);
     const emailItems = await getEmailItems(order._id);
     sendRefundProcessed(
@@ -2344,6 +2298,135 @@ const refundOrder = async (req, res) => {
       true,
       order,
       `₹${refundAmount} refunded to customer's wallet successfully`,
+    );
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+// UPDATE SHIPPING ADDRESS + ITEM DIMENSIONS (admin edit)
+// ═══════════════════════════════════════════════════════════
+const pushOrderToIthink = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id).populate(
+      "user_id",
+      "name email",
+    );
+    if (!order) return sendResponse(res, false, null, "Order not found");
+
+    if (order.courier?.awb_number) {
+      return sendResponse(
+        res,
+        false,
+        null,
+        "AWB already assigned. Cannot push again.",
+      );
+    }
+
+    if (
+      !order.shipment_weight ||
+      !order.shipment_length ||
+      !order.shipment_width ||
+      !order.shipment_height
+    ) {
+      return sendResponse(
+        res,
+        false,
+        null,
+        "Please fill weight/length/width/height before shipping to iThink",
+      );
+    }
+
+    const orderItems = await OrderItem.find({ order_id: order._id })
+      .populate("product_id", "name")
+      .populate("variant_id", "sku");
+
+    await syncOrderToIthink({ order, orderItems });
+
+    order.status = "processing";
+    pushHistory(
+      order,
+      "processing",
+      req.user?.name || "admin",
+      "Order pushed to iThink dashboard",
+    );
+    await order.save();
+
+    sendResponse(res, true, order, "Order pushed to iThink!");
+  } catch (err) {
+    sendResponse(res, false, null, err.message);
+  }
+};
+
+const updateOrderShippingDetails = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) return sendResponse(res, false, null, "Order not found");
+    const {
+      shippingAddress,
+      shipment_weight,
+      shipment_length,
+      shipment_width,
+      shipment_height,
+      awb_number,
+      courier_name,
+    } = req.body;
+
+    if (shippingAddress) {
+      order.shippingAddress = {
+        ...(order.shippingAddress?.toObject?.() || order.shippingAddress || {}),
+        ...shippingAddress,
+      };
+    }
+
+    if (shipment_weight !== undefined)
+      order.shipment_weight = Number(shipment_weight) || 0;
+    if (shipment_length !== undefined)
+      order.shipment_length = Number(shipment_length) || 0;
+    if (shipment_width !== undefined)
+      order.shipment_width = Number(shipment_width) || 0;
+    if (shipment_height !== undefined)
+      order.shipment_height = Number(shipment_height) || 0;
+
+    if (awb_number !== undefined) {
+      const cleanAwb = safeString(awb_number);
+      if (cleanAwb) {
+        order.courier = {
+          partner: "ithink",
+          name: safeString(courier_name) || "iThink",
+          awb_number: cleanAwb,
+          tracking_url: `https://my.ithinklogistics.com/tracking/${cleanAwb}`,
+          last_status: "Manifested",
+          last_updated: new Date(),
+        };
+        if (!["shipped", "in_transit", "completed"].includes(order.status)) {
+          order.status = "shipped";
+          pushHistory(
+            order,
+            "shipped",
+            req.user?.name || "admin",
+            `AWB added: ${cleanAwb}`,
+          );
+        }
+      }
+    }
+
+    await order.save();
+
+    const updatedOrder = await Order.findById(order._id).populate(
+      "user_id",
+      "name email",
+    );
+    const updatedItems = await OrderItem.find({ order_id: order._id })
+      .populate("product_id", "name")
+      .populate("variant_id", "sku");
+
+    sendResponse(
+      res,
+      true,
+      { order: updatedOrder, items: updatedItems },
+      "Shipping details updated successfully",
     );
   } catch (err) {
     sendResponse(res, false, null, err.message);
@@ -2375,5 +2458,7 @@ module.exports = {
   getOrderTracking,
   requestReturn,
   decideReturn,
+  updateOrderShippingDetails,
+  pushOrderToIthink,
   refundOrder,
 };

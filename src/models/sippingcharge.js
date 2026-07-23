@@ -82,6 +82,13 @@ const sippingchargeSchema = new mongoose.Schema(
       default: "price",
     },
 
+    methodStatus: {
+      cod: { type: Boolean, default: true },
+      prepaid: { type: Boolean, default: true },
+      partialCod: { type: Boolean, default: true },
+      wallet: { type: Boolean, default: true },
+    },
+
     partialCod: {
       codType: {
         type: String,
