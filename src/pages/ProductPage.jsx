@@ -18,7 +18,6 @@ import { Handbag } from "lucide-react";
 import ProductSections, {
   SectionRenderer,
 } from "../components/product/ProductSections";
-import Productreviews from "../components/product/productreviews";
 import BuyNowButton from "../components/product/BuyNowButton";
 import Button from "../components/ui/Button";
 const CustomerAlsoViewed = lazy(
@@ -28,62 +27,9 @@ const SimilarProducts = lazy(
   () => import("../components/product/SimilarProducts"),
 );
 export default function Product() {
-  // const { id } = useParams();
-  // const dispatch = useDispatch();
-  // const { product, products, error } = useSelector((state) => state.products);
-  // const [selectedVariant, setSelectedVariant] = useState(null);
-  // const [selectedColor, setSelectedColor] = useState(null);
-  // const [showLoginPopup, setShowLoginPopup] = useState(false);
-  // const [showStickyBar, setShowStickyBar] = useState(false);
-  // const [priceData, setPriceData] = useState({});
-  // const [addingToCart, setAddingToCart] = useState(false);
-  // const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
-  // const [handleAddToWishlistFn, setHandleAddToWishlistFn] = useState(null);
-  // const [addedToCart, setAddedToCart] = useState(false);
-  // const [activeVariantState, setActiveVariantState] = useState(null);
-  // const [selectedPackState, setSelectedPackState] = useState(null);
-
-  // const [isAddedToCart, setIsAddedToCart] = useState(false);
-  // const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
-  // const [addingToCart, setAddingToCart] = useState(false);
-
-  // useEffect(() => {
-  //   if (id) dispatch(fetchProductById(id));
-  // }, [id, dispatch]);
-
-  // useEffect(() => {
-  //   if (product && product._id) {
-  //     addRecentlyViewed(product);
-  //     dispatch(
-  //       fetchProductReviews({ productId: product._id, page: 1, limit: 50 }),
-  //     );
-  //   }
-  // }, [product?._id, dispatch]);
-
-  // const handleGoToCart = () => {
-  //   const userLS = JSON.parse(localStorage.getItem("user"));
-  //   if (!userLS?._id) {
-  //     setShowLoginPopup(true);
-  //     return;
-  //   }
-  //   navigate("/cart");
-  // };
-
-  // if (error) return <p className="text-center text-red-500 py-10">{error}</p>;
-  // if (!product) return <Loding />;
-
-  // const otherRecommendedSection = product?.sections?.find(
-  //   (section) =>
-  //     section.type === "Other Recommended Solutions" &&
-  //     section?.data?.status === true,
-  // );
-
-  // const remainingSections = product?.sections?.filter(
-  //   (section) => section.type !== "Other Recommended Solutions",
-  // );
 
   const { id } = useParams();
-  const navigate = useNavigate(); // ✅ navu
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { product, products, error } = useSelector((state) => state.products);
 
@@ -92,10 +38,10 @@ export default function Product() {
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [priceData, setPriceData] = useState({});
-  const [addingToCart, setAddingToCart] = useState(false); // ✅ ek j vaar
-  const [handleAddToCartFn, setHandleAddToCartFn] = useState(null); // ✅ ek j vaar
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [handleAddToCartFn, setHandleAddToCartFn] = useState(null);
   const [handleAddToWishlistFn, setHandleAddToWishlistFn] = useState(null);
-  const [addedToCart, setAddedToCart] = useState(false); // ✅ ek j state - isAddedToCart hatavyu
+  const [addedToCart, setAddedToCart] = useState(false);
   const [activeVariantState, setActiveVariantState] = useState(null);
   const [selectedPackState, setSelectedPackState] = useState(null);
 
@@ -112,7 +58,7 @@ export default function Product() {
     }
   }, [product?._id, dispatch]);
 
-  // ✅ Navu function - login check + navigate
+
   const handleGoToCart = () => {
     const userLS = JSON.parse(localStorage.getItem("user"));
     if (!userLS?._id) {
@@ -152,22 +98,6 @@ export default function Product() {
             />
           </div>
           <div className="min-w-0">
-            {/* <ProductInfo
-              product={product}
-              setSelectedVariant={setSelectedVariant}
-              selectedColor={selectedColor}
-              setSelectedColor={setSelectedColor}
-              setShowLoginPopup={setShowLoginPopup}
-              setShowStickyBar={setShowStickyBar}
-              setPriceData={setPriceData}
-              setAddingToCart={setAddingToCart}
-              setHandleAddToCartFn={setHandleAddToCartFn}
-              setHandleAddToWishlistFn={setHandleAddToWishlistFn}
-              setSelectedPack={setSelectedPackState}
-              setActiveVariant={setActiveVariantState}
-              setIsAddedToCartFn={setIsAddedToCart}
-              setIsAddedToCartFn={setAddedToCart}
-            /> */}
             <ProductInfo
               product={product}
               setSelectedVariant={setSelectedVariant}
@@ -183,7 +113,6 @@ export default function Product() {
               setActiveVariant={setActiveVariantState}
               setIsAddedToCartFn={setAddedToCart}
             />
-
             <ProductTabs product={product} selectedVariant={selectedVariant} />
           </div>
         </Row>
@@ -200,15 +129,13 @@ export default function Product() {
         <SimilarProducts product={product} products={products} />
       </Suspense>
 
+     
       <ProductSections
         sections={remainingSections}
-        setShowLoginPopup={setShowLoginPopup}
-      />
-
-      <Productreviews
         productId={product?._id}
         setShowLoginPopup={setShowLoginPopup}
       />
+
       <Suspense>
         <CustomerAlsoViewed
           products={products}

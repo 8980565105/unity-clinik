@@ -60,6 +60,7 @@ function BannerCard({ banner, cardH, cardW }) {
 
   return (
     <div
+      onClick={() => navigate(banner.button_link || "/allproducts")}
       className="relative w-full rounded-2xl overflow-hidden flex"
       style={{
         height: cardH,
@@ -101,13 +102,14 @@ function BannerCard({ banner, cardH, cardW }) {
         >
           {banner.description}
         </p>
-        <button
-          onClick={() => navigate(banner.button_link || "/allproducts")}
-          className="bg-primary text-white font-bold rounded-full transition-colors duration-200 whitespace-nowrap"
-          style={{ fontSize: s.btnFontSize, padding: s.btnPadding }}
-        >
-          {banner.button_name || "SHOP NOW"}
-        </button>
+        {banner.button_name && (
+          <button
+            className="bg-primary text-white font-bold rounded-full transition-colors duration-200 whitespace-nowrap"
+            style={{ fontSize: s.btnFontSize, padding: s.btnPadding }}
+          >
+            {banner.button_name}
+          </button>
+        )}
       </div>
 
       {banner.productimg && (

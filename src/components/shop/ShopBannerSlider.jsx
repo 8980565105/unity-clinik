@@ -1,13 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import Section from "../ui/Section";
 import Row from "../ui/Row";
-import NavBtn from "../ui/Navbtn";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getImageUrl } from "../utils/helper";
-
 const GAP = 16;
-
 function getResponsiveSizes(cardW) {
   if (cardW < 280)
     return {
@@ -53,13 +50,12 @@ function getResponsiveSizes(cardW) {
     btnFontSize: "12px",
   };
 }
-
 function BannerCard({ banner, cardH, cardW }) {
   const navigate = useNavigate();
   const s = getResponsiveSizes(cardW);
-
   return (
     <div
+      onClick={() => navigate(banner.button_link || "/allproducts")}
       className="relative w-full rounded-2xl overflow-hidden flex"
       style={{
         height: cardH,
@@ -101,13 +97,15 @@ function BannerCard({ banner, cardH, cardW }) {
         >
           {banner.description}
         </p>
-        <button
-          onClick={() => navigate(banner.button_link || "/allproducts")}
-          className="bg-primary text-white font-bold rounded-full transition-colors duration-200 whitespace-nowrap"
-          style={{ fontSize: s.btnFontSize, padding: s.btnPadding }}
-        >
-          {banner.button_name || "SHOP NOW"}
-        </button>
+        {banner.button_name && (
+          <button
+            onClick={() => navigate(banner.button_link || "/allproducts")}
+            className="bg-primary text-white font-bold rounded-full transition-colors duration-200 whitespace-nowrap"
+            style={{ fontSize: s.btnFontSize, padding: s.btnPadding }}
+          >
+            {banner.button_name}
+          </button>
+        )}
       </div>
 
       {banner.productimg && (
@@ -129,12 +127,10 @@ function BannerCard({ banner, cardH, cardW }) {
 
 export default function ShopBannerSlider() {
   const { slides } = useSelector((state) => state.slides);
-
   const bannerData = (slides || [])
     .filter((s) => s.section === "shoppage")
     .flatMap((s) => s.shoppageSlides || [])
     .filter((slide) => slide.status === "active");
-
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const isAnimating = useRef(false);
@@ -144,12 +140,10 @@ export default function ShopBannerSlider() {
   const [cardH, setCardH] = useState(230);
   const [visibleCount, setVisibleCount] = useState(2);
   const [currentIndex, setCurrentIndex] = useState(total);
-
   const isStatic = total <= visibleCount;
   const tripled = isStatic
     ? bannerData
     : [...bannerData, ...bannerData, ...bannerData];
-
   const calcDimensions = useCallback(() => {
     if (!containerRef.current) return;
     const w = containerRef.current.offsetWidth;
@@ -162,17 +156,14 @@ export default function ShopBannerSlider() {
     setCardH(newH);
     stepRef.current = newW + GAP;
   }, []);
-
   useEffect(() => {
     calcDimensions();
     window.addEventListener("resize", calcDimensions);
     return () => window.removeEventListener("resize", calcDimensions);
   }, [calcDimensions]);
-
   useEffect(() => {
     if (total > 0) setTimeout(() => calcDimensions(), 0);
   }, [total, calcDimensions]);
-
   useEffect(() => {
     if (!trackRef.current || cardW === 0 || total === 0 || isStatic) return;
     stepRef.current = cardW + GAP;
@@ -180,7 +171,6 @@ export default function ShopBannerSlider() {
     trackRef.current.style.transform = `translateX(-${total * stepRef.current}px)`;
     setCurrentIndex(total);
   }, [cardW, total, isStatic]);
-
   const handleNext = useCallback(() => {
     if (isAnimating.current || total === 0 || isStatic || cardW === 0) return;
     isAnimating.current = true;
@@ -204,37 +194,12 @@ export default function ShopBannerSlider() {
     }, 310);
   }, [currentIndex, isStatic, cardW, total]);
 
-  const handlePrev = useCallback(() => {
-    if (isAnimating.current || total === 0 || isStatic || cardW === 0) return;
-    isAnimating.current = true;
-    const prev = currentIndex - 1;
-    setCurrentIndex(prev);
-    if (trackRef.current) {
-      trackRef.current.style.transition =
-        "transform 300ms cubic-bezier(0.4,0,0.2,1)";
-      trackRef.current.style.transform = `translateX(-${prev * stepRef.current}px)`;
-    }
-    setTimeout(() => {
-      if (prev < total) {
-        const r = prev + total;
-        setCurrentIndex(r);
-        if (trackRef.current) {
-          trackRef.current.style.transition = "none";
-          trackRef.current.style.transform = `translateX(-${r * stepRef.current}px)`;
-        }
-      }
-      isAnimating.current = false;
-    }, 310);
-  }, [currentIndex, isStatic, cardW, total]);
-
   useEffect(() => {
     if (isStatic || cardW === 0 || total === 0) return;
     const timer = setInterval(() => handleNext(), 3000);
     return () => clearInterval(timer);
   }, [handleNext, isStatic, cardW, total]);
-
   if (!bannerData.length) return null;
-
   if (total === 1) {
     return (
       <Section>
@@ -256,7 +221,6 @@ export default function ShopBannerSlider() {
       </Section>
     );
   }
-
   if (total === 2 && visibleCount >= 2) {
     return (
       <Section>
@@ -280,30 +244,27 @@ export default function ShopBannerSlider() {
       </Section>
     );
   }
-
   return (
     <Section className="!p-0">
-      {/* <Row> */}
-        <div className="overflow-hidden w-full" ref={containerRef}>
-          {cardW > 0 && (
-            <div
-              ref={trackRef}
-              className="flex"
-              style={{ gap: `${GAP}px`, willChange: "transform" }}
-            >
-              {tripled.map((banner, i) => (
-                <div
-                  key={`${banner._id}-${i}`}
-                  className="flex-shrink-0"
-                  style={{ width: `${cardW}px` }}
-                >
-                  <BannerCard banner={banner} cardH={cardH} cardW={cardW} />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      {/* </Row> */}
+      <div className="overflow-hidden w-full" ref={containerRef}>
+        {cardW > 0 && (
+          <div
+            ref={trackRef}
+            className="flex"
+            style={{ gap: `${GAP}px`, willChange: "transform" }}
+          >
+            {tripled.map((banner, i) => (
+              <div
+                key={`${banner._id}-${i}`}
+                className="flex-shrink-0"
+                style={{ width: `${cardW}px` }}
+              >
+                <BannerCard banner={banner} cardH={cardH} cardW={cardW} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </Section>
   );
 }

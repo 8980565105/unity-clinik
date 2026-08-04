@@ -11,7 +11,10 @@ import HolisticApproach from "../components/home/HolisticApproach.jsx";
 import TimelineResult from "../components/home/TimelineResult.jsx";
 import GetStarted from "../components/home/GetStarted.jsx";
 import Banner2 from "./banner2.jsx";
-
+// import RootCauseSection from "../components/home/rootcasesection.jsx";
+const RootCauseSection = lazy(
+  () => import("../components/home/rootcasesection"),
+);
 const CategoriesSection = lazy(
   () => import("../components/home/CategoriesSection"),
 );
@@ -40,6 +43,7 @@ const Banner4 = lazy(() => import("../components/home/banner4.jsx"));
 const SuccessStorySection = lazy(
   () => import("../components/home/SuccessStory.jsx"),
 );
+
 const ReportCard = lazy(() => import("../components/pages/Reportcard.jsx"));
 const Home = () => {
   const dispatch = useDispatch();
@@ -71,6 +75,7 @@ const Home = () => {
     contacthome: <ContactHome />,
     customerreviews: <Customerreviews />,
     featuresection: <FeatureSection />,
+    rootcasesection: <RootCauseSection />,
   };
   useEffect(() => {
     if (!slugLoading) {
@@ -105,7 +110,6 @@ const Home = () => {
       document.body.style.overflow = "auto";
     };
   }, [isConsultationPopupOpen]);
-
   const handleCloseConsultationPopup = () => {
     localStorage.setItem("hasSeenConsultationPopup", "true");
     setIsConsultationPopupOpen(false);

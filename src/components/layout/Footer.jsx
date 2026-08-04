@@ -26,7 +26,7 @@ const getSocialIcon = (platform) => {
   const p = platform?.toLowerCase();
   if (p?.includes("facebook")) return { icon: Facebook };
   if (p?.includes("instagram")) return { icon: Instagram };
-  if (p?.includes("youtube")) return { icon: Youtube};
+  if (p?.includes("youtube")) return { icon: Youtube };
   if (p?.includes("twitter") || p?.includes("x"))
     return { icon: Twitter, color: "#1DA1F2" };
   return { icon: Facebook, color: "#555" };
@@ -36,6 +36,7 @@ export default function Footer() {
   const dispatch = useDispatch();
   const location = useLocation();
   const isConsultationPage = location.pathname === "/consultation";
+
 
   const { footers = [], loading } = useSelector((state) => state.footer);
   const { info: storeInfo } = useSelector((state) => state.store);
@@ -47,14 +48,10 @@ export default function Footer() {
     error,
   } = useSelector((state) => state.emails);
   const contentRef = useRef(null);
-  const contactEmail = storeInfo?.email || "info@gmail.com";
-  const contactPhone = storeInfo?.phone || "+1 [155] 000-01000";
-  const footertext =
-    storeInfo?.theme?.footerText ||
-    "Become a Unity member and get 10% off your next purchase!";
-  const copyright =
-    storeInfo?.theme?.copyrightText ||
-    "2026 Unity Hair Clinic PVT LTD. All rights reserved.";
+  const contactEmail = storeInfo?.email;
+  const contactPhone = storeInfo?.phone;
+  const footertext = storeInfo?.theme?.footerText;
+  const copyright = storeInfo?.theme?.copyrightText;
   const contactAddress =
     [
       storeInfo?.address?.street,
@@ -66,6 +63,8 @@ export default function Footer() {
       .filter(Boolean)
       .join(", ") ||
     "unity clinic shop no 10 11 ground floor dhara arcade mahadev chowk mota varcha, surat , Gujarat, Surat, 394101";
+
+  const mapUrl = `https://www.google.com/maps/place/dhara+arcade,+Mota+Varachha,+Surat,+Gujarat+394101/@21.2372365,72.8829878,17z/data=!4m6!3m5!1s0x3be04f44e00969b3:0xf68c5249f9bae7a0!8m2!3d21.2372315!4d72.8855627!16s%2Fg%2F11mcy366_c?entry=tts&g_ep=EgoyMDI2MDYwMy4xIPu8ASoASAFQAw%3D%3D&skid=9d659e00-16c5-4aae-9a86-456ffa3c5d33`;
 
   useEffect(() => {
     dispatch(fetchFooter({ isPublic: true }));
@@ -132,29 +131,46 @@ export default function Footer() {
                   className="h-auto w-[200px]"
                 />
               </Link>
-              <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
+
+              <div className="flex items-start gap-[10px] text-sm text-black">
                 <div className="w-[20px]">
                   <MapPin className="mt-1" size={22} />
                 </div>
 
-                <p>{contactAddress}</p>
+                <a
+                  href={mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline"
+                >
+                  {contactAddress}
+                </a>
               </div>
-              <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
+
+              <div className="flex items-center gap-[10px] text-sm text-black">
                 <div className="w-[20px]">
                   <Mail className="mt-1" size={20} />
                 </div>
-                <Link
-                  to="mailto:info@gmail.com"
-                  className="underline break-words"
+
+                <a
+                  href={`mailto:${contactEmail}?subject=Contact&body`}
+                  className="hover:underline break-words"
                 >
                   {contactEmail}
-                </Link>
+                </a>
               </div>
-              <div className="flex items-center gap-[10px] text-sm text-black hover:ms-4">
+
+              <div className="flex items-center gap-[10px] text-sm text-black">
                 <div className="w-[20px]">
                   <Phone className="mt-1" size={20} />
                 </div>
-                <p>{contactPhone}</p>
+
+                <a
+                  href={`tel:${contactPhone}`}
+                  className="hover:underline"
+                >
+                  {contactPhone}
+                </a>
               </div>
             </div>
             <div>

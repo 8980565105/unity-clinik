@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSlides } from "../../features/slides/slideThunk";
@@ -17,7 +17,7 @@ const imgSrc = (path) => {
 function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
   return (
     <div
-      className="relative min-w-[220px] w-[220px] h-[370px] rounded-2xl overflow-hidden cursor-pointer py-2 bg-black flex-shrink-0"
+      className="relative w-[46%] sm:w-[220px] min-w-[46%] sm:min-w-[220px] h-[310px] sm:h-[370px] rounded-2xl overflow-hidden cursor-pointer py-2 bg-black flex-shrink-0 snap-start"
       onClick={onToggle}
     >
       <div className="absolute inset-0">
@@ -48,7 +48,7 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
       )}
 
       {!isPlaying && (
-        <div className="absolute right-3 top-24 flex flex-col gap-3 z-20">
+        <div className="absolute right-3 top-20 flex flex-col gap-3 z-20">
           {slide.beforeImage && (
             <div className="relative">
               <img
@@ -59,7 +59,7 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
                 className="w-16 h-16 rounded-xl object-cover border border-white"
               />
               <span className="absolute bottom-0 left-0 right-0 text-center text-[9px] bg-black/60 text-white rounded-b-xl">
-                Before
+                {slide.beforeMonth}
               </span>
             </div>
           )}
@@ -74,7 +74,7 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
                 className="w-16 h-16 rounded-xl object-cover border border-white"
               />
               <span className="absolute bottom-0 left-0 right-0 text-center text-[9px] bg-black/60 text-white rounded-b-xl">
-                After
+                {slide.afterMonth}
               </span>
             </div>
           )}
@@ -98,16 +98,22 @@ function StoryCard({ slide, isPlaying, onToggle, onVideoEnd }) {
       {!isPlaying && (
         <div className="absolute bottom-2 left-2 right-2 z-20 ">
           <div className="bg-gray-100 p-2 overflow-hidden rounded-b-[10px]">
-            <p className="text-sm font-semibold text-gray-900 text-left line-clamp-2">
+            <p className="text-[12px] lg:text-[16px] font-semibold text-gray-900 text-left line-clamp-2">
               {slide.title}
             </p>
             <div className="flex justify-start gap-2">
-              <span className="text-xs text-gray-600 mt-1">- {slide.name}</span>
-              <span className="text-xs text-gray-600 mt-1">{slide.age}</span>
+              <span className="text-[12px] lg:text-[16px] text-gray-600 mt-1">
+                - {slide.name}
+              </span>
+              <span className="text-[12px] lg:text-[16px] text-gray-600 mt-1">
+                {slide.age}
+              </span>
             </div>
 
             {slide.review && (
-              <p className="text-xs text-gray-500 mt-1">{slide.review}</p>
+              <p className="text-[12px] lg:text-[16px] text-gray-500 mt-1">
+                {slide.review}
+              </p>
             )}
           </div>
         </div>
@@ -122,6 +128,7 @@ export default function SuccessStorySection() {
   const containerRef = useRef(null);
 
   const [playingId, setPlayingId] = useState(null);
+  const [activeDot, setActiveDot] = useState(0);
 
   const { slides } = useSelector((state) => state.slides);
   const sectionData = slides?.find((item) => item.section === "successStory");
@@ -131,14 +138,14 @@ export default function SuccessStorySection() {
 
   const currentPage = useMemo(() => {
     const path = location.pathname.toLowerCase();
-
     if (path === "/") return "home";
-
     return path.replace("/", "");
   }, [location.pathname]);
-  const shouldShow = sectionData?.showOnPages?.includes(currentPage);
 
+  const shouldShow = sectionData?.showOnPages?.includes(currentPage);
   const slidesList = sectionData?.successStorySlides || [];
+
+  const totalDots = slidesList.length;
 
   const tripleSlidesList = useMemo(() => {
     if (!slidesList.length) return [];
@@ -171,6 +178,15 @@ export default function SuccessStorySection() {
         container.style.scrollBehavior = "auto";
         container.scrollLeft += W;
         container.style.scrollBehavior = prevBehavior;
+      }
+
+      const firstCard = container.children[0];
+      if (firstCard && totalDots > 0) {
+        const gap = 20;
+        const cardWidth = firstCard.offsetWidth + gap;
+        const scrolledIndex = Math.round(container.scrollLeft / cardWidth);
+        const realIndex = ((scrolledIndex % totalDots) + totalDots) % totalDots;
+        setActiveDot(realIndex);
       }
     };
 
@@ -213,28 +229,46 @@ export default function SuccessStorySection() {
       clearTimeout(timer);
       container.removeEventListener("scroll", handleScroll);
       window.removeEventListener("resize", initScroll);
-
       container.removeEventListener("mousedown", handleMouseDown);
       container.removeEventListener("mouseleave", handleMouseLeave);
       container.removeEventListener("mouseup", handleMouseUp);
       container.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [slidesList.length]);
+  }, [slidesList.length, totalDots]);
+
+  const goToDot = useCallback(
+    (index) => {
+      const container = containerRef.current;
+      if (!container || !totalDots) return;
+
+      const firstCard = container.children[0];
+      if (!firstCard) return;
+
+      const gap = 20;
+      const cardWidth = firstCard.offsetWidth + gap;
+
+      const targetIndex = totalDots + index;
+      container.scrollTo({
+        left: targetIndex * cardWidth,
+        behavior: "smooth",
+      });
+      setActiveDot(index);
+    },
+    [totalDots],
+  );
 
   if (!sectionData) return null;
-
   if (!shouldShow) return null;
-
   if (!slidesList.length) return null;
 
   return (
     <Section className="w-full py-6">
       <Heading title={"Our Success Stories"} />
 
-      <Row>
+      <Row className="">
         <div
           ref={containerRef}
-          className="flex gap-5 overflow-x-auto px-2 py-2 cursor-grab active:cursor-grabbing select-none"
+          className="flex gap-5 overflow-x-auto  py-2 cursor-grab active:cursor-grabbing select-none snap-x snap-mandatory scroll-smooth"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {tripleSlidesList.map((slide, idx) => {
@@ -252,6 +286,21 @@ export default function SuccessStorySection() {
             );
           })}
         </div>
+
+        {totalDots > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-3">
+            {slidesList.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToDot(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  activeDot === index ? "w-10 bg-primary" : "w-5 bg-gray-300"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </Row>
     </Section>
   );

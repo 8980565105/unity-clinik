@@ -16,6 +16,7 @@ import Solutionstagecard from "./solutionstagecard";
 import OtherRecommendedCard from "./OtherRecommendedCard";
 import { fetchProductReviews } from "../../features/reivews/reviewsThunk";
 import { useDispatch } from "react-redux";
+import Productreviews from "./productreviews";
 
 function FaqItem({ faq, isOpen, onToggle }) {
   return (
@@ -34,9 +35,8 @@ function FaqItem({ faq, isOpen, onToggle }) {
       </button>
 
       <div
-        className={`overflow-hidden transition-all duration-300 ${
-          isOpen ? "pb-6" : "max-h-0"
-        }`}
+        className={`overflow-hidden transition-all duration-300 ${isOpen ? "pb-6" : "max-h-0"
+          }`}
       >
         <div className="flex gap-6 items-start">
           <p className="text-gray-500 text-[12px] leading-relaxed">
@@ -86,9 +86,8 @@ const Faq2Item = ({ item, isOpen, onToggle }) => {
       </button>
 
       <div
-        className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isOpen ? "max-h-[500px]" : "max-h-0"
-        }`}
+        className={`transition-all duration-500 ease-in-out overflow-hidden ${isOpen ? "max-h-[500px]" : "max-h-0"
+          }`}
       >
         <div className="px-5 md:px-8 pb-6 md:pb-8 text-[#5f6c86] text-[16px] md:text-[18px] leading-[1.9] border-t border-[#edf0f4]">
           <div className="pt-5">{item.answer || item.description}</div>
@@ -184,26 +183,62 @@ lg:w-[485px]
 export default function ProductSections({
   sections,
   productLabels,
+  productId,
+  setShowLoginPopup,
 }) {
   const activeSections = (sections || []).filter(
     (sec) => sec?.data?.status === true || sec?.data?.status === undefined,
   );
+  const LAST_ORDER = [
+    "Product Reviews Section",
+    "FAQ 1",
+    "Why Choose Unity Hair",
+  ];
+  const normalSections = activeSections.filter(
+    (sec) => !LAST_ORDER.includes(sec.type),
+  );
+
+  const fixedLastSections = LAST_ORDER
+    .map((type) => {
+      if (type === "Product Reviews Section") {
+        return { type: "Product Reviews Section", isStatic: true };
+      }
+      return activeSections.find((sec) => sec.type === type);
+    })
+    .filter(Boolean);
+
+  const sortedSections = [...normalSections, ...fixedLastSections];
 
   const [faq1OpenIndex, setFaq1OpenIndex] = useState(0);
   return (
     <>
-      {activeSections.map((section, idx) => (
-        <SectionRenderer
-          key={idx}
-          section={section}
-          productLabels={productLabels}
-        />
-      ))}
+      {sortedSections.map((section, idx) => {
+        if (section.isStatic && section.type === "Product Reviews Section") {
+          return (
+            <Productreviews
+              key={idx}
+              productId={productId}
+              setShowLoginPopup={setShowLoginPopup}
+            />
+          );
+        }
+        return (
+          <SectionRenderer
+            key={idx}
+            section={section}
+            productLabels={productLabels}
+            productId={productId}
+            setShowLoginPopup={setShowLoginPopup}
+          />
+        );
+      })}
     </>
   );
 }
 
-export function SectionRenderer({ section, productLabels }) {
+export function SectionRenderer({ section, productLabels, productId, setShowLoginPopup }) {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { type, data } = section;
   const items = data?.items || [];
   const scrollRef = useRef(null);
@@ -215,8 +250,8 @@ export function SectionRenderer({ section, productLabels }) {
   const [showAllAttrs, setShowAllAttrs] = useState(false);
   const [open, setOpen] = useState(true);
   const [activeSlider, setActiveSlider] = useState(null);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const [selectedDescription, setSelectedDescription] = useState(null);
+
 
   const [visibleCount, setVisibleCount] = useState(
     typeof window !== "undefined" && window.innerWidth < 768 ? 2 : 4,
@@ -315,78 +350,145 @@ export function SectionRenderer({ section, productLabels }) {
   switch (type) {
     case "Root Cause Section":
       return (
-        <Section className="py-16 bg-[#f8f9fa] overflow-hidden">
-          <Row className="overflow-hidden">
-            <Heading title={data.title} />
-            <Description Description={data.description} />
-            <Swiper
-              modules={[Pagination, Autoplay]}
-              pagination={{ clickable: true }}
-              autoplay={{
-                delay: 3000,
-                disableOnInteraction: false,
-              }}
-              loop
-              spaceBetween={30}
-              breakpoints={{
-                0: {
-                  slidesPerView: 1,
-                  spaceBetween: 12,
-                },
-                480: {
-                  slidesPerView: 1,
-                  spaceBetween: 12,
-                },
-                640: {
-                  slidesPerView: 2,
-                  spaceBetween: 16,
-                },
-                768: {
-                  slidesPerView: 3,
-                  spaceBetween: 20,
-                },
-                1024: {
-                  slidesPerView: 3,
-                  spaceBetween: 30,
-                },
-              }}
-              className="rootCauseSwiper !pb-16 mt-5"
-            >
-              {items.map((item, i) => (
-                <SwiperSlide key={i}>
-                  <div
-                    className="
-  group
-  rounded-[20px]
-  bg-white
-  p-2
-  shadow-md
-  h-full
-  flex
-     border-2
-                      border-transparent
-                      hover:border-[#163d73]
-  items-center
-  justify-center
-"
-                  >
-                    <img
-                      src={getImageUrl(item.image)}
-                      alt={`root-cause-${i}`}
+        <>
+          <Section className="py-16 bg-[#f8f9fa] overflow-hidden">
+            <Row className="overflow-hidden">
+              <Heading title={data.title} />
+              <Description Description={data.description} />
+              <Swiper
+                modules={[Pagination, Autoplay]}
+                pagination={{ clickable: true }}
+                autoplay={{
+                  delay: 3000,
+                  disableOnInteraction: false,
+                }}
+                loop
+                spaceBetween={30}
+                breakpoints={{
+                  0: {
+                    slidesPerView: 1,
+                    spaceBetween: 12,
+                  },
+                  480: {
+                    slidesPerView: 1,
+                    spaceBetween: 12,
+                  },
+                  640: {
+                    slidesPerView: 2,
+                    spaceBetween: 16,
+                  },
+                  768: {
+                    slidesPerView: 3,
+                    spaceBetween: 20,
+                  },
+                  1024: {
+                    slidesPerView: 3,
+                    spaceBetween: 30,
+                  },
+                }}
+                className="rootCauseSwiper !pb-16 mt-5"
+              >
+                {items.map((item, i) => (
+                  <SwiperSlide key={i}>
+                    <div
                       className="
+ group
+    rounded-[20px]
+    bg-white
+    p-4
+    shadow-md
+    h-full
+    min-h-[420px]
+    flex
+    flex-col
+    border-2
+    border-transparent
+    hover:border-[#163d73]
+    text-center
+    "
+                    >
+                      <img
+                        src={getImageUrl(item.image)}
+                        alt={`root-cause-${i}`}
+                        className="
     w-full
     h-auto
     rounded-[16px]
     object-contain
     block
+    mb-4
   "
-                    />
+                      />
+
+                      <h3 className="text-base md:text-lg font-bold text-gray-900 mb-2 tracking-tighter">
+                        {item?.name}
+                      </h3>
+                      <div className="w-full">
+                        <p
+                          className="text-[11px] text-brand-gray leading-relaxed overflow-hidden"
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: "vertical",
+                          }}
+                        >
+                          {item?.description}
+                        </p>
+
+                        {item?.description?.length > 90 && (
+                          <button
+                            onClick={() => setSelectedDescription(item)}
+                            className="text-[#005B99] text-[11px] font-semibold hover:underline mt-1"
+                          >
+                            Read More
+                          </button>
+                        )}
+                      </div>
+
+
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </Row>
+          </Section>
+
+          {
+            selectedDescription && (
+              <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl w-full max-w-md relative shadow-xl">
+
+                  <button
+                    onClick={() => setSelectedDescription(null)}
+                    className="absolute top-3 right-3 w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg"
+                  >
+                    ✕
+                  </button>
+
+                  <div className="p-6">
+
+                    {selectedDescription?.image && (
+                      <img
+                        src={getImageUrl(selectedDescription.image)}
+                        alt={selectedDescription.name}
+                        className="w-24 h-24 object-contain mx-auto mb-4"
+                      />
+                    )}
+
+                    <h2 className="text-xl font-bold text-center mb-4">
+                      {selectedDescription?.name}
+                    </h2>
+
+                    <p className="text-gray-600 text-[14px] leading-7 max-h-[350px] overflow-y-auto">
+                      {selectedDescription?.description}
+                    </p>
+
                   </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </Row>
-        </Section>
+                </div>
+              </div>
+            )
+          }
+        </>
       );
 
     case "How Does It Do It Section":
@@ -423,9 +525,8 @@ export function SectionRenderer({ section, productLabels }) {
                   <button
                     key={i}
                     onClick={() => scrollToIndex(i)}
-                    className={`h-2 rounded-full ${
-                      activeIndex === i ? "w-8 bg-[#005B9F]" : "w-2 bg-gray-300"
-                    }`}
+                    className={`h-2 rounded-full ${activeIndex === i ? "w-8 bg-[#005B9F]" : "w-2 bg-gray-300"
+                      }`}
                   />
                 ))}
               </div>
@@ -461,7 +562,7 @@ export function SectionRenderer({ section, productLabels }) {
                     {selectedItem.name}
                   </h2>
 
-                  <p className="text-center text-[#6b7280] text-[14px] lg:text-[22px]">
+                  <p className="text-center text-[#6b7280] text-[14px] lg:text-[20px] overflow-y-auto max-h-[350px] lg:max-h-[400px] no-scrollbar">
                     {selectedItem.description}
                   </p>
                 </div>
@@ -627,7 +728,7 @@ export function SectionRenderer({ section, productLabels }) {
                       <img
                         src={getImageUrl(item.image)}
                         alt={item.name}
-                        className=" object-cover"
+                        className="w-[82px] h-[82px] rounded-full object-cover"
                       />
                     </div>
                   )}
@@ -787,29 +888,6 @@ export function SectionRenderer({ section, productLabels }) {
         </>
       );
 
-    case "FAQ 1":
-      return (
-        <Section className="py-14 bg-white">
-          <Row>
-            <div className="max-w-4xl mx-auto">
-              <Heading title={data.title} />
-              <Description Description={data.description} />
-              <div className="mt-5 border-t border-[#e7e7e7]">
-                {(data?.questions || []).map((faq, i) => (
-                  <FaqItem
-                    key={i}
-                    faq={faq}
-                    isOpen={faq1OpenIndex === i}
-                    onToggle={() =>
-                      setFaq1OpenIndex(faq1OpenIndex === i ? null : i)
-                    }
-                  />
-                ))}
-              </div>
-            </div>
-          </Row>
-        </Section>
-      );
 
     case "FAQ 2":
       return (
@@ -914,59 +992,6 @@ export function SectionRenderer({ section, productLabels }) {
                     </button>
                   </div>
                 )}
-            </div>
-          </Row>
-        </Section>
-      );
-
-    case "Why Choose Unity Hair":
-      return (
-        <Section className="py-16 bg-[#eef5f8]">
-          <Row>
-            <Heading title={data.title} />
-
-            <Description Description={data.description} />
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-5 auto-rows-fr">
-              {(data?.items || []).map((item, i) => (
-                <div
-                  key={i}
-                  className="
-    h-full
-    flex
-    flex-col
-    bg-white
-    rounded-[34px]
-    p-7 md:p-8
-    transition-all duration-300
-    hover:-translate-y-2
-    hover:shadow-xl
-    border border-[#edf2f7]
-  "
-                >
-                  {item?.image && (
-                    <div className="mb-5">
-                      <img
-                        src={
-                          item.image.startsWith("http")
-                            ? item.image
-                            : getImageUrl(item.image)
-                        }
-                        alt={item.title}
-                        className="w-[82px] h-[82px] rounded-full object-cover"
-                      />
-                    </div>
-                  )}
-
-                  <h3 className="text-[22px] md:text-[28px] font-bold text-[#0f172a] mb-4 leading-tight">
-                    {item.title}
-                  </h3>
-
-                  <p className="text-[#667085] text-[15px] md:text-[17px] leading-[2]">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
             </div>
           </Row>
         </Section>
@@ -1423,6 +1448,93 @@ export function SectionRenderer({ section, productLabels }) {
         </Section>
       );
     }
+
+
+    case "Product Reviews Section":
+      return (
+        <Productreviews
+          productId={productId}
+          setShowLoginPopup={setShowLoginPopup}
+        />
+      );
+
+
+    case "FAQ 1":
+      return (
+        <Section className="py-14 bg-white">
+          <Row>
+            <div className="max-w-4xl mx-auto">
+              <Heading title={data.title} />
+              <Description Description={data.description} />
+              <div className="mt-5 border-t border-[#e7e7e7]">
+                {(data?.questions || []).map((faq, i) => (
+                  <FaqItem
+                    key={i}
+                    faq={faq}
+                    isOpen={faq1OpenIndex === i}
+                    onToggle={() =>
+                      setFaq1OpenIndex(faq1OpenIndex === i ? null : i)
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          </Row>
+        </Section>
+      );
+
+    case "Why Choose Unity Hair":
+      return (
+        <Section className="py-16 bg-whte">
+          <Row>
+            <Heading title={data.title} />
+
+            <Description Description={data.description} />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-5 auto-rows-fr">
+              {(data?.items || []).map((item, i) => (
+                <div
+                  key={i}
+                  className="
+    h-full
+    flex
+    flex-col
+    bg-[#eef5f8]
+    rounded-[34px]
+    p-7 md:p-8
+    transition-all duration-300
+    hover:-translate-y-2
+    hover:shadow-xl
+    border border-[#edf2f7]
+  "
+                >
+                  {item?.image && (
+                    <div className="mb-5">
+                      <img
+                        src={
+                          item.image.startsWith("http")
+                            ? item.image
+                            : getImageUrl(item.image)
+                        }
+                        alt={item.title}
+                        className="w-[82px] h-[82px] rounded-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <h3 className="text-[22px] md:text-[28px] font-bold text-[#0f172a] mb-4 leading-tight">
+                    {item.title}
+                  </h3>
+
+                  <p className="text-[#667085] text-[15px] md:text-[17px] leading-[2]">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Row>
+        </Section>
+      );
 
     default:
       return null;

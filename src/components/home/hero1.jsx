@@ -70,7 +70,6 @@ export default function Hero1() {
                     <h1 className="text-[70px] font-bold leading-none my-10">
                       {slide.description}
                     </h1>
-
                     <Button
                       onClick={() => navigate(slide.button_link)}
                       variant="commone"
@@ -82,7 +81,7 @@ export default function Hero1() {
                   <div className="flex gap-5 justify-start items-center">
                     <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
                       <h2 className="text-[40px] font-bold text-gray-800">
-                        1L+
+                        {slide.customerResult}
                       </h2>
                       <p className="text-gray-600 mt-1 text-[20px]">
                         Customers
@@ -93,7 +92,7 @@ export default function Hero1() {
                     </div>
                     <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
                       <h2 className="text-[40px] font-bold text-gray-800">
-                        95%
+                       {slide.happyCustomers}
                       </h2>
                       <p className="text-gray-600 mt-1 text-[20px]">
                         Saw results*
@@ -104,7 +103,7 @@ export default function Hero1() {
                     </div>
                     <div className="w-[200px] h-[180px] rounded-2xl bg-white/60 backdrop-blur-md shadow-md flex flex-col items-center justify-center relative">
                       <h2 className="text-[40px] font-bold text-gray-800">
-                        4.8
+                        {slide.rating}
                       </h2>
                       <p className="text-gray-600 mt-1 text-[20px]">Ratings</p>
                       <div className="absolute -bottom-5 bg-white rounded-full w-12 h-12 flex items-center justify-center shadow">
@@ -218,12 +217,12 @@ export default function Hero1() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex-1 flex flex-col gap-[5px] pt-1">
+                  <div className="flex-1 flex flex-col gap-[5px] pt-1 h-[180px]">
                     <div className="text-white">
                       <p className="mt-5 text-[20px] uppercase">
                         {slide.title}
                       </p>
-                      <h1 className="text-[24px] font-bold leading-none my-5">
+                      <h1 className="text-[16px] font-bold leading-none my-5">
                         {slide.description}
                       </h1>
                       <Button
@@ -231,14 +230,13 @@ export default function Hero1() {
                           navigate(slide.button_link || "/allproducts")
                         }
                         variant="commone"
-                        className="!bg-white !text-primary rounded-full min-w-[150px]"
-                      >
+                        className="!bg-white !text-primary rounded-full min-w-[150px] !px-[5px]"
+                      > 
                         {slide.button_name || "Shop Now"}
                       </Button>
                     </div>
                   </div>
                 </div>
-                
                 <div className="relative w-full mt-[-6px]">
                   <img
                     src={getImageUrl(slide.mainImage)}
@@ -253,32 +251,32 @@ export default function Hero1() {
                 <div className="flex bg-white rounded-b-[20px] border-b">
                   {[
                     {
-                      val: "1L+",
+                      val: slide.customerResult,
                       label: "Customers",
                       icon: <Heart className="text-red-400" size={17} />,
                     },
                     {
-                      val: "95%",
+                      val: slide.happyCustomers,
                       label: "Saw results*",
                       icon: <Star className="text-yellow-400" size={17} />,
                     },
                     {
-                      val: "4.8",
+                      val: slide.rating,
                       label: "Ratings",
                       icon: <FaGoogle className="text-red-500" size={17} />,
                     },
-                  ].map((s, i, arr) => (
+                  ].map((item, i, arr) => (
                     <div
-                      key={s.label}
+                      key={item.label}
                       className={`flex-1 flex flex-col items-center py-4 gap-[3px] ${i < arr.length - 1 ? "border-r border-gray-200" : ""}`}
                     >
                       <span className="text-[22px] font-extrabold text-gray-800 leading-none">
-                        {s.val}
+                        {item.val}
                       </span>
                       <span className="text-[11px] text-gray-500 leading-none">
-                        {s.label}
+                        {item.label}
                       </span>
-                      <span className="mt-[3px]">{s.icon}</span>
+                      <span className="mt-[3px]">{item.icon}</span>
                     </div>
                   ))}
                 </div>
