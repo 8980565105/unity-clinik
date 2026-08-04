@@ -15,6 +15,9 @@ const hero1SlideSchema = new mongoose.Schema(
     mainImage: { type: String, default: null },
     beforeImage: { type: String, default: null },
     afterImage: { type: String, default: null },
+    customerResult: { type: String, default: "" },
+    rating: { type: String, default: "" },
+    happyCustomers: { type: String, default: "" },
   },
   { _id: true },
 );
@@ -90,6 +93,8 @@ const successStorySlideSchema = new mongoose.Schema(
     beforeImage: { type: String, default: null },
     afterImage: { type: String, default: null },
     videoUrl: { type: String, default: null },
+    beforeMonth: { type: String, default: "" },
+    afterMonth: { type: String, default: "" },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
   { _id: true },
@@ -205,6 +210,24 @@ const featuresCardSchema = new mongoose.Schema(
   { _id: true },
 );
 
+const rootCauseItemSchema = new mongoose.Schema(
+  {
+    title: { type: String, default: "" },
+    description: { type: String, default: "" },
+    image: { type: String, default: null },
+    order: { type: Number, default: 0 },
+  },
+  { _id: true },
+);
+
+const rootCauseSchema = new mongoose.Schema(
+  {
+    subtitle: { type: String, default: "" },
+    title: { type: String, default: "" },
+  },
+  { _id: false },
+);
+
 const sliderSectionSchema = new mongoose.Schema(
   {
     section: {
@@ -225,6 +248,7 @@ const sliderSectionSchema = new mongoose.Schema(
         "holisticApproach",
         "contactSection",
         "featuressection",
+        "rootCause",
       ],
       required: true,
     },
@@ -243,13 +267,14 @@ const sliderSectionSchema = new mongoose.Schema(
     successStorySlides: { type: [successStorySlideSchema], default: undefined },
     reportCardSlides: { type: [reportCardSlideSchema], default: undefined },
     reportCardTitle: { type: String, default: "" },
-
     honestExpectations: { type: honestExpectationsSchema, default: undefined },
     getStartedSteps: { type: [getStartedStepSchema], default: undefined },
     timelineResult: { type: timelineResultSchema, default: undefined },
     holisticCards: { type: [holisticCardSchema], default: undefined },
     contactSection: { type: contactSectionSchema, default: undefined },
     featuresCards: { type: [featuresCardSchema], default: undefined },
+    rootCause: { type: rootCauseSchema, default: undefined },
+    rootCauseItems: { type: [rootCauseItemSchema], default: undefined },
 
     showOnPages: { type: [String], default: [] },
   },

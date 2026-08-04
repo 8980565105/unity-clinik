@@ -24,7 +24,7 @@ router.use(authMiddleware);
 router.get("/", getCategories);
 router.get("/all", getAllCategories);
 router.put("/reorder/bulk", authorizeMinRole("admin"), reorderCategories);
-router.get("/:id", authorizeMinRole("admin"), getCategoryById);
+router.get("/:id", authorizeMinRole("admin", "store_owner"), getCategoryById);
 router.post(
   "/",
   authorizeMinRole("admin"),

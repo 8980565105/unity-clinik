@@ -5,7 +5,7 @@ const ProductVariant = require("../models/ProductVariant");
 const mongoose = require("mongoose");
 
 const SECTION_ITEM_FIELDS = {
-  "Root Cause Section": ["image"],
+  "Root Cause Section": ["name", "description", "image"],
   "How Does It Do It Section": ["name", "description", "image"],
   "Benefits Section": ["name", "description", "image"],
   "Ingredients Section": ["name", "description", "image"],
@@ -94,7 +94,7 @@ const normalizeSections = (sections = []) => {
           badge: variant.badge || "",
           product_id:
             variant.product_id &&
-            mongoose.Types.ObjectId.isValid(variant.product_id)
+              mongoose.Types.ObjectId.isValid(variant.product_id)
               ? variant.product_id
               : null,
           price: Number(variant.price || 0),

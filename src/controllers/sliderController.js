@@ -17,6 +17,7 @@ const VALID_SECTIONS = [
   "holisticApproach",
   "contactSection",
   "featuressection",
+  "rootCause",
 ];
 
 const OBJECT_SECTIONS = [
@@ -174,6 +175,20 @@ const createSlide = async (req, res) => {
       return sendResponse(res, true, saved, "Section created successfully");
     }
 
+    if (section === "rootCause") {
+      const items = Array.isArray(req.body.slides) ? req.body.slides : [];
+      const doc = new Slider({
+        ...baseData,
+        rootCause: {
+          subtitle: req.body.rootCause?.subtitle || "",
+          title: req.body.rootCause?.title || "",
+        },
+        rootCauseItems: items,
+      });
+      const saved = await doc.save();
+      return sendResponse(res, true, saved, "Section created successfully");
+    }
+
     if (!Array.isArray(slides) || slides.length === 0)
       return sendResponse(
         res,
@@ -310,6 +325,19 @@ const updateSlide = async (req, res) => {
           existing.contactSection?.buttonLink ??
           "",
       };
+    }
+
+    if (resolvedSection === "rootCause") {
+      if (req.body.rootCause && typeof req.body.rootCause === "object") {
+        updateData.rootCause = {
+          subtitle:
+            req.body.rootCause.subtitle ?? existing.rootCause?.subtitle ?? "",
+          title: req.body.rootCause.title ?? existing.rootCause?.title ?? "",
+        };
+      }
+      if (Array.isArray(req.body.slides)) {
+        updateData.rootCauseItems = req.body.slides;
+      }
     }
 
     if (Array.isArray(slides) && slides.length > 0) {

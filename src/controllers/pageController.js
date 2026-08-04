@@ -187,13 +187,6 @@ const updatePage = async (req, res) => {
 
     const page = await Page.findById(req.params.id);
 
-    // if (updated.slug === "home" && Array.isArray(data.home_sections)) {
-    //   data.home_sections = data.home_sections.map((item, index) => ({
-    //     ...item,
-    //     order: index + 1,
-    //   }));
-    // }
-
     if (page && page.slug === "home" && Array.isArray(data.home_sections)) {
       data.home_sections = data.home_sections.map((item, index) => ({
         ...item,

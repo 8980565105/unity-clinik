@@ -80,7 +80,7 @@ app.use(
           "'self'",
           "data:",
           "blob:",
-          "http://localhost:5000",
+          "http://localhost:5500",
           "https://zyfolixowellness.tech",
           "https://www.zyfolixowellness.tech",
           "https://admin.zyfolixowellness.tech",
@@ -90,7 +90,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         connectSrc: [
           "'self'",
-          "http://localhost:5000",
+          "http://localhost:5500",
           "https://zyfolixowellness.tech",
           "https://www.zyfolixowellness.tech",
           "https://admin.zyfolixowellness.tech",
@@ -270,5 +270,5 @@ if (fs.existsSync(FRONTEND_BUILD)) {
   });
 }
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 6000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

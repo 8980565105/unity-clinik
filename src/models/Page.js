@@ -54,6 +54,7 @@ const HomeSectionType = [
   "contacthome",
   "customerreviews",
   "featuresection",
+  "rootcasesection",
 ];
 
 const homeSectionSchema = new mongoose.Schema(

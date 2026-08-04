@@ -27,7 +27,7 @@ router.use(authMiddleware);
 router.get("/", injectOwnershipFilter, getsubCategories);
 router.get("/all", injectPublicStoreFilter, getAllsubCategories);
 router.put("/reorder/bulk", authorizeMinRole("admin"), reorderSubCategories);
-router.get("/:id", authorizeMinRole("admin"), getsubCategoryById);
+router.get("/:id", authorizeMinRole("admin", "store_owner"), getsubCategoryById);
 router.post(
   "/",
   authorizeMinRole("admin"),
