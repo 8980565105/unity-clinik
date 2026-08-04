@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Loader2, X, Video, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, X, Video, Upload, Trash2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { useBasePath } from "@/hooks/useBasePath";
 import {
@@ -23,6 +23,11 @@ interface Hero1Slide {
     title: string; description: string; button_name: string; button_link: string;
     location: string; name: string; age: string; review: string;
     mainImageUrl: string | null; beforeImageUrl: string | null; afterImageUrl: string | null;
+
+    customerResult: string;
+    rating: string;
+    happyCustomers: string;
+
 }
 interface Banner1Slide {
     title: string; description: string; button_name: string; button_link: string;
@@ -56,6 +61,8 @@ interface SuccessStorySlide {
     afterImageUrl: string | null;
     videoUrl: string | null;
     videoUploading: boolean;
+    beforeMonth: string;
+    afterMonth: string;
 }
 interface HonestStageItem {
     title: string;
@@ -102,16 +109,26 @@ interface FeaturesCard {
     imageUrl: string | null;
 }
 
+interface RootCauseData {
+    subtitle: string;
+    title: string;
+}
+interface RootCauseItem {
+    title: string;
+    description: string;
+    imageUrl: string | null;
+}
+
 type SectionType =
     | ""
     | "hero1" | "banner1" | "topDoctor" | "banner2" | "banner3" | "banner4"
     | "shoppage" | "successStory" | "reportCard"
-    | "honestExpectations" | "getStarted" | "timelineResult" | "holisticApproach" | "contactSection" | "featuressection";
+    | "honestExpectations" | "getStarted" | "timelineResult" | "holisticApproach" | "contactSection" | "featuressection" | "rootCause";
 
 const ALL_SECTIONS: Exclude<SectionType, "">[] = [
     "hero1", "banner1", "topDoctor", "banner2", "banner3", "banner4",
     "shoppage", "successStory", "reportCard",
-    "honestExpectations", "getStarted", "timelineResult", "holisticApproach", "contactSection", "featuressection",
+    "honestExpectations", "getStarted", "timelineResult", "holisticApproach", "contactSection", "featuressection", "rootCause",
 ];
 
 const SECTION_LABELS: Record<string, string> = {
@@ -124,7 +141,8 @@ const SECTION_LABELS: Record<string, string> = {
     timelineResult: "Timeline Result (Month wise)",
     holisticApproach: "Holistic Approach (Cards)",
     contactSection: "Contact Section",
-    featuressection: "features Section"
+    featuressection: "features Section",
+    rootCause: "Root Causes",
 };
 
 
@@ -140,22 +158,30 @@ const defaultHero1Slide = (): Hero1Slide => ({
     title: "", description: "", button_name: "", button_link: "",
     location: "", name: "", age: "", review: "",
     mainImageUrl: null, beforeImageUrl: null, afterImageUrl: null,
+    customerResult: "",
+    rating: "",
+    happyCustomers: "",
 });
 const defaultBanner1Slide = (): Banner1Slide => ({
     title: "", description: "", button_name: "", button_link: "",
     badge: "", bgImageUrl: null, productimgUrl: null,
 });
+
 const defaultTopDoctorSlide = (): TopDoctorSlide => ({ name: "", cases: "", doctorimg: null });
 const defaultBannerData = (): BannerImageData => ({ image: null, mobileimg: null });
 const defaultShoppageSlide = (): ShoppageSlide => ({
     title: "", description: "", button_name: "", button_link: "",
     badge: "", bgImageUrl: null, productimgUrl: null,
 });
+
 const defaultSuccessStorySlide = (): SuccessStorySlide => ({
     name: "", age: "", title: "", review: "",
     mainImageUrl: null, beforeImageUrl: null, afterImageUrl: null,
     videoUrl: null, videoUploading: false,
+    beforeMonth: "",
+    afterMonth: "",
 });
+
 const defaultContactSection = () => ({
     title: "",
     numberTitle: "",
@@ -180,6 +206,8 @@ const defaultTimelineSlide = (gender: "male" | "female"): TimelineSlide => ({
     stages: [defaultTimelineStage()],
 });
 
+const defaultRootCauseData = (): RootCauseData => ({ subtitle: "", title: "" });
+const defaultRootCauseItem = (): RootCauseItem => ({ title: "", description: "", imageUrl: null });
 const defaultHolisticCard = (): HolisticCard => ({ title: "", description: "", imageUrl: null });
 
 function updateField<T>(setter: React.Dispatch<React.SetStateAction<T[]>>, index: number, field: keyof T, value: T[keyof T]) {
@@ -231,7 +259,7 @@ interface VideoUploadProps {
 export function VideoUpload({ value, uploading, onChange, onUploadingChange }: VideoUploadProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const MAX_MB = 15;
+    const MAX_MB = 25;
     const handleFile = async (file: File) => {
         if (!file.type.startsWith("video/")) {
             toast.error("Only video files are allowed");
@@ -377,7 +405,7 @@ export function VideoUpload({ value, uploading, onChange, onUploadingChange }: V
                             <Upload className="h-7 w-7 text-gray-400 mb-1" />
                             <span className="text-xs text-gray-500 font-medium">Upload Video</span>
                             <span className="text-xs text-gray-400">Click or Drop</span>
-                            <span className="text-xs text-gray-400">Max 15MB</span>
+                            <span className="text-xs text-gray-400">Max 25MB</span>
                         </>
                     )}
                 </div>
@@ -463,6 +491,35 @@ function PageMultiSelect({ selectedSlugs, onChange }: PageMultiSelectProps) {
         </div>
     );
 }
+function useDragList<T>(list: T[], setList: React.Dispatch<React.SetStateAction<T[]>>) {
+    const dragIdx = useRef<number | null>(null);
+    const [dragOver, setDragOver] = useState<number | null>(null);
+
+    const onDragStart = (idx: number) => { dragIdx.current = idx; };
+    const onDragOver = (e: React.DragEvent, idx: number) => { e.preventDefault(); setDragOver(idx); };
+    const onDrop = (e: React.DragEvent, dropIdx: number) => {
+        e.preventDefault();
+        if (dragIdx.current === null || dragIdx.current === dropIdx) { setDragOver(null); return; }
+        const updated = [...list];
+        const [moved] = updated.splice(dragIdx.current, 1);
+        updated.splice(dropIdx, 0, moved);
+        setList(updated);
+        dragIdx.current = null;
+        setDragOver(null);
+    };
+    const onDragLeave = () => setDragOver(null);
+    const onDragEnd = () => { dragIdx.current = null; setDragOver(null); };
+
+    return { dragOver, onDragStart, onDragOver, onDrop, onDragLeave, onDragEnd };
+}
+
+function DragHandle() {
+    return (
+        <span className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors" title="Drag to reorder">
+            <GripVertical className="w-5 h-5" />
+        </span>
+    );
+}
 
 export default function SlideFormPage() {
     const dispatch = useDispatch<AppDispatch>();
@@ -470,15 +527,12 @@ export default function SlideFormPage() {
     const { id } = useParams<{ id: string }>();
     const isEditMode = Boolean(id);
     const basePath = useBasePath();
-
     const [pageLoading, setPageLoading] = useState(isEditMode);
     const [submitLoading, setSubmitLoading] = useState(false);
-
     const [status, setStatus] = useState(true);
     const [selectedSection, setSelectedSection] = useState<SectionType>("");
     const [ownSection, setOwnSection] = useState<string>("");
     const [showOnPages, setShowOnPages] = useState<string[]>([]);
-
     const [hero1Slides, setHero1Slides] = useState<Hero1Slide[]>([defaultHero1Slide()]);
     const [banner1Slides, setBanner1Slides] = useState<Banner1Slide[]>([defaultBanner1Slide()]);
     const [topDoctorSlides, setTopDoctorSlides] = useState<TopDoctorSlide[]>([defaultTopDoctorSlide()]);
@@ -497,11 +551,28 @@ export default function SlideFormPage() {
     const [holisticCards, setHolisticCards] = useState<HolisticCard[]>([defaultHolisticCard()]);
     const [contactSection, setContactSection] = useState(defaultContactSection());
     const [featuresCards, setFeaturesCards] = useState<FeaturesCard[]>([defaultFeaturesCard()]);
+    
+    const [rootCauseData, setRootCauseData] = useState<RootCauseData>(defaultRootCauseData());
+    const [rootCauseItems, setRootCauseItems] = useState<RootCauseItem[]>([defaultRootCauseItem()]);
+
     const slidesState = useSelector((state: any) => state.slides);
     const allSlides: any[] = Array.isArray(slidesState)
         ? slidesState
         : Array.isArray(slidesState?.slides) ? slidesState.slides : [];
-
+    const hero1Drag = useDragList(hero1Slides, setHero1Slides);
+    const banner1Drag = useDragList(banner1Slides, setBanner1Slides);
+    const topDoctorDrag = useDragList(topDoctorSlides, setTopDoctorSlides);
+    const shoppageDrag = useDragList(shoppageData, setShoppageData);
+    const successStoryDrag = useDragList(successStorySlides, setSuccessStorySlides);
+    const reportCardDrag = useDragList(reportCardSlides, setReportCardSlides);
+    const honestMaleDrag = useDragList(honestMaleStages, setHonestMaleStages);
+    const honestFemaleDrag = useDragList(honestFemaleStages, setHonestFemaleStages);
+    const getStartedDrag = useDragList(getStartedSteps, setGetStartedSteps);
+    const timelineMaleDrag = useDragList(timelineMaleStages, setTimelineMaleStages);
+    const timelineFemaleDrag = useDragList(timelineFemaleStages, setTimelineFemaleStages);
+    const holisticDrag = useDragList(holisticCards, setHolisticCards);
+    const featuresDrag = useDragList(featuresCards, setFeaturesCards);
+    const rootCauseDrag = useDragList(rootCauseItems, setRootCauseItems);
     const addedSections: string[] = allSlides
         .map((s: any) => s.section as string)
         .filter(sec => sec !== ownSection);
@@ -532,6 +603,9 @@ export default function SlideFormPage() {
                         age: s.age ?? "", review: s.review ?? "",
                         mainImageUrl: s.mainImage ?? null, beforeImageUrl: s.beforeImage ?? null,
                         afterImageUrl: s.afterImage ?? null,
+                        customerResult: s.customerResult ?? "",
+                        rating: s.rating ?? "",
+                        happyCustomers: s.happyCustomers ?? "",
                     })));
                 }
                 if (doc.section === "banner1" && Array.isArray(doc.banner1Slides)) {
@@ -570,6 +644,8 @@ export default function SlideFormPage() {
                         afterImageUrl: s.afterImage ?? null,
                         videoUrl: s.videoUrl ?? null,
                         videoUploading: false,
+                        beforeMonth: s.beforeMonth ?? "",
+                        afterMonth: s.afterMonth ?? "",
                     })));
                 }
                 if (doc.section === "reportCard" && Array.isArray(doc.reportCardSlides)) {
@@ -638,6 +714,21 @@ export default function SlideFormPage() {
                         title: s.title ?? "", description: s.description ?? "", imageUrl: s.image ?? null,
                     })));
                 }
+
+                if (doc.section === "rootCause") {
+                    setRootCauseData({
+                        subtitle: doc.rootCause?.subtitle || "",
+                        title: doc.rootCause?.title || "",
+                    });
+                    setRootCauseItems(
+                        (doc.rootCauseItems || []).map((s: any) => ({
+                            title: s.title ?? "",
+                            description: s.description ?? "",
+                            imageUrl: s.image ?? null,
+                        }))
+                    );
+                }
+
             })
             .catch(() => { toast.error("Failed to load slide data"); navigate(`${basePath}/slider`); })
             .finally(() => setPageLoading(false));
@@ -686,6 +777,9 @@ export default function SlideFormPage() {
                 location: s.location, name: s.name, age: s.age, review: s.review,
                 mainImage: s.mainImageUrl, beforeImage: s.beforeImageUrl,
                 afterImage: s.afterImageUrl, status: statusValue,
+                customerResult: s.customerResult,
+                rating: s.rating,
+                happyCustomers: s.happyCustomers,
             }));
         } else if (selectedSection === "banner1") {
             payload.slides = banner1Slides.map(s => ({
@@ -717,6 +811,8 @@ export default function SlideFormPage() {
                 mainImage: s.mainImageUrl,
                 beforeImage: s.beforeImageUrl,
                 afterImage: s.afterImageUrl,
+                beforeMonth: s.beforeMonth,
+                afterMonth: s.afterMonth,
                 videoUrl: s.videoUrl,
                 status: statusValue,
             }));
@@ -767,6 +863,16 @@ export default function SlideFormPage() {
         } else if (selectedSection === "featuressection") {
             payload.slides = featuresCards.map(s => ({
                 title: s.title, description: s.description, image: s.imageUrl,
+            }));
+        } else if (selectedSection === "rootCause") {
+            payload.rootCause = {
+                subtitle: rootCauseData.subtitle,
+                title: rootCauseData.title,
+            };
+            payload.slides = rootCauseItems.map(s => ({
+                title: s.title,
+                description: s.description,
+                image: s.imageUrl,
             }));
         }
 
@@ -872,9 +978,20 @@ export default function SlideFormPage() {
                     {selectedSection === "hero1" && (
                         <div className="space-y-4">
                             {hero1Slides.map((slide, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                <Card key={index}
+                                    draggable
+                                    onDragStart={(e) => { hero1Drag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => hero1Drag.onDragOver(e, index)}
+                                    onDrop={(e) => hero1Drag.onDrop(e, index)}
+                                    onDragLeave={hero1Drag.onDragLeave}
+                                    onDragEnd={hero1Drag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${hero1Drag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}>
+
                                     <CardHeader>
-                                        <CardTitle className="text-base font-semibold text-gray-700">Slide {index + 1}</CardTitle>
+                                        <div className="flex items-center gap-2">
+                                            <DragHandle />
+                                            <CardTitle className="text-base font-semibold text-gray-700">Slide {index + 1}</CardTitle>
+                                        </div>
                                     </CardHeader>
                                     <CardContent className="space-y-5">
                                         <div>
@@ -895,11 +1012,69 @@ export default function SlideFormPage() {
                                             <div><Label>Location</Label><Input placeholder="e.g. Punjab, IN" value={slide.location} onChange={e => updateField(setHero1Slides, index, "location", e.target.value)} className="mt-1" /></div>
                                             <div><Label>Review</Label><Input placeholder="Short review text" value={slide.review} onChange={e => updateField(setHero1Slides, index, "review", e.target.value)} className="mt-1" /></div>
                                         </div>
+
                                         <div className="flex gap-4 flex-wrap">
                                             <div><Label>Main Image</Label><div className="mt-1"><ImageUpload value={slide.mainImageUrl} onChange={url => updateField(setHero1Slides, index, "mainImageUrl", url as string | null)} size={150} /></div></div>
                                             <div><Label>Before Image</Label><div className="mt-1"><ImageUpload value={slide.beforeImageUrl} onChange={url => updateField(setHero1Slides, index, "beforeImageUrl", url as string | null)} size={150} /></div></div>
                                             <div><Label>After Image</Label><div className="mt-1"><ImageUpload value={slide.afterImageUrl} onChange={url => updateField(setHero1Slides, index, "afterImageUrl", url as string | null)} size={150} /></div></div>
                                         </div>
+
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div>
+                                                <Label>Happy Customers</Label>
+                                                <Input
+                                                    placeholder="1L+"
+                                                    value={slide.happyCustomers}
+                                                    onChange={(e) =>
+                                                        updateField(
+                                                            setHero1Slides,
+                                                            index,
+                                                            "happyCustomers",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="mt-1"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label>Customer Result</Label>
+                                                <Input
+                                                    placeholder="95%"
+                                                    value={slide.customerResult}
+                                                    onChange={(e) =>
+                                                        updateField(
+                                                            setHero1Slides,
+                                                            index,
+                                                            "customerResult",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="mt-1"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <Label>Rating</Label>
+                                                <Input
+                                                    placeholder="4.9"
+                                                    value={slide.rating}
+                                                    onChange={(e) =>
+                                                        updateField(
+                                                            setHero1Slides,
+                                                            index,
+                                                            "rating",
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="mt-1"
+                                                />
+                                            </div>
+
+
+                                        </div>
+
+
                                         <div className="grid md:grid-cols-2 gap-4">
                                             <div><Label>Button Name</Label><Input placeholder="e.g. Shop Now" value={slide.button_name} onChange={e => updateField(setHero1Slides, index, "button_name", e.target.value)} className="mt-1" /></div>
                                             <div><Label>Button Link</Label><Input placeholder="/shop" value={slide.button_link} onChange={e => updateField(setHero1Slides, index, "button_link", e.target.value)} className="mt-1" /></div>
@@ -917,10 +1092,20 @@ export default function SlideFormPage() {
                     {selectedSection === "banner1" && (
                         <div className="space-y-4">
                             {banner1Slides.map((slide, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
-                                    <CardHeader><CardTitle className="text-base font-semibold text-gray-700">Slide {index + 1}</CardTitle></CardHeader>
+                                <Card key={index}
+                                    draggable
+                                    onDragStart={(e) => { banner1Drag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => banner1Drag.onDragOver(e, index)}
+                                    onDrop={(e) => banner1Drag.onDrop(e, index)}
+                                    onDragLeave={banner1Drag.onDragLeave}
+                                    onDragEnd={banner1Drag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${banner1Drag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
+                                    <CardHeader>
+                                        <DragHandle />
+                                        <CardTitle className="text-base font-semibold text-gray-700">Slide {index + 1}</CardTitle></CardHeader>
                                     <CardContent className="space-y-5">
-                                        <div><Label>Title <span className="text-red-500">*</span></Label><Input placeholder="Enter slide title" value={slide.title} onChange={e => updateField(setBanner1Slides, index, "title", e.target.value)} required className="mt-1" /></div>
+                                        <div><Label>Title <span className="text-red-500">*</span></Label><Input placeholder="Enter slide title" value={slide.title} onChange={e => updateField(setBanner1Slides, index, "title", e.target.value)} className="mt-1" /></div>
                                         <div><Label>Description</Label><Textarea placeholder="Slide description..." value={slide.description} onChange={e => updateField(setBanner1Slides, index, "description", e.target.value)} className="mt-1 min-h-[100px]" /></div>
                                         <div><Label>Badge</Label><Input placeholder="e.g. Trending / NEW" value={slide.badge} onChange={e => updateField(setBanner1Slides, index, "badge", e.target.value)} className="mt-1" /></div>
                                         <div className="flex gap-4 flex-wrap">
@@ -943,13 +1128,23 @@ export default function SlideFormPage() {
                     {selectedSection === "featuressection" && (
                         <div className="space-y-4">
                             {featuresCards.map((card, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                <Card key={index}
+                                    draggable
+                                    onDragStart={(e) => { featuresDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => featuresDrag.onDragOver(e, index)}
+                                    onDrop={(e) => featuresDrag.onDrop(e, index)}
+                                    onDragLeave={featuresDrag.onDragLeave}
+                                    onDragEnd={featuresDrag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${featuresDrag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
-                                            <CardTitle className="text-base font-semibold text-gray-700">Feature {index + 1}</CardTitle>
+                                            <div className="flex items-center gap-2">
+                                                <DragHandle />
+                                                <CardTitle className="text-base font-semibold text-gray-700">Feature {index + 1}</CardTitle>
+                                            </div>
                                             {featuresCards.length > 1 && (
-                                                <Button type="button" variant="destructive" size="sm"
-                                                    onClick={() => removeSlideItem(setFeaturesCards, index)}>
+                                                <Button type="button" variant="destructive" size="sm" onClick={() => removeSlideItem(setFeaturesCards, index)}>
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             )}
@@ -989,8 +1184,23 @@ export default function SlideFormPage() {
                     {selectedSection === "topDoctor" && (
                         <div className="space-y-4">
                             {topDoctorSlides.map((slide, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
-                                    <CardHeader><CardTitle className="text-base font-semibold text-gray-700">Doctor {index + 1}</CardTitle></CardHeader>
+                                <Card key={index}
+                                    draggable
+                                    onDragStart={(e) => { topDoctorDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => topDoctorDrag.onDragOver(e, index)}
+                                    onDrop={(e) => topDoctorDrag.onDrop(e, index)}
+                                    onDragLeave={topDoctorDrag.onDragLeave}
+                                    onDragEnd={topDoctorDrag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${topDoctorDrag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
+                                    <CardHeader>
+                                        <div className="flex items-center gap-2">
+                                            <DragHandle />
+                                            <CardTitle className="text-base font-semibold text-gray-700">Doctor {index + 1}</CardTitle>
+                                        </div>
+                                        {/* <CardTitle className="text-base font-semibold text-gray-700">Doctor {index + 1}</CardTitle> */}
+
+                                    </CardHeader>
                                     <CardContent className="space-y-5">
                                         <div><Label>Name <span className="text-red-500">*</span></Label><Input placeholder="Doctor name" value={slide.name} onChange={e => updateField(setTopDoctorSlides, index, "name", e.target.value)} required className="mt-1" /></div>
                                         <div><Label>Cases / Specialization</Label><Textarea placeholder="e.g. 500+ Hair Transplant Cases" value={slide.cases} onChange={e => updateField(setTopDoctorSlides, index, "cases", e.target.value)} className="mt-1 min-h-[80px]" /></div>
@@ -1011,12 +1221,26 @@ export default function SlideFormPage() {
 
                     {selectedSection === "shoppage" && (
                         <Card>
-                            <CardHeader><CardTitle>Shop Page Slider</CardTitle></CardHeader>
+                            <CardHeader>
+
+
+                                <CardTitle>Shop Page Slider</CardTitle></CardHeader>
                             <CardContent className="space-y-6">
                                 {shoppageData.map((slide, index) => (
-                                    <div key={index} className="border rounded-lg p-4 space-y-4">
+                                    <div key={index}
+                                        draggable
+                                        onDragStart={(e) => { shoppageDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                        onDragOver={(e) => shoppageDrag.onDragOver(e, index)}
+                                        onDrop={(e) => shoppageDrag.onDrop(e, index)}
+                                        onDragLeave={shoppageDrag.onDragLeave}
+                                        onDragEnd={shoppageDrag.onDragEnd}
+                                        className={`border rounded-lg p-4 space-y-4 transition-all ${shoppageDrag.dragOver === index ? "border-blue-400 bg-blue-50" : ""}`}
+                                    >
                                         <div className="flex justify-between">
-                                            <h3 className="font-semibold">Slide {index + 1}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <DragHandle />
+                                                <h3 className="font-semibold">Slide {index + 1}</h3>
+                                            </div>
                                             {shoppageData.length > 1 && (
                                                 <Button variant="destructive" type="button" onClick={() => removeSlideItem(setShoppageData, index)}>Remove</Button>
                                             )}
@@ -1044,12 +1268,21 @@ export default function SlideFormPage() {
                     {selectedSection === "successStory" && (
                         <div className="space-y-4">
                             {successStorySlides.map((slide, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                <Card key={index}
+                                    draggable
+                                    onDragStart={(e) => { successStoryDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => successStoryDrag.onDragOver(e, index)}
+                                    onDrop={(e) => successStoryDrag.onDrop(e, index)}
+                                    onDragLeave={successStoryDrag.onDragLeave}
+                                    onDragEnd={successStoryDrag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${successStoryDrag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
-                                            <CardTitle className="text-base font-semibold text-gray-700">
-                                                Story {index + 1}
-                                            </CardTitle>
+                                            <div className="flex items-center gap-2">
+                                                <DragHandle />
+                                                <CardTitle className="text-base font-semibold text-gray-700">Story {index + 1}</CardTitle>
+                                            </div>
                                             {successStorySlides.length > 1 && (<Button type="button" variant="destructive" size="sm" onClick={() => removeSlideItem(setSuccessStorySlides, index)}>
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -1091,6 +1324,26 @@ export default function SlideFormPage() {
                                                 className="mt-1"
                                             />
                                         </div>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <Label>Before Month Label</Label>
+                                                <Input
+                                                    placeholder="e.g. Month 1"
+                                                    value={slide.beforeMonth}
+                                                    onChange={e => updateField(setSuccessStorySlides, index, "beforeMonth", e.target.value)}
+                                                    className="mt-1"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label>After Month Label</Label>
+                                                <Input
+                                                    placeholder="e.g. Month 6"
+                                                    value={slide.afterMonth}
+                                                    onChange={e => updateField(setSuccessStorySlides, index, "afterMonth", e.target.value)}
+                                                    className="mt-1"
+                                                />
+                                            </div>
+                                        </div>
                                         <div>
                                             <div className="flex gap-4 flex-wrap mt-2">
                                                 <div>
@@ -1128,7 +1381,7 @@ export default function SlideFormPage() {
 
                                         <div>
                                             <Label className="font-semibold text-gray-700">
-                                                Video <span className="text-gray-400 font-normal text-xs">(Max 15MB)</span>
+                                                Video <span className="text-gray-400 font-normal text-xs">(Max 25MB)</span>
                                             </Label>
 
                                             <VideoUpload
@@ -1169,12 +1422,23 @@ export default function SlideFormPage() {
                             </Card>
 
                             {reportCardSlides.map((slide, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                <Card key={index} draggable
+                                    onDragStart={(e) => { reportCardDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => reportCardDrag.onDragOver(e, index)}
+                                    onDrop={(e) => reportCardDrag.onDrop(e, index)}
+                                    onDragLeave={reportCardDrag.onDragLeave}
+                                    onDragEnd={reportCardDrag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${reportCardDrag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
-                                            <CardTitle className="text-base font-semibold text-gray-700">
+                                            {/* <CardTitle className="text-base font-semibold text-gray-700">
                                                 Card {index + 1}
-                                            </CardTitle>
+                                            </CardTitle> */}
+                                            <div className="flex items-center gap-2">
+                                                <DragHandle />
+                                                <CardTitle className="text-base font-semibold text-gray-700">Card {index + 1}</CardTitle>
+                                            </div>
                                             {reportCardSlides.length > 1 && (
                                                 <Button type="button" variant="destructive" size="sm" onClick={() => removeSlideItem(setReportCardSlides, index)}>
                                                     <Trash2 className="h-4 w-4" />
@@ -1275,9 +1539,14 @@ export default function SlideFormPage() {
 
                     {selectedSection === "honestExpectations" && (
                         <div className="space-y-6">
+                            {/* {(["male", "female"] as const).map((gender) => {
+                                const stages = gender === "male" ? honestMaleStages : honestFemaleStages;
+                                const setStages = gender === "male" ? setHonestMaleStages : setHonestFemaleStages;
+                                return ( */}
                             {(["male", "female"] as const).map((gender) => {
                                 const stages = gender === "male" ? honestMaleStages : honestFemaleStages;
                                 const setStages = gender === "male" ? setHonestMaleStages : setHonestFemaleStages;
+                                const stagesDrag = gender === "male" ? honestMaleDrag : honestFemaleDrag;
                                 return (
                                     <Card key={gender} className="border border-gray-200 shadow-sm">
                                         <CardHeader>
@@ -1287,9 +1556,19 @@ export default function SlideFormPage() {
                                         </CardHeader>
                                         <CardContent className="space-y-4">
                                             {stages.map((stage, index) => (
-                                                <div key={index} className="border rounded-lg p-4 space-y-3">
+                                                <div key={index} draggable
+                                                    onDragStart={(e) => { stagesDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                                    onDragOver={(e) => stagesDrag.onDragOver(e, index)}
+                                                    onDrop={(e) => stagesDrag.onDrop(e, index)}
+                                                    onDragLeave={stagesDrag.onDragLeave}
+                                                    onDragEnd={stagesDrag.onDragEnd}
+                                                    className={`border rounded-lg p-4 space-y-3 transition-all ${stagesDrag.dragOver === index ? "border-blue-400 bg-blue-50" : ""}`}
+                                                >
                                                     <div className="flex justify-between items-center">
-                                                        <h4 className="font-medium">Stage {index + 1}</h4>
+                                                        <div className="flex items-center gap-2">
+                                                            <DragHandle />
+                                                            <h4 className="font-medium">Stage {index + 1}</h4>
+                                                        </div>
                                                         <div className="flex items-center gap-3">
                                                             <Label className="text-sm">Success?</Label>
                                                             <Switch
@@ -1335,10 +1614,20 @@ export default function SlideFormPage() {
                     {selectedSection === "getStarted" && (
                         <div className="space-y-4">
                             {getStartedSteps.map((step, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                <Card key={index} draggable
+                                    onDragStart={(e) => { getStartedDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => getStartedDrag.onDragOver(e, index)}
+                                    onDrop={(e) => getStartedDrag.onDrop(e, index)}
+                                    onDragLeave={getStartedDrag.onDragLeave}
+                                    onDragEnd={getStartedDrag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${getStartedDrag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
-                                            <CardTitle className="text-base font-semibold text-gray-700">Step {index + 1}</CardTitle>
+                                            <div className="flex items-center gap-2">
+                                                <DragHandle />
+                                                <CardTitle className="text-base font-semibold text-gray-700">Step {index + 1}</CardTitle>
+                                            </div>
                                             {getStartedSteps.length > 1 && (
                                                 <Button type="button" variant="destructive" size="sm"
                                                     onClick={() => removeSlideItem(setGetStartedSteps, index)}>
@@ -1386,9 +1675,14 @@ export default function SlideFormPage() {
 
                     {selectedSection === "timelineResult" && (
                         <div className="space-y-6">
+                            {/* {(["male", "female"] as const).map((gender) => {
+                                const stages = gender === "male" ? timelineMaleStages : timelineFemaleStages;
+                                const setStages = gender === "male" ? setTimelineMaleStages : setTimelineFemaleStages;
+                                return ( */}
                             {(["male", "female"] as const).map((gender) => {
                                 const stages = gender === "male" ? timelineMaleStages : timelineFemaleStages;
                                 const setStages = gender === "male" ? setTimelineMaleStages : setTimelineFemaleStages;
+                                const stagesDrag = gender === "male" ? timelineMaleDrag : timelineFemaleDrag;
                                 return (
                                     <Card key={gender} className="border border-gray-200 shadow-sm">
                                         <CardHeader>
@@ -1398,9 +1692,20 @@ export default function SlideFormPage() {
                                         </CardHeader>
                                         <CardContent className="space-y-4">
                                             {stages.map((stage, index) => (
-                                                <div key={index} className="border rounded-lg p-4 space-y-3">
+                                                <div key={index}
+                                                    draggable
+                                                    onDragStart={(e) => { stagesDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                                    onDragOver={(e) => stagesDrag.onDragOver(e, index)}
+                                                    onDrop={(e) => stagesDrag.onDrop(e, index)}
+                                                    onDragLeave={stagesDrag.onDragLeave}
+                                                    onDragEnd={stagesDrag.onDragEnd}
+                                                    className={`border rounded-lg p-4 space-y-3 transition-all ${stagesDrag.dragOver === index ? "border-blue-400 bg-blue-50" : ""}`}
+                                                >
                                                     <div className="flex justify-between items-center">
-                                                        <h4 className="font-medium">Month {index + 1}</h4>
+                                                        <div className="flex items-center gap-2">
+                                                            <DragHandle />
+                                                            <h4 className="font-medium">Month {index + 1}</h4>
+                                                        </div>
                                                         {stages.length > 1 && (
                                                             <Button type="button" variant="destructive" size="sm"
                                                                 onClick={() => removeSlideItem(setStages, index)}>
@@ -1446,10 +1751,20 @@ export default function SlideFormPage() {
                     {selectedSection === "holisticApproach" && (
                         <div className="space-y-4">
                             {holisticCards.map((card, index) => (
-                                <Card key={index} className="border border-gray-200 shadow-sm">
+                                <Card key={index} draggable
+                                    onDragStart={(e) => { holisticDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => holisticDrag.onDragOver(e, index)}
+                                    onDrop={(e) => holisticDrag.onDrop(e, index)}
+                                    onDragLeave={holisticDrag.onDragLeave}
+                                    onDragEnd={holisticDrag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${holisticDrag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
                                     <CardHeader>
                                         <div className="flex items-center justify-between">
-                                            <CardTitle className="text-base font-semibold text-gray-700">Card {index + 1}</CardTitle>
+                                            <div className="flex items-center gap-2">
+                                                <DragHandle />
+                                                <CardTitle className="text-base font-semibold text-gray-700">Card {index + 1}</CardTitle>
+                                            </div>
                                             {holisticCards.length > 1 && (
                                                 <Button type="button" variant="destructive" size="sm"
                                                     onClick={() => removeSlideItem(setHolisticCards, index)}>
@@ -1569,6 +1884,92 @@ export default function SlideFormPage() {
                             </CardContent>
                         </Card>
                     )}
+
+                    {selectedSection === "rootCause" && (
+                        <div className="space-y-4">
+                            <Card className="border border-gray-200 shadow-sm">
+                                <CardHeader>
+                                    <CardTitle className="text-base font-semibold text-gray-700">
+                                        Section Heading
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div>
+                                        <Label>Subtitle (small tag) <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            placeholder="e.g. ROOT CAUSES"
+                                            value={rootCauseData.subtitle}
+                                            onChange={e => setRootCauseData(p => ({ ...p, subtitle: e.target.value }))}
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label>Title <span className="text-red-500">*</span></Label>
+                                        <Input
+                                            placeholder="e.g. Hair health starts from within"
+                                            value={rootCauseData.title}
+                                            onChange={e => setRootCauseData(p => ({ ...p, title: e.target.value }))}
+                                            required
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {rootCauseItems.map((item, index) => (
+                                <Card key={index}
+                                    draggable
+                                    onDragStart={(e) => { rootCauseDrag.onDragStart(index); e.dataTransfer.effectAllowed = "move"; }}
+                                    onDragOver={(e) => rootCauseDrag.onDragOver(e, index)}
+                                    onDrop={(e) => rootCauseDrag.onDrop(e, index)}
+                                    onDragLeave={rootCauseDrag.onDragLeave}
+                                    onDragEnd={rootCauseDrag.onDragEnd}
+                                    className={`border shadow-sm transition-all ${rootCauseDrag.dragOver === index ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
+                                >
+                                    <CardHeader>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <DragHandle />
+                                                <CardTitle className="text-base font-semibold text-gray-700">Item {index + 1}</CardTitle>
+                                            </div>
+                                            {rootCauseItems.length > 1 && (
+                                                <Button type="button" variant="destructive" size="sm" onClick={() => removeSlideItem(setRootCauseItems, index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            )}
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div>
+                                            <Label>Title <span className="text-red-500">*</span></Label>
+                                            <Input placeholder="e.g. Nutrition" value={item.title}
+                                                onChange={e => updateField(setRootCauseItems, index, "title", e.target.value)}
+                                                required className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Description</Label>
+                                            <Textarea placeholder="e.g. A diet low in iron, biotin, or protein..." value={item.description}
+                                                onChange={e => updateField(setRootCauseItems, index, "description", e.target.value)}
+                                                className="mt-1" />
+                                        </div>
+                                        <div>
+                                            <Label>Icon / Image</Label>
+                                            <div className="mt-1">
+                                                <ImageUpload value={item.imageUrl}
+                                                    onChange={url => updateField(setRootCauseItems, index, "imageUrl", url as string | null)}
+                                                    size={130} />
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            <button type="button" onClick={() => addSlideItem(setRootCauseItems, defaultRootCauseItem)}
+                                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-400 hover:text-blue-500 text-sm font-medium">
+                                + Add Root Cause Item
+                            </button>
+                        </div>
+                    )}
+
                 </div>
 
                 <div className="space-y-6">

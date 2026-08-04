@@ -40,6 +40,7 @@ export const HOME_SECTIONS = [
   "contacthome",
   "customerreviews",
   "featuresection",
+  "rootcasesection"
 ];
 
 export default function PageFormPage() {
@@ -114,8 +115,30 @@ export default function PageFormPage() {
           setStatus(page.status || "active");
           setOrder(page.order || 1);
           setSections(page.sections?.length ? page.sections : []);
+          // if (page.home_sections?.length) {
+          //   setHomeSections(page.home_sections);
+          // }
           if (page.home_sections?.length) {
-            setHomeSections(page.home_sections);
+            const savedSections = page.home_sections;
+            const savedTypes = savedSections.map((s: any) => s.type);
+
+            const missingSections = HOME_SECTIONS
+              .filter((type) => !savedTypes.includes(type))
+              .map((type, i) => ({
+                type,
+                enabled: true,
+                order: savedSections.length + i + 1,
+              }));
+
+            setHomeSections([...savedSections, ...missingSections]);
+          } else {
+            setHomeSections(
+              HOME_SECTIONS.map((item, index) => ({
+                type: item,
+                enabled: true,
+                order: index + 1,
+              }))
+            );
           }
         }
       });

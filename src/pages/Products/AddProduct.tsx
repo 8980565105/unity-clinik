@@ -27,6 +27,7 @@ import {
   updateProduct,
 } from "@/features/products/productsThunk";
 import { fetchsubCategories } from "@/features/subcategories/subcategoriesThunk";
+import { fetchCategories } from "@/features/categories/categoriesThunk";
 import { fetchBrands } from "@/features/brands/brandsThunk";
 import { fetchTypes } from "@/features/types/typesThunk";
 import { fetchProductLabels } from "@/features/productLabels/productLabelsThunk";
@@ -493,31 +494,6 @@ function InsertBetweenSectionButton({ insertAfterIdx, onInsert }: any) {
   );
 }
 
-// function AddFirstSectionButton({ onAdd }: any) {
-//   const [open, setOpen] = useState(false);
-//   const ref = useRef<HTMLDivElement>(null);
-
-//   useEffect(() => {
-//     const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-//     document.addEventListener("mousedown", handler);
-//     return () => document.removeEventListener("mousedown", handler);
-//   }, []);
-
-//   return (
-//     <div ref={ref} className="relative flex justify-center mt-4">
-//       {open && (
-//         <div className="absolute bottom-12 z-50 w-72 bg-white border border-gray-200 rounded-lg shadow-xl max-h-80 overflow-y-auto">
-//           {SECTION_TYPES.map((sType) => (
-//             <div key={sType} className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-//               onClick={() => { onAdd(sType); setOpen(false); }}>
-//               {sType}
-//             </div>
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
 
 function AddFirstSectionButton({ onAdd }: any) {
   const [open, setOpen] = useState(false);
@@ -900,13 +876,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
                         ) : (
                           <div className="grid grid-cols-3 gap-4">
                             <div><Label>Title</Label><Input value={variant.title || ""} placeholder="e.g. Stage 1 (Receding Hairline)" onChange={(e) => updateVariantField(stepIdx, variantIdx, "title", e.target.value)} /></div>
-                            {/* <div>
-                              <Label>Select Product</Label>
-                              <Select value={variant.product_id || ""} onValueChange={(val) => updateVariantField(stepIdx, variantIdx, "product_id", val)}>
-                                <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
-                                <SelectContent>{(products || []).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
-                              </Select>
-                            </div> */}
                             <div>
                               <Label>Select Product</Label>
                               <Select
@@ -1245,10 +1214,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
 
               <div>
                 <Label>Select Product</Label>
-                {/* <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
-                  <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
-                  <SelectContent>{(products || []).filter((p: any) => p._id !== id).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
-                </Select> */}
                 <Select
                   value={item.product_id || "none"}
                   onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val === "none" ? "" : val)}
@@ -1294,11 +1259,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
               <div><Label>Description</Label><Input value={item.description || ""} placeholder="Enter Description" onChange={(e) => updateSectionItem(itemIdx, "description", e.target.value)} /></div>
               <div>
                 <Label>Select Product</Label>
-                {/* <Select value={item.product_id || ""} onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val)}>
-                  <SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger>
-                  <SelectContent>{(products || []).filter((p: any) => p._id !== id).map((p: any) => <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div> */}
                 <Select
                   value={item.product_id || "none"}
                   onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val === "none" ? "" : val)}
@@ -1671,34 +1631,6 @@ const SectionRenderer = React.memo(function SectionRenderer({
               <div><Label>Description</Label><Input value={item.description || ""} placeholder="Enter Description" onChange={(e) => updateSectionItem(itemIdx, "description", e.target.value)} /></div>
               <div>
                 <Label>Select Product</Label>
-
-                {/* <Select
-                  value={item.product_id || ""}
-                  onValueChange={(val) =>
-                    updateSectionItem(
-                      itemIdx,
-                      "product_id",
-                      val
-                    )
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Product" />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {(products || [])
-                      .filter((p) => p._id !== id)
-                      .map((p) => (
-                        <SelectItem
-                          key={p._id}
-                          value={p._id}
-                        >
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select> */}
                 <Select
                   value={item.product_id || "none"}
                   onValueChange={(val) => updateSectionItem(itemIdx, "product_id", val === "none" ? "" : val)}
@@ -2450,7 +2382,7 @@ export default function ProductFormPage() {
                     </div>
                     <div className="col-span-2 mt-4">
                       <Label className="font-semibold text-gray-700">
-                        Videos <span className="text-gray-400 font-normal text-xs">(Max 15MB)</span>
+                        Videos <span className="text-gray-400 font-normal text-xs">(Max 25MB)</span>
                       </Label>
                       <DraggableVideoList
                         videos={v.videos || []}
